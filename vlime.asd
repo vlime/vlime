@@ -7,6 +7,8 @@
   :depends-on (#:cl-async
                #:blackbird
                #:lparallel
+               #:yason
+               #:babel
                #:vom)
   :components ((:module "src"
                 :pathname "src"
