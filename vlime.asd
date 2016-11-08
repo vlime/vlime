@@ -9,6 +9,7 @@
                #:lparallel
                #:yason
                #:babel
+               #:swank
                #:vom)
   :components ((:module "src"
                 :pathname "src"

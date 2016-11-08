@@ -1,4 +1,3 @@
-(format t "~s~%" *posix-argv*)
 (require :asdf)
 
 (defparameter *vlime-home* (make-pathname :directory (pathname-directory *load-truename*)))
