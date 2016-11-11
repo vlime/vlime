@@ -48,16 +48,15 @@
     new-conn))
 
 
-(defgeneric connection-close (connection))
-
-(defmethod connection-close ((connection connection))
-  (with-slots (socket stream peer) connection
-    (when stream (close stream))
-    (when peer
-      (vom:debug "Closing peer connection...")
-      (setf (connection-peer peer) nil)
-      (connection-close peer))
-    (remhash socket *connections*)))
+(defgeneric connection-close (connection)
+  (:method ((connection connection))
+   (with-slots (socket stream peer) connection
+     (when stream (close stream))
+     (when peer
+       (vom:debug "Closing peer connection...")
+       (setf (connection-peer peer) nil)
+       (connection-close peer))
+     (remhash socket *connections*))))
 
 
 (defun socket-event-cb (event)
@@ -69,7 +68,7 @@
         (connection-close conn)
         (vom:debug "Connection count: ~s" (hash-table-count *connections*))))
     (error ()
-      (vom:debug "Socket event: ~s" event))))
+      (vom:debug "Socket event: ~a" event))))
 
 
 (defun client-connect-cb (socket)
@@ -178,10 +177,26 @@
          nil)))))
 
 
-(defun parse-forms (input-str)
+(defun parse-form (input-str)
   (with-standard-io-syntax
     (let ((*read-eval* nil))
       (read-from-string input-str))))
+
+
+(defun handle-swank-msg (msg swank-conn)
+  (let* ((form (parse-form (babel:octets-to-string msg)))
+         (msg-type (car form))
+         (json
+           (if (eql msg-type :return)
+             (seq-swank-to-client (form-to-json form))
+             (form-to-json form)))
+         (encoded (with-output-to-string (json-out)
+                    (yason:encode json json-out))))
+    (with-slots ((client-conn peer)) swank-conn
+      (write-sequence (babel:string-to-octets encoded)
+                      (connection-stream client-conn))
+      (write-sequence (babel:string-to-octets (format nil "~a" #\newline))
+                      (connection-stream client-conn)))))
 
 
 (defun swank-read-cb (socket stream)
@@ -192,12 +207,54 @@
       ;(vom:debug "Raw data from SWANK ~s: ~s" socket msg-list)
       (dolist (msg msg-list)
         (vom:debug "Message from SWANK: ~s" (babel:octets-to-string msg))
-        (let ((encoded (form-to-json (parse-forms (babel:octets-to-string msg)))))
-          (with-slots ((client-conn peer)) swank-conn
-            (write-sequence (babel:string-to-octets encoded)
-                            (connection-stream client-conn))
-            (write-sequence (babel:string-to-octets (format nil "~a" #\newline))
-                            (connection-stream client-conn))))))))
+        (handler-case (handle-swank-msg msg swank-conn)
+          (error (err)
+                 (vom:debug
+                   "Failed to handle SWANK message: ~s~a: ~s"
+                   (if (> (length msg) 32) (subseq msg 0 32) msg)
+                   (if (> (length msg) 32) "..." "")
+                   err)))))))
+
+
+(defun seq-client-to-swank (form)
+  (let ((seq (car form))
+        (payload (cadr form)))
+    (concatenate 'list payload (list seq))))
+
+
+(defun seq-swank-to-client (form)
+  (let ((seq (car (last form)))
+        (payload (subseq form 0 (1- (length form)))))
+    (list seq payload)))
+
+
+(defun handle-client-msg (msg client-conn)
+  (let* ((msg-str (babel:octets-to-string msg))
+         (json (yason:parse msg-str))
+         (form (seq-client-to-swank (json-to-form json)))
+         (form-str (with-standard-io-syntax (write-to-string form)))
+         (form-str-len (length form-str))
+         (out-str (format nil "~6,'0x~a" form-str-len form-str)))
+    (with-slots ((swank-conn peer)) client-conn
+      (write-sequence
+        (babel:string-to-octets out-str)
+        (connection-stream swank-conn)))))
+
+
+(defun ensure-swank-connection (client-conn)
+  (with-slots ((swank-conn peer)) client-conn
+    (when (not swank-conn)
+      (vom:debug "Connecting to peer...")
+      (let* ((swank-stream
+               (tcp-connect "127.0.0.1" 4005
+                            #'swank-read-cb
+                            :event-cb  #'socket-event-cb
+                            :stream t))
+             (swank-socket (streamish swank-stream)))
+        (make-connection :socket swank-socket
+                         :stream swank-stream
+                         :peer client-conn)
+        (vom:debug "Connection count: ~s" (hash-table-count *connections*))))))
 
 
 (defun client-read-cb (socket stream)
@@ -205,58 +262,42 @@
          (client-conn (gethash socket *connections*))
          (line-list (async-stream-read-line stream client-conn data-cache)))
     (when line-list
-      (with-slots ((client-stream stream) (swank-conn peer)) client-conn
+      (with-slots ((client-stream stream)) client-conn
         (when (not client-stream)
-          (setf client-stream stream))
-        (when (not swank-conn)
-          (vom:debug "Connecting to SWANK...")
-          (let* ((swank-stream
-                   (tcp-connect "127.0.0.1" 4005
-                                #'swank-read-cb
-                                :event-cb  #'socket-event-cb
-                                :stream t))
-                 (swank-socket (streamish swank-stream)))
-            (make-connection :socket swank-socket
-                             :stream swank-stream
-                             :peer client-conn)
-            (vom:debug "Connection count: ~s" (hash-table-count *connections*))))
-        (vom:debug "Raw data from ~s: ~s" socket line-list)
-        (loop for line in line-list
-              do (let* ((line-str (babel:octets-to-string line))
-                        (json (handler-case (yason:parse line-str)
-                                (error (co)
-                                       (vom:debug "Bad JSON data (~s): ~s" co line-str)
-                                       nil))))
-                   (vom:debug "Data from ~s: ~s" socket json)
-                   (when json
-                     ; TODO: json-to-form
-                     (write-sequence
-                       (babel:string-to-octets
-                         "00002c(:emacs-rex (swank:connection-info) nil t 5)") (connection-stream swank-conn)))))))))
+          (setf client-stream stream)))
+      (ensure-swank-connection client-conn)
+      (vom:debug "Raw data from ~s: ~s" socket line-list)
+      (dolist (line line-list)
+        (handle-client-msg line client-conn)))))
 
 
 (defun form-to-json (form)
-  (case (car form)
-    (:emacs-rex
-      (let ((res (make-hash-table :test #'equal)))
-        (setf (gethash "type" res) "emacs-rex")
-        (setf (gethash "form" res)
-              (with-standard-io-syntax
-                (nth 1 form)))
-        (setf (gethash "seq" res) (nth 2 form))
-        (with-output-to-string (json-out)
-          (yason:encode res json-out))))
-    (:return
-      (let ((res (make-hash-table :test #'equal)))
-        (setf (gethash "type" res) "return")
-        (setf (gethash "form" res)
-              (with-standard-io-syntax
-                (write-to-string (nth 1 form))))
-        (setf (gethash "seq" res) (nth 2 form))
-        (with-output-to-string (json-out)
-          (yason:encode res json-out))))
+  (cond
+    ((listp form)
+     (mapcar #'form-to-json form))
+    ((symbolp form)
+     (let ((sym-obj (make-hash-table :test #'equal))
+           (sym-name (symbol-name form))
+           (sym-package (package-name (symbol-package form))))
+       (setf (gethash "name" sym-obj) sym-name)
+       (setf (gethash "package" sym-obj) sym-package)
+       sym-obj))
     (t
-      (error "Unknown form: ~s" form))))
+     ; Numbers & strings
+     form)))
+
+
+(defun json-to-form (json)
+  (cond
+    ((listp json)
+     (mapcar #'json-to-form json))
+    ((hash-table-p json)
+     (let ((sym-name (gethash "name" json))
+           (sym-package (gethash "package" json)))
+       (intern sym-name sym-package)))
+    (t
+     ; Numbers & strings
+     json)))
 
 
 (defun main ()

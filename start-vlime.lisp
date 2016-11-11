@@ -10,4 +10,5 @@
   (asdf/operate:load-system :vlime))
 
 (load-vlime)
+(swank:create-server :port 4005 :style :spawn :dont-close t)
 (vlime:main)
