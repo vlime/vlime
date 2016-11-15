@@ -185,18 +185,26 @@
 
 (defun handle-swank-msg (msg swank-conn)
   (let* ((form (parse-form (babel:octets-to-string msg)))
-         (msg-type (car form))
-         (json
-           (if (eql msg-type :return)
-             (seq-swank-to-client (form-to-json form))
-             (form-to-json form)))
-         (encoded (with-output-to-string (json-out)
-                    (yason:encode json json-out))))
-    (with-slots ((client-conn peer)) swank-conn
-      (write-sequence (babel:string-to-octets encoded)
-                      (connection-stream client-conn))
-      (write-sequence (babel:string-to-octets (format nil "~a" #\newline))
-                      (connection-stream client-conn)))))
+         (msg-type (car form)))
+    (if (eql msg-type :return)
+      (let* ((json (seq-swank-to-client (form-to-json form)))
+             (encoded (with-output-to-string (json-out)
+                        (yason:encode json json-out))))
+        (with-slots ((client-conn peer)) swank-conn
+          (write-sequence (babel:string-to-octets encoded)
+                          (connection-stream client-conn))
+          (write-sequence (babel:string-to-octets (format nil "~a" #\newline))
+                          (connection-stream client-conn))))
+      ; TODO: Other events from swank server
+      (let* ((json (form-to-json form))
+             (active-msg (list 0 json))
+             (encoded (with-output-to-string (json-out)
+                        (yason:encode active-msg json-out))))
+        (with-slots ((client-conn peer)) swank-conn
+          (write-sequence (babel:string-to-octets encoded)
+                          (connection-stream client-conn))
+          (write-sequence (babel:string-to-octets (format nil "~a" #\newline))
+                          (connection-stream client-conn)))))))
 
 
 (defun swank-read-cb (socket stream)
@@ -275,6 +283,10 @@
   (cond
     ((listp form)
      (mapcar #'form-to-json form))
+    ((eql form t)
+     ; special case to prevent T from being serialized as a normal symbol,
+     ; thus saving some space
+     form)
     ((symbolp form)
      (let ((sym-obj (make-hash-table :test #'equal))
            (sym-name (symbol-name form))
