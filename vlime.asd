@@ -5,8 +5,6 @@
   :license "MIT"
   :version "0.1.0"
   :depends-on (#:cl-async
-               #:blackbird
-               #:lparallel
                #:yason
                #:babel
                #:swank
