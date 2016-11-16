@@ -6,9 +6,11 @@ function! vlime#New()
                 \ 'Connect': function('vlime#Connect'),
                 \ 'Close': function('vlime#Close'),
                 \ 'Call': function('vlime#Call'),
+                \ 'Send': function('vlime#Send'),
                 \ 'ConnectionInfo': function('vlime#ConnectionInfo'),
                 \ 'CreateREPL': function('vlime#CreateREPL'),
                 \ 'ListenerEval': function('vlime#ListenerEval'),
+                \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'NEW-PACKAGE': function('vlime#OnNewPackage')
@@ -35,7 +37,7 @@ function! vlime#Close() dict
     if type(self.channel) == v:t_channel
         try
             call ch_close(self.channel)
-        catch /^Vim\%((\a\+)\)\=:E906/  "Not an open channel
+        catch /^Vim\%((\a\+)\)\=:E906/  " Not an open channel
         endtry
         let self.channel = v:null
     endif
@@ -46,7 +48,23 @@ function! vlime#Call(msg) dict
     return ch_evalexpr(self.channel, a:msg)
 endfunction
 
-" vlime#ConnectionInfo(return_dict=true)
+" vlime#Send(msg[, callback])
+function! vlime#Send(msg, ...) dict
+    let options = {}
+    if a:0 == 1
+        let options['callback'] = a:1
+    elseif a:0 != 0
+        throw 'vlime#Send: wrong # of arguments'
+    endif
+
+    if len(options) > 0
+        call ch_sendexpr(self.channel, a:msg, options)
+    else
+        call ch_sendexpr(self.channel, a:msg)
+    endif
+endfunction
+
+" vlime#ConnectionInfo([return_dict])
 function! vlime#ConnectionInfo(...) dict
     let raw = self.Call(s:EmacsRex(
                 \ [s:SYM('SWANK', 'CONNECTION-INFO')], v:null, v:true))
@@ -56,7 +74,7 @@ function! vlime#ConnectionInfo(...) dict
     if a:0 == 1
         let return_dict = a:1
     elseif a:0 != 0
-        throw "vlime#ConnectionInfo: wrong # of arguments"
+        throw 'vlime#ConnectionInfo: wrong # of arguments'
     endif
 
     if return_dict
@@ -66,7 +84,7 @@ function! vlime#ConnectionInfo(...) dict
     endif
 endfunction
 
-" vlime#CreateREPL(coding-system=null)
+" vlime#CreateREPL([coding_system])
 function! vlime#CreateREPL(...) dict
     let cmd = [s:SYM('SWANK-REPL', 'CREATE-REPL'), v:null]
     if a:0 == 1
@@ -87,6 +105,10 @@ function! vlime#ListenerEval(expr) dict
                 \ self.repl_package, v:true))
     call s:CheckReturnStatus(raw, 'vlime#ListenerEval')
     return raw[1][1]
+endfunction
+
+function! vlime#Interrupt(thread) dict
+    call self.Send([s:KW('EMACS-INTERRUPT'), a:thread])
 endfunction
 
 " ------------------ server event handlers ------------------

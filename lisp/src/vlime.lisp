@@ -195,7 +195,6 @@
                           (connection-stream client-conn))
           (write-sequence (babel:string-to-octets (format nil "~a" #\newline))
                           (connection-stream client-conn))))
-      ; TODO: Other events from swank server
       (let* ((json (form-to-json form))
              (active-msg (list 0 json))
              (encoded (with-output-to-string (json-out)
@@ -236,17 +235,37 @@
     (list seq payload)))
 
 
+(defun client-emacs-rex-p (form)
+  (and (listp form)
+       (listp (nth 1 form))
+       (eql (car (nth 1 form)) :emacs-rex)))
+
+
+(defun remove-client-seq (form)
+  (nth 1 form))
+
+
 (defun handle-client-msg (msg client-conn)
   (let* ((msg-str (babel:octets-to-string msg))
          (json (yason:parse msg-str))
-         (form (seq-client-to-swank (json-to-form json)))
-         (form-str (with-standard-io-syntax (write-to-string form)))
-         (form-str-len (length form-str))
-         (out-str (format nil "~6,'0x~a" form-str-len form-str)))
-    (with-slots ((swank-conn peer)) client-conn
-      (write-sequence
-        (babel:string-to-octets out-str)
-        (connection-stream swank-conn)))))
+         (form (json-to-form json)))
+    (if (client-emacs-rex-p form)
+      (let* ((emacs-rex-form (seq-client-to-swank form))
+             (form-str (with-standard-io-syntax (write-to-string emacs-rex-form)))
+             (form-str-len (length form-str))
+             (out-str (format nil "~6,'0x~a" form-str-len form-str)))
+        (with-slots ((swank-conn peer)) client-conn
+          (write-sequence
+            (babel:string-to-octets out-str)
+            (connection-stream swank-conn))))
+      (let* ((one-way-form (remove-client-seq form))
+             (form-str (with-standard-io-syntax (write-to-string one-way-form)))
+             (form-str-len (length form-str))
+             (out-str (format nil "~6,'0x~a" form-str-len form-str)))
+        (with-slots ((swank-conn peer)) client-conn
+          (write-sequence
+            (babel:string-to-octets out-str)
+            (connection-stream swank-conn)))))))
 
 
 (defun ensure-swank-connection (client-conn)
