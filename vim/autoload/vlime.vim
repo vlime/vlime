@@ -48,7 +48,8 @@ endfunction
 
 " vlime#ConnectionInfo(return_dict=true)
 function! vlime#ConnectionInfo(...) dict
-    let raw = self.Call(s:EmacsRex([s:SYM('SWANK', 'CONNECTION-INFO')], v:null, v:true))
+    let raw = self.Call(s:EmacsRex(
+                \ [s:SYM('SWANK', 'CONNECTION-INFO')], v:null, v:true))
     call s:CheckReturnStatus(raw, 'vlime#ConnectionInfo')
 
     let return_dict = v:true
@@ -81,7 +82,9 @@ function! vlime#CreateREPL(...) dict
 endfunction
 
 function! vlime#ListenerEval(expr) dict
-    let raw = self.Call(s:EmacsRex([s:SYM('SWANK-REPL', 'LISTENER-EVAL'), a:expr], self.repl_package, v:true))
+    let raw = self.Call(s:EmacsRex(
+                \ [s:SYM('SWANK-REPL', 'LISTENER-EVAL'), a:expr],
+                \ self.repl_package, v:true))
     call s:CheckReturnStatus(raw, 'vlime#ListenerEval')
     return raw[1][1]
 endfunction
@@ -97,7 +100,8 @@ endfunction
 
 function! vlime#OnServerEvent(chan, msg) dict
     let chan_info = ch_info(self.channel)
-    echom chan_info['hostname'] . ':' . chan_info['port'] . ' -> ' . string(a:msg)
+    echom chan_info['hostname'] . ':' . chan_info['port'] .
+                \ ' -> ' . string(a:msg)
     let msg_type = a:msg[0]
     let Handler = get(self.server_event_handlers, msg_type['name'], v:null)
     if type(Handler) == v:t_func
