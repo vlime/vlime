@@ -5,14 +5,19 @@ function! vlime#New()
                 \ 'repl_prompt': v:null,
                 \ 'Connect': function('vlime#Connect'),
                 \ 'Close': function('vlime#Close'),
-                \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'Call': function('vlime#Call'),
                 \ 'ConnectionInfo': function('vlime#ConnectionInfo'),
                 \ 'CreateREPL': function('vlime#CreateREPL'),
-                \ 'ListenerEval': function('vlime#ListenerEval')
+                \ 'ListenerEval': function('vlime#ListenerEval'),
+                \ 'OnServerEvent': function('vlime#OnServerEvent'),
+                \ 'server_event_handlers': {
+                    \ 'NEW-PACKAGE': function('vlime#OnNewPackage')
+                    \ }
                 \ }
     return obj
 endfunction
+
+" ================== methods for vlime connections ==================
 
 function! vlime#Connect(host, port) dict
     let self.channel = ch_open(
@@ -35,16 +40,6 @@ function! vlime#Close() dict
         let self.channel = v:null
     endif
     return self
-endfunction
-
-function! vlime#OnServerEvent(chan, msg) dict
-    let chan_info = ch_info(self.channel)
-    echom chan_info['hostname'] . ':' . chan_info['port'] . ' -> ' . string(a:msg)
-    let msg_type = a:msg[0]
-    if msg_type['name'] == 'NEW-PACKAGE'
-        let self.repl_package = a:msg[1]
-        let self.repl_prompt = a:msg[2]
-    endif
 endfunction
 
 function! vlime#Call(msg) dict
@@ -70,6 +65,7 @@ function! vlime#ConnectionInfo(...) dict
     endif
 endfunction
 
+" vlime#CreateREPL(coding-system=null)
 function! vlime#CreateREPL(...) dict
     let cmd = [s:SYM('SWANK-REPL', 'CREATE-REPL'), v:null]
     if a:0 == 1
@@ -77,7 +73,7 @@ function! vlime#CreateREPL(...) dict
     elseif a:0 != 0
         throw 'vlime#CreateREPL: wrong # of arguments'
     endif
-    let raw = self.Call(s:EmacsRex(cmd, self.repl_package, v:true))
+    let raw = self.Call(s:EmacsRex(cmd, v:null, v:true))
     call s:CheckReturnStatus(raw, 'vlime#CreateREPL')
     let self.repl_package = raw[1][1][0]
     let self.repl_prompt = raw[1][1][1]
@@ -89,6 +85,27 @@ function! vlime#ListenerEval(expr) dict
     call s:CheckReturnStatus(raw, 'vlime#ListenerEval')
     return raw[1][1]
 endfunction
+
+" ------------------ server event handlers ------------------
+
+function! vlime#OnNewPackage(conn, msg)
+    let a:conn.repl_package = a:msg[1]
+    let a:conn.repl_prompt = a:msg[2]
+endfunction
+
+" ------------------ end of server event handlers ------------------
+
+function! vlime#OnServerEvent(chan, msg) dict
+    let chan_info = ch_info(self.channel)
+    echom chan_info['hostname'] . ':' . chan_info['port'] . ' -> ' . string(a:msg)
+    let msg_type = a:msg[0]
+    let Handler = get(self.server_event_handlers, msg_type['name'], v:null)
+    if type(Handler) == v:t_func
+        call Handler(self, a:msg)
+    endif
+endfunction
+
+" ================== end of methods for vlime connections ==================
 
 function! s:PListToDict(plist)
     let d = {}
