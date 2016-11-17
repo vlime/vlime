@@ -67,69 +67,99 @@ function! vlime#Send(msg, ...) dict
     endif
 endfunction
 
-" vlime#ConnectionInfo([return_dict])
+" vlime#ConnectionInfo([return_dict[, callback]])
 function! vlime#ConnectionInfo(...) dict
-    let raw = self.Call(s:EmacsRex(
-                \ [s:SYM('SWANK', 'CONNECTION-INFO')], v:null, v:true))
-    call s:CheckReturnStatus(raw, 'vlime#ConnectionInfo')
+    " We pass local variables as extra arguments instead of
+    " using the 'closure' flag on inner functions, to prevent
+    " messed-up variable values caused by calling the outer
+    " function more than once.
+    function! s:ConnectionInfoCB(Callback, return_dict, chan, msg) abort
+        call s:CheckReturnStatus(a:msg, 'vlime#ConnectionInfo')
+        if a:return_dict
+            call s:TryToCall(a:Callback, [s:PListToDict(a:msg[1][1])])
+        else
+            call s:TryToCall(a:Callback, [a:msg[1][1]])
+        endif
+    endfunction
 
-    let return_dict = v:true
-    if a:0 == 1
-        let return_dict = a:1
-    elseif a:0 != 0
-        throw 'vlime#ConnectionInfo: wrong # of arguments'
-    endif
-
-    if return_dict
-        return s:PListToDict(raw[1][1])
-    else
-        return raw[1][1]
-    endif
+    let return_dict = s:GetNthVarArg(a:000, 0, v:true)
+    let Callback = s:GetNthVarArg(a:000, 1)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'CONNECTION-INFO')], v:null, v:true),
+                \ function('s:ConnectionInfoCB', [Callback, return_dict]))
 endfunction
 
-function! vlime#SwankRequire(contrib) dict
-    let raw = self.Call(s:EmacsRex(
-                \ [s:SYM('SWANK', 'SWANK-REQUIRE'), s:KW(a:contrib)],
-                \ v:null, v:true))
-    call s:CheckReturnStatus(raw, 'vlime#SwankRequire')
-    return raw
+" vlime#SwankRequire(contrib[, callback])
+function! vlime#SwankRequire(contrib, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'SWANK-REQUIRE'), s:KW(a:contrib)],
+                    \ v:null, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#SwankRequire']))
 endfunction
 
-" vlime#CreateREPL([coding_system])
+" vlime#CreateREPL([coding_system[, callback]])
 function! vlime#CreateREPL(...) dict
+    function! s:CreateREPL_CB(Callback, conn, chan, msg) abort
+        call s:CheckReturnStatus(a:msg, 'vlime#CreateREPL')
+        let a:conn.repl_package = a:msg[1][1][0]
+        let a:conn.repl_prompt = a:msg[1][1][1]
+        call s:TryToCall(a:Callback, [a:msg[1][1]])    " [PACKAGE_NAME, PROMPT]
+    endfunction
+
     let cmd = [s:SYM('SWANK-REPL', 'CREATE-REPL'), v:null]
-    if a:0 == 1
-        let cmd += [s:KW('CODING-SYSTEM'), a:1]
-    elseif a:0 != 0
-        throw 'vlime#CreateREPL: wrong # of arguments'
+    let coding_system = s:GetNthVarArg(a:000, 0)
+    if coding_system != v:null
+        let cmd += [s:KW('CODING-SYSTEM'), coding_system]
     endif
-    let raw = self.Call(s:EmacsRex(cmd, v:null, v:true))
-    call s:CheckReturnStatus(raw, 'vlime#CreateREPL')
-    let self.repl_package = raw[1][1][0]
-    let self.repl_prompt = raw[1][1][1]
-    return raw[1][1]    " [PACKAGE_NAME, PROMPT]
+    let Callback = s:GetNthVarArg(a:000, 1)
+    call self.Send(s:EmacsRex(cmd, v:null, v:true),
+                \ function('s:CreateREPL_CB', [Callback, self]))
 endfunction
 
-function! vlime#ListenerEval(expr) dict
-    let raw = self.Call(s:EmacsRex(
-                \ [s:SYM('SWANK-REPL', 'LISTENER-EVAL'), a:expr],
-                \ self.repl_package, v:true))
-    call s:CheckReturnStatus(raw, 'vlime#ListenerEval')
-    return raw[1][1]
+" vlime#ListenerEval(expr[, callback])
+function! vlime#ListenerEval(expr, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK-REPL', 'LISTENER-EVAL'), a:expr],
+                    \ self.repl_package, s:KW('REPL-THREAD')),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#ListenerEval']))
 endfunction
 
 function! vlime#Interrupt(thread) dict
     call self.Send([s:KW('EMACS-INTERRUPT'), a:thread])
 endfunction
 
-function! vlime#SLDBAbort(thread) dict
-    return self.Call(s:EmacsRex(
-                \ [s:SYM('SWANK', 'SLDB-ABORT')], v:null, a:thread))
+" vlime#SLDBAbort(thread[, callback])
+function! vlime#SLDBAbort(thread, ...) dict
+    function! s:SLDBAbortCB(Callback, chan, msg)
+        let status = a:msg[1][0]
+        if status['name'] != 'ABORT'
+            throw 'vlime#SLDBAbort returned: ' . string(a:msg[1])
+        endif
+        call s:TryToCall(a:Callback, [a:msg[1][1]])
+    endfunction
+
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'SLDB-ABORT')], v:null, a:thread),
+                \ function('s:SLDBAbortCB', [Callback]))
 endfunction
 
-function! vlime#SLDBContinue(thread) dict
-    return self.Call(s:EmacsRex(
-                \ [s:SYM('SWANK', 'SLDB-CONTINUE')], v:null, a:thread))
+" vlime#SLDBContinue(thread[, callback])
+function! vlime#SLDBContinue(thread, ...) dict
+    function! s:SLDBContinueCB(Callback, chan, msg)
+        let status = a:msg[1][0]
+        if status['name'] != 'ABORT' && status['name'] != 'OK'
+            throw 'vlime#SLDBContinue returned: ' . string(a:msg[1])
+        endif
+        call s:TryToCall(a:Callback, [a:msg[1][1]])
+    endfunction
+
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'SLDB-CONTINUE')], v:null, a:thread),
+                \ function('s:SLDBContinueCB', [Callback]))
 endfunction
 
 " ------------------ server event handlers ------------------
@@ -154,6 +184,26 @@ endfunction
 
 " ================== end of methods for vlime connections ==================
 
+function! s:SimpleSendCB(Callback, caller, chan, msg) abort
+    call s:CheckReturnStatus(a:msg, a:caller)
+    call s:TryToCall(a:Callback, [a:msg[1][1]])
+endfunction
+
+function! s:GetNthVarArg(args, n, ...)
+    let def_val = v:null
+    if a:0 == 1
+        let def_val = a:1
+    elseif a:0 != 0
+        throw 's:GetNthVarArg: wrong # of arguments'
+    endif
+
+    if a:n >= len(a:args)
+        return def_val
+    else
+        return a:args[a:n]
+    endif
+endfunction
+
 function! s:PListToDict(plist)
     let d = {}
     let i = 0
@@ -176,7 +226,7 @@ endfunction
 function! s:CheckReturnStatus(return_msg, caller)
     let status = a:return_msg[1][0]
     if status['name'] != 'OK'
-        throw a:caller . ' returned: ' . a:return_msg[1]
+        throw a:caller . ' returned: ' . string(a:return_msg[1])
     endif
 endfunction
 
@@ -194,4 +244,16 @@ endfunction
 
 function! s:EmacsRex(cmd, pkg, thread)
     return [s:KW('EMACS-REX'), a:cmd, a:pkg, a:thread]
+endfunction
+
+function! s:TryToCall(Callback, args)
+    if type(a:Callback) == v:t_func
+        let CB = function(a:Callback, a:args)
+        call CB()
+    endif
+endfunction
+
+function! vlime#DummyCB(result)
+    echom '==========================='
+    echom string(a:result)
 endfunction
