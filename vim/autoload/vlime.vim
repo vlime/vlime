@@ -13,6 +13,7 @@ function! vlime#New()
                 \ 'ListenerEval': function('vlime#ListenerEval'),
                 \ 'SetPackage': function('vlime#SetPackage'),
                 \ 'DescribeSymbol': function('vlime#DescribeSymbol'),
+                \ 'OperatorArgList': function('vlime#OperatorArgList'),
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
@@ -181,6 +182,15 @@ function! vlime#DescribeSymbol(symbol, ...) dict
                     \ [s:SYM('SWANK', 'DESCRIBE-SYMBOL'), a:symbol],
                     \ self.repl_package, v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#DescribeSymbol']))
+endfunction
+
+" vlime#OperatorArgList(operator[, callback])
+function! vlime#OperatorArgList(operator, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'OPERATOR-ARGLIST'), a:operator, self.repl_package],
+                    \ self.repl_package, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#OperatorArgList']))
 endfunction
 
 " ------------------ server event handlers ------------------
