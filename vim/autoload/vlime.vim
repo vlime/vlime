@@ -11,11 +11,12 @@ function! vlime#New()
                 \ 'SwankRequire': function('vlime#SwankRequire'),
                 \ 'CreateREPL': function('vlime#CreateREPL'),
                 \ 'ListenerEval': function('vlime#ListenerEval'),
+                \ 'SetPackage': function('vlime#SetPackage'),
+                \ 'DescribeSymbol': function('vlime#DescribeSymbol'),
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
                 \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
-                \ 'SetPackage': function('vlime#SetPackage'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'NEW-PACKAGE': function('vlime#OnNewPackage')
@@ -171,6 +172,15 @@ function! vlime#SetPackage(package, ...) dict
                     \ [s:SYM('SWANK', 'SET-PACKAGE'), a:package],
                     \ self.repl_package, s:KW('REPL-THREAD')),
                 \ function('s:SetPackageCB', [Callback, self]))
+endfunction
+
+" vlime#DescribeSymbol(symbol[, callback])
+function! vlime#DescribeSymbol(symbol, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'DESCRIBE-SYMBOL'), a:symbol],
+                    \ self.repl_package, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#DescribeSymbol']))
 endfunction
 
 " ------------------ server event handlers ------------------
