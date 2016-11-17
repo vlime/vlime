@@ -19,6 +19,7 @@ function! vlime#New()
                 \ 'SwankMacroExpandOne': function('vlime#SwankMacroExpandOne'),
                 \ 'SwankMacroExpand': function('vlime#SwankMacroExpand'),
                 \ 'SwankMacroExpandAll': function('vlime#SwankMacroExpandAll'),
+                \ 'DisassembleForm': function('vlime#DisassembleForm'),
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
@@ -247,6 +248,14 @@ function! vlime#SwankMacroExpandAll(expr, ...) dict
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND-ALL'), a:expr],
                     \ self.repl_package, v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpandAll']))
+endfunction
+
+function! vlime#DisassembleForm(expr, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'DISASSEMBLE-FORM'), a:expr],
+                    \ self.repl_package, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#DisassembleForm']))
 endfunction
 
 " ------------------ server event handlers ------------------
