@@ -15,6 +15,7 @@ function! vlime#New()
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
                 \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
+                \ 'SetPackage': function('vlime#SetPackage'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'NEW-PACKAGE': function('vlime#OnNewPackage')
@@ -156,6 +157,22 @@ function! vlime#InvokeNthRestartForEmacs(thread, level, restart, ...) dict
                 \ function('s:SLDBSendCB', [Callback, 'vlime#InvokeNthRestartForEmacs']))
 endfunction
 
+" vlime#SetPackage(package[, callback])
+function! vlime#SetPackage(package, ...) dict
+    function! s:SetPackageCB(Callback, conn, chan, msg) abort
+        call s:CheckReturnStatus(a:msg, 'vlime#SetPackage')
+        let a:conn.repl_package = a:msg[1][1][0]
+        let a:conn.repl_prompt = a:msg[1][1][1]
+        call s:TryToCall(a:Callback, [a:msg[1][1]])     " [PACKAGE_NAME, PROMPT]
+    endfunction
+
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'SET-PACKAGE'), a:package],
+                    \ self.repl_package, s:KW('REPL-THREAD')),
+                \ function('s:SetPackageCB', [Callback, self]))
+endfunction
+
 " ------------------ server event handlers ------------------
 
 function! vlime#OnNewPackage(conn, msg)
@@ -167,6 +184,7 @@ endfunction
 
 function! vlime#OnServerEvent(chan, msg) dict
     let chan_info = ch_info(self.channel)
+    echom '==========================='
     echom chan_info['hostname'] . ':' . chan_info['port'] .
                 \ ' -> ' . string(a:msg)
     let msg_type = a:msg[0]
@@ -256,6 +274,6 @@ function! s:TryToCall(Callback, args)
 endfunction
 
 function! vlime#DummyCB(result)
-    echom '==========================='
+    echom '---------------------------'
     echom string(a:result)
 endfunction
