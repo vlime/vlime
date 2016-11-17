@@ -16,6 +16,9 @@ function! vlime#New()
                 \ 'OperatorArgList': function('vlime#OperatorArgList'),
                 \ 'SimpleCompletions': function('vlime#SimpleCompletions'),
                 \ 'FuzzyCompletions': function('vlime#FuzzyCompletions'),
+                \ 'SwankMacroExpandOne': function('vlime#SwankMacroExpandOne'),
+                \ 'SwankMacroExpand': function('vlime#SwankMacroExpand'),
+                \ 'SwankMacroExpandAll': function('vlime#SwankMacroExpandAll'),
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
@@ -217,6 +220,33 @@ function! vlime#FuzzyCompletions(symbol, ...) dict
                     \ [s:SYM('SWANK', 'FUZZY-COMPLETIONS'), a:symbol, self.repl_package],
                     \ v:null, v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#FuzzyCompletions']))
+endfunction
+
+" vlime#SwankMacroExpandOne(expr[, callback])
+function! vlime#SwankMacroExpandOne(expr, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'SWANK-MACROEXPAND-1'), a:expr],
+                    \ self.repl_package, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpandOne']))
+endfunction
+
+" vlime#SwankMacroExpand(expr[, callback])
+function! vlime#SwankMacroExpand(expr, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'SWANK-MACROEXPAND'), a:expr],
+                    \ self.repl_package, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpand']))
+endfunction
+
+" vlime#SwankMacroExpandAll(expr[, callback])
+function! vlime#SwankMacroExpandAll(expr, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'SWANK-MACROEXPAND-ALL'), a:expr],
+                    \ self.repl_package, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpandAll']))
 endfunction
 
 " ------------------ server event handlers ------------------
