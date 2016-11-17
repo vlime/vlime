@@ -14,6 +14,7 @@ function! vlime#New()
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
+                \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'NEW-PACKAGE': function('vlime#OnNewPackage')
@@ -132,34 +133,27 @@ endfunction
 
 " vlime#SLDBAbort(thread[, callback])
 function! vlime#SLDBAbort(thread, ...) dict
-    function! s:SLDBAbortCB(Callback, chan, msg)
-        let status = a:msg[1][0]
-        if status['name'] != 'ABORT'
-            throw 'vlime#SLDBAbort returned: ' . string(a:msg[1])
-        endif
-        call s:TryToCall(a:Callback, [a:msg[1][1]])
-    endfunction
-
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'SLDB-ABORT')], v:null, a:thread),
-                \ function('s:SLDBAbortCB', [Callback]))
+                \ function('s:SLDBSendCB', [Callback, 'vlime#SLDBAbort']))
 endfunction
 
 " vlime#SLDBContinue(thread[, callback])
 function! vlime#SLDBContinue(thread, ...) dict
-    function! s:SLDBContinueCB(Callback, chan, msg)
-        let status = a:msg[1][0]
-        if status['name'] != 'ABORT' && status['name'] != 'OK'
-            throw 'vlime#SLDBContinue returned: ' . string(a:msg[1])
-        endif
-        call s:TryToCall(a:Callback, [a:msg[1][1]])
-    endfunction
-
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'SLDB-CONTINUE')], v:null, a:thread),
-                \ function('s:SLDBContinueCB', [Callback]))
+                \ function('s:SLDBSendCB', [Callback, 'vlime#SLDBContinue']))
+endfunction
+
+" vlime#InvokeNthRestartForEmacs(thread, level, restart[, callback])
+function! vlime#InvokeNthRestartForEmacs(thread, level, restart, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'INVOKE-NTH-RESTART-FOR-EMACS'), a:level, a:restart],
+                    \ v:null, a:thread),
+                \ function('s:SLDBSendCB', [Callback, 'vlime#InvokeNthRestartForEmacs']))
 endfunction
 
 " ------------------ server event handlers ------------------
@@ -186,6 +180,14 @@ endfunction
 
 function! s:SimpleSendCB(Callback, caller, chan, msg) abort
     call s:CheckReturnStatus(a:msg, a:caller)
+    call s:TryToCall(a:Callback, [a:msg[1][1]])
+endfunction
+
+function! s:SLDBSendCB(Callback, caller, chan, msg) abort
+    let status = a:msg[1][0]
+    if status['name'] != 'ABORT' && status['name'] != 'OK'
+        throw caller . ' returned: ' . string(a:msg[1])
+    endif
     call s:TryToCall(a:Callback, [a:msg[1][1]])
 endfunction
 
