@@ -8,9 +8,12 @@ function! vlime#New()
                 \ 'Call': function('vlime#Call'),
                 \ 'Send': function('vlime#Send'),
                 \ 'ConnectionInfo': function('vlime#ConnectionInfo'),
+                \ 'SwankRequire': function('vlime#SwankRequire'),
                 \ 'CreateREPL': function('vlime#CreateREPL'),
                 \ 'ListenerEval': function('vlime#ListenerEval'),
                 \ 'Interrupt': function('vlime#Interrupt'),
+                \ 'SLDBAbort': function('vlime#SLDBAbort'),
+                \ 'SLDBContinue': function('vlime#SLDBContinue'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'NEW-PACKAGE': function('vlime#OnNewPackage')
@@ -84,6 +87,14 @@ function! vlime#ConnectionInfo(...) dict
     endif
 endfunction
 
+function! vlime#SwankRequire(contrib) dict
+    let raw = self.Call(s:EmacsRex(
+                \ [s:SYM('SWANK', 'SWANK-REQUIRE'), s:KW(a:contrib)],
+                \ v:null, v:true))
+    call s:CheckReturnStatus(raw, 'vlime#SwankRequire')
+    return raw
+endfunction
+
 " vlime#CreateREPL([coding_system])
 function! vlime#CreateREPL(...) dict
     let cmd = [s:SYM('SWANK-REPL', 'CREATE-REPL'), v:null]
@@ -109,6 +120,16 @@ endfunction
 
 function! vlime#Interrupt(thread) dict
     call self.Send([s:KW('EMACS-INTERRUPT'), a:thread])
+endfunction
+
+function! vlime#SLDBAbort(thread) dict
+    return self.Call(s:EmacsRex(
+                \ [s:SYM('SWANK', 'SLDB-ABORT')], v:null, a:thread))
+endfunction
+
+function! vlime#SLDBContinue(thread) dict
+    return self.Call(s:EmacsRex(
+                \ [s:SYM('SWANK', 'SLDB-CONTINUE')], v:null, a:thread))
 endfunction
 
 " ------------------ server event handlers ------------------
