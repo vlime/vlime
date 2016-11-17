@@ -14,6 +14,8 @@ function! vlime#New()
                 \ 'SetPackage': function('vlime#SetPackage'),
                 \ 'DescribeSymbol': function('vlime#DescribeSymbol'),
                 \ 'OperatorArgList': function('vlime#OperatorArgList'),
+                \ 'SimpleCompletions': function('vlime#SimpleCompletions'),
+                \ 'FuzzyCompletions': function('vlime#FuzzyCompletions'),
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
@@ -96,8 +98,14 @@ endfunction
 " vlime#SwankRequire(contrib[, callback])
 function! vlime#SwankRequire(contrib, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
+    if type(a:contrib) == v:t_list
+        let required = [s:CL('QUOTE'), map(a:contrib, {k, v -> s:KW(v)})]
+    else
+        let required = s:KW(a:contrib)
+    endif
+
     call self.Send(s:EmacsRex(
-                    \ [s:SYM('SWANK', 'SWANK-REQUIRE'), s:KW(a:contrib)],
+                    \ [s:SYM('SWANK', 'SWANK-REQUIRE'), required],
                     \ v:null, v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#SwankRequire']))
 endfunction
@@ -191,6 +199,24 @@ function! vlime#OperatorArgList(operator, ...) dict
                     \ [s:SYM('SWANK', 'OPERATOR-ARGLIST'), a:operator, self.repl_package],
                     \ self.repl_package, v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#OperatorArgList']))
+endfunction
+
+" vlime#SimpleCompletions(symbol[, callback])
+function! vlime#SimpleCompletions(symbol, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'SIMPLE-COMPLETIONS'), a:symbol, self.repl_package],
+                    \ v:null, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#SimpleCompletions']))
+endfunction
+
+" vlime#FuzzyCompletions(symbol[, callback])
+function! vlime#FuzzyCompletions(symbol, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'FUZZY-COMPLETIONS'), a:symbol, self.repl_package],
+                    \ v:null, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#FuzzyCompletions']))
 endfunction
 
 " ------------------ server event handlers ------------------
