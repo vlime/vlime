@@ -1,12 +1,18 @@
-function! vlime#New()
+" Vlime Connection constructor.
+" vlime#New([GetPackage[, SetPackage]])
+function! vlime#New(...)
+    let PackageGetter = s:GetNthVarArg(a:000, 0)
+    let PackageSetter = s:GetNthVarArg(a:000, 1)
     let obj = {
                 \ 'channel': v:null,
-                \ 'repl_package': v:null,
-                \ 'repl_prompt': v:null,
+                \ 'PackageGetter': PackageGetter,
+                \ 'PackageSetter': PackageSetter,
                 \ 'Connect': function('vlime#Connect'),
                 \ 'Close': function('vlime#Close'),
                 \ 'Call': function('vlime#Call'),
                 \ 'Send': function('vlime#Send'),
+                \ 'GetCurrentPackage': function('vlime#GetCurrentPackage'),
+                \ 'SetCurrentPackage': function('vlime#SetCurrentPackage'),
                 \ 'ConnectionInfo': function('vlime#ConnectionInfo'),
                 \ 'SwankRequire': function('vlime#SwankRequire'),
                 \ 'CreateREPL': function('vlime#CreateREPL'),
@@ -80,6 +86,20 @@ function! vlime#Send(msg, ...) dict
     endif
 endfunction
 
+function! vlime#GetCurrentPackage() dict
+    if type(self.PackageGetter) == v:t_func
+        return self.PackageGetter()
+    else
+        return v:null
+    endif
+endfunction
+
+function! vlime#SetCurrentPackage(package) dict
+    if type(self.PackageSetter) == v:t_func
+        call self.PackageSetter(a:package)
+    endif
+endfunction
+
 " vlime#ConnectionInfo([return_dict[, callback]])
 function! vlime#ConnectionInfo(...) dict
     " We pass local variables as extra arguments instead of
@@ -121,8 +141,7 @@ endfunction
 function! vlime#CreateREPL(...) dict
     function! s:CreateREPL_CB(Callback, conn, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#CreateREPL')
-        let a:conn.repl_package = a:msg[1][1][0]
-        let a:conn.repl_prompt = a:msg[1][1][1]
+        call a:conn.SetCurrentPackage(a:msg[1][1])
         call s:TryToCall(a:Callback, [a:msg[1][1]])    " [PACKAGE_NAME, PROMPT]
     endfunction
 
@@ -141,7 +160,7 @@ function! vlime#ListenerEval(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK-REPL', 'LISTENER-EVAL'), a:expr],
-                    \ self.repl_package, s:KW('REPL-THREAD')),
+                    \ self.GetCurrentPackage()[0], s:KW('REPL-THREAD')),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#ListenerEval']))
 endfunction
 
@@ -178,15 +197,14 @@ endfunction
 function! vlime#SetPackage(package, ...) dict
     function! s:SetPackageCB(Callback, conn, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#SetPackage')
-        let a:conn.repl_package = a:msg[1][1][0]
-        let a:conn.repl_prompt = a:msg[1][1][1]
+        call a:conn.SetCurrentPackage(a:msg[1][1])
         call s:TryToCall(a:Callback, [a:msg[1][1]])     " [PACKAGE_NAME, PROMPT]
     endfunction
 
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'SET-PACKAGE'), a:package],
-                    \ self.repl_package, s:KW('REPL-THREAD')),
+                    \ self.GetCurrentPackage()[0], s:KW('REPL-THREAD')),
                 \ function('s:SetPackageCB', [Callback, self]))
 endfunction
 
@@ -195,7 +213,7 @@ function! vlime#DescribeSymbol(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'DESCRIBE-SYMBOL'), a:symbol],
-                    \ self.repl_package, v:true),
+                    \ self.GetCurrentPackage()[0], v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#DescribeSymbol']))
 endfunction
 
@@ -203,8 +221,8 @@ endfunction
 function! vlime#OperatorArgList(operator, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
-                    \ [s:SYM('SWANK', 'OPERATOR-ARGLIST'), a:operator, self.repl_package],
-                    \ self.repl_package, v:true),
+                    \ [s:SYM('SWANK', 'OPERATOR-ARGLIST'), a:operator, self.GetCurrentPackage()[0]],
+                    \ self.GetCurrentPackage()[0], v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#OperatorArgList']))
 endfunction
 
@@ -212,7 +230,7 @@ endfunction
 function! vlime#SimpleCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
-                    \ [s:SYM('SWANK', 'SIMPLE-COMPLETIONS'), a:symbol, self.repl_package],
+                    \ [s:SYM('SWANK', 'SIMPLE-COMPLETIONS'), a:symbol, self.GetCurrentPackage()[0]],
                     \ v:null, v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#SimpleCompletions']))
 endfunction
@@ -221,7 +239,7 @@ endfunction
 function! vlime#FuzzyCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
-                    \ [s:SYM('SWANK', 'FUZZY-COMPLETIONS'), a:symbol, self.repl_package],
+                    \ [s:SYM('SWANK', 'FUZZY-COMPLETIONS'), a:symbol, self.GetCurrentPackage()[0]],
                     \ v:null, v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#FuzzyCompletions']))
 endfunction
@@ -231,7 +249,7 @@ function! vlime#SwankMacroExpandOne(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND-1'), a:expr],
-                    \ self.repl_package, v:true),
+                    \ self.GetCurrentPackage()[0], v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpandOne']))
 endfunction
 
@@ -240,7 +258,7 @@ function! vlime#SwankMacroExpand(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND'), a:expr],
-                    \ self.repl_package, v:true),
+                    \ self.GetCurrentPackage()[0], v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpand']))
 endfunction
 
@@ -249,7 +267,7 @@ function! vlime#SwankMacroExpandAll(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND-ALL'), a:expr],
-                    \ self.repl_package, v:true),
+                    \ self.GetCurrentPackage()[0], v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpandAll']))
 endfunction
 
@@ -258,7 +276,7 @@ function! vlime#DisassembleForm(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'DISASSEMBLE-FORM'), a:expr],
-                    \ self.repl_package, v:true),
+                    \ self.GetCurrentPackage()[0], v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#DisassembleForm']))
 endfunction
 
@@ -270,7 +288,7 @@ function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dic
                         \ a:expr, a:buffer,
                         \ [s:CL('QUOTE'), [[s:KW('POSITION'), a:position]]],
                         \ a:filename, v:null],
-                    \ self.repl_package, v:true),
+                    \ self.GetCurrentPackage()[0], v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#CompileStringForEmacs']))
 endfunction
 
@@ -281,7 +299,7 @@ function! vlime#CompileFileForEmacs(filename, ...) dict
     let Callback = s:GetNthVarArg(a:000, 1)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'COMPILE-FILE-FOR-EMACS'), a:filename, load],
-                    \ self.repl_package, v:true),
+                    \ self.GetCurrentPackage()[0], v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#CompileFileForEmacs']))
 endfunction
 
@@ -290,15 +308,14 @@ function! vlime#LoadFile(filename, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'LOAD-FILE'), a:filename],
-                    \ self.repl_package, v:true),
+                    \ self.GetCurrentPackage()[0], v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#LoadFile']))
 endfunction
 
 " ------------------ server event handlers ------------------
 
 function! vlime#OnNewPackage(conn, msg)
-    let a:conn.repl_package = a:msg[1]
-    let a:conn.repl_prompt = a:msg[2]
+    call a:conn.SetCurrentPackage([a:msg[1], a:msg[2]])
 endfunction
 
 " ------------------ end of server event handlers ------------------
