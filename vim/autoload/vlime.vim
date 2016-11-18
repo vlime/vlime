@@ -20,6 +20,9 @@ function! vlime#New()
                 \ 'SwankMacroExpand': function('vlime#SwankMacroExpand'),
                 \ 'SwankMacroExpandAll': function('vlime#SwankMacroExpandAll'),
                 \ 'DisassembleForm': function('vlime#DisassembleForm'),
+                \ 'CompileStringForEmacs': function('vlime#CompileStringForEmacs'),
+                \ 'CompileFileForEmacs': function('vlime#CompileFileForEmacs'),
+                \ 'LoadFile': function('vlime#LoadFile'),
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
@@ -250,12 +253,45 @@ function! vlime#SwankMacroExpandAll(expr, ...) dict
                 \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpandAll']))
 endfunction
 
+" vlime#DisassembleForm(expr[, callback])
 function! vlime#DisassembleForm(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(s:EmacsRex(
                     \ [s:SYM('SWANK', 'DISASSEMBLE-FORM'), a:expr],
                     \ self.repl_package, v:true),
                 \ function('s:SimpleSendCB', [Callback, 'vlime#DisassembleForm']))
+endfunction
+
+" vlime#CompileStringForEmacs(expr, buffer, position, filename[, callback])
+function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'COMPILE-STRING-FOR-EMACS'),
+                        \ a:expr, a:buffer,
+                        \ [s:CL('QUOTE'), [[s:KW('POSITION'), a:position]]],
+                        \ a:filename, v:null],
+                    \ self.repl_package, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#CompileStringForEmacs']))
+endfunction
+
+
+" vlime#CompileFileForEmacs(filename[, load[, callback]]) dict
+function! vlime#CompileFileForEmacs(filename, ...) dict
+    let load = s:GetNthVarArg(a:000, 0, v:true)
+    let Callback = s:GetNthVarArg(a:000, 1)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'COMPILE-FILE-FOR-EMACS'), a:filename, load],
+                    \ self.repl_package, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#CompileFileForEmacs']))
+endfunction
+
+" vlime#LoadFile(filename[, callback])
+function! vlime#LoadFile(filename, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(s:EmacsRex(
+                    \ [s:SYM('SWANK', 'LOAD-FILE'), a:filename],
+                    \ self.repl_package, v:true),
+                \ function('s:SimpleSendCB', [Callback, 'vlime#LoadFile']))
 endfunction
 
 " ------------------ server event handlers ------------------
