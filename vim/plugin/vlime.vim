@@ -113,8 +113,26 @@ function! GetVlimeConnection()
         elseif len(g:vlime_connections) == 1
             let b:vlime_conn = g:vlime_connections[0]
         else
-            conn_nr = input('Which connection to use? ')
-            let b:vlime_conn = g:vlime_connections[conn_nr]
+            let conn_names = []
+            let i = 1
+            while i <= len(g:vlime_connections)
+                let conn = g:vlime_connections[i-1]
+                let chan_info = ch_info(conn.channel)
+                call add(conn_names, i . '. Vlime REPL ' .
+                            \ ' (' . chan_info['hostname'] . ':' . chan_info['port'] . ')')
+                let i += 1
+            endwhile
+
+            echohl Question
+            echom 'Which connection to use?'
+            echohl None
+            let conn_nr = inputlist(conn_names)
+            if conn_nr == 0
+                throw 'GetVlimeConnection: canceled'
+            elseif  conn_nr > len(g:vlime_connections)
+                throw 'GetVlimeConnection: Please choose from 1 to ' . len(g:vlime_connections)
+            endif
+            let b:vlime_conn = g:vlime_connections[conn_nr-1]
         endif
     endif
     return b:vlime_conn
