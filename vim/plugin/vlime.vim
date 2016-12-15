@@ -140,10 +140,11 @@ function! CurExpr()
     return join(lines, ' ')
 endfunction
 
-function! SendCurExpr()
+function! SendCurExprToREPL()
     let expr = CurExpr()
     if len(expr) > 0
         let conn = GetVlimeConnection()
-        call conn.ListenerEval(expr)
+        call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                    \ conn.ListenerEval, [expr])
     endif
 endfunction
