@@ -12,12 +12,19 @@ endif
 
 
 function! s:NormalizePackageName(name)
-    let i = 0
-    while i < len(a:name) && (a:name[i] == '#' || a:name[i] == ':')
-        let i += 1
-    endwhile
-    let r_name = toupper(strpart(a:name, i))
-    return r_name
+    let pattern1 = '^\(\(#\?:\)\|''\)\(.\+\)'
+    let pattern2 = '"\(.\+\)"'
+    let matches = matchlist(a:name, pattern1)
+    let r_name = ''
+    if len(matches) > 0
+        let r_name = matches[3]
+    else
+        let matches = matchlist(a:name, pattern2)
+        if len(matches) > 0
+            let r_name = matches[1]
+        endif
+    endif
+    return toupper(r_name)
 endfunction
 
 function! CurInPackage()
@@ -62,7 +69,6 @@ function! s:BufferThreadGetter() dict
     if type(buf_thread) == v:t_none
         let buf_thread = v:true
     endif
-    echom 'buf_thread = ' . string(buf_thread)
     return buf_thread
 endfunction
 
