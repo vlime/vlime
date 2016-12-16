@@ -86,8 +86,25 @@ function! VlimeSendCurExprToREPL()
     endif
 endfunction
 
+function! VlimeSendCurAtomToREPL()
+    let atom = CurAtom()
+    if len(atom) > 0
+        let conn = VlimeGetConnection()
+        call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                    \ conn.ListenerEval, [atom])
+    endif
+endfunction
+
 function! CurChar()
     return matchstr(getline('.'), '\%' . col('.') . 'c.')
+endfunction
+
+function! CurAtom()
+    let old_kw = &iskeyword
+    setlocal iskeyword+=+,-,*,/,%,<,=,>,:,$,?,!,@-@,94,~,#,\|,&,.,{,},[,]
+    let atom = expand('<cword>')
+    let &l:iskeyword = old_kw
+    return atom
 endfunction
 
 function! CurExpr()
