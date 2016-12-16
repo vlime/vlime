@@ -7,7 +7,11 @@ if !exists('g:buffer_thread_map')
 endif
 
 if !exists('g:vlime_connections')
-    let g:vlime_connections = []
+    let g:vlime_connections = {}
+endif
+
+if !exists('g:vlime_next_conn_id')
+    let g:vlime_next_conn_id = 1
 endif
 
 
@@ -87,7 +91,7 @@ endfunction
 function! s:OnCreateREPLComplete(conn, result)
     echom '-- OnCreateREPLComplete -------------------------'
     echom string(a:result)
-    call add(g:vlime_connections, a:conn)
+    echom 'Vlime connection ' . a:conn.cb_data.id . ' established.'
 endfunction
 
 function! s:OnSwankRequireComplete(conn, result)
@@ -96,32 +100,48 @@ function! s:OnSwankRequireComplete(conn, result)
     call a:conn.CreateREPL(v:null, function('s:OnCreateREPLComplete', [a:conn]))
 endfunction
 
-function! VlimeConnectREPL()
-    let vlime = vlime#New(
+function! VlimeNewConnection()
+    let conn = vlime#New(
+                \ {'id': g:vlime_next_conn_id},
                 \ function('s:BufferPackageGetter'),
                 \ function('s:BufferPackageSetter'),
                 \ function('s:BufferThreadGetter'),
                 \ function('s:BufferThreadSetter'))
-    call vlime.Connect('127.0.0.1', 7002)
-    call vlime.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete', [vlime]))
+    let g:vlime_connections[g:vlime_next_conn_id] = conn
+    let g:vlime_next_conn_id += 1
+    return conn
+endfunction
+
+function! VlimeCloseConnection(conn)
+    if type(a:conn) == v:t_dict
+        let conn_id = a:conn.cb_data.id
+    else
+        let conn_id = a:conn
+    endif
+    let r_conn = remove(g:vlime_connections, conn_id)
+    call r_conn.Close()
+endfunction
+
+function! VlimeConnectREPL()
+    let conn = VlimeNewConnection()
+    call conn.Connect('127.0.0.1', 7002)
+    call conn.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete', [conn]))
 endfunction
 
 function! GetVlimeConnection()
-    if !exists('b:vlime_conn')
+    if !exists('b:vlime_conn') || !b:vlime_conn.IsConnected()
         if len(g:vlime_connections) == 0
-            throw 'GetVlimeConnection: not connected'
-        elseif len(g:vlime_connections) == 1
-            let b:vlime_conn = g:vlime_connections[0]
+            throw 'GetVlimeConnection: Not connected'
+        elseif len(g:vlime_connections) == 1 && !exists('b:vlime_conn')
+            let b:vlime_conn = g:vlime_connections[keys(g:vlime_connections)[0]]
         else
             let conn_names = []
-            let i = 1
-            while i <= len(g:vlime_connections)
-                let conn = g:vlime_connections[i-1]
+            for k in sort(keys(g:vlime_connections), 'n')
+                let conn = g:vlime_connections[k]
                 let chan_info = ch_info(conn.channel)
-                call add(conn_names, i . '. Vlime REPL ' .
+                call add(conn_names, k . '. Vlime REPL ' .
                             \ ' (' . chan_info['hostname'] . ':' . chan_info['port'] . ')')
-                let i += 1
-            endwhile
+            endfor
 
             echohl Question
             echom 'Which connection to use?'
@@ -129,10 +149,14 @@ function! GetVlimeConnection()
             let conn_nr = inputlist(conn_names)
             if conn_nr == 0
                 throw 'GetVlimeConnection: canceled'
-            elseif  conn_nr > len(g:vlime_connections)
-                throw 'GetVlimeConnection: Please choose from 1 to ' . len(g:vlime_connections)
+            else
+                let conn = get(g:vlime_connections, conn_nr, v:null)
+                if type(conn) == v:t_none
+                    throw 'GetVlimeConnection: Invalid connection: ' . conn_nr
+                else
+                    let b:vlime_conn = conn
+                endif
             endif
-            let b:vlime_conn = g:vlime_connections[conn_nr-1]
         endif
     endif
     return b:vlime_conn

@@ -1,17 +1,20 @@
 " Vlime Connection constructor.
-" vlime#New([GetPackage[, SetPackage[, GetThread[, SetThread]]]])
+" vlime#New([cb_data, [GetPackage[, SetPackage[, GetThread[, SetThread]]]]])
 function! vlime#New(...)
-    let PackageGetter = s:GetNthVarArg(a:000, 0)
-    let PackageSetter = s:GetNthVarArg(a:000, 1)
-    let ThreadGetter = s:GetNthVarArg(a:000, 2)
-    let ThreadSetter = s:GetNthVarArg(a:000, 3)
+    let cb_data = s:GetNthVarArg(a:000, 0)
+    let PackageGetter = s:GetNthVarArg(a:000, 1)
+    let PackageSetter = s:GetNthVarArg(a:000, 2)
+    let ThreadGetter = s:GetNthVarArg(a:000, 3)
+    let ThreadSetter = s:GetNthVarArg(a:000, 4)
     let obj = {
+                \ 'cb_data': cb_data,
                 \ 'channel': v:null,
                 \ 'PackageGetter': PackageGetter,
                 \ 'PackageSetter': PackageSetter,
                 \ 'ThreadGetter': ThreadGetter,
                 \ 'ThreadSetter': ThreadSetter,
                 \ 'Connect': function('vlime#Connect'),
+                \ 'IsConnected': function('vlime#IsConnected'),
                 \ 'Close': function('vlime#Close'),
                 \ 'Call': function('vlime#Call'),
                 \ 'Send': function('vlime#Send'),
@@ -62,6 +65,11 @@ function! vlime#Connect(host, port) dict
         throw 'vlime#Connect: failed to open channel'
     endif
     return self
+endfunction
+
+function! vlime#IsConnected() dict
+    return type(self.channel) == v:t_channel &&
+                \ ch_status(self.channel) == 'open'
 endfunction
 
 function! vlime#Close() dict
