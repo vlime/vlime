@@ -23,7 +23,7 @@ function! TestClose()
 endfunction
 
 function! TestGetCurrentPackage()
-    function! s:DummyPackageGetter() dict
+    function! s:DummyPackageGetter(...) dict
         return ['DUMMY-PACKAGE-1', 'DUMMY-PACKAGE-1']
     endfunction
     let ui = vlime#ui#New()
@@ -34,7 +34,7 @@ function! TestGetCurrentPackage()
 endfunction
 
 function! TestSetCurrentPackage()
-    function! s:DummyPackageSetter(pkg) dict
+    function! s:DummyPackageSetter(pkg, ...) dict
         let b:vlime_test_dummy_package = a:pkg
     endfunction
     let ui = vlime#ui#New()
@@ -47,7 +47,7 @@ function! TestSetCurrentPackage()
 endfunction
 
 function! TestGetCurrentThread()
-    function! s:DummyThreadGetter() dict
+    function! s:DummyThreadGetter(...) dict
         return {'name': 'REPL-THREAD', 'package': 'KEYWORD'}
     endfunction
     let ui = vlime#ui#New()
@@ -58,7 +58,7 @@ function! TestGetCurrentThread()
 endfunction
 
 function! TestSetCurrentThread()
-    function! s:DummyThreadSetter(thread) dict
+    function! s:DummyThreadSetter(thread, ...) dict
         let b:vlime_test_dummy_thread = a:thread
     endfunction
     let ui = vlime#ui#New()
@@ -71,11 +71,11 @@ function! TestSetCurrentThread()
 endfunction
 
 function! TestWithThread()
-    function! s:DummyThreadGetter() dict
+    function! s:DummyThreadGetter(...) dict
         return b:vlime_test_dummy_thread
     endfunction
 
-    function! s:DummyThreadSetter(thread) dict
+    function! s:DummyThreadSetter(thread, ...) dict
         let b:vlime_test_dummy_thread = a:thread
     endfunction
 
@@ -94,11 +94,11 @@ function! TestWithThread()
 endfunction
 
 function! TestWithPackage()
-    function! s:DummyPackageGetter() dict
+    function! s:DummyPackageGetter(...) dict
         return b:vlime_test_dummy_package
     endfunction
 
-    function! s:DummyPackageSetter(pkg) dict
+    function! s:DummyPackageSetter(pkg, ...) dict
         let b:vlime_test_dummy_package = a:pkg
     endfunction
 

@@ -41,7 +41,9 @@ function! vlime#New(...)
                 \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
-                    \ 'NEW-PACKAGE': function('vlime#OnNewPackage')
+                    \ 'NEW-PACKAGE': function('vlime#OnNewPackage'),
+                    \ 'DEBUG': function('vlime#OnDebug'),
+                    \ 'DEBUG-ACTIVATE': function('vlime#OnDebugActivate')
                     \ }
                 \ }
     return obj
@@ -353,6 +355,20 @@ function! vlime#OnNewPackage(conn, msg)
     call a:conn.SetCurrentPackage([a:msg[1], a:msg[2]])
 endfunction
 
+function! vlime#OnDebug(conn, msg)
+    if type(a:conn.ui) != v:t_none
+        let [_msg_type, thread, level, condition, restarts, frames, conts] = a:msg
+        call a:conn.ui.OnDebug(a:conn, thread, level, condition, restarts, frames, conts)
+    endif
+endfunction
+
+function! vlime#OnDebugActivate(conn, msg)
+    if type(a:conn.ui) != v:t_none
+        let [_msg_type, thread, level, select] = a:msg
+        call a:conn.ui.OnDebugActivate(a:conn, thread, level, select)
+    endif
+endfunction
+
 " ------------------ end of server event handlers ------------------
 
 function! vlime#OnServerEvent(chan, msg) dict
@@ -368,6 +384,13 @@ function! vlime#OnServerEvent(chan, msg) dict
 endfunction
 
 " ================== end of methods for vlime connections ==================
+
+function! vlime#GetNthVarArg(args, n, ...)
+    let n_args = [a:args, a:n]
+    call extend(n_args, a:000)
+    let Ref = function('s:GetNthVarArg', n_args)
+    return Ref()
+endfunction
 
 function! s:SimpleSendCB(Callback, caller, chan, msg) abort
     call s:CheckReturnStatus(a:msg, a:caller)
