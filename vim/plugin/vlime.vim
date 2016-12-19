@@ -14,10 +14,18 @@ if !exists('g:vlime_next_conn_id')
     let g:vlime_next_conn_id = 1
 endif
 
-
-function! VlimeNewConnection()
+" VlimeNewConnection([name])
+function! VlimeNewConnection(...)
+    if a:0 > 0
+        let conn_name = a:1
+    else
+        let conn_name = 'Vlime Connection ' . g:vlime_next_conn_id
+    endif
     let conn = vlime#New(
-                \ {'id': g:vlime_next_conn_id},
+                \ {
+                    \ 'id': g:vlime_next_conn_id,
+                    \ 'name': conn_name
+                \ },
                 \ function('s:BufferPackageGetter'),
                 \ function('s:BufferPackageSetter'),
                 \ function('s:BufferThreadGetter'),
@@ -28,18 +36,25 @@ function! VlimeNewConnection()
 endfunction
 
 function! VlimeCloseConnection(conn)
-    if type(a:conn) == v:t_dict
-        let conn_id = a:conn.cb_data.id
-    else
-        let conn_id = a:conn
-    endif
+    let conn_id = s:NormalizeConnectionID(a:conn)
     let r_conn = remove(g:vlime_connections, conn_id)
     call r_conn.Close()
 endfunction
 
-function! VlimeConnectREPL()
-    let conn = VlimeNewConnection()
-    call conn.Connect('127.0.0.1', 7002)
+function! VlimeRenameConnection(conn, new_name)
+    let conn_id = s:NormalizeConnectionID(a:conn)
+    let r_conn = g:vlime_connections[conn_id]
+    let r_conn.cb_data.name = a:new_name
+endfunction
+
+" VlimeConnectREPL([name])
+function! VlimeConnectREPL(host, port, ...)
+    if a:0 > 0
+        let conn = VlimeNewConnection(a:1)
+    else
+        let conn = VlimeNewConnection()
+    endif
+    call conn.Connect(a:host, a:port)
     call conn.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete', [conn]))
 endfunction
 
@@ -54,7 +69,7 @@ function! VlimeGetConnection()
             for k in sort(keys(g:vlime_connections), 'n')
                 let conn = g:vlime_connections[k]
                 let chan_info = ch_info(conn.channel)
-                call add(conn_names, k . '. Vlime REPL ' .
+                call add(conn_names, k . '. ' . conn.cb_data.name .
                             \ ' (' . chan_info['hostname'] . ':' . chan_info['port'] . ')')
             endfor
 
@@ -162,6 +177,14 @@ function! s:NormalizePackageName(name)
     return toupper(r_name)
 endfunction
 
+function! s:NormalizeConnectionID(id)
+    if type(a:id) == v:t_dict
+        return a:id.cb_data.id
+    else
+        return a:id
+    endif
+endfunction
+
 function! s:BufferPackageGetter() dict
     let cur_buf = bufnr('%')
     let buf_pkg = get(g:buffer_package_map, cur_buf, v:null)
@@ -198,7 +221,7 @@ endfunction
 function! s:OnCreateREPLComplete(conn, result)
     echom '-- OnCreateREPLComplete -------------------------'
     echom string(a:result)
-    echom 'Vlime connection ' . a:conn.cb_data.id . ' established.'
+    echom a:conn.cb_data.name . ' established.'
 endfunction
 
 function! s:OnSwankRequireComplete(conn, result)
