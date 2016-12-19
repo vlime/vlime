@@ -24,13 +24,13 @@ endfunction
 
 function! TestGetCurrentPackage()
     function! s:DummyPackageGetter() dict
-        return ['DUMMY-PACKAGE', 'DUMMY-PACKAGE']
+        return ['DUMMY-PACKAGE-1', 'DUMMY-PACKAGE-1']
     endfunction
     let ui = vlime#ui#New()
     let ui['GetCurrentPackage'] = function('s:DummyPackageGetter')
     let conn = vlime#New(v:null, ui)
     let pkg = conn.GetCurrentPackage()
-    call assert_equal(['DUMMY-PACKAGE', 'DUMMY-PACKAGE'], pkg)
+    call assert_equal(['DUMMY-PACKAGE-1', 'DUMMY-PACKAGE-1'], pkg)
 endfunction
 
 function! TestSetCurrentPackage()
@@ -40,9 +40,9 @@ function! TestSetCurrentPackage()
     let ui = vlime#ui#New()
     let ui['SetCurrentPackage'] = function('s:DummyPackageSetter')
     let conn = vlime#New(v:null, ui)
-    call conn.SetCurrentPackage(['DUMMY-PACKAGE', 'DUMMY-PACKAGE'])
+    call conn.SetCurrentPackage(['DUMMY-PACKAGE-2', 'DUMMY-PACKAGE-2'])
     call assert_true(exists('b:vlime_test_dummy_package'))
-    call assert_equal(['DUMMY-PACKAGE', 'DUMMY-PACKAGE'], b:vlime_test_dummy_package)
+    call assert_equal(['DUMMY-PACKAGE-2', 'DUMMY-PACKAGE-2'], b:vlime_test_dummy_package)
     unlet b:vlime_test_dummy_package
 endfunction
 
@@ -64,9 +64,9 @@ function! TestSetCurrentThread()
     let ui = vlime#ui#New()
     let ui['SetCurrentThread'] = function('s:DummyThreadSetter')
     let conn = vlime#New(v:null, ui)
-    call conn.SetCurrentThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'})
+    call conn.SetCurrentThread({'name': 'DUMMY-THREAD', 'package': 'KEYWORD'})
     call assert_true(exists('b:vlime_test_dummy_thread'))
-    call assert_equal({'name': 'REPL-THREAD', 'package': 'KEYWORD'}, b:vlime_test_dummy_thread)
+    call assert_equal({'name': 'DUMMY-THREAD', 'package': 'KEYWORD'}, b:vlime_test_dummy_thread)
     unlet b:vlime_test_dummy_thread
 endfunction
 
