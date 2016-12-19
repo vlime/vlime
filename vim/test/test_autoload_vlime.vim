@@ -26,7 +26,9 @@ function! TestGetCurrentPackage()
     function! s:DummyPackageGetter() dict
         return ['DUMMY-PACKAGE', 'DUMMY-PACKAGE']
     endfunction
-    let conn = vlime#New(v:null, function('s:DummyPackageGetter'))
+    let ui = vlime#ui#New()
+    let ui['GetCurrentPackage'] = function('s:DummyPackageGetter')
+    let conn = vlime#New(v:null, ui)
     let pkg = conn.GetCurrentPackage()
     call assert_equal(['DUMMY-PACKAGE', 'DUMMY-PACKAGE'], pkg)
 endfunction
@@ -35,7 +37,9 @@ function! TestSetCurrentPackage()
     function! s:DummyPackageSetter(pkg) dict
         let b:vlime_test_dummy_package = a:pkg
     endfunction
-    let conn = vlime#New(v:null, v:null, function('s:DummyPackageSetter'))
+    let ui = vlime#ui#New()
+    let ui['SetCurrentPackage'] = function('s:DummyPackageSetter')
+    let conn = vlime#New(v:null, ui)
     call conn.SetCurrentPackage(['DUMMY-PACKAGE', 'DUMMY-PACKAGE'])
     call assert_true(exists('b:vlime_test_dummy_package'))
     call assert_equal(['DUMMY-PACKAGE', 'DUMMY-PACKAGE'], b:vlime_test_dummy_package)
@@ -46,7 +50,9 @@ function! TestGetCurrentThread()
     function! s:DummyThreadGetter() dict
         return {'name': 'REPL-THREAD', 'package': 'KEYWORD'}
     endfunction
-    let conn = vlime#New(v:null, v:null, v:null, function('s:DummyThreadGetter'))
+    let ui = vlime#ui#New()
+    let ui['GetCurrentThread'] = function('s:DummyThreadGetter')
+    let conn = vlime#New(v:null, ui)
     let thread = conn.GetCurrentThread()
     call assert_equal({'name': 'REPL-THREAD', 'package': 'KEYWORD'}, thread)
 endfunction
@@ -55,7 +61,9 @@ function! TestSetCurrentThread()
     function! s:DummyThreadSetter(thread) dict
         let b:vlime_test_dummy_thread = a:thread
     endfunction
-    let conn = vlime#New(v:null, v:null, v:null, v:null, function('s:DummyThreadSetter'))
+    let ui = vlime#ui#New()
+    let ui['SetCurrentThread'] = function('s:DummyThreadSetter')
+    let conn = vlime#New(v:null, ui)
     call conn.SetCurrentThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'})
     call assert_true(exists('b:vlime_test_dummy_thread'))
     call assert_equal({'name': 'REPL-THREAD', 'package': 'KEYWORD'}, b:vlime_test_dummy_thread)
@@ -75,8 +83,10 @@ function! TestWithThread()
         let b:vlime_test_dummy_action_result = a:conn.GetCurrentThread()
     endfunction
 
-    let conn = vlime#New(v:null, v:null, v:null,
-                \ function('s:DummyThreadGetter'), function('s:DummyThreadSetter'))
+    let ui = vlime#ui#New()
+    let ui['GetCurrentThread'] = function('s:DummyThreadGetter')
+    let ui['SetCurrentThread'] = function('s:DummyThreadSetter')
+    let conn = vlime#New(v:null, ui)
     let b:vlime_test_dummy_thread = {'name': 'OLD-THREAD', 'package': 'KEYWORD'}
     call conn.WithThread(1, function('s:DummyAction'), [conn])
     call assert_equal(1, b:vlime_test_dummy_action_result)
@@ -96,7 +106,10 @@ function! TestWithPackage()
         let b:vlime_test_dummy_action_result = a:conn.GetCurrentPackage()
     endfunction
 
-    let conn = vlime#New(v:null, function('s:DummyPackageGetter'), function('s:DummyPackageSetter'))
+    let ui = vlime#ui#New()
+    let ui['GetCurrentPackage'] = function('s:DummyPackageGetter')
+    let ui['SetCurrentPackage'] = function('s:DummyPackageSetter')
+    let conn = vlime#New(v:null, ui)
     let b:vlime_test_dummy_package = ['OLD-PKG', 'OLD-PKG']
     call conn.WithPackage('NEW-PKG', function('s:DummyAction'), [conn])
     call assert_equal(['NEW-PKG','NEW-PKG'], b:vlime_test_dummy_action_result)

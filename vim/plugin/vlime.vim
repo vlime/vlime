@@ -1,9 +1,5 @@
-if !exists('g:buffer_package_map')
-    let g:buffer_package_map = {}
-endif
-
-if !exists('g:buffer_thread_map')
-    let g:buffer_thread_map = {}
+if !exists('g:vlime_ui')
+    let g:vlime_ui = vlime#ui#New()
 endif
 
 if !exists('g:vlime_connections')
@@ -26,10 +22,7 @@ function! VlimeNewConnection(...)
                     \ 'id': g:vlime_next_conn_id,
                     \ 'name': conn_name
                 \ },
-                \ function('s:BufferPackageGetter'),
-                \ function('s:BufferPackageSetter'),
-                \ function('s:BufferThreadGetter'),
-                \ function('s:BufferThreadSetter'))
+                \ g:vlime_ui)
     let g:vlime_connections[g:vlime_next_conn_id] = conn
     let g:vlime_next_conn_id += 1
     return conn
@@ -93,7 +86,7 @@ function! VlimeGetConnection()
 endfunction
 
 function! VlimeSendCurExprToREPL()
-    let expr = CurExpr()
+    let expr = vlime#ui#CurExpr()
     if len(expr) > 0
         let conn = VlimeGetConnection()
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
@@ -102,79 +95,12 @@ function! VlimeSendCurExprToREPL()
 endfunction
 
 function! VlimeSendCurAtomToREPL()
-    let atom = CurAtom()
+    let atom = vlime#ui#CurAtom()
     if len(atom) > 0
         let conn = VlimeGetConnection()
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
                     \ conn.ListenerEval, [atom])
     endif
-endfunction
-
-function! CurChar()
-    return matchstr(getline('.'), '\%' . col('.') . 'c.')
-endfunction
-
-function! CurAtom()
-    let old_kw = &iskeyword
-    setlocal iskeyword+=+,-,*,/,%,<,=,>,:,$,?,!,@-@,94,~,#,\|,&,.,{,},[,]
-    let atom = expand('<cword>')
-    let &l:iskeyword = old_kw
-    return atom
-endfunction
-
-function! CurExpr()
-    let cur_char = CurChar()
-    if cur_char == '('
-        let [s_line, s_col] = searchpairpos('(', '', ')', 'cbnW')
-        let [e_line, e_col] = searchpairpos('(', '', ')', 'nW')
-    elseif cur_char == ')'
-        let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
-        let [e_line, e_col] = searchpairpos('(', '', ')', 'cnW')
-    else
-        let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
-        let [e_line, e_col] = searchpairpos('(', '', ')', 'nW')
-    endif
-    let lines = getline(s_line, e_line)
-    if len(lines) == 1
-        let lines[0] = strpart(lines[0], s_col - 1, e_col - s_col + 1)
-    elseif len(lines) > 1
-        let lines[0] = strpart(lines[0], s_col - 1)
-        let lines[-1] = strpart(lines[-1], 0, e_col)
-    endif
-    return join(lines, ' ')
-endfunction
-
-function! CurInPackage()
-    let pattern = '^\s*(\_s*in-package\_s\+\(.\+\)\_s*)'
-    let old_cur_pos = getcurpos()
-    let package_line = search(pattern, 'bcW')
-    if package_line <= 0
-        let package_line = search(pattern, 'cW')
-    endif
-    if package_line > 0
-        let matches = matchlist(CurExpr(), pattern)
-        let package = s:NormalizePackageName(matches[1])
-    else
-        let package = ''
-    endif
-    call setpos('.', old_cur_pos)
-    return package
-endfunction
-
-function! s:NormalizePackageName(name)
-    let pattern1 = '^\(\(#\?:\)\|''\)\(.\+\)'
-    let pattern2 = '"\(.\+\)"'
-    let matches = matchlist(a:name, pattern1)
-    let r_name = ''
-    if len(matches) > 0
-        let r_name = matches[3]
-    else
-        let matches = matchlist(a:name, pattern2)
-        if len(matches) > 0
-            let r_name = matches[1]
-        endif
-    endif
-    return toupper(r_name)
 endfunction
 
 function! s:NormalizeConnectionID(id)
@@ -183,39 +109,6 @@ function! s:NormalizeConnectionID(id)
     else
         return a:id
     endif
-endfunction
-
-function! s:BufferPackageGetter() dict
-    let cur_buf = bufnr('%')
-    let buf_pkg = get(g:buffer_package_map, cur_buf, v:null)
-    if type(buf_pkg) != v:t_list
-        let in_pkg = CurInPackage()
-        if len(in_pkg) > 0
-            let buf_pkg = [in_pkg, in_pkg]
-        else
-            let buf_pkg = ['COMMON-LISP-USER', 'CL-USER']
-        endif
-    endif
-    return buf_pkg
-endfunction
-
-function! s:BufferPackageSetter(pkg) dict
-    let cur_buf = bufnr('%')
-    let g:buffer_package_map[cur_buf] = a:pkg
-endfunction
-
-function! s:BufferThreadGetter() dict
-    let cur_buf = bufnr('%')
-    let buf_thread = get(g:buffer_thread_map, cur_buf, v:null)
-    if type(buf_thread) == v:t_none
-        let buf_thread = v:true
-    endif
-    return buf_thread
-endfunction
-
-function! s:BufferThreadSetter(thread) dict
-    let cur_buf = bufnr('%')
-    let g:buffer_thread_map[cur_buf] = a:thread
 endfunction
 
 function! s:OnCreateREPLComplete(conn, result)

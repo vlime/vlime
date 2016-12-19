@@ -1,18 +1,12 @@
 " Vlime Connection constructor.
-" vlime#New([cb_data, [GetPackage[, SetPackage[, GetThread[, SetThread]]]]])
+" vlime#New([cb_data[, ui]])
 function! vlime#New(...)
     let cb_data = s:GetNthVarArg(a:000, 0)
-    let PackageGetter = s:GetNthVarArg(a:000, 1)
-    let PackageSetter = s:GetNthVarArg(a:000, 2)
-    let ThreadGetter = s:GetNthVarArg(a:000, 3)
-    let ThreadSetter = s:GetNthVarArg(a:000, 4)
+    let ui = s:GetNthVarArg(a:000, 1)
     let obj = {
                 \ 'cb_data': cb_data,
                 \ 'channel': v:null,
-                \ 'PackageGetter': PackageGetter,
-                \ 'PackageSetter': PackageSetter,
-                \ 'ThreadGetter': ThreadGetter,
-                \ 'ThreadSetter': ThreadSetter,
+                \ 'ui': ui,
                 \ 'Connect': function('vlime#Connect'),
                 \ 'IsConnected': function('vlime#IsConnected'),
                 \ 'Close': function('vlime#Close'),
@@ -104,30 +98,30 @@ function! vlime#Send(msg, ...) dict
 endfunction
 
 function! vlime#GetCurrentPackage() dict
-    if type(self.PackageGetter) == v:t_func
-        return self.PackageGetter()
+    if type(self.ui) != v:t_none
+        return self.ui.GetCurrentPackage()
     else
         return v:null
     endif
 endfunction
 
 function! vlime#SetCurrentPackage(package) dict
-    if type(self.PackageSetter) == v:t_func
-        call self.PackageSetter(a:package)
+    if type(self.ui) != v:t_none
+        call self.ui.SetCurrentPackage(a:package)
     endif
 endfunction
 
 function! vlime#GetCurrentThread() dict
-    if type(self.ThreadGetter) == v:t_func
-        return self.ThreadGetter()
+    if type(self.ui) != v:t_none
+        return self.ui.GetCurrentThread()
     else
         return v:true
     endif
 endfunction
 
 function! vlime#SetCurrentThread(thread) dict
-    if type(self.ThreadSetter) == v:t_func
-        call self.ThreadSetter(a:thread)
+    if type(self.ui) != v:t_none
+        call self.ui.SetCurrentThread(a:thread)
     endif
 endfunction
 
