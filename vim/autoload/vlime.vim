@@ -19,6 +19,7 @@ function! vlime#New(...)
                 \ 'WithPackage': function('vlime#WithPackage'),
                 \ 'WithThread': function('vlime#WithThread'),
                 \ 'EmacsRex': function('vlime#EmacsRex'),
+                \ 'Pong': function('vlime#Pong'),
                 \ 'ConnectionInfo': function('vlime#ConnectionInfo'),
                 \ 'SwankRequire': function('vlime#SwankRequire'),
                 \ 'CreateREPL': function('vlime#CreateREPL'),
@@ -28,6 +29,7 @@ function! vlime#New(...)
                 \ 'OperatorArgList': function('vlime#OperatorArgList'),
                 \ 'SimpleCompletions': function('vlime#SimpleCompletions'),
                 \ 'FuzzyCompletions': function('vlime#FuzzyCompletions'),
+                \ 'ReturnString': function('vlime#ReturnString'),
                 \ 'SwankMacroExpandOne': function('vlime#SwankMacroExpandOne'),
                 \ 'SwankMacroExpand': function('vlime#SwankMacroExpand'),
                 \ 'SwankMacroExpandAll': function('vlime#SwankMacroExpandAll'),
@@ -41,9 +43,12 @@ function! vlime#New(...)
                 \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
+                    \ 'PING': function('vlime#OnPing'),
                     \ 'NEW-PACKAGE': function('vlime#OnNewPackage'),
                     \ 'DEBUG': function('vlime#OnDebug'),
-                    \ 'DEBUG-ACTIVATE': function('vlime#OnDebugActivate')
+                    \ 'DEBUG-ACTIVATE': function('vlime#OnDebugActivate'),
+                    \ 'WRITE-STRING': function('vlime#OnWriteString'),
+                    \ 'READ-STRING': function('vlime#OnReadString')
                     \ }
                 \ }
     return obj
@@ -157,25 +162,29 @@ function! vlime#EmacsRex(cmd) dict
     return s:EmacsRex(a:cmd, pkg, self.GetCurrentThread())
 endfunction
 
+function! vlime#Pong(thread, ttag) dict
+    call self.Send([s:KW('EMACS-PONG'), a:thread, a:ttag])
+endfunction
+
 " vlime#ConnectionInfo([return_dict[, callback]])
 function! vlime#ConnectionInfo(...) dict
     " We pass local variables as extra arguments instead of
     " using the 'closure' flag on inner functions, to prevent
     " messed-up variable values caused by calling the outer
     " function more than once.
-    function! s:ConnectionInfoCB(Callback, return_dict, chan, msg) abort
+    function! s:ConnectionInfoCB(conn, Callback, return_dict, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#ConnectionInfo')
         if a:return_dict
-            call s:TryToCall(a:Callback, [s:PListToDict(a:msg[1][1])])
+            call s:TryToCall(a:Callback, [a:conn, s:PListToDict(a:msg[1][1])])
         else
-            call s:TryToCall(a:Callback, [a:msg[1][1]])
+            call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
         endif
     endfunction
 
     let return_dict = s:GetNthVarArg(a:000, 0, v:true)
     let Callback = s:GetNthVarArg(a:000, 1)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'CONNECTION-INFO')]),
-                \ function('s:ConnectionInfoCB', [Callback, return_dict]))
+                \ function('s:ConnectionInfoCB', [self, Callback, return_dict]))
 endfunction
 
 " vlime#SwankRequire(contrib[, callback])
@@ -188,15 +197,15 @@ function! vlime#SwankRequire(contrib, ...) dict
     endif
 
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SWANK-REQUIRE'), required]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#SwankRequire']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SwankRequire']))
 endfunction
 
 " vlime#CreateREPL([coding_system[, callback]])
 function! vlime#CreateREPL(...) dict
-    function! s:CreateREPL_CB(Callback, conn, chan, msg) abort
+    function! s:CreateREPL_CB(conn, Callback, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#CreateREPL')
         call a:conn.SetCurrentPackage(a:msg[1][1])
-        call s:TryToCall(a:Callback, [a:msg[1][1]])    " [PACKAGE_NAME, PROMPT]
+        call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
     endfunction
 
     let cmd = [s:SYM('SWANK-REPL', 'CREATE-REPL'), v:null]
@@ -206,7 +215,7 @@ function! vlime#CreateREPL(...) dict
     endif
     let Callback = s:GetNthVarArg(a:000, 1)
     call self.Send(self.EmacsRex(cmd),
-                \ function('s:CreateREPL_CB', [Callback, self]))
+                \ function('s:CreateREPL_CB', [self, Callback]))
 endfunction
 
 " vlime#ListenerEval(expr[, callback])
@@ -214,7 +223,7 @@ function! vlime#ListenerEval(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK-REPL', 'LISTENER-EVAL'), a:expr]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#ListenerEval']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#ListenerEval']))
 endfunction
 
 function! vlime#Interrupt(thread) dict
@@ -225,14 +234,14 @@ endfunction
 function! vlime#SLDBAbort(...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-ABORT')]),
-                \ function('s:SLDBSendCB', [Callback, 'vlime#SLDBAbort']))
+                \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBAbort']))
 endfunction
 
 " vlime#SLDBContinue([callback])
 function! vlime#SLDBContinue(...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-CONTINUE')]),
-                \ function('s:SLDBSendCB', [Callback, 'vlime#SLDBContinue']))
+                \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBContinue']))
 endfunction
 
 " vlime#InvokeNthRestartForEmacs(level, restart[, callback])
@@ -240,27 +249,27 @@ function! vlime#InvokeNthRestartForEmacs(level, restart, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INVOKE-NTH-RESTART-FOR-EMACS'), a:level, a:restart]),
-                \ function('s:SLDBSendCB', [Callback, 'vlime#InvokeNthRestartForEmacs']))
+                \ function('s:SLDBSendCB', [self, Callback, 'vlime#InvokeNthRestartForEmacs']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
 function! vlime#SetPackage(package, ...) dict
-    function! s:SetPackageCB(Callback, conn, chan, msg) abort
+    function! s:SetPackageCB(conn, Callback, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#SetPackage')
         call a:conn.SetCurrentPackage(a:msg[1][1])
-        call s:TryToCall(a:Callback, [a:msg[1][1]])     " [PACKAGE_NAME, PROMPT]
+        call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
     endfunction
 
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SET-PACKAGE'), a:package]),
-                \ function('s:SetPackageCB', [Callback, self]))
+                \ function('s:SetPackageCB', [self, Callback]))
 endfunction
 
 " vlime#DescribeSymbol(symbol[, callback])
 function! vlime#DescribeSymbol(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'DESCRIBE-SYMBOL'), a:symbol]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#DescribeSymbol']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#DescribeSymbol']))
 endfunction
 
 " vlime#OperatorArgList(operator[, callback])
@@ -268,7 +277,7 @@ function! vlime#OperatorArgList(operator, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'OPERATOR-ARGLIST'), a:operator, self.GetCurrentPackage()[0]]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#OperatorArgList']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#OperatorArgList']))
 endfunction
 
 " vlime#SimpleCompletions(symbol[, callback])
@@ -276,7 +285,7 @@ function! vlime#SimpleCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'SIMPLE-COMPLETIONS'), a:symbol, self.GetCurrentPackage()[0]]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#SimpleCompletions']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SimpleCompletions']))
 endfunction
 
 " vlime#FuzzyCompletions(symbol[, callback])
@@ -284,7 +293,11 @@ function! vlime#FuzzyCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'FUZZY-COMPLETIONS'), a:symbol, self.GetCurrentPackage()[0]]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#FuzzyCompletions']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#FuzzyCompletions']))
+endfunction
+
+function! vlime#ReturnString(thread, ttag, str) dict
+    call self.Send([s:KW('EMACS-RETURN-STRING'), a:thread, a:ttag, a:str])
 endfunction
 
 " vlime#SwankMacroExpandOne(expr[, callback])
@@ -292,7 +305,7 @@ function! vlime#SwankMacroExpandOne(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND-1'), a:expr]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpandOne']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpandOne']))
 endfunction
 
 " vlime#SwankMacroExpand(expr[, callback])
@@ -300,7 +313,7 @@ function! vlime#SwankMacroExpand(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND'), a:expr]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpand']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpand']))
 endfunction
 
 " vlime#SwankMacroExpandAll(expr[, callback])
@@ -308,7 +321,7 @@ function! vlime#SwankMacroExpandAll(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND-ALL'), a:expr]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#SwankMacroExpandAll']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpandAll']))
 endfunction
 
 " vlime#DisassembleForm(expr[, callback])
@@ -316,7 +329,7 @@ function! vlime#DisassembleForm(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'DISASSEMBLE-FORM'), a:expr]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#DisassembleForm']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#DisassembleForm']))
 endfunction
 
 " vlime#CompileStringForEmacs(expr, buffer, position, filename[, callback])
@@ -327,7 +340,7 @@ function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dic
                         \ a:expr, a:buffer,
                         \ [s:CL('QUOTE'), [[s:KW('POSITION'), a:position]]],
                         \ a:filename, v:null]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#CompileStringForEmacs']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#CompileStringForEmacs']))
 endfunction
 
 
@@ -337,17 +350,22 @@ function! vlime#CompileFileForEmacs(filename, ...) dict
     let Callback = s:GetNthVarArg(a:000, 1)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'COMPILE-FILE-FOR-EMACS'), a:filename, load]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#CompileFileForEmacs']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#CompileFileForEmacs']))
 endfunction
 
 " vlime#LoadFile(filename[, callback])
 function! vlime#LoadFile(filename, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'LOAD-FILE'), a:filename]),
-                \ function('s:SimpleSendCB', [Callback, 'vlime#LoadFile']))
+                \ function('s:SimpleSendCB', [self, Callback, 'vlime#LoadFile']))
 endfunction
 
 " ------------------ server event handlers ------------------
+
+function! vlime#OnPing(conn, msg)
+    let [_msg_type, thread, ttag] = a:msg
+    call a:conn.Pong(thread, ttag)
+endfunction
 
 function! vlime#OnNewPackage(conn, msg)
     call a:conn.SetCurrentPackage([a:msg[1], a:msg[2]])
@@ -364,6 +382,21 @@ function! vlime#OnDebugActivate(conn, msg)
     if type(a:conn.ui) != v:t_none
         let [_msg_type, thread, level, select] = a:msg
         call a:conn.ui.OnDebugActivate(a:conn, thread, level, select)
+    endif
+endfunction
+
+function! vlime#OnWriteString(conn, msg)
+    if type(a:conn.ui) != v:t_none
+        let str = a:msg[1]
+        let str_type = (len(a:msg) >= 3) ? a:msg[2] : v:null
+        call a:conn.ui.OnWriteString(a:conn, str, str_type)
+    endif
+endfunction
+
+function! vlime#OnReadString(conn, msg)
+    if type(a:conn.ui) != v:t_none
+        let [_msg_type, thread, ttag] = a:msg
+        call a:conn.ui.OnReadString(a:conn, thread, ttag)
     endif
 endfunction
 
@@ -390,17 +423,17 @@ function! vlime#GetNthVarArg(args, n, ...)
     return Ref()
 endfunction
 
-function! s:SimpleSendCB(Callback, caller, chan, msg) abort
+function! s:SimpleSendCB(conn, Callback, caller, chan, msg) abort
     call s:CheckReturnStatus(a:msg, a:caller)
-    call s:TryToCall(a:Callback, [a:msg[1][1]])
+    call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
 endfunction
 
-function! s:SLDBSendCB(Callback, caller, chan, msg) abort
+function! s:SLDBSendCB(conn, Callback, caller, chan, msg) abort
     let status = a:msg[1][0]
     if status['name'] != 'ABORT' && status['name'] != 'OK'
         throw caller . ' returned: ' . string(a:msg[1])
     endif
-    call s:TryToCall(a:Callback, [a:msg[1][1]])
+    call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
 endfunction
 
 function! s:GetNthVarArg(args, n, ...)
@@ -467,7 +500,7 @@ function! s:TryToCall(Callback, args)
     endif
 endfunction
 
-function! vlime#DummyCB(result)
+function! vlime#DummyCB(conn, result)
     echom '---------------------------'
     echom string(a:result)
 endfunction

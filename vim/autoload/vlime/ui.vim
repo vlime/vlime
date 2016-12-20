@@ -7,7 +7,9 @@ function! vlime#ui#New()
                 \ 'GetCurrentThread': function('vlime#ui#GetCurrentThread'),
                 \ 'SetCurrentThread': function('vlime#ui#SetCurrentThread'),
                 \ 'OnDebug': function('vlime#ui#OnDebug'),
-                \ 'OnDebugActivate': function('vlime#ui#OnDebugActivate')
+                \ 'OnDebugActivate': function('vlime#ui#OnDebugActivate'),
+                \ 'OnWriteString': function('vlime#ui#OnWriteString'),
+                \ 'OnReadString': function('vlime#ui#OnReadString')
                 \ }
     return obj
 endfunction
@@ -59,19 +61,30 @@ function! vlime#ui#OnDebug(conn, thread, level, condition, restarts, frames, con
     call setbufvar(dbg_buf, '&modifiable', 0)
 endfunction
 
-function! vlime#ui#OnDebugActivate(conn, thread, level, select)
-    let dbg_buf = bufnr(s:SLDBBufName(a:conn, a:thread))
-    let win_nr = bufwinnr(dbg_buf)
-    if win_nr < 0
-        execute 'botright split #' . dbg_buf
-    else
-        execute win_nr . 'wincmd w'
+function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
+    let dbg_buf = s:OpenBuffer(s:SLDBBufName(a:conn, a:thread), v:false)
+    if dbg_buf > 0
+        let pos = search('^\s*[0-9]\+\.\s\+\*[A-Z]\+\s\+-\s.\+$')
+        if pos <= 0
+            call search('^\s*[0-9]\+\.\s\+[A-Z]\+\s\+-\s.\+$')
+        endif
+        " Is this necessary?
+        redraw
     endif
-    let pos = search('^\s*[0-9]\+\.\s\+\*[A-Z]\+\s\+-\s.\+$')
-    if pos <= 0
-        call search('^\s*[0-9]\+\.\s\+[A-Z]\+\s\+-\s.\+$')
+endfunction
+
+function! vlime#ui#OnWriteString(conn, str, str_type)
+    let repl_buf = s:OpenBuffer(s:REPLBufName(a:conn), v:true)
+    if repl_buf > 0
+        call s:SetVlimeBufferOpts(repl_buf, a:conn)
+        call s:PutString(a:str)
     endif
-    redraw
+endfunction
+
+function! vlime#ui#OnReadString(conn, thread, ttag)
+    let input_str = input('Input string: ')
+    let input_str .= "\n"
+    call a:conn.ReturnString(a:thread, a:ttag, input_str)
 endfunction
 
 function! vlime#ui#WithBuffer(buf, Func)
@@ -202,13 +215,17 @@ function! s:FormatRestartLine(r, max_name_len, has_star)
     return spc . a:r[0] . pad . '- ' . a:r[1]
 endfunction
 
+function! s:SetVlimeBufferOpts(buf, conn)
+    call setbufvar(a:buf, '&buftype', 'nofile')
+    call setbufvar(a:buf, '&bufhidden', 'hide')
+    call setbufvar(a:buf, '&swapfile', 0)
+    call setbufvar(a:buf, '&buflisted', 1)
+    call setbufvar(a:buf, 'vlime_conn', a:conn)
+endfunction
+
 function! s:InitSLDBBuf(ui, conn, thread, level)
     let buf = bufnr(s:SLDBBufName(a:conn, a:thread), v:true)
-    call setbufvar(buf, '&buftype', 'nofile')
-    call setbufvar(buf, '&bufhidden', 'hide')
-    call setbufvar(buf, '&swapfile', 0)
-    call setbufvar(buf, '&buflisted', 1)
-    call setbufvar(buf, 'vlime_conn', a:conn)
+    call s:SetVlimeBufferOpts(buf, a:conn)
     call setbufvar(buf, 'vlime_sldb_level', a:level)
     call a:ui.SetCurrentThread(a:thread, buf)
     return buf
@@ -250,4 +267,32 @@ endfunction
 
 function! s:SLDBBufName(conn, thread)
     return 'sldb / ' . a:conn.cb_data.name . ' / ' . a:thread
+endfunction
+
+function! s:REPLBufName(conn)
+    return 'repl / ' . a:conn.cb_data.name
+endfunction
+
+function! s:OpenBuffer(name, create)
+    let buf = bufnr(a:name, a:create)
+    if buf > 0
+        " Found it. Try to put it in a window
+        let win_nr = bufwinnr(buf)
+        if win_nr < 0
+            execute 'botright split #' . buf
+        else
+            execute win_nr . 'wincmd w'
+        endif
+    endif
+    return buf
+endfunction
+
+function! s:PutString(str)
+    let old_reg_x = @x
+    try
+        let @x = a:str
+        normal! G$"xp
+    finally
+        let @x = old_reg_x
+    endtry
 endfunction

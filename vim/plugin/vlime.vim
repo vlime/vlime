@@ -48,7 +48,7 @@ function! VlimeConnectREPL(host, port, ...)
         let conn = VlimeNewConnection()
     endif
     call conn.Connect(a:host, a:port)
-    call conn.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete', [conn]))
+    call conn.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete'))
 endfunction
 
 function! VlimeGetConnection()
@@ -89,6 +89,7 @@ function! VlimeSendCurExprToREPL()
     let expr = vlime#ui#CurExpr()
     if len(expr) > 0
         let conn = VlimeGetConnection()
+        call conn.ui.OnWriteString(conn, "--\n", {'name': 'LOCAL', 'package': 'KEYWORD'})
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
                     \ function(conn.ListenerEval, [expr]))
     endif
@@ -98,6 +99,7 @@ function! VlimeSendCurAtomToREPL()
     let atom = vlime#ui#CurAtom()
     if len(atom) > 0
         let conn = VlimeGetConnection()
+        call conn.ui.OnWriteString(conn, "--\n", {'name': 'LOCAL', 'package': 'KEYWORD'})
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
                     \ function(conn.ListenerEval, [atom]))
     endif
@@ -120,5 +122,5 @@ endfunction
 function! s:OnSwankRequireComplete(conn, result)
     echom '-- OnSwankRequireComplete -------------------------'
     echom string(a:result)
-    call a:conn.CreateREPL(v:null, function('s:OnCreateREPLComplete', [a:conn]))
+    call a:conn.CreateREPL(v:null, function('s:OnCreateREPLComplete'))
 endfunction
