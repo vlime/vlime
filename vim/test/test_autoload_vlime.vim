@@ -88,7 +88,7 @@ function! TestWithThread()
     let ui['SetCurrentThread'] = function('s:DummyThreadSetter')
     let conn = vlime#New(v:null, ui)
     let b:vlime_test_dummy_thread = {'name': 'OLD-THREAD', 'package': 'KEYWORD'}
-    call conn.WithThread(1, function('s:DummyAction'), [conn])
+    call conn.WithThread(1, function('s:DummyAction', [conn]))
     call assert_equal(1, b:vlime_test_dummy_action_result)
     call assert_equal({'name': 'OLD-THREAD', 'package': 'KEYWORD'}, b:vlime_test_dummy_thread)
 endfunction
@@ -111,7 +111,7 @@ function! TestWithPackage()
     let ui['SetCurrentPackage'] = function('s:DummyPackageSetter')
     let conn = vlime#New(v:null, ui)
     let b:vlime_test_dummy_package = ['OLD-PKG', 'OLD-PKG']
-    call conn.WithPackage('NEW-PKG', function('s:DummyAction'), [conn])
+    call conn.WithPackage('NEW-PKG', function('s:DummyAction', [conn]))
     call assert_equal(['NEW-PKG','NEW-PKG'], b:vlime_test_dummy_action_result)
     call assert_equal(['OLD-PKG', 'OLD-PKG'], b:vlime_test_dummy_package)
 endfunction

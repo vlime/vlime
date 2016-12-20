@@ -127,23 +127,21 @@ function! vlime#SetCurrentThread(thread) dict
     endif
 endfunction
 
-function! vlime#WithThread(thread, Func, args) dict
+function! vlime#WithThread(thread, Func) dict
     let old_thread = self.GetCurrentThread()
     try
         call self.SetCurrentThread(a:thread)
-        let ToCall = function(a:Func, a:args)
-        return ToCall()
+        return a:Func()
     finally
         call self.SetCurrentThread(old_thread)
     endtry
 endfunction
 
-function! vlime#WithPackage(package, Func, args) dict
+function! vlime#WithPackage(package, Func) dict
     let old_package = self.GetCurrentPackage()
     try
         call self.SetCurrentPackage([a:package, a:package])
-        let ToCall = function(a:Func, a:args)
-        return ToCall()
+        return a:Func()
     finally
         call self.SetCurrentPackage(old_package)
     endtry

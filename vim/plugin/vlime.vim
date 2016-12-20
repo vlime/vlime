@@ -90,7 +90,7 @@ function! VlimeSendCurExprToREPL()
     if len(expr) > 0
         let conn = VlimeGetConnection()
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
-                    \ conn.ListenerEval, [expr])
+                    \ function(conn.ListenerEval, [expr]))
     endif
 endfunction
 
@@ -99,7 +99,7 @@ function! VlimeSendCurAtomToREPL()
     if len(atom) > 0
         let conn = VlimeGetConnection()
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
-                    \ conn.ListenerEval, [atom])
+                    \ function(conn.ListenerEval, [atom]))
     endif
 endfunction
 

@@ -18,7 +18,7 @@ function! vlime#ui#GetCurrentPackage(...) dict
     let cur_buf = bufnr(buf_spec)
     let buf_pkg = get(self.buffer_package_map, cur_buf, v:null)
     if type(buf_pkg) != v:t_list
-        let in_pkg = vlime#ui#CurInPackage()
+        let in_pkg = vlime#ui#WithBuffer(cur_buf, function('vlime#ui#CurInPackage'))
         if len(in_pkg) > 0
             let buf_pkg = [in_pkg, in_pkg]
         else
@@ -28,7 +28,7 @@ function! vlime#ui#GetCurrentPackage(...) dict
     return buf_pkg
 endfunction
 
-" vlime#ui#GetCurrentPackage(pkg[, buffer])
+" vlime#ui#SetCurrentPackage(pkg[, buffer])
 function! vlime#ui#SetCurrentPackage(pkg, ...) dict
     let buf_spec = vlime#GetNthVarArg(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
@@ -39,11 +39,7 @@ endfunction
 function! vlime#ui#GetCurrentThread(...) dict
     let buf_spec = vlime#GetNthVarArg(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
-    let buf_thread = get(self.buffer_thread_map, cur_buf, v:null)
-    if type(buf_thread) == v:t_none
-        let buf_thread = v:true
-    endif
-    return buf_thread
+    return get(self.buffer_thread_map, cur_buf, v:true)
 endfunction
 
 " vlime#ui#SetCurrentThread(thread[, buffer])
@@ -54,51 +50,12 @@ function! vlime#ui#SetCurrentThread(thread, ...) dict
 endfunction
 
 function! vlime#ui#OnDebug(conn, thread, level, condition, restarts, frames, conts) dict
-    let dbg_buf = bufnr(s:SLDBBufName(a:conn, a:thread), v:true)
-    call setbufvar(dbg_buf, '&buftype', 'nofile')
-    call setbufvar(dbg_buf, '&bufhidden', 'hide')
-    call setbufvar(dbg_buf, '&swapfile', 0)
-    call setbufvar(dbg_buf, '&buflisted', 1)
-    call setbufvar(dbg_buf, 'vlime_conn', a:conn)
-    call self.SetCurrentThread(a:thread, dbg_buf)
-
+    let dbg_buf = s:InitSLDBBuf(self, a:conn, a:thread)
     call setbufvar(dbg_buf, '&modifiable', 1)
-
-    let old_buf = bufnr('%')
-    try
-        execute 'hide buffer ' . dbg_buf
-
-        normal! ggVG"_d
-
-        call append(line('$'), 'Thread: ' . a:thread . '; Level: ' . a:level)
-        call append(line('$'), '')
-
-        call append(line('$'), a:condition[0:-2])
-        call append(line('$'), '')
-
-        call append(line('$'), 'Restarts:')
-        let [max_name_len, has_star] = s:FindMaxRestartNameLen(a:restarts)
-        let max_digits = len(string(len(a:restarts) - 1))
-        let ri = 0
-        while ri < len(a:restarts)
-            let r = a:restarts[ri]
-            let idx_str = s:PadIdx(ri, '.', max_digits)
-            let restart_line = s:FormatRestartLine(r, max_name_len, has_star)
-            call append(line('$'), '  ' . idx_str . restart_line)
-            let ri += 1
-        endwhile
-        call append(line('$'), '')
-
-        call append(line('$'), 'Frames:')
-        let max_digits = len(string(len(a:frames) - 1))
-        for f in a:frames
-            let idx_str = s:PadIdx(f[0], '.', max_digits)
-            call append(line('$'), '  ' . idx_str . f[1])
-        endfor
-    finally
-        execute 'buffer ' . old_buf
-    endtry
-
+    call vlime#ui#WithBuffer(
+                \ dbg_buf,
+                \ function('s:FillSLDBBuf',
+                    \ [a:thread, a:level, a:condition, a:restarts, a:frames]))
     call setbufvar(dbg_buf, '&modifiable', 0)
 endfunction
 
@@ -112,6 +69,17 @@ function! vlime#ui#OnDebugActivate(conn, thread, level, select)
     endif
     call search('^\s*[0-9]\+\.\s\+\*[A-Z]\+\s\+-\s.\+$')
     redraw
+endfunction
+
+function! vlime#ui#WithBuffer(buf, Func)
+    let old_buf = bufnr('%')
+    let cur_buf = bufnr(a:buf)
+    try
+        execute 'hide buffer ' . cur_buf
+        return a:Func()
+    finally
+        execute 'buffer ' . old_buf
+    endtry
 endfunction
 
 function! vlime#ui#CurChar()
@@ -217,6 +185,48 @@ function! s:FormatRestartLine(r, max_name_len, has_star)
     endif
     let pad = repeat(' ', a:max_name_len + 1 - len(a:r[0][start:]))
     return spc . a:r[0] . pad . '- ' . a:r[1]
+endfunction
+
+function! s:InitSLDBBuf(ui, conn, thread)
+    let buf = bufnr(s:SLDBBufName(a:conn, a:thread), v:true)
+    call setbufvar(buf, '&buftype', 'nofile')
+    call setbufvar(buf, '&bufhidden', 'hide')
+    call setbufvar(buf, '&swapfile', 0)
+    call setbufvar(buf, '&buflisted', 1)
+    call setbufvar(buf, 'vlime_conn', a:conn)
+    call a:ui.SetCurrentThread(a:thread, buf)
+    return buf
+endfunction
+
+" Operates on current buffer. Should be called with vlime#ui#WithBuffer(...)
+function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
+    normal! ggVG"_d
+
+    call append(line('$'), 'Thread: ' . a:thread . '; Level: ' . a:level)
+    call append(line('$'), '')
+
+    call append(line('$'), a:condition[0:-2])
+    call append(line('$'), '')
+
+    call append(line('$'), 'Restarts:')
+    let [max_name_len, has_star] = s:FindMaxRestartNameLen(a:restarts)
+    let max_digits = len(string(len(a:restarts) - 1))
+    let ri = 0
+    while ri < len(a:restarts)
+        let r = a:restarts[ri]
+        let idx_str = s:PadIdx(ri, '.', max_digits)
+        let restart_line = s:FormatRestartLine(r, max_name_len, has_star)
+        call append(line('$'), '  ' . idx_str . restart_line)
+        let ri += 1
+    endwhile
+    call append(line('$'), '')
+
+    call append(line('$'), 'Frames:')
+    let max_digits = len(string(len(a:frames) - 1))
+    for f in a:frames
+        let idx_str = s:PadIdx(f[0], '.', max_digits)
+        call append(line('$'), '  ' . idx_str . f[1])
+    endfor
 endfunction
 
 function! s:SLDBBufName(conn, thread)
