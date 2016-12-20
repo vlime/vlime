@@ -50,7 +50,7 @@ function! vlime#ui#SetCurrentThread(thread, ...) dict
 endfunction
 
 function! vlime#ui#OnDebug(conn, thread, level, condition, restarts, frames, conts) dict
-    let dbg_buf = s:InitSLDBBuf(self, a:conn, a:thread)
+    let dbg_buf = s:InitSLDBBuf(self, a:conn, a:thread, a:level)
     call setbufvar(dbg_buf, '&modifiable', 1)
     call vlime#ui#WithBuffer(
                 \ dbg_buf,
@@ -67,7 +67,10 @@ function! vlime#ui#OnDebugActivate(conn, thread, level, select)
     else
         execute win_nr . 'wincmd w'
     endif
-    call search('^\s*[0-9]\+\.\s\+\*[A-Z]\+\s\+-\s.\+$')
+    let pos = search('^\s*[0-9]\+\.\s\+\*[A-Z]\+\s\+-\s.\+$')
+    if pos <= 0
+        call search('^\s*[0-9]\+\.\s\+[A-Z]\+\s\+-\s.\+$')
+    endif
     redraw
 endfunction
 
@@ -133,6 +136,18 @@ function! vlime#ui#CurInPackage()
     return package
 endfunction
 
+function! vlime#ui#ChooseCurRestart()
+    let line = getline('.')
+    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+\*\?[A-Z]\+\s\+-\s.\+$')
+    if len(matches) > 0
+        let nth = matches[1] + 0
+        echom 'Invoking restart ' . nth
+        call b:vlime_conn.InvokeNthRestartForEmacs(b:vlime_sldb_level, nth)
+        set nobuflisted
+        bunload!
+    endif
+endfunction
+
 function! s:NormalizePackageName(name)
     let pattern1 = '^\(\(#\?:\)\|''\)\(.\+\)'
     let pattern2 = '"\(.\+\)"'
@@ -187,13 +202,14 @@ function! s:FormatRestartLine(r, max_name_len, has_star)
     return spc . a:r[0] . pad . '- ' . a:r[1]
 endfunction
 
-function! s:InitSLDBBuf(ui, conn, thread)
+function! s:InitSLDBBuf(ui, conn, thread, level)
     let buf = bufnr(s:SLDBBufName(a:conn, a:thread), v:true)
     call setbufvar(buf, '&buftype', 'nofile')
     call setbufvar(buf, '&bufhidden', 'hide')
     call setbufvar(buf, '&swapfile', 0)
     call setbufvar(buf, '&buflisted', 1)
     call setbufvar(buf, 'vlime_conn', a:conn)
+    call setbufvar(buf, 'vlime_sldb_level', a:level)
     call a:ui.SetCurrentThread(a:thread, buf)
     return buf
 endfunction
@@ -227,6 +243,9 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
         let idx_str = s:PadIdx(f[0], '.', max_digits)
         call append(line('$'), '  ' . idx_str . f[1])
     endfor
+
+    " TODO: Move to a separate function?
+    nnoremap <buffer> <cr> :call vlime#ui#ChooseCurRestart()<cr>
 endfunction
 
 function! s:SLDBBufName(conn, thread)
