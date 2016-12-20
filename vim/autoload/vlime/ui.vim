@@ -68,7 +68,7 @@ function! vlime#ui#OnDebug(conn, thread, level, condition, restarts, frames, con
     try
         execute 'hide buffer ' . dbg_buf
 
-        normal! ggVGx
+        normal! ggVG"_d
 
         call append(line('$'), 'Thread: ' . a:thread . '; Level: ' . a:level)
         call append(line('$'), '')
