@@ -220,10 +220,17 @@ endfunction
 
 " vlime#ListenerEval(expr[, callback])
 function! vlime#ListenerEval(expr, ...) dict
+    function! s:ListenerEvalCB(conn, Callback, chan, msg) abort
+        let stat = s:CheckAndReportReturnStatus(a:conn, a:msg, 'vlime#CreateREPL')
+        if stat
+            call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
+        endif
+    endfunction
+
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK-REPL', 'LISTENER-EVAL'), a:expr]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#ListenerEval']))
+                \ function('s:ListenerEvalCB', [self, Callback]))
 endfunction
 
 function! vlime#Interrupt(thread) dict
@@ -474,6 +481,21 @@ function! s:CheckReturnStatus(return_msg, caller)
     let status = a:return_msg[1][0]
     if status['name'] != 'OK'
         throw a:caller . ' returned: ' . string(a:return_msg[1])
+    endif
+endfunction
+
+function! s:CheckAndReportReturnStatus(conn, return_msg, caller)
+    let status = a:return_msg[1][0]
+    if status['name'] == 'OK'
+        return v:true
+    elseif status['name'] == 'ABORT'
+        call a:conn.ui.OnWriteString(a:conn, a:return_msg[1][1],
+                    \ {'name': 'ABORT-REASON', 'package': 'KEYWORD'})
+        return v:false
+    else
+        call a:conn.ui.OnWriteString(a:conn, string(a:return_msg[1]),
+                    \ {'name': 'UNKNOWN-ERROR', 'package': 'KEYWORD'})
+        return v:false
     endif
 endfunction
 

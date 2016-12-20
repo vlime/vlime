@@ -89,7 +89,7 @@ function! VlimeSendCurExprToREPL()
     let expr = vlime#ui#CurExpr()
     if len(expr) > 0
         let conn = VlimeGetConnection()
-        call conn.ui.OnWriteString(conn, "--\n", {'name': 'LOCAL', 'package': 'KEYWORD'})
+        call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
                     \ function(conn.ListenerEval, [expr]))
     endif
@@ -99,7 +99,7 @@ function! VlimeSendCurAtomToREPL()
     let atom = vlime#ui#CurAtom()
     if len(atom) > 0
         let conn = VlimeGetConnection()
-        call conn.ui.OnWriteString(conn, "--\n", {'name': 'LOCAL', 'package': 'KEYWORD'})
+        call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
                     \ function(conn.ListenerEval, [atom]))
     endif

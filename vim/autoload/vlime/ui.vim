@@ -77,7 +77,10 @@ function! vlime#ui#OnWriteString(conn, str, str_type)
     let repl_buf = s:OpenBuffer(s:REPLBufName(a:conn), v:true)
     if repl_buf > 0
         call s:SetVlimeBufferOpts(repl_buf, a:conn)
-        call s:PutString(a:str)
+        call s:AppendString(a:str)
+        wincmd p
+        " Is this necessary?
+        redraw
     endif
 endfunction
 
@@ -287,12 +290,32 @@ function! s:OpenBuffer(name, create)
     return buf
 endfunction
 
-function! s:PutString(str)
+function! s:AppendString(str)
+    let i = len(a:str) - 1
+    let nl = 0
+    while i >= 0 && a:str[i] == "\n"
+        let i -= 1
+        let nl += 1
+    endwhile
+    let r_str = (i >= 0) ? a:str[0:i] : ''
+
+    let old_cur = getcurpos()
+    let scroll = (old_cur[1] == line('$'))
     let old_reg_x = @x
     try
-        let @x = a:str
-        normal! G$"xp
+        if len(r_str) > 0
+            let @x = r_str
+            normal! G$"xp
+        endif
+        if nl > 0
+            call append(line('$'), '')
+        endif
     finally
         let @x = old_reg_x
+        if !scroll
+            call setpos('.', old_cur)
+        else
+            normal! G
+        endif
     endtry
 endfunction
