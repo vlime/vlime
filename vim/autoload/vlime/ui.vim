@@ -116,7 +116,7 @@ function! vlime#ui#CurExpr()
         let lines[0] = strpart(lines[0], s_col - 1)
         let lines[-1] = strpart(lines[-1], 0, e_col)
     endif
-    return join(lines, ' ')
+    return join(lines, "\n")
 endfunction
 
 function! vlime#ui#CurInPackage()
