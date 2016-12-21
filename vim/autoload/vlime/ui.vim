@@ -157,7 +157,6 @@ function! vlime#ui#ChooseCurRestart()
     let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+\*\?[A-Z]\+\s\+-\s.\+$')
     if len(matches) > 0
         let nth = matches[1] + 0
-        echom 'Invoking restart ' . nth
         call b:vlime_conn.InvokeNthRestartForEmacs(b:vlime_sldb_level, nth)
         set nobuflisted
         bunload!
@@ -238,13 +237,18 @@ endfunction
 function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     normal! ggVG"_d
 
-    call append(line('$'), 'Thread: ' . a:thread . '; Level: ' . a:level)
-    call append(line('$'), '')
+    call s:AppendString('Thread: ' . a:thread . '; Level: ' . a:level . "\n\n")
 
-    call append(line('$'), a:condition[0:-2])
-    call append(line('$'), '')
+    let condition_str = ''
+    for c in a:condition
+        if type(c) != v:t_none
+            let condition_str .= (c . "\n")
+        endif
+    endfor
+    let condition_str .= "\n"
+    call s:AppendString(condition_str)
 
-    call append(line('$'), 'Restarts:')
+    let restarts_str = "Restarts:\n"
     let [max_name_len, has_star] = s:FindMaxRestartNameLen(a:restarts)
     let max_digits = len(string(len(a:restarts) - 1))
     let ri = 0
@@ -252,17 +256,19 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
         let r = a:restarts[ri]
         let idx_str = s:PadIdx(ri, '.', max_digits)
         let restart_line = s:FormatRestartLine(r, max_name_len, has_star)
-        call append(line('$'), '  ' . idx_str . restart_line)
+        let restarts_str .= ('  ' . idx_str . restart_line . "\n")
         let ri += 1
     endwhile
-    call append(line('$'), '')
+    let restarts_str .= "\n"
+    call s:AppendString(restarts_str)
 
-    call append(line('$'), 'Frames:')
+    let frames_str = "Frames:\n"
     let max_digits = len(string(len(a:frames) - 1))
     for f in a:frames
         let idx_str = s:PadIdx(f[0], '.', max_digits)
-        call append(line('$'), '  ' . idx_str . f[1])
+        let frames_str .= ('  ' . idx_str . f[1] . "\n")
     endfor
+    call s:AppendString(frames_str)
 
     " TODO: Move to a separate function?
     nnoremap <buffer> <cr> :call vlime#ui#ChooseCurRestart()<cr>
@@ -308,7 +314,9 @@ function! s:AppendString(str)
             normal! G$"xp
         endif
         if nl > 0
-            call append(line('$'), '')
+            for n in range(nl)
+                call append(line('$'), '')
+            endfor
         endif
     finally
         let @x = old_reg_x

@@ -489,7 +489,7 @@ function! s:CheckAndReportReturnStatus(conn, return_msg, caller)
     if status['name'] == 'OK'
         return v:true
     elseif status['name'] == 'ABORT'
-        call a:conn.ui.OnWriteString(a:conn, a:return_msg[1][1],
+        call a:conn.ui.OnWriteString(a:conn, a:return_msg[1][1] . "\n",
                     \ {'name': 'ABORT-REASON', 'package': 'KEYWORD'})
         return v:false
     else
