@@ -48,7 +48,7 @@ function! VlimeConnectREPL(host, port, ...)
         let conn = VlimeNewConnection()
     endif
     call conn.Connect(a:host, a:port)
-    call conn.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete'))
+    call conn.ConnectionInfo(v:true, function('s:OnConnectionInfoComplete'))
 endfunction
 
 function! VlimeGetConnection()
@@ -105,6 +105,19 @@ function! VlimeSendCurAtomToREPL()
     endif
 endfunction
 
+function! VlimeSendCurThingToREPL()
+    let thing = vlime#ui#CurExpr()
+    if len(thing) <= 0
+        let thing = vlime#ui#CurAtom()
+    endif
+    if len(thing) > 0
+        let conn = VlimeGetConnection()
+        call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+        call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                    \ function(conn.ListenerEval, [thing]))
+    endif
+endfunction
+
 function! s:NormalizeConnectionID(id)
     if type(a:id) == v:t_dict
         return a:id.cb_data.id
@@ -123,4 +136,13 @@ function! s:OnSwankRequireComplete(conn, result)
     echom '-- OnSwankRequireComplete -------------------------'
     echom string(a:result)
     call a:conn.CreateREPL(v:null, function('s:OnCreateREPLComplete'))
+endfunction
+
+function! s:OnConnectionInfoComplete(conn, result)
+    echom '-- OnConnectionInfoComplete -------------------------'
+    echom string(a:result)
+    let banner = 'SWANK version ' . a:result['VERSION'] . ', pid ' . a:result['PID'] . "\n"
+    let banner .= (repeat('=', len(banner) - 1) . "\n")
+    call a:conn.ui.OnWriteString(a:conn, banner, {'name': 'REPL-BANNER', 'package': 'KEYWORD'})
+    call a:conn.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete'))
 endfunction

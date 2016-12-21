@@ -86,7 +86,9 @@ endfunction
 
 function! vlime#ui#OnReadString(conn, thread, ttag)
     let input_str = input('Input string: ')
-    let input_str .= "\n"
+    if input_str[len(input_str)-1] != "\n"
+        let input_str .= "\n"
+    endif
     call a:conn.ReturnString(a:thread, a:ttag, input_str)
 endfunction
 

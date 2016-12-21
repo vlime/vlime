@@ -204,7 +204,9 @@ endfunction
 function! vlime#CreateREPL(...) dict
     function! s:CreateREPL_CB(conn, Callback, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#CreateREPL')
-        call a:conn.SetCurrentPackage(a:msg[1][1])
+        " The package for the REPL defaults to ['COMMON-LISP-USER', 'CL-USER'],
+        " so SetCurrentPackage(...) is not necessary.
+        "call a:conn.SetCurrentPackage(a:msg[1][1])
         call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
     endfunction
 
