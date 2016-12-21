@@ -109,10 +109,12 @@ endfunction
 
 function! vlime#ui#CurAtom()
     let old_kw = &iskeyword
-    setlocal iskeyword+=+,-,*,/,%,<,=,>,:,$,?,!,@-@,94,~,#,\|,&,.,{,},[,]
-    let atom = expand('<cword>')
-    let &l:iskeyword = old_kw
-    return atom
+    try
+        setlocal iskeyword+=+,-,*,/,%,<,=,>,:,$,?,!,@-@,94,~,#,\|,&,.,{,},[,]
+        return expand('<cword>')
+    finally
+        let &l:iskeyword = old_kw
+    endtry
 endfunction
 
 function! vlime#ui#CurExpr()

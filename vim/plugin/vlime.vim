@@ -118,6 +118,45 @@ function! VlimeSendCurThingToREPL()
     endif
 endfunction
 
+function! s:CompleteFindStart()
+    let col = col('.') - 1
+    let line = getline('.')
+    while col > 0 && match(line[col-1], '\_s\|[()#;"'']') < 0
+        let col -= 1
+    endwhile
+    return col
+endfunction
+
+function! VlimeCompleteFunc(findstart, base)
+    let start_col = s:CompleteFindStart()
+    if a:findstart
+        return start_col
+    endif
+
+    let conn = VlimeGetConnection()
+    call conn.FuzzyCompletions(a:base,
+                \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
+    " Actual completions are found in s:OnFuzzyCompletionsComplete(...)
+    " XXX: The refresh option doesn't work, why?
+    return {'words': [], 'refresh': 'always'}
+endfunction
+
+function! VlimeComplete()
+    let start_col = s:CompleteFindStart()
+    let end_col = col('.') - 1
+    let line = getline('.')
+    if end_col <= 0
+        let base = ''
+    else
+        let base = line[start_col:end_col-1]
+    endif
+
+    let conn = VlimeGetConnection()
+    call conn.FuzzyCompletions(base,
+                \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
+    return ''
+endfunction
+
 function! s:NormalizeConnectionID(id)
     if type(a:id) == v:t_dict
         return a:id.cb_data.id
@@ -145,4 +184,17 @@ function! s:OnConnectionInfoComplete(conn, result)
     let banner .= (repeat('=', len(banner) - 1) . "\n")
     call a:conn.ui.OnWriteString(a:conn, banner, {'name': 'REPL-BANNER', 'package': 'KEYWORD'})
     call a:conn.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete'))
+endfunction
+
+function! s:OnFuzzyCompletionsComplete(col, conn, result)
+    let comps = a:result[0]
+    if type(comps) == v:t_none
+        let comps = []
+    endif
+    let r_comps = []
+    for c in comps
+        let cobj = {'word': c[0],'menu': c[3]}
+        call add(r_comps, cobj)
+    endfor
+    call complete(a:col, r_comps)
 endfunction
