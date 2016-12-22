@@ -125,8 +125,13 @@ function! VlimeCompleteFunc(findstart, base)
     endif
 
     let conn = VlimeGetConnection()
-    call conn.FuzzyCompletions(a:base,
-                \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
+    if s:ConnHasContrib(conn, 'SWANK-FUZZY')
+        call conn.FuzzyCompletions(a:base,
+                    \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
+    else
+        call conn.SimpleCompletions(a:base,
+                    \ function('s:OnSimpleCompletionsComplete', [start_col + 1]))
+    endif
     " Actual completions are found in s:OnFuzzyCompletionsComplete(...)
     " XXX: The refresh option doesn't work, why?
     return {'words': [], 'refresh': 'always'}
@@ -143,8 +148,13 @@ function! VlimeComplete()
     endif
 
     let conn = VlimeGetConnection()
-    call conn.FuzzyCompletions(base,
-                \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
+    if s:ConnHasContrib(conn, 'SWANK-FUZZY')
+        call conn.FuzzyCompletions(base,
+                    \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
+    else
+        call conn.SimpleCompletions(base,
+                    \ function('s:OnSimpleCompletionsComplete', [start_col + 1]))
+    endif
     return ''
 endfunction
 
@@ -181,6 +191,11 @@ function! s:CompleteFindStart()
     return col
 endfunction
 
+function! s:ConnHasContrib(conn, contrib)
+    return has_key(a:conn.cb_data, 'contribs') &&
+                \ index(a:conn.cb_data['contribs'], a:contrib) >= 0
+endfunction
+
 function! s:OnCreateREPLComplete(conn, result)
     echom '-- OnCreateREPLComplete -------------------------'
     echom string(a:result)
@@ -190,14 +205,18 @@ endfunction
 function! s:OnSwankRequireComplete(conn, result)
     echom '-- OnSwankRequireComplete -------------------------'
     echom string(a:result)
-    call a:conn.CreateREPL(v:null, function('s:OnCreateREPLComplete'))
+    let a:conn.cb_data['contribs'] = a:result
+    if s:ConnHasContrib(a:conn, 'SWANK-REPL')
+        call a:conn.CreateREPL(v:null, function('s:OnCreateREPLComplete'))
+    endif
 endfunction
 
 function! s:OnConnectionInfoComplete(conn, result)
     echom '-- OnConnectionInfoComplete -------------------------'
     let a:conn.cb_data['version'] = a:result['VERSION']
     let a:conn.cb_data['pid'] = a:result['PID']
-    call a:conn.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete'))
+    call a:conn.SwankRequire(['SWANK-REPL'],
+                \ function('s:OnSwankRequireComplete'))
 endfunction
 
 function! s:OnFuzzyCompletionsComplete(col, conn, result)
@@ -211,4 +230,13 @@ function! s:OnFuzzyCompletionsComplete(col, conn, result)
         call add(r_comps, cobj)
     endfor
     call complete(a:col, r_comps)
+endfunction
+
+function! s:OnSimpleCompletionsComplete(col, conn, result)
+    echom string(a:result)
+    let comps = a:result[0]
+    if type(comps) == v:t_none
+        let comps = []
+    endif
+    call complete(a:col, comps)
 endfunction
