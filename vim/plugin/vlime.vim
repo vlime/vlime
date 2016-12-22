@@ -179,10 +179,8 @@ endfunction
 
 function! s:OnConnectionInfoComplete(conn, result)
     echom '-- OnConnectionInfoComplete -------------------------'
-    echom string(a:result)
-    let banner = 'SWANK version ' . a:result['VERSION'] . ', pid ' . a:result['PID'] . "\n"
-    let banner .= (repeat('=', len(banner) - 1) . "\n")
-    call a:conn.ui.OnWriteString(a:conn, banner, {'name': 'REPL-BANNER', 'package': 'KEYWORD'})
+    let a:conn.cb_data['version'] = a:result['VERSION']
+    let a:conn.cb_data['pid'] = a:result['PID']
     call a:conn.SwankRequire(['SWANK-REPL'], function('s:OnSwankRequireComplete'))
 endfunction
 

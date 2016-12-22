@@ -76,7 +76,11 @@ endfunction
 function! vlime#ui#OnWriteString(conn, str, str_type)
     let repl_buf = s:OpenBuffer(s:REPLBufName(a:conn), v:true)
     if repl_buf > 0
-        call s:SetVlimeBufferOpts(repl_buf, a:conn)
+        if !exists('b:vlime_buffer_initialized')
+            call s:SetVlimeBufferOpts(repl_buf, a:conn)
+            call s:ShowREPLBanner(a:conn)
+            let b:vlime_buffer_initialized = v:true
+        endif
         call s:AppendString(a:str)
         wincmd p
         " Is this necessary?
@@ -330,4 +334,17 @@ function! s:AppendString(str)
             normal! G
         endif
     endtry
+endfunction
+
+function! s:ShowREPLBanner(conn)
+    let banner = 'SWANK'
+    if has_key(a:conn.cb_data, 'version')
+        let banner .= ' version ' . a:conn.cb_data['version']
+    endif
+    if has_key(a:conn.cb_data, 'pid')
+        let banner .= ', pid ' . a:conn.cb_data['pid']
+    endif
+    let banner_len = len(banner)
+    let banner .= ("\n" . repeat('=', banner_len) . "\n")
+    call s:AppendString(banner)
 endfunction
