@@ -163,22 +163,6 @@ function! VlimeComplete()
     return ''
 endfunction
 
-function! VlimeCompleteBegin()
-    let ret = VlimeComplete()
-    augroup VlimeCompletions
-        autocmd!
-        autocmd TextChangedI <buffer> call VlimeComplete()
-        autocmd CompleteDone <buffer> call VlimeCompleteEnd()
-    augroup end
-    return ret
-endfunction
-
-function! VlimeCompleteEnd()
-    augroup VlimeCompletions
-        autocmd!
-    augroup end
-endfunction
-
 function! s:NormalizeConnectionID(id)
     if type(a:id) == v:t_dict
         return a:id.cb_data.id
