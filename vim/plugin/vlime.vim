@@ -40,7 +40,7 @@ function! VlimeRenameConnection(conn, new_name)
     let r_conn.cb_data.name = a:new_name
 endfunction
 
-" VlimeConnectREPL([name])
+" VlimeConnectREPL(host, port[, name])
 function! VlimeConnectREPL(host, port, ...)
     if a:0 > 0
         let conn = VlimeNewConnection(a:1)
@@ -118,15 +118,6 @@ function! VlimeSendCurThingToREPL()
     endif
 endfunction
 
-function! s:CompleteFindStart()
-    let col = col('.') - 1
-    let line = getline('.')
-    while col > 0 && match(line[col-1], '\_s\|[()#;"'']') < 0
-        let col -= 1
-    endwhile
-    return col
-endfunction
-
 function! VlimeCompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
@@ -163,6 +154,15 @@ function! s:NormalizeConnectionID(id)
     else
         return a:id
     endif
+endfunction
+
+function! s:CompleteFindStart()
+    let col = col('.') - 1
+    let line = getline('.')
+    while col > 0 && match(line[col-1], '\_s\|[()#;"'']') < 0
+        let col -= 1
+    endwhile
+    return col
 endfunction
 
 function! s:OnCreateREPLComplete(conn, result)
