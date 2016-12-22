@@ -118,6 +118,11 @@ function! VlimeSendCurThingToREPL()
     endif
 endfunction
 
+function! VlimeSwankRequire(contribs)
+    let conn = VlimeGetConnection()
+    call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete', [v:false]))
+endfunction
+
 function! VlimeCompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
@@ -198,15 +203,13 @@ endfunction
 
 function! s:OnCreateREPLComplete(conn, result)
     echom '-- OnCreateREPLComplete -------------------------'
-    echom string(a:result)
     echom a:conn.cb_data.name . ' established.'
 endfunction
 
-function! s:OnSwankRequireComplete(conn, result)
+function! s:OnSwankRequireComplete(create_repl, conn, result)
     echom '-- OnSwankRequireComplete -------------------------'
-    echom string(a:result)
     let a:conn.cb_data['contribs'] = a:result
-    if s:ConnHasContrib(a:conn, 'SWANK-REPL')
+    if a:create_repl && s:ConnHasContrib(a:conn, 'SWANK-REPL')
         call a:conn.CreateREPL(v:null, function('s:OnCreateREPLComplete'))
     endif
 endfunction
@@ -216,7 +219,7 @@ function! s:OnConnectionInfoComplete(conn, result)
     let a:conn.cb_data['version'] = a:result['VERSION']
     let a:conn.cb_data['pid'] = a:result['PID']
     call a:conn.SwankRequire(['SWANK-REPL'],
-                \ function('s:OnSwankRequireComplete'))
+                \ function('s:OnSwankRequireComplete', [v:true]))
 endfunction
 
 function! s:OnFuzzyCompletionsComplete(col, conn, result)
