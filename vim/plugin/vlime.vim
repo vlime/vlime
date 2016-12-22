@@ -136,7 +136,7 @@ function! VlimeComplete()
     let start_col = s:CompleteFindStart()
     let end_col = col('.') - 1
     let line = getline('.')
-    if end_col <= 0
+    if end_col <= start_col
         let base = ''
     else
         let base = line[start_col:end_col-1]
@@ -146,6 +146,22 @@ function! VlimeComplete()
     call conn.FuzzyCompletions(base,
                 \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
     return ''
+endfunction
+
+function! VlimeCompleteBegin()
+    let ret = VlimeComplete()
+    augroup VlimeCompletions
+        autocmd!
+        autocmd TextChangedI <buffer> call VlimeComplete()
+        autocmd CompleteDone <buffer> call VlimeCompleteEnd()
+    augroup end
+    return ret
+endfunction
+
+function! VlimeCompleteEnd()
+    augroup VlimeCompletions
+        autocmd!
+    augroup end
 endfunction
 
 function! s:NormalizeConnectionID(id)
