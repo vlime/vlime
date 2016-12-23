@@ -165,7 +165,7 @@ endfunction
 function! vlime#ui#CurOperator()
     let expr = vlime#ui#CurExpr()
     if len(expr) > 0
-        let matches = matchlist(expr, '^(\_s*\([^[:blank:]\n]\+\)\_s\+\_.*)$')
+        let matches = matchlist(expr, '^(\_s*\([^[:blank:]\n]\+\)\_s*\_.*)$')
         if len(matches) > 0
             return matches[1]
         endif
