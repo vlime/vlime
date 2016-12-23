@@ -62,7 +62,8 @@ function! vlime#ui#OnDebug(conn, thread, level, condition, restarts, frames, con
 endfunction
 
 function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
-    let dbg_buf = s:OpenBuffer(s:SLDBBufName(a:conn, a:thread), v:false)
+    let dbg_buf = vlime#ui#OpenBuffer(
+                \ s:SLDBBufName(a:conn, a:thread), v:false, v:true)
     if dbg_buf > 0
         let pos = search('^\s*[0-9]\+\.\s\+\*[A-Z]\+\s\+-\s.\+$')
         if pos <= 0
@@ -74,15 +75,15 @@ function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
 endfunction
 
 function! vlime#ui#OnWriteString(conn, str, str_type)
-    let repl_buf = s:OpenBuffer(s:REPLBufName(a:conn), v:true)
+    let repl_buf = vlime#ui#OpenBuffer(s:REPLBufName(a:conn), v:true, v:false)
     if repl_buf > 0
-        if !exists('b:vlime_buffer_initialized')
+        if !getbufvar(repl_buf, 'vlime_buffer_initialized', v:false)
+            call setbufvar(repl_buf, 'vlime_buffer_initialized', v:true)
             call s:SetVlimeBufferOpts(repl_buf, a:conn)
+            call vlime#ui#OpenBuffer(repl_buf, v:false, v:true)
             call s:ShowREPLBanner(a:conn)
-            let b:vlime_buffer_initialized = v:true
         endif
-        call s:AppendString(a:str)
-        wincmd p
+        call vlime#ui#WithBuffer(repl_buf, function('s:AppendString', [a:str]))
         " Is this necessary?
         redraw
     endif
@@ -160,6 +161,17 @@ function! vlime#ui#CurInPackage()
     return package
 endfunction
 
+function! vlime#ui#CurOperator()
+    let expr = vlime#ui#CurExpr()
+    if len(expr) > 0
+        let matches = matchlist(expr, '^(\_s*\([^[:blank:]\n]\+\)\_s\+\_.*)$')
+        if len(matches) > 0
+            return matches[1]
+        endif
+    endif
+    return ''
+endfunction
+
 function! vlime#ui#ChooseCurRestart()
     let line = getline('.')
     let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+\*\?[A-Z]\+\s\+-\s.\+$')
@@ -169,6 +181,24 @@ function! vlime#ui#ChooseCurRestart()
         set nobuflisted
         bunload!
     endif
+endfunction
+
+function! vlime#ui#OpenBuffer(name, create, show)
+    let buf = bufnr(a:name, a:create)
+    if buf > 0
+        if a:show == 'preview'
+            execute 'pedit ' . a:name
+        elseif a:show
+            " Found it. Try to put it in a window
+            let win_nr = bufwinnr(buf)
+            if win_nr < 0
+                execute 'botright split #' . buf
+            else
+                execute win_nr . 'wincmd w'
+            endif
+        endif
+    endif
+    return buf
 endfunction
 
 function! s:NormalizePackageName(name)
@@ -288,20 +318,6 @@ endfunction
 
 function! s:REPLBufName(conn)
     return 'repl / ' . a:conn.cb_data.name
-endfunction
-
-function! s:OpenBuffer(name, create)
-    let buf = bufnr(a:name, a:create)
-    if buf > 0
-        " Found it. Try to put it in a window
-        let win_nr = bufwinnr(buf)
-        if win_nr < 0
-            execute 'botright split #' . buf
-        else
-            execute win_nr . 'wincmd w'
-        endif
-    endif
-    return buf
 endfunction
 
 function! s:AppendString(str)
