@@ -51,34 +51,66 @@ function! VlimeConnectREPL(host, port, ...)
     call conn.ConnectionInfo(v:true, function('s:OnConnectionInfoComplete'))
 endfunction
 
-function! VlimeGetConnection()
-    if !exists('b:vlime_conn') || !b:vlime_conn.IsConnected()
-        if len(g:vlime_connections) == 0
-            throw 'VlimeGetConnection: Not connected'
-        elseif len(g:vlime_connections) == 1 && !exists('b:vlime_conn')
+function! VlimeSelectConnection(quiet)
+    if len(g:vlime_connections) == 0
+        if !a:quiet
+            call s:ErrMsg('Vlime not connected.')
+        endif
+        return v:null
+    else
+        let conn_names = []
+        for k in sort(keys(g:vlime_connections), 'n')
+            let conn = g:vlime_connections[k]
+            let chan_info = ch_info(conn.channel)
+            call add(conn_names, k . '. ' . conn.cb_data.name .
+                        \ ' (' . chan_info['hostname'] . ':' . chan_info['port'] . ')')
+        endfor
+
+        echohl Question
+        echom 'Which connection to use?'
+        echohl None
+        let conn_nr = inputlist(conn_names)
+        if conn_nr == 0
+            if !a:quiet
+                call s:ErrMsg('Canceled.')
+            endif
+            return v:null
+        else
+            let conn = get(g:vlime_connections, conn_nr, v:null)
+            if type(conn) == v:t_none
+                if !a:quiet
+                    call s:ErrMsg('Invalid connection ID: ' . conn_nr)
+                endif
+                return v:null
+            else
+                return conn
+            endif
+        endif
+    endif
+endfunction
+
+" VlimeGetConnection([quiet])
+function! VlimeGetConnection(...) abort
+    let quiet = vlime#GetNthVarArg(a:000, 0, v:false)
+
+    if !exists('b:vlime_conn') ||
+                \ (type(b:vlime_conn) != v:t_none &&
+                    \ !b:vlime_conn.IsConnected()) ||
+                \ (type(b:vlime_conn) == v:t_none && !quiet)
+        if len(g:vlime_connections) == 1 && !exists('b:vlime_conn')
             let b:vlime_conn = g:vlime_connections[keys(g:vlime_connections)[0]]
         else
-            let conn_names = []
-            for k in sort(keys(g:vlime_connections), 'n')
-                let conn = g:vlime_connections[k]
-                let chan_info = ch_info(conn.channel)
-                call add(conn_names, k . '. ' . conn.cb_data.name .
-                            \ ' (' . chan_info['hostname'] . ':' . chan_info['port'] . ')')
-            endfor
-
-            echohl Question
-            echom 'Which connection to use?'
-            echohl None
-            let conn_nr = inputlist(conn_names)
-            if conn_nr == 0
-                throw 'VlimeGetConnection: canceled'
-            else
-                let conn = get(g:vlime_connections, conn_nr, v:null)
-                if type(conn) == v:t_none
-                    throw 'VlimeGetConnection: Invalid connection: ' . conn_nr
-                else
+            let conn = VlimeSelectConnection(quiet)
+            if type(conn) == v:t_none
+                if quiet
+                    " No connection found. Set this variable to v:null to
+                    " make it 'quiet'
                     let b:vlime_conn = conn
+                else
+                    return conn
                 endif
+            else
+                let b:vlime_conn = conn
             endif
         endif
     endif
@@ -89,6 +121,10 @@ function! VlimeSendCurExprToREPL()
     let expr = vlime#ui#CurExpr()
     if len(expr) > 0
         let conn = VlimeGetConnection()
+        if type(conn) == v:t_none
+            return
+        endif
+
         call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
                     \ function(conn.ListenerEval, [expr]))
@@ -99,6 +135,10 @@ function! VlimeSendCurAtomToREPL()
     let atom = vlime#ui#CurAtom()
     if len(atom) > 0
         let conn = VlimeGetConnection()
+        if type(conn) == v:t_none
+            return
+        endif
+
         call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
                     \ function(conn.ListenerEval, [atom]))
@@ -112,6 +152,10 @@ function! VlimeSendCurThingToREPL()
     endif
     if len(thing) > 0
         let conn = VlimeGetConnection()
+        if type(conn) == v:t_none
+            return
+        endif
+
         call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
         call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
                     \ function(conn.ListenerEval, [thing]))
@@ -120,18 +164,27 @@ endfunction
 
 function! VlimeSwankRequire(contribs)
     let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
     call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete', [v:false]))
 endfunction
 
 function! VlimeCurOperatorArgList()
     let op = vlime#ui#CurOperator()
-    let conn = VlimeGetConnection()
+    let conn = VlimeGetConnection(v:true)
+    if type(conn) == v:t_none
+        return
+    endif
     call conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))
 endfunction
 
 function! VlimeDescribeCurSymbol()
     let sym = vlime#ui#CurOperator()
     let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
     call conn.DescribeSymbol(sym, function('s:OnDescribeSymbolComplete'))
 endfunction
 
@@ -142,6 +195,10 @@ function! VlimeCompleteFunc(findstart, base)
     endif
 
     let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return -1
+    endif
+
     if s:ConnHasContrib(conn, 'SWANK-FUZZY')
         call conn.FuzzyCompletions(a:base,
                     \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
@@ -155,6 +212,11 @@ function! VlimeCompleteFunc(findstart, base)
 endfunction
 
 function! VlimeComplete()
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
     let start_col = s:CompleteFindStart()
     let end_col = col('.') - 1
     let line = getline('.')
@@ -164,7 +226,6 @@ function! VlimeComplete()
         let base = line[start_col:end_col-1]
     endif
 
-    let conn = VlimeGetConnection()
     if s:ConnHasContrib(conn, 'SWANK-FUZZY')
         call conn.FuzzyCompletions(base,
                     \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
@@ -207,6 +268,7 @@ function! VlimeSetup()
     inoremap <buffer> <cr> <c-r>=VlimeKey("cr")<cr>
     inoremap <buffer> <tab> <c-r>=VlimeKey("tab")<cr>
     execute 'nnoremap <buffer> <LocalLeader>c :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
+    nnoremap <buffer> <LocalLeader>S :call VlimeSelectConnection(v:false)<cr>
     nnoremap <buffer> <LocalLeader>d :call VlimeCloseConnection(b:vlime_conn)<cr>
     nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
     nnoremap <buffer> <LocalLeader>s :call VlimeDescribeCurSymbol()<cr>
@@ -306,4 +368,10 @@ function! s:OnDescribeSymbolComplete(conn, result)
     finally
         call setpos('.', old_pos)
     endtry
+endfunction
+
+function! s:ErrMsg(msg)
+    echohl ErrorMsg
+    echom a:msg
+    echohl None
 endfunction
