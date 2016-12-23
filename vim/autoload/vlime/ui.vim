@@ -202,9 +202,24 @@ function! vlime#ui#OpenBuffer(name, create, show)
     return buf
 endfunction
 
-function! vlime#ui#ShowPreview(content, append)
-    let buf = vlime#ui#OpenBuffer(
-                \ vlime#ui#PreviewBufName(), v:true, 'preview')
+" vlime#ui#ShowPreview(content, append[, win_size])
+function! vlime#ui#ShowPreview(content, append, ...)
+    let win_size = vlime#GetNthVarArg(a:000, 0)
+    if type(win_size) != v:t_none
+        let old_pwheight = &previewheight
+        pclose!
+        try
+            let &previewheight = win_size
+            let buf = vlime#ui#OpenBuffer(
+                        \ vlime#ui#PreviewBufName(), v:true, 'preview')
+        finally
+            let &previewheight = old_pwheight
+        endtry
+    else
+        let buf = vlime#ui#OpenBuffer(
+                    \ vlime#ui#PreviewBufName(), v:true, 'preview')
+    endif
+
     if buf > 0
         if !getbufvar(buf, 'vlime_buffer_initialized', v:false)
             call setbufvar(buf, 'vlime_buffer_initialized', v:true)
@@ -217,6 +232,8 @@ function! vlime#ui#ShowPreview(content, append)
             call vlime#ui#WithBuffer(buf, function('s:ReplaceContent', [a:content]))
         endif
     endif
+
+    return buf
 endfunction
 
 function! vlime#ui#SLDBBufName(conn, thread)

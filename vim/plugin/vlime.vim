@@ -127,7 +127,12 @@ function! VlimeCurOperatorArgList()
     let op = vlime#ui#CurOperator()
     let conn = VlimeGetConnection()
     call conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))
-    return ''
+endfunction
+
+function! VlimeDescribeCurSymbol()
+    let sym = vlime#ui#CurOperator()
+    let conn = VlimeGetConnection()
+    call conn.DescribeSymbol(sym, function('s:OnDescribeSymbolComplete'))
 endfunction
 
 function! VlimeCompleteFunc(findstart, base)
@@ -167,7 +172,54 @@ function! VlimeComplete()
         call conn.SimpleCompletions(base,
                     \ function('s:OnSimpleCompletionsComplete', [start_col + 1]))
     endif
+endfunction
+
+function! VlimeKey(key)
+    if tolower(a:key) == 'space'
+        call VlimeCurOperatorArgList()
+        return ' '
+    elseif tolower(a:key) == 'cr'
+        call VlimeCurOperatorArgList()
+        return "\<cr>"
+    elseif tolower(a:key) == 'tab'
+        if pumvisible()
+            return "\<c-n>"
+        else
+            return "\<c-x>\<c-o>"
+        endif
+    else
+        throw 'VlimeKey: Unknown key: ' . a:key
+    endif
     return ''
+endfunction
+
+function! VlimeSetup()
+    if exists('g:vlime_address')
+        let [host, port] = g:vlime_address
+    else
+        let [host, port] = ['127.0.0.1', 7002]
+    endif
+
+    setlocal omnifunc=VlimeCompleteFunc
+    setlocal filetype=lisp
+
+    inoremap <buffer> <space> <c-r>=VlimeKey('space')<cr>
+    inoremap <buffer> <cr> <c-r>=VlimeKey("cr")<cr>
+    inoremap <buffer> <tab> <c-r>=VlimeKey("tab")<cr>
+    execute 'nnoremap <buffer> <LocalLeader>c :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
+    nnoremap <buffer> <LocalLeader>d :call VlimeCloseConnection(b:vlime_conn)<cr>
+    nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
+    nnoremap <buffer> <LocalLeader>s :call VlimeDescribeCurSymbol()<cr>
+endfunction
+
+function! VlimeInteractionMode()
+    if getbufvar(bufnr('%'), 'vlime_interaction_mode', v:false)
+        let b:vlime_interaction_mode = v:false
+        nnoremap <cr> <cr>
+    else
+        let b:vlime_interaction_mode = v:true
+        nnoremap <cr> :call VlimeSendCurThingToREPL()<cr>
+    endif
 endfunction
 
 function! s:NormalizeConnectionID(id)
@@ -240,21 +292,17 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
         return
     endif
     let old_pos = getcurpos()
-    let old_pwheight = &previewheight
     try
-        let &previewheight = 2
-        call vlime#ui#ShowPreview(a:result . "\n\n", v:false)
+        call vlime#ui#ShowPreview(a:result . "\n\n", v:false, 2)
     finally
-        let &previewheight = old_pwheight
         call setpos('.', old_pos)
     endtry
-    "call a:conn.DescribeSymbol(a:sym, function('s:OnDescribeSymbolComplete'))
 endfunction
 
 function! s:OnDescribeSymbolComplete(conn, result)
     let old_pos = getcurpos()
     try
-        call vlime#ui#ShowPreview(a:result, v:true)
+        call vlime#ui#ShowPreview(a:result, v:false, 12)
     finally
         call setpos('.', old_pos)
     endtry
