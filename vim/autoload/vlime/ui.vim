@@ -63,7 +63,7 @@ endfunction
 
 function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
     let dbg_buf = vlime#ui#OpenBuffer(
-                \ s:SLDBBufName(a:conn, a:thread), v:false, v:true)
+                \ vlime#ui#SLDBBufName(a:conn, a:thread), v:false, v:true)
     if dbg_buf > 0
         let pos = search('^\s*[0-9]\+\.\s\+\*[A-Z]\+\s\+-\s.\+$')
         if pos <= 0
@@ -75,7 +75,8 @@ function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
 endfunction
 
 function! vlime#ui#OnWriteString(conn, str, str_type)
-    let repl_buf = vlime#ui#OpenBuffer(s:REPLBufName(a:conn), v:true, v:false)
+    let repl_buf = vlime#ui#OpenBuffer(
+                \ vlime#ui#REPLBufName(a:conn), v:true, v:false)
     if repl_buf > 0
         if !getbufvar(repl_buf, 'vlime_buffer_initialized', v:false)
             call setbufvar(repl_buf, 'vlime_buffer_initialized', v:true)
@@ -187,7 +188,7 @@ function! vlime#ui#OpenBuffer(name, create, show)
     let buf = bufnr(a:name, a:create)
     if buf > 0
         if a:show == 'preview'
-            execute 'pedit ' . a:name
+            execute 'pedit! ' . substitute(a:name, '\(\s\)', '\\\1', 'g')
         elseif a:show
             " Found it. Try to put it in a window
             let win_nr = bufwinnr(buf)
@@ -199,6 +200,35 @@ function! vlime#ui#OpenBuffer(name, create, show)
         endif
     endif
     return buf
+endfunction
+
+function! vlime#ui#ShowPreview(content, append)
+    let buf = vlime#ui#OpenBuffer(
+                \ vlime#ui#PreviewBufName(), v:true, 'preview')
+    if buf > 0
+        if !getbufvar(buf, 'vlime_buffer_initialized', v:false)
+            call setbufvar(buf, 'vlime_buffer_initialized', v:true)
+            call s:SetVlimeBufferOpts(buf, v:null)
+        endif
+        if a:append
+            " XXX: Appending doesn't work and I don't know why
+            call vlime#ui#WithBuffer(buf, function('s:AppendString', [a:content]))
+        else
+            call vlime#ui#WithBuffer(buf, function('s:ReplaceContent', [a:content]))
+        endif
+    endif
+endfunction
+
+function! vlime#ui#SLDBBufName(conn, thread)
+    return 'vlime / sldb / ' . a:conn.cb_data.name . ' / ' . a:thread
+endfunction
+
+function! vlime#ui#REPLBufName(conn)
+    return 'vlime / repl / ' . a:conn.cb_data.name
+endfunction
+
+function! vlime#ui#PreviewBufName()
+    return 'vlime / preview'
 endfunction
 
 function! s:NormalizePackageName(name)
@@ -264,7 +294,7 @@ function! s:SetVlimeBufferOpts(buf, conn)
 endfunction
 
 function! s:InitSLDBBuf(ui, conn, thread, level)
-    let buf = bufnr(s:SLDBBufName(a:conn, a:thread), v:true)
+    let buf = bufnr(vlime#ui#SLDBBufName(a:conn, a:thread), v:true)
     call s:SetVlimeBufferOpts(buf, a:conn)
     call setbufvar(buf, 'vlime_sldb_level', a:level)
     call a:ui.SetCurrentThread(a:thread, buf)
@@ -312,14 +342,6 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     nnoremap <buffer> <cr> :call vlime#ui#ChooseCurRestart()<cr>
 endfunction
 
-function! s:SLDBBufName(conn, thread)
-    return 'sldb / ' . a:conn.cb_data.name . ' / ' . a:thread
-endfunction
-
-function! s:REPLBufName(conn)
-    return 'repl / ' . a:conn.cb_data.name
-endfunction
-
 function! s:AppendString(str)
     let i = len(a:str) - 1
     let nl = 0
@@ -350,6 +372,12 @@ function! s:AppendString(str)
             normal! G
         endif
     endtry
+endfunction
+
+function! s:ReplaceContent(str)
+    normal! ggVG"_d
+    call s:AppendString(a:str)
+    normal! gg
 endfunction
 
 function! s:ShowREPLBanner(conn)

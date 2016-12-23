@@ -123,6 +123,13 @@ function! VlimeSwankRequire(contribs)
     call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete', [v:false]))
 endfunction
 
+function! VlimeCurOperatorArgList()
+    let op = vlime#ui#CurOperator()
+    let conn = VlimeGetConnection()
+    call conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))
+    return ''
+endfunction
+
 function! VlimeCompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
@@ -226,4 +233,29 @@ function! s:OnSimpleCompletionsComplete(col, conn, result)
         let comps = []
     endif
     call complete(a:col, comps)
+endfunction
+
+function! s:OnOperatorArgListComplete(sym, conn, result)
+    if type(a:result) == v:t_none
+        return
+    endif
+    let old_pos = getcurpos()
+    let old_pwheight = &previewheight
+    try
+        let &previewheight = 2
+        call vlime#ui#ShowPreview(a:result . "\n\n", v:false)
+    finally
+        let &previewheight = old_pwheight
+        call setpos('.', old_pos)
+    endtry
+    "call a:conn.DescribeSymbol(a:sym, function('s:OnDescribeSymbolComplete'))
+endfunction
+
+function! s:OnDescribeSymbolComplete(conn, result)
+    let old_pos = getcurpos()
+    try
+        call vlime#ui#ShowPreview(a:result, v:true)
+    finally
+        call setpos('.', old_pos)
+    endtry
 endfunction
