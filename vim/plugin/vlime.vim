@@ -162,6 +162,18 @@ function! VlimeSendCurThingToREPL()
     endif
 endfunction
 
+function! VlimeLoadCurFile()
+    let fname = expand('%:p')
+    if len(fname) > 0
+        let conn = VlimeGetConnection()
+        if type(conn) == v:t_none
+            return
+        endif
+
+        call conn.LoadFile(fname, function('s:OnLoadFileComplete', [fname]))
+    endif
+endfunction
+
 function! VlimeSwankRequire(contribs)
     let conn = VlimeGetConnection()
     if type(conn) == v:t_none
@@ -270,6 +282,7 @@ function! VlimeSetup()
     nnoremap <buffer> <LocalLeader>d :call VlimeCloseConnection(b:vlime_conn)<cr>
     nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
     nnoremap <buffer> <LocalLeader>s :call VlimeDescribeCurSymbol()<cr>
+    nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
 endfunction
 
 function! VlimeInteractionMode()
@@ -366,6 +379,10 @@ function! s:OnDescribeSymbolComplete(conn, result)
     finally
         call setpos('.', old_pos)
     endtry
+endfunction
+
+function! s:OnLoadFileComplete(fname, conn, result)
+    echom 'Loaded: ' . a:fname
 endfunction
 
 function! s:ErrMsg(msg)
