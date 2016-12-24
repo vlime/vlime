@@ -238,10 +238,8 @@ endfunction
 function! VlimeKey(key)
     if tolower(a:key) == 'space'
         call VlimeCurOperatorArgList()
-        return ' '
     elseif tolower(a:key) == 'cr'
         call VlimeCurOperatorArgList()
-        return "\<cr>"
     elseif tolower(a:key) == 'tab'
         if pumvisible()
             return "\<c-n>"
@@ -264,8 +262,8 @@ function! VlimeSetup()
     setlocal omnifunc=VlimeCompleteFunc
     setlocal filetype=lisp
 
-    inoremap <buffer> <space> <c-r>=VlimeKey('space')<cr>
-    inoremap <buffer> <cr> <c-r>=VlimeKey("cr")<cr>
+    inoremap <buffer> <space> <space><c-r>=VlimeKey('space')<cr>
+    inoremap <buffer> <cr> <cr><c-r>=VlimeKey("cr")<cr>
     inoremap <buffer> <tab> <c-r>=VlimeKey("tab")<cr>
     execute 'nnoremap <buffer> <LocalLeader>c :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
     nnoremap <buffer> <LocalLeader>S :call VlimeSelectConnection(v:false)<cr>
