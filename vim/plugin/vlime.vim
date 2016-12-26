@@ -1,7 +1,3 @@
-if !exists('g:vlime_ui')
-    let g:vlime_ui = vlime#ui#New()
-endif
-
 if !exists('g:vlime_connections')
     let g:vlime_connections = {}
 endif
@@ -9,6 +5,13 @@ endif
 if !exists('g:vlime_next_conn_id')
     let g:vlime_next_conn_id = 1
 endif
+
+function! VlimeGetUI()
+    if !exists('g:vlime_ui')
+        let g:vlime_ui = vlime#ui#New()
+    endif
+    return g:vlime_ui
+endfunction
 
 " VlimeNewConnection([name])
 function! VlimeNewConnection(...)
@@ -22,7 +25,7 @@ function! VlimeNewConnection(...)
                     \ 'id': g:vlime_next_conn_id,
                     \ 'name': conn_name
                 \ },
-                \ g:vlime_ui)
+                \ VlimeGetUI())
     let g:vlime_connections[g:vlime_next_conn_id] = conn
     let g:vlime_next_conn_id += 1
     return conn
@@ -47,7 +50,13 @@ function! VlimeConnectREPL(host, port, ...)
     else
         let conn = VlimeNewConnection()
     endif
-    call conn.Connect(a:host, a:port)
+    try
+        call conn.Connect(a:host, a:port)
+    catch
+        call VlimeCloseConnection(conn)
+        call s:ErrMsg(v:exception)
+        return
+    endtry
     call conn.ConnectionInfo(v:true, function('s:OnConnectionInfoComplete'))
 endfunction
 
@@ -253,23 +262,23 @@ function! VlimeKey(key)
     elseif tolower(a:key) == 'cr'
         call VlimeCurOperatorArgList()
     elseif tolower(a:key) == 'tab'
-        if pumvisible()
-            return "\<c-n>"
-        else
-            return "\<c-x>\<c-o>"
-        endif
+        return "\<c-x>\<c-o>"
     else
         throw 'VlimeKey: Unknown key: ' . a:key
     endif
     return ''
 endfunction
 
-function! VlimeSetup()
-    if exists('g:vlime_address')
-        let [host, port] = g:vlime_address
-    else
-        let [host, port] = ['127.0.0.1', 7002]
+" VlimeSetup([force])
+function! VlimeSetup(...)
+    let force = vlime#GetNthVarArg(a:000, 0, v:false)
+
+    if !force && exists('b:vlime_setup') && b:vlime_setup
+        return
     endif
+
+    let [host, port] = exists('g:vlime_address') ?
+                \ g:vlime_address : ['127.0.0.1', 7002]
 
     setlocal omnifunc=VlimeCompleteFunc
     setlocal filetype=lisp
@@ -283,6 +292,8 @@ function! VlimeSetup()
     nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
     nnoremap <buffer> <LocalLeader>s :call VlimeDescribeCurSymbol()<cr>
     nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
+
+    let b:vlime_setup = v:true
 endfunction
 
 function! VlimeInteractionMode()
@@ -334,7 +345,13 @@ function! s:OnConnectionInfoComplete(conn, result)
     echom '-- OnConnectionInfoComplete -------------------------'
     let a:conn.cb_data['version'] = a:result['VERSION']
     let a:conn.cb_data['pid'] = a:result['PID']
-    call a:conn.SwankRequire(['SWANK-REPL'],
+    let contribs = exists('g:vlime_contribs') ?
+                \ g:vlime_contribs : [
+                    \ 'SWANK-ASDF', 'SWANK-PACKAGE-FU',
+                    \ 'SWANK-PRESENTATIONS', 'SWANK-FANCY-INSPECTOR',
+                    \ 'SWANK-C-P-C', 'SWANK-ARGLISTS', 'SWANK-REPL',
+                    \ 'SWANK-FUZZY']
+    call a:conn.SwankRequire(contribs,
                 \ function('s:OnSwankRequireComplete', [v:true]))
 endfunction
 
