@@ -40,7 +40,7 @@ endfunction
 function! VlimeRenameConnection(conn, new_name)
     let conn_id = s:NormalizeConnectionID(a:conn)
     let r_conn = g:vlime_connections[conn_id]
-    let r_conn.cb_data.name = a:new_name
+    let r_conn.cb_data['name'] = a:new_name
 endfunction
 
 " VlimeConnectREPL(host, port[, name])
@@ -72,7 +72,7 @@ function! VlimeSelectConnection(quiet)
         for k in sort(keys(g:vlime_connections), 'n')
             let conn = g:vlime_connections[k]
             let chan_info = ch_info(conn.channel)
-            call add(conn_names, k . '. ' . conn.cb_data.name .
+            call add(conn_names, k . '. ' . conn.cb_data['name'] .
                         \ ' (' . chan_info['hostname'] . ':' . chan_info['port'] . ')')
         endfor
 
@@ -308,7 +308,7 @@ endfunction
 
 function! s:NormalizeConnectionID(id)
     if type(a:id) == v:t_dict
-        return a:id.cb_data.id
+        return a:id.cb_data['id']
     else
         return a:id
     endif
@@ -330,7 +330,7 @@ endfunction
 
 function! s:OnCreateREPLComplete(conn, result)
     echom '-- OnCreateREPLComplete -------------------------'
-    echom a:conn.cb_data.name . ' established.'
+    echom a:conn.cb_data['name'] . ' established.'
 endfunction
 
 function! s:OnSwankRequireComplete(create_repl, conn, result)

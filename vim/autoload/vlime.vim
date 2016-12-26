@@ -48,7 +48,8 @@ function! vlime#New(...)
                     \ 'DEBUG': function('vlime#OnDebug'),
                     \ 'DEBUG-ACTIVATE': function('vlime#OnDebugActivate'),
                     \ 'WRITE-STRING': function('vlime#OnWriteString'),
-                    \ 'READ-STRING': function('vlime#OnReadString')
+                    \ 'READ-STRING': function('vlime#OnReadString'),
+                    \ 'INDENTATION-UPDATE': function('vlime#OnIndentationUpdate'),
                     \ }
                 \ }
     return obj
@@ -406,6 +407,13 @@ function! vlime#OnReadString(conn, msg)
     if type(a:conn.ui) != v:t_none
         let [_msg_type, thread, ttag] = a:msg
         call a:conn.ui.OnReadString(a:conn, thread, ttag)
+    endif
+endfunction
+
+function! vlime#OnIndentationUpdate(conn, msg)
+    if type(a:conn.ui) != v:t_none
+        let [_msg_type, indent_info] = a:msg
+        call a:conn.ui.OnIndentationUpdate(a:conn, indent_info)
     endif
 endfunction
 

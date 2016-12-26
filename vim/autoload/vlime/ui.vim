@@ -9,7 +9,8 @@ function! vlime#ui#New()
                 \ 'OnDebug': function('vlime#ui#OnDebug'),
                 \ 'OnDebugActivate': function('vlime#ui#OnDebugActivate'),
                 \ 'OnWriteString': function('vlime#ui#OnWriteString'),
-                \ 'OnReadString': function('vlime#ui#OnReadString')
+                \ 'OnReadString': function('vlime#ui#OnReadString'),
+                \ 'OnIndentationUpdate': function('vlime#ui#OnIndentationUpdate'),
                 \ }
     return obj
 endfunction
@@ -99,6 +100,15 @@ function! vlime#ui#OnReadString(conn, thread, ttag)
         let input_str .= "\n"
     endif
     call a:conn.ReturnString(a:thread, a:ttag, input_str)
+endfunction
+
+function! vlime#ui#OnIndentationUpdate(conn, indent_info)
+    if !has_key(a:conn.cb_data, 'indent_info')
+        let a:conn.cb_data['indent_info'] = {}
+    endif
+    for i in a:indent_info
+        let a:conn.cb_data['indent_info'][i[0]] = [i[1], i[2]]
+    endfor
 endfunction
 
 function! vlime#ui#WithBuffer(buf, Func)
