@@ -276,6 +276,7 @@ function! VlimeSetup(...)
     if !force && exists('b:vlime_setup') && b:vlime_setup
         return
     endif
+    let b:vlime_setup = v:true
 
     let [host, port] = exists('g:vlime_address') ?
                 \ g:vlime_address : ['127.0.0.1', 7002]
@@ -292,8 +293,6 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
     nnoremap <buffer> <LocalLeader>s :call VlimeDescribeCurSymbol()<cr>
     nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
-
-    let b:vlime_setup = v:true
 endfunction
 
 function! VlimeInteractionMode()
