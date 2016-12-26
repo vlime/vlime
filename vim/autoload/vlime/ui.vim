@@ -187,8 +187,11 @@ endfunction
 function! vlime#ui#OpenBuffer(name, create, show)
     let buf = bufnr(a:name, a:create)
     if buf > 0
-        if a:show == 'preview'
+        if type(a:show) == v:t_string && a:show == 'preview'
             execute 'pedit! ' . substitute(a:name, '\(\s\)', '\\\1', 'g')
+        elseif type(a:show) == v:t_string && a:show[0:7] == 'preview '
+            let prefix = a:show[8:]
+            execute prefix . ' pedit! ' . substitute(a:name, '\(\s\)', '\\\1', 'g')
         elseif a:show
             " Found it. Try to put it in a window
             let win_nr = bufwinnr(buf)
