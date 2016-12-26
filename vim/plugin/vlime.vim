@@ -57,6 +57,7 @@ function! VlimeConnectREPL(host, port, ...)
         call s:ErrMsg(v:exception)
         return
     endtry
+    call s:CleanUpNullBufConnections()
     call conn.ConnectionInfo(v:true, function('s:OnConnectionInfoComplete'))
 endfunction
 
@@ -405,4 +406,14 @@ function! s:ErrMsg(msg)
     echohl ErrorMsg
     echom a:msg
     echohl None
+endfunction
+
+function! s:CleanUpNullBufConnections()
+    let old_buf = bufnr('%')
+    try
+        bufdo! if exists('b:vlime_conn') && type(b:vlime_conn) == v:t_none
+                    \ | unlet b:vlime_conn | endif
+    finally
+        execute 'hide buffer ' . old_buf
+    endtry
 endfunction
