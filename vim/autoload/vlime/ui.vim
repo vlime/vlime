@@ -83,6 +83,9 @@ function! vlime#ui#OnWriteString(conn, str, str_type)
             call s:SetVlimeBufferOpts(repl_buf, a:conn)
             call vlime#ui#OpenBuffer(repl_buf, v:false, v:true)
             call s:ShowREPLBanner(a:conn)
+            nnoremap <buffer> <c-c>
+                        \ :call b:vlime_conn.Interrupt(
+                            \ {'name': 'REPL-THREAD', 'package': 'KEYWORD'})<cr>
         endif
         call vlime#ui#WithBuffer(repl_buf, function('s:AppendString', [a:str]))
         " Is this necessary?
