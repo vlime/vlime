@@ -263,7 +263,18 @@ function! VlimeKey(key)
     elseif tolower(a:key) == 'cr'
         call VlimeCurOperatorArgList()
     elseif tolower(a:key) == 'tab'
-        return "\<c-x>\<c-o>"
+        let col = col('.') - 1
+        if col <= 0
+            return "\<tab>"
+        else
+            let line = getline('.')
+            let prev_char = line[col-1]
+            if match(prev_char, '\s') >= 0
+                return "\<tab>"
+            else
+                return "\<c-x>\<c-o>"
+            endif
+        endif
     else
         throw 'VlimeKey: Unknown key: ' . a:key
     endif
