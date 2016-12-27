@@ -21,6 +21,9 @@ Dependencies
 
 Vlime is written and tested with SBCL, but other implementations may also work.
 
+Currently Vlime can only detect s-expressions inside parentheses. To make your
+life easier, use [paredit](https://github.com/kovisoft/paredit).
+
 Installation
 ============
 
