@@ -194,20 +194,24 @@ endfunction
 
 function! VlimeCurOperatorArgList()
     let op = vlime#ui#CurOperator()
-    let conn = VlimeGetConnection(v:true)
-    if type(conn) == v:t_none
-        return
+    if len(op) > 0
+        let conn = VlimeGetConnection(v:true)
+        if type(conn) == v:t_none
+            return
+        endif
+        call conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))
     endif
-    call conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))
 endfunction
 
 function! VlimeDescribeCurSymbol()
     let sym = vlime#ui#CurOperator()
-    let conn = VlimeGetConnection()
-    if type(conn) == v:t_none
-        return
+    if len(sym) > 0
+        let conn = VlimeGetConnection()
+        if type(conn) == v:t_none
+            return
+        endif
+        call conn.DescribeSymbol(sym, function('s:OnDescribeSymbolComplete'))
     endif
-    call conn.DescribeSymbol(sym, function('s:OnDescribeSymbolComplete'))
 endfunction
 
 function! VlimeCompleteFunc(findstart, base)
@@ -261,24 +265,74 @@ function! VlimeKey(key)
     if tolower(a:key) == 'space'
         call VlimeCurOperatorArgList()
     elseif tolower(a:key) == 'cr'
+        call VlimeIndentCurLine(VlimeCalcCurIndent())
         call VlimeCurOperatorArgList()
     elseif tolower(a:key) == 'tab'
-        let col = col('.') - 1
-        if col <= 0
-            return "\<tab>"
-        else
-            let line = getline('.')
-            let prev_char = line[col-1]
-            if match(prev_char, '\s') >= 0
-                return "\<tab>"
+        let line = getline('.')
+        let old_cur = getcurpos()
+        try
+            normal! ^
+            let old_first_col = col('.')
+        finally
+            call setpos('.', old_cur)
+        endtry
+        let col = col('.')
+        if col <= old_first_col
+            let indent = VlimeCalcCurIndent()
+            if old_first_col - 1 < indent
+                call VlimeIndentCurLine(indent)
             else
-                return "\<c-x>\<c-o>"
+                return "\<tab>"
             endif
+        else
+            return "\<c-x>\<c-o>"
         endif
     else
         throw 'VlimeKey: Unknown key: ' . a:key
     endif
     return ''
+endfunction
+
+function! VlimeCalcCurIndent()
+    let line = getline('.')
+    let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
+
+    let old_cur = getcurpos()
+    try
+        normal! ^
+        let first_col = col('.')
+        call setpos('.', [0, s_line, s_col, 0])
+        let s_op = vlime#ui#CurOperator()
+    finally
+        call setpos('.', old_cur)
+    endtry
+
+    if len(s_op) > 0
+        let indent = s_col + 1
+    else
+        let indent = s_col
+    endif
+
+    return indent
+endfunction
+
+function! VlimeIndentCurLine(indent)
+    let line = getline('.')
+    let old_cur = getcurpos()
+    try
+        normal! ^
+        let first_col = col('.')
+    finally
+        call setpos('.', old_cur)
+    endtry
+
+    let needs = a:indent - (first_col - 1)
+    if needs > 0
+        call setline('.', repeat(' ', needs) . line)
+    else
+        call setline('.', substitute(line, '^\(\s\+\)', repeat(' ', a:indent), ''))
+    endif
+    normal! ^
 endfunction
 
 " VlimeSetup([force])
