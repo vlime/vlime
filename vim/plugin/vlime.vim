@@ -180,6 +180,36 @@ function! VlimeSendCurThingToREPL()
     endif
 endfunction
 
+function! VlimeExpandCurMacroOne()
+    let expr = vlime#ui#CurExpr()
+    if len(expr) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.SwankMacroExpandOne(expr,
+                \ function('s:OnSwankMacroExpandComplete'))
+endfunction
+
+function! VlimeExpandCurMacroAll()
+    let expr = vlime#ui#CurExpr()
+    if len(expr) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.SwankMacroExpandAll(expr,
+                \ function('s:OnSwankMacroExpandComplete'))
+endfunction
+
 function! VlimeLoadCurFile()
     let fname = expand('%:p')
     if len(fname) > 0
@@ -382,6 +412,8 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
     nnoremap <buffer> <LocalLeader>s :call VlimeDescribeCurSymbol()<cr>
     nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
+    nnoremap <buffer> <LocalLeader>m1 :call VlimeExpandCurMacroOne()<cr>
+    nnoremap <buffer> <LocalLeader>ma :call VlimeExpandCurMacroAll()<cr>
 endfunction
 
 function! VlimeInteractionMode()
@@ -479,7 +511,7 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
     endif
     let old_pos = getcurpos()
     try
-        call vlime#ui#ShowPreview(a:result . "\n\n", v:false, 2)
+        call vlime#ui#ShowPreview(a:result, v:false, 2)
     finally
         call setpos('.', old_pos)
     endtry
@@ -496,6 +528,15 @@ endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)
     echom 'Loaded: ' . a:fname
+endfunction
+
+function! s:OnSwankMacroExpandComplete(conn, result)
+    let old_pos = getcurpos()
+    try
+        call vlime#ui#ShowPreview(a:result, v:false, 12)
+    finally
+        call setpos('.', old_pos)
+    endtry
 endfunction
 
 function! s:ErrMsg(msg)
