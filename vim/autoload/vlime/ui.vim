@@ -227,13 +227,13 @@ function! vlime#ui#ShowPreview(content, append, ...)
         try
             let &previewheight = win_size
             let buf = vlime#ui#OpenBuffer(
-                        \ vlime#ui#PreviewBufName(), v:true, 'preview')
+                        \ vlime#ui#PreviewBufName(), v:true, 'preview topleft')
         finally
             let &previewheight = old_pwheight
         endtry
     else
         let buf = vlime#ui#OpenBuffer(
-                    \ vlime#ui#PreviewBufName(), v:true, 'preview')
+                    \ vlime#ui#PreviewBufName(), v:true, 'preview topleft')
     endif
 
     if buf > 0
