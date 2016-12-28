@@ -416,6 +416,7 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
     nnoremap <buffer> <LocalLeader>m1 :call VlimeExpandCurMacro(v:false)<cr>
     nnoremap <buffer> <LocalLeader>ma :call VlimeExpandCurMacro(v:true)<cr>
+    nnoremap <buffer> <LocalLeader>a :call VlimeDisassembleCurForm()<cr>
 endfunction
 
 function! VlimeInteractionMode()
