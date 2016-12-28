@@ -265,7 +265,6 @@ function! VlimeKey(key)
     if tolower(a:key) == 'space'
         call VlimeCurOperatorArgList()
     elseif tolower(a:key) == 'cr'
-        call VlimeIndentCurLine(VlimeCalcCurIndent())
         call VlimeCurOperatorArgList()
     elseif tolower(a:key) == 'tab'
         let line = getline('.')
@@ -294,26 +293,46 @@ function! VlimeKey(key)
 endfunction
 
 function! VlimeCalcCurIndent()
+    "return lispindent(line('.'))
+    let line_no = line('.')
+    let conn = VlimeGetConnection(v:true)
+    if type(conn) == v:t_none
+        return lispindent(line_no)
+    endif
+
+    let indent_info = get(conn.cb_data, 'indent_info', {})
+
     let line = getline('.')
     let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
 
     let old_cur = getcurpos()
     try
-        normal! ^
-        let first_col = col('.')
         call setpos('.', [0, s_line, s_col, 0])
         let s_op = vlime#ui#CurOperator()
     finally
         call setpos('.', old_cur)
     endtry
 
-    if len(s_op) > 0
-        let indent = s_col + 1
-    else
-        let indent = s_col
+    let matches = matchlist(s_op, '\(\([^:|]\+\||[^|]\+|\):\{1,2}\)\?\([^:|]\+\||[^|]\+|\)$')
+    if len(matches) == 0
+        return lispindent(line_no)
     endif
 
-    return indent
+    let op_pkg = toupper(s:NormalizeIdentifierForIndentInfo(matches[2]))
+    let op = tolower(s:NormalizeIdentifierForIndentInfo(matches[3]))
+
+    if len(op_pkg) == 0
+        let op_pkg = conn.GetCurrentPackage()
+        if type(op_pkg) == v:t_list
+            let op_pkg = op_pkg[0]
+        endif
+    endif
+
+    if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
+        return s_col + 1
+    else
+        return lispindent(line_no)
+    endif
 endfunction
 
 function! VlimeIndentCurLine(indent)
@@ -349,6 +368,7 @@ function! VlimeSetup(...)
 
     setlocal omnifunc=VlimeCompleteFunc
     setlocal filetype=lisp
+    setlocal indentexpr=VlimeCalcCurIndent()
 
     inoremap <buffer> <space> <space><c-r>=VlimeKey('space')<cr>
     inoremap <buffer> <cr> <cr><c-r>=VlimeKey("cr")<cr>
@@ -376,6 +396,15 @@ function! s:NormalizeConnectionID(id)
         return a:id.cb_data['id']
     else
         return a:id
+    endif
+endfunction
+
+function! s:NormalizeIdentifierForIndentInfo(ident)
+    let ident_len = len(a:ident)
+    if ident_len >= 2 && a:ident[0] == '|' && a:ident[ident_len-1] == '|'
+        return strpart(a:ident, 1, ident_len - 2)
+    else
+        return a:ident
     endif
 endfunction
 
@@ -434,7 +463,6 @@ function! s:OnFuzzyCompletionsComplete(col, conn, result)
 endfunction
 
 function! s:OnSimpleCompletionsComplete(col, conn, result)
-    echom string(a:result)
     let comps = a:result[0]
     if type(comps) == v:t_none
         let comps = []
