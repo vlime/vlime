@@ -337,8 +337,15 @@ function! VlimeCalcCurIndent()
 endfunction
 
 function! VlimeIndentCurLine(indent)
+    if &expandtab
+        let indent_str = repeat(' ', a:indent)
+    else
+        " Ah! So bad! Such evil!
+        let indent_str = repeat("\<tab>", a:indent / &tabstop)
+        let indent_str .= repeat(' ', a:indent % &tabstop)
+    endif
     let line = getline('.')
-    call setline('.', substitute(line, '^\(\s\+\)', repeat(' ', a:indent), ''))
+    call setline('.', substitute(line, '^\(\s*\)', indent_str, ''))
     normal! ^
 endfunction
 
