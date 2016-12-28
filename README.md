@@ -45,11 +45,13 @@ Run the server:
 Use Vim to start editing a Lisp source file. These keys are mapped:
 
 * `<LocalLeader>c`: Connect to Vlime server.
-* `<LocalLeader>S`: Switch Vlime connections.
+* `<LocalLeader>C`: Switch Vlime connections.
 * `<LocalLeader>d`: Disconnect.
 * `<LocalLeader>i`: Interaction Mode.
 * `<LocalLeader>s`: Describe symbol.
 * `<LocalLeader>l`: Load current file.
+* `<LocalLeader>m1`: Expand current macro.
+* `<LocalLeader>ma`: Expand current macro and all nested macros.
 
 `<LocalLeader>` defaults to backslash `\`. In addition, you can use `<tab>`
 instead of `<c-x><c-o>` to invoke omni-completion.
