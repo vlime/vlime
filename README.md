@@ -1,15 +1,25 @@
 Intro
 =====
 
-Vlime is a Common Lisp dev environment for Vim, similar to SLIME for Emacs. It
-provides REPL integration inside Vim, as well as omni-completions and basic
-SLDB support. And, optionally, it makes you a lot sexier.
+Vlime is a Common Lisp dev environment for Vim, similar to SLIME for Emacs and
+SLIMV for Vim (And yes, I dug around SLIMV's source code when writing Vlime).
+
+Vlime provides REPL integration inside Vim, as well as omni-completions and
+basic SLDB support. And, optionally, it makes you a lot sexier.
+
+Why?
+====
+
+* There were barely no choice besides SLIMV.
+* SLIMV was written in Python on the Vim side, but I think a Lisp-and-Vimscript
+  implementation would be awesome.
+* Vim 8 has these nice `channel` APIs, why not try them out?
 
 Current State
 =============
 
-Vlime is currently in pre-alpha state. Changes in APIs and key bindings etc.
-are expected.
+Vlime is currently in a pre-alpha state. One should expect changes in APIs and
+key bindings etc.
 
 Dependencies
 ============
@@ -19,7 +29,7 @@ Dependencies
 * Vim 8.0+ and +channel
 * A decent Common Lisp implementation (SBCL is recommended)
 
-Vlime is written and tested with SBCL, but other implementations may also work.
+Vlime is built and tested with SBCL, but other implementations may also work.
 
 Currently Vlime can only detect s-expressions inside parentheses. To make your
 life easier, use [paredit](https://github.com/kovisoft/paredit).
