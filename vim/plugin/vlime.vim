@@ -180,7 +180,7 @@ function! VlimeSendCurThingToREPL()
     endif
 endfunction
 
-function! VlimeExpandCurMacroOne()
+function! VlimeExpandCurMacro(expand_all)
     let expr = vlime#ui#CurExpr()
     if len(expr) <= 0
         return
@@ -191,23 +191,13 @@ function! VlimeExpandCurMacroOne()
         return
     endif
 
-    call conn.SwankMacroExpandOne(expr,
-                \ function('s:OnSwankMacroExpandComplete'))
-endfunction
-
-function! VlimeExpandCurMacroAll()
-    let expr = vlime#ui#CurExpr()
-    if len(expr) <= 0
-        return
+    if a:expand_all
+        call conn.SwankMacroExpandAll(expr,
+                    \ function('s:OnSwankMacroExpandComplete'))
+    else
+        call conn.SwankMacroExpandOne(expr,
+                    \ function('s:OnSwankMacroExpandComplete'))
     endif
-
-    let conn = VlimeGetConnection()
-    if type(conn) == v:t_none
-        return
-    endif
-
-    call conn.SwankMacroExpandAll(expr,
-                \ function('s:OnSwankMacroExpandComplete'))
 endfunction
 
 function! VlimeLoadCurFile()
@@ -412,8 +402,8 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
     nnoremap <buffer> <LocalLeader>s :call VlimeDescribeCurSymbol()<cr>
     nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
-    nnoremap <buffer> <LocalLeader>m1 :call VlimeExpandCurMacroOne()<cr>
-    nnoremap <buffer> <LocalLeader>ma :call VlimeExpandCurMacroAll()<cr>
+    nnoremap <buffer> <LocalLeader>m1 :call VlimeExpandCurMacro(v:false)<cr>
+    nnoremap <buffer> <LocalLeader>ma :call VlimeExpandCurMacro(v:true)<cr>
 endfunction
 
 function! VlimeInteractionMode()
