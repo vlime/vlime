@@ -192,12 +192,24 @@ function! VlimeExpandCurMacro(expand_all)
     endif
 
     if a:expand_all
-        call conn.SwankMacroExpandAll(expr,
-                    \ function('s:OnSwankMacroExpandComplete'))
+        call conn.SwankMacroExpandAll(expr, function('s:ShowAsyncResult'))
     else
-        call conn.SwankMacroExpandOne(expr,
-                    \ function('s:OnSwankMacroExpandComplete'))
+        call conn.SwankMacroExpandOne(expr, function('s:ShowAsyncResult'))
     endif
+endfunction
+
+function! VlimeDisassembleCurForm()
+    let expr = vlime#ui#CurExpr()
+    if len(expr) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.DisassembleForm(expr, function('s:ShowAsyncResult'))
 endfunction
 
 function! VlimeLoadCurFile()
@@ -238,7 +250,7 @@ function! VlimeDescribeCurSymbol()
         if type(conn) == v:t_none
             return
         endif
-        call conn.DescribeSymbol(sym, function('s:OnDescribeSymbolComplete'))
+        call conn.DescribeSymbol(sym, function('s:ShowAsyncResult'))
     endif
 endfunction
 
@@ -507,7 +519,7 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
     endtry
 endfunction
 
-function! s:OnDescribeSymbolComplete(conn, result)
+function! s:ShowAsyncResult(conn, result)
     let old_pos = getcurpos()
     try
         call vlime#ui#ShowPreview(a:result, v:false, 12)
@@ -518,15 +530,6 @@ endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)
     echom 'Loaded: ' . a:fname
-endfunction
-
-function! s:OnSwankMacroExpandComplete(conn, result)
-    let old_pos = getcurpos()
-    try
-        call vlime#ui#ShowPreview(a:result, v:false, 12)
-    finally
-        call setpos('.', old_pos)
-    endtry
 endfunction
 
 function! s:ErrMsg(msg)
