@@ -271,11 +271,11 @@ function! VlimeKey(key)
         let old_cur = getcurpos()
         try
             normal! ^
-            let old_first_col = col('.')
+            let old_first_col = virtcol('.')
         finally
             call setpos('.', old_cur)
         endtry
-        let col = col('.')
+        let col = virtcol('.')
         if col <= old_first_col
             let indent = VlimeCalcCurIndent()
             if old_first_col - 1 < indent
@@ -308,6 +308,7 @@ function! VlimeCalcCurIndent()
     let old_cur = getcurpos()
     try
         call setpos('.', [0, s_line, s_col, 0])
+        let vs_col = virtcol('.')
         let s_op = vlime#ui#CurOperator()
     finally
         call setpos('.', old_cur)
@@ -329,7 +330,7 @@ function! VlimeCalcCurIndent()
     endif
 
     if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
-        return s_col + 1
+        return vs_col + 1
     else
         return lispindent(line_no)
     endif
@@ -337,20 +338,7 @@ endfunction
 
 function! VlimeIndentCurLine(indent)
     let line = getline('.')
-    let old_cur = getcurpos()
-    try
-        normal! ^
-        let first_col = col('.')
-    finally
-        call setpos('.', old_cur)
-    endtry
-
-    let needs = a:indent - (first_col - 1)
-    if needs > 0
-        call setline('.', repeat(' ', needs) . line)
-    else
-        call setline('.', substitute(line, '^\(\s\+\)', repeat(' ', a:indent), ''))
-    endif
+    call setline('.', substitute(line, '^\(\s\+\)', repeat(' ', a:indent), ''))
     normal! ^
 endfunction
 
