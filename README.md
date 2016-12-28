@@ -52,6 +52,7 @@ Use Vim to start editing a Lisp source file. These keys are mapped:
 * `<LocalLeader>l`: Load current file.
 * `<LocalLeader>m1`: Expand current macro.
 * `<LocalLeader>ma`: Expand current macro and all nested macros.
+* `<LocalLeader>a`: Disassemble current form.
 
 `<LocalLeader>` defaults to backslash `\`. In addition, you can use `<tab>`
 instead of `<c-x><c-o>` to invoke omni-completion.
