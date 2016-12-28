@@ -61,6 +61,14 @@ function! VlimeConnectREPL(host, port, ...)
     call conn.ConnectionInfo(v:true, function('s:OnConnectionInfoComplete'))
 endfunction
 
+function! VlimeSelectBufferConnection()
+    let conn = VlimeSelectConnection(v:false)
+    if type(conn) != v:t_none
+        " XXX: Cleanup buffers & windows for the old connection?
+        let b:vlime_conn = conn
+    endif
+endfunction
+
 function! VlimeSelectConnection(quiet)
     if len(g:vlime_connections) == 0
         if !a:quiet
@@ -369,7 +377,7 @@ function! VlimeSetup(...)
     inoremap <buffer> <cr> <cr><c-r>=VlimeKey("cr")<cr>
     inoremap <buffer> <tab> <c-r>=VlimeKey("tab")<cr>
     execute 'nnoremap <buffer> <LocalLeader>c :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
-    nnoremap <buffer> <LocalLeader>S :call VlimeSelectConnection(v:false)<cr>
+    nnoremap <buffer> <LocalLeader>C :call VlimeSelectBufferConnection()<cr>
     nnoremap <buffer> <LocalLeader>d :call VlimeCloseConnection(b:vlime_conn)<cr>
     nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
     nnoremap <buffer> <LocalLeader>s :call VlimeDescribeCurSymbol()<cr>
