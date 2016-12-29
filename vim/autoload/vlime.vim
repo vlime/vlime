@@ -224,7 +224,7 @@ endfunction
 " vlime#ListenerEval(expr[, callback])
 function! vlime#ListenerEval(expr, ...) dict
     function! s:ListenerEvalCB(conn, Callback, chan, msg) abort
-        let stat = s:CheckAndReportReturnStatus(a:conn, a:msg, 'vlime#CreateREPL')
+        let stat = s:CheckAndReportReturnStatus(a:conn, a:msg, 'vlime#ListenerEval')
         if stat
             call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
         endif
