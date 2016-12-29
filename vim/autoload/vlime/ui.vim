@@ -230,10 +230,32 @@ endfunction
 
 function! vlime#ui#ChooseCurRestart()
     let line = getline('.')
-    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+\*\?[A-Z]\+\s\+-\s.\+$')
+    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+\*\?[A-Z\-]\+\s\+-\s.\+$')
     if len(matches) > 0
         let nth = matches[1] + 0
         call b:vlime_conn.InvokeNthRestartForEmacs(b:vlime_sldb_level, nth)
+        set nobuflisted
+        bunload!
+    endif
+endfunction
+
+function! vlime#ui#RestartCurFrame()
+    let line = getline('.')
+    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
+    if len(matches) > 0
+        let nth = matches[1] + 0
+        call b:vlime_conn.RestartFrame(nth)
+        set nobuflisted
+        bunload!
+    endif
+endfunction
+
+function! vlime#ui#StepCurFrame()
+    let line = getline('.')
+    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
+    if len(matches) > 0
+        let nth = matches[1] + 0
+        call b:vlime_conn.SLDBStep(nth)
         set nobuflisted
         bunload!
     endif
@@ -384,7 +406,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
 
     let condition_str = ''
     for c in a:condition
-        if type(c) != v:t_none
+        if type(c) == v:t_string
             let condition_str .= (c . "\n")
         endif
     endfor
@@ -415,6 +437,8 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
 
     " TODO: Move to a separate function?
     nnoremap <buffer> <cr> :call vlime#ui#ChooseCurRestart()<cr>
+    nnoremap <buffer> r :call vlime#ui#RestartCurFrame()<cr>
+    nnoremap <buffer> s :call vlime#ui#StepCurFrame()<cr>
 endfunction
 
 function! s:AppendString(str)

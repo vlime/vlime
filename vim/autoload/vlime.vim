@@ -40,7 +40,9 @@ function! vlime#New(...)
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
+                \ 'SLDBStep': function('vlime#SLDBStep'),
                 \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
+                \ 'RestartFrame': function('vlime#RestartFrame'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -254,12 +256,28 @@ function! vlime#SLDBContinue(...) dict
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBContinue']))
 endfunction
 
+" vlime#SLDBStep(frame[, callback]) dict
+function! vlime#SLDBStep(frame, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-STEP'), a:frame]),
+                \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBStep']))
+endfunction
+
 " vlime#InvokeNthRestartForEmacs(level, restart[, callback])
 function! vlime#InvokeNthRestartForEmacs(level, restart, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INVOKE-NTH-RESTART-FOR-EMACS'), a:level, a:restart]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#InvokeNthRestartForEmacs']))
+endfunction
+
+" vlime#RestartFrame(frame[, callback]) dict
+function! vlime#RestartFrame(frame, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'RESTART-FRAME'), a:frame]),
+                \ function('s:SLDBSendCB',
+                    \ [self, Callback, 'vlime#RestartFrame']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
