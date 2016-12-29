@@ -196,6 +196,59 @@ function! VlimeSendCurSelectionToREPL()
                 \ function(conn.ListenerEval, [selected]))
 endfunction
 
+function! VlimeCompileCurExpr()
+    let [expr, s_pos, e_pos] = vlime#ui#CurExpr(v:true)
+    if len(expr) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    let [expr_line, expr_col] = s_pos
+    call conn.CompileStringForEmacs(
+                \ expr, bufnr('%'),
+                \ line2byte(expr_line) + expr_col - 1,
+                \ expand('%:p'))
+endfunction
+
+function! VlimeCompileCurFile()
+    let fname = expand('%:p')
+    if len(fname) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    call conn.CompileFileForEmacs(fname)
+endfunction
+
+function! VlimeCompileCurSelection()
+    let [selected, s_pos, e_pos] = vlime#ui#CurSelection(v:true)
+    if len(selected) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    let [sel_line, sel_col] = s_pos
+    call conn.CompileStringForEmacs(
+                \ selected, bufnr('%'),
+                \ line2byte(sel_line) + sel_col - 1,
+                \ expand('%:p'))
+endfunction
+
 function! VlimeExpandCurMacro(expand_all)
     let expr = vlime#ui#CurExpr()
     if len(expr) <= 0
@@ -433,6 +486,9 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>m1 :call VlimeExpandCurMacro(v:false)<cr>
     nnoremap <buffer> <LocalLeader>ma :call VlimeExpandCurMacro(v:true)<cr>
     nnoremap <buffer> <LocalLeader>a :call VlimeDisassembleCurForm()<cr>
+    nnoremap <buffer> <LocalLeader>oe :call VlimeCompileCurExpr()<cr>
+    nnoremap <buffer> <LocalLeader>of :call VlimeCompileCurFile()<cr>
+    vnoremap <buffer> <LocalLeader>os :<c-u>call VlimeCompileCurSelection()<cr>
 endfunction
 
 function! VlimeInteractionMode()
@@ -443,7 +499,7 @@ function! VlimeInteractionMode()
     else
         let b:vlime_interaction_mode = v:true
         nnoremap <cr> :call VlimeSendCurThingToREPL()<cr>
-        vnoremap <cr> :call VlimeSendCurSelectionToREPL()<cr>
+        vnoremap <cr> :<c-u>call VlimeSendCurSelectionToREPL()<cr>
     endif
 endfunction
 

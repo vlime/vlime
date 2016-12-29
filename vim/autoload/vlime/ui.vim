@@ -141,18 +141,13 @@ function! vlime#ui#CurAtom()
     endtry
 endfunction
 
-function! vlime#ui#CurExpr()
+" vlime#ui#CurExpr([return_pos])
+function! vlime#ui#CurExpr(...)
+    let return_pos = vlime#GetNthVarArg(a:000, 0, v:false)
+
     let cur_char = vlime#ui#CurChar()
-    if cur_char == '('
-        let [s_line, s_col] = searchpairpos('(', '', ')', 'cbnW')
-        let [e_line, e_col] = searchpairpos('(', '', ')', 'nW')
-    elseif cur_char == ')'
-        let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
-        let [e_line, e_col] = searchpairpos('(', '', ')', 'cnW')
-    else
-        let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
-        let [e_line, e_col] = searchpairpos('(', '', ')', 'nW')
-    endif
+    let [s_line, s_col] = vlime#ui#CurExprPos(cur_char)
+    let [e_line, e_col] = vlime#ui#CurExprEndPos(cur_char)
     let lines = getline(s_line, e_line)
     if len(lines) == 1
         let lines[0] = strpart(lines[0], s_col - 1, e_col - s_col + 1)
@@ -160,7 +155,29 @@ function! vlime#ui#CurExpr()
         let lines[0] = strpart(lines[0], s_col - 1)
         let lines[-1] = strpart(lines[-1], 0, e_col)
     endif
-    return join(lines, "\n")
+
+    let expr = join(lines, "\n")
+    return return_pos ? [expr, [s_line, s_col], [e_line, e_col]] : expr
+endfunction
+
+function! vlime#ui#CurExprPos(cur_char)
+    if a:cur_char == '('
+        return searchpairpos('(', '', ')', 'cbnW')
+    elseif a:cur_char == ')'
+        return searchpairpos('(', '', ')', 'bnW')
+    else
+        return searchpairpos('(', '', ')', 'bnW')
+    endif
+endfunction
+
+function! vlime#ui#CurExprEndPos(cur_char)
+    if a:cur_char == '('
+        return searchpairpos('(', '', ')', 'nW')
+    elseif a:cur_char == ')'
+        return searchpairpos('(', '', ')', 'cnW')
+    else
+        return searchpairpos('(', '', ')', 'nW')
+    endif
 endfunction
 
 function! vlime#ui#CurInPackage()
@@ -191,11 +208,21 @@ function! vlime#ui#CurOperator()
     return ''
 endfunction
 
-function! vlime#ui#CurSelection()
+" vlime#ui#CurSelection([return_pos])
+function! vlime#ui#CurSelection(...)
+    let return_pos = vlime#GetNthVarArg(a:000, 0, v:false)
+
+    if return_pos
+        let [s_pos, e_pos] = [getpos("'<")[1:2], getpos("'>")[1:2]]
+    endif
     let old_reg = @x
     try
         normal! gv"xy
-        return @x
+        if return_pos
+            return [@x, s_pos, e_pos]
+        else
+            return @x
+        endif
     finally
         let @x = old_reg
     endtry
