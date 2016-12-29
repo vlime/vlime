@@ -78,3 +78,8 @@ In the REPL output buffer, `<c-c>` will interrupt the REPL thread.
 When there's an unhandled condition or a thread is interrupted, the SLDB
 buffer will appear, with posible restarts and stack frames as it's content.
 Pressing `<cr>` on one of the restart options will invoke that restart.
+
+License
+=======
+
+MIT. See `LICENSE.txt`.
