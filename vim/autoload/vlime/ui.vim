@@ -191,6 +191,16 @@ function! vlime#ui#CurOperator()
     return ''
 endfunction
 
+function! vlime#ui#CurSelection()
+    let old_reg = @x
+    try
+        normal! gv"xy
+        return @x
+    finally
+        let @x = old_reg
+    endtry
+endfunction
+
 function! vlime#ui#ChooseCurRestart()
     let line = getline('.')
     let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+\*\?[A-Z]\+\s\+-\s.\+$')

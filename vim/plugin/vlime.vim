@@ -180,6 +180,22 @@ function! VlimeSendCurThingToREPL()
     endif
 endfunction
 
+function! VlimeSendCurSelectionToREPL()
+    let selected = vlime#ui#CurSelection()
+    if len(selected) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                \ function(conn.ListenerEval, [selected]))
+endfunction
+
 function! VlimeExpandCurMacro(expand_all)
     let expr = vlime#ui#CurExpr()
     if len(expr) <= 0
@@ -423,9 +439,11 @@ function! VlimeInteractionMode()
     if getbufvar(bufnr('%'), 'vlime_interaction_mode', v:false)
         let b:vlime_interaction_mode = v:false
         nnoremap <cr> <cr>
+        vnoremap <cr> <cr>
     else
         let b:vlime_interaction_mode = v:true
         nnoremap <cr> :call VlimeSendCurThingToREPL()<cr>
+        vnoremap <cr> :call VlimeSendCurSelectionToREPL()<cr>
     endif
 endfunction
 
