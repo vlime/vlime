@@ -30,10 +30,27 @@ function! VlimeCloseConnection(conn)
     call r_conn.Close()
 endfunction
 
+function! VlimeCloseCurConnection()
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+    call VlimeCloseConnection(conn)
+endfunction
+
 function! VlimeRenameConnection(conn, new_name)
     let conn_id = s:NormalizeConnectionID(a:conn)
     let r_conn = g:vlime_connections[conn_id]
     let r_conn.cb_data['name'] = a:new_name
+endfunction
+
+function! VlimeRenameCurConnection()
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+    let new_name = input('New name: ', conn.cb_data['name'])
+    call VlimeRenameConnection(conn, new_name)
 endfunction
 
 " VlimeConnectREPL(host, port[, name])
@@ -54,7 +71,7 @@ function! VlimeConnectREPL(host, port, ...)
     call conn.ConnectionInfo(v:true, function('s:OnConnectionInfoComplete'))
 endfunction
 
-function! VlimeSelectBufferConnection()
+function! VlimeSelectCurConnection()
     let conn = VlimeSelectConnection(v:false)
     if type(conn) != v:t_none
         " XXX: Cleanup buffers & windows for the old connection?
@@ -128,54 +145,21 @@ function! VlimeGetConnection(...) abort
     return b:vlime_conn
 endfunction
 
-function! VlimeSendCurExprToREPL()
-    let expr = vlime#ui#CurExpr()
-    if len(expr) > 0
-        let conn = VlimeGetConnection()
-        if type(conn) == v:t_none
-            return
+function! VlimeSendCurThingToREPL(thing)
+    if a:thing == 'thing'
+        let thing = vlime#ui#CurExpr()
+        if len(thing) <= 0
+            let thing = vlime#ui#CurAtom()
         endif
-
-        call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-        call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
-                    \ function(conn.ListenerEval, [expr]))
-    endif
-endfunction
-
-function! VlimeSendCurAtomToREPL()
-    let atom = vlime#ui#CurAtom()
-    if len(atom) > 0
-        let conn = VlimeGetConnection()
-        if type(conn) == v:t_none
-            return
-        endif
-
-        call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-        call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
-                    \ function(conn.ListenerEval, [atom]))
-    endif
-endfunction
-
-function! VlimeSendCurThingToREPL()
-    let thing = vlime#ui#CurExpr()
-    if len(thing) <= 0
+    elseif a:thing == 'expr'
+        let thing = vlime#ui#CurExpr()
+    elseif a:thing == 'atom'
         let thing = vlime#ui#CurAtom()
+    elseif a:thing == 'selection'
+        let thing = vlime#ui#CurSelection()
     endif
-    if len(thing) > 0
-        let conn = VlimeGetConnection()
-        if type(conn) == v:t_none
-            return
-        endif
 
-        call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-        call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
-                    \ function(conn.ListenerEval, [thing]))
-    endif
-endfunction
-
-function! VlimeSendCurSelectionToREPL()
-    let selected = vlime#ui#CurSelection()
-    if len(selected) <= 0
+    if len(thing) <= 0
         return
     endif
 
@@ -186,12 +170,16 @@ function! VlimeSendCurSelectionToREPL()
 
     call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
-                \ function(conn.ListenerEval, [selected]))
+                \ function(conn.ListenerEval, [thing]))
 endfunction
 
-function! VlimeCompileCurExpr()
-    let [expr, s_pos, e_pos] = vlime#ui#CurExpr(v:true)
-    if len(expr) <= 0
+function! VlimeCompileCurThing(thing)
+    if a:thing == 'expr'
+        let [str, s_pos, e_pos] = vlime#ui#CurExpr(v:true)
+    elseif a:thing == 'selection'
+        let [str, s_pos, e_pos] = vlime#ui#CurSelection(v:true)
+    endif
+    if len(str) <= 0
         return
     endif
 
@@ -201,10 +189,10 @@ function! VlimeCompileCurExpr()
     endif
 
     call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    let [expr_line, expr_col] = s_pos
+    let [str_line, str_col] = s_pos
     call conn.CompileStringForEmacs(
-                \ expr, bufnr('%'),
-                \ line2byte(expr_line) + expr_col - 1,
+                \ str, bufnr('%'),
+                \ line2byte(str_line) + str_col - 1,
                 \ expand('%:p'))
 endfunction
 
@@ -221,25 +209,6 @@ function! VlimeCompileCurFile()
 
     call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call conn.CompileFileForEmacs(fname)
-endfunction
-
-function! VlimeCompileCurSelection()
-    let [selected, s_pos, e_pos] = vlime#ui#CurSelection(v:true)
-    if len(selected) <= 0
-        return
-    endif
-
-    let conn = VlimeGetConnection()
-    if type(conn) == v:t_none
-        return
-    endif
-
-    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    let [sel_line, sel_col] = s_pos
-    call conn.CompileStringForEmacs(
-                \ selected, bufnr('%'),
-                \ line2byte(sel_line) + sel_col - 1,
-                \ expand('%:p'))
 endfunction
 
 function! VlimeExpandCurMacro(expand_all)
@@ -305,8 +274,12 @@ function! VlimeCurOperatorArgList()
     endif
 endfunction
 
-function! VlimeDescribeCurSymbol()
-    let sym = vlime#ui#CurOperator()
+function! VlimeDescribeCurSymbol(sym_type)
+    if a:sym_type == 'operator'
+        let sym = vlime#ui#CurOperator()
+    elseif a:sym_type == 'atom'
+        let sym = vlime#ui#CurAtom()
+    endif
     if len(sym) > 0
         let conn = VlimeGetConnection()
         if type(conn) == v:t_none
@@ -339,30 +312,6 @@ function! VlimeCompleteFunc(findstart, base)
     return {'words': [], 'refresh': 'always'}
 endfunction
 
-function! VlimeComplete()
-    let conn = VlimeGetConnection()
-    if type(conn) == v:t_none
-        return
-    endif
-
-    let start_col = s:CompleteFindStart()
-    let end_col = col('.') - 1
-    let line = getline('.')
-    if end_col <= start_col
-        let base = ''
-    else
-        let base = line[start_col:end_col-1]
-    endif
-
-    if s:ConnHasContrib(conn, 'SWANK-FUZZY')
-        call conn.FuzzyCompletions(base,
-                    \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
-    else
-        call conn.SimpleCompletions(base,
-                    \ function('s:OnSimpleCompletionsComplete', [start_col + 1]))
-    endif
-endfunction
-
 function! VlimeKey(key)
     if tolower(a:key) == 'space'
         call VlimeCurOperatorArgList()
@@ -381,7 +330,7 @@ function! VlimeKey(key)
         if col <= old_first_col
             let indent = VlimeCalcCurIndent()
             if old_first_col - 1 < indent
-                call VlimeIndentCurLine(indent)
+                call vlime#ui#IndentCurLine(indent)
             else
                 return "\<tab>"
             endif
@@ -438,19 +387,6 @@ function! VlimeCalcCurIndent()
     endif
 endfunction
 
-function! VlimeIndentCurLine(indent)
-    if &expandtab
-        let indent_str = repeat(' ', a:indent)
-    else
-        " Ah! So bad! Such evil!
-        let indent_str = repeat("\<tab>", a:indent / &tabstop)
-        let indent_str .= repeat(' ', a:indent % &tabstop)
-    endif
-    let line = getline('.')
-    call setline('.', substitute(line, '^\(\s*\)', indent_str, ''))
-    normal! ^
-endfunction
-
 " VlimeSetup([force])
 function! VlimeSetup(...)
     let force = vlime#GetNthVarArg(a:000, 0, v:false)
@@ -470,18 +406,36 @@ function! VlimeSetup(...)
     inoremap <buffer> <space> <space><c-r>=VlimeKey('space')<cr>
     inoremap <buffer> <cr> <cr><c-r>=VlimeKey("cr")<cr>
     inoremap <buffer> <tab> <c-r>=VlimeKey("tab")<cr>
-    execute 'nnoremap <buffer> <LocalLeader>c :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
-    nnoremap <buffer> <LocalLeader>C :call VlimeSelectBufferConnection()<cr>
-    nnoremap <buffer> <LocalLeader>d :call VlimeCloseConnection(b:vlime_conn)<cr>
-    nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
-    nnoremap <buffer> <LocalLeader>s :call VlimeDescribeCurSymbol()<cr>
-    nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
+
+    " Connection operations
+    execute 'nnoremap <buffer> <LocalLeader>cc :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
+    nnoremap <buffer> <LocalLeader>cs :call VlimeSelectCurConnection()<cr>
+    nnoremap <buffer> <LocalLeader>cd :call VlimeCloseCurConnection()<cr>
+    nnoremap <buffer> <LocalLeader>cr :call VlimeRenameCurConnection()<cr>
+
+    " Sending stuff to the REPL
+    nnoremap <buffer> <LocalLeader>ss :call VlimeSendCurThingToREPL('thing')<cr>
+    nnoremap <buffer> <LocalLeader>se :call VlimeSendCurThingToREPL('expr')<cr>
+    nnoremap <buffer> <LocalLeader>sa :call VlimeSendCurThingToREPL('atom')<cr>
+    vnoremap <buffer> <LocalLeader>s :<c-u>call VlimeSendCurThingToREPL('selection')<cr>
+
+    " Expanding macros
     nnoremap <buffer> <LocalLeader>m1 :call VlimeExpandCurMacro(v:false)<cr>
     nnoremap <buffer> <LocalLeader>ma :call VlimeExpandCurMacro(v:true)<cr>
-    nnoremap <buffer> <LocalLeader>a :call VlimeDisassembleCurForm()<cr>
-    nnoremap <buffer> <LocalLeader>oe :call VlimeCompileCurExpr()<cr>
+
+    " Compilation operations
+    nnoremap <buffer> <LocalLeader>oe :call VlimeCompileCurThing('expr')<cr>
     nnoremap <buffer> <LocalLeader>of :call VlimeCompileCurFile()<cr>
-    vnoremap <buffer> <LocalLeader>os :<c-u>call VlimeCompileCurSelection()<cr>
+    vnoremap <buffer> <LocalLeader>o :<c-u>call VlimeCompileCurThing('selection')<cr>
+
+    " Describing things
+    nnoremap <buffer> <LocalLeader>do :call VlimeDescribeCurSymbol('operator')<cr>
+    nnoremap <buffer> <LocalLeader>da :call VlimeDescribeCurSymbol('atom')<cr>
+
+    " Other stuff
+    nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
+    nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
+    nnoremap <buffer> <LocalLeader>a :call VlimeDisassembleCurForm()<cr>
 endfunction
 
 function! VlimeInteractionMode()
@@ -491,8 +445,8 @@ function! VlimeInteractionMode()
         vnoremap <cr> <cr>
     else
         let b:vlime_interaction_mode = v:true
-        nnoremap <cr> :call VlimeSendCurThingToREPL()<cr>
-        vnoremap <cr> :<c-u>call VlimeSendCurSelectionToREPL()<cr>
+        nnoremap <cr> :call VlimeSendCurThingToREPL('thing')<cr>
+        vnoremap <cr> :<c-u>call VlimeSendCurThingToREPL('selection')<cr>
     endif
 endfunction
 

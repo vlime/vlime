@@ -346,6 +346,19 @@ function! vlime#ui#PreviewBufName()
     return 'vlime / preview'
 endfunction
 
+function! vlime#ui#IndentCurLine(indent)
+    if &expandtab
+        let indent_str = repeat(' ', a:indent)
+    else
+        " Ah! So bad! Such evil!
+        let indent_str = repeat("\<tab>", a:indent / &tabstop)
+        let indent_str .= repeat(' ', a:indent % &tabstop)
+    endif
+    let line = getline('.')
+    call setline('.', substitute(line, '^\(\s*\)', indent_str, ''))
+    normal! ^
+endfunction
+
 function! s:NormalizePackageName(name)
     let pattern1 = '^\(\(#\?:\)\|''\)\(.\+\)'
     let pattern2 = '"\(.\+\)"'
