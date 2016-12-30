@@ -54,21 +54,48 @@ Run the server:
 
 Use Vim to start editing a Lisp source file. These keys are mapped:
 
-* `<LocalLeader>c`: Connect to Vlime server.
-* `<LocalLeader>C`: Switch Vlime connections.
-* `<LocalLeader>d`: Disconnect.
+Connection management:
+
+* `<LocalLeader>cc`: Connect to Vlime server.
+* `<LocalLeader>cs`: Switch Vlime connections.
+* `<LocalLeader>cd`: Disconnect.
+* `<LocalLeader>cr`: Rename the current connection.
+
+Sending stuff to the REPL:
+
+* `<LocalLeader>ss`: Send the "thing" (An s-expression or an atom) under the cursor to the REPL.
+* `<LocalLeader>se`: Send the s-expression under the cursor to the REPL.
+* `<LocalLeader>sa`: Send the atom under the cursor to the REPL.
+* `<LocalLeader>s`: (In visual mode) Send the current selection to the REPL.
+
+Expanding macros:
+
+* `<LocalLeader>m1`: Expand the macro under the cursor.
+* `<LocalLeader>ma`: Expand the macro under the cursor and all nested macros.
+
+Compiling:
+
+* `<LocalLeader>oe`: Compile the form under the cursor.
+* `<LocalLeader>of`: Compile the current file.
+* `<LocalLeader>o`: (In visual mode) Compile the current selection.
+
+Describing things:
+
+* `<LocalLeader>do`: Describe the "operator" of the s-expression under the cursor.
+* `<LocalLeader>da`: Describe the atom under the cursor.
+
+Other stuff:
+
 * `<LocalLeader>i`: Interaction Mode.
-* `<LocalLeader>s`: Describe symbol.
-* `<LocalLeader>l`: Load current file.
-* `<LocalLeader>m1`: Expand current macro.
-* `<LocalLeader>ma`: Expand current macro and all nested macros.
-* `<LocalLeader>a`: Disassemble current form.
+* `<LocalLeader>l`: Load the current file.
+* `<LocalLeader>a`: Disassemble the form under the cursor.
 
 `<LocalLeader>` defaults to backslash `\`. In addition, you can use `<tab>`
 instead of `<c-x><c-o>` to invoke omni-completion.
 
 Most of Vlime's functionalities need an active connection to the server. Press
-`<LocalLeader>c` to create one.
+`<LocalLeader>cc` to create one. And Vlime supports multiple connections, use
+`<LocalLeader>cs` to select the connection to use for the current buffer.
 
 In `Interaction Mode` (Entered via `<LocalLeader>i`), you can place the cursor
 on an s-expression and then press `<cr>` to send it to the REPL.
@@ -77,7 +104,16 @@ In the REPL output buffer, `<c-c>` will interrupt the REPL thread.
 
 When there's an unhandled condition or a thread is interrupted, the SLDB
 buffer will appear, with posible restarts and stack frames as it's content.
-Pressing `<cr>` on one of the restart options will invoke that restart.
+Pressing `<cr>` on one of the restart options will invoke that restart. These
+keys are available in the SLDB buffer:
+
+* `<cr>`: Choose a restart.
+* `r`: Restart the frame under the cursor.
+* `s`: Start stepping in the frame under the cursor (Or the most recent frame).
+* `x`: Step over the current function call.
+* `o`: Step out of the current function.
+* `c`: Invoke the restart labeled CONTINUE.
+* `a`: Invoke the restart labeled ABORT.
 
 License
 =======
