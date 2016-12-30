@@ -108,9 +108,21 @@ function! vlime#ui#OnWriteString(conn, str, str_type)
                 execute old_winnr . 'wincmd w'
             endtry
         endif
-        call vlime#ui#WithBuffer(repl_buf, function('s:AppendString', [a:str]))
-        " Is this necessary?
-        redraw
+
+        let repl_winnr = bufwinnr(repl_buf)
+        if repl_winnr > 0
+            " If the REPL buffer is visible, move to that window to enable
+            " automatic scrolling
+            let old_winnr = winnr()
+            try
+                execute repl_winnr . 'wincmd w'
+                call s:AppendString(a:str)
+            finally
+                execute old_winnr . 'wincmd w'
+            endtry
+        else
+            call vlime#ui#WithBuffer(repl_buf, function('s:AppendString', [a:str]))
+        endif
     endif
 endfunction
 
