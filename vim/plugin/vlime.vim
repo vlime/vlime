@@ -6,13 +6,6 @@ if !exists('g:vlime_next_conn_id')
     let g:vlime_next_conn_id = 1
 endif
 
-function! VlimeGetUI()
-    if !exists('g:vlime_ui')
-        let g:vlime_ui = vlime#ui#New()
-    endif
-    return g:vlime_ui
-endfunction
-
 " VlimeNewConnection([name])
 function! VlimeNewConnection(...)
     if a:0 > 0
@@ -25,7 +18,7 @@ function! VlimeNewConnection(...)
                     \ 'id': g:vlime_next_conn_id,
                     \ 'name': conn_name
                 \ },
-                \ VlimeGetUI())
+                \ vlime#ui#GetUI())
     let g:vlime_connections[g:vlime_next_conn_id] = conn
     let g:vlime_next_conn_id += 1
     return conn

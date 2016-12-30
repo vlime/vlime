@@ -16,6 +16,13 @@ function! vlime#ui#New()
     return obj
 endfunction
 
+function! vlime#ui#GetUI()
+    if !exists('g:vlime_ui')
+        let g:vlime_ui = vlime#ui#New()
+    endif
+    return g:vlime_ui
+endfunction
+
 " vlime#ui#GetCurrentPackage([buffer])
 function! vlime#ui#GetCurrentPackage(...) dict
     let buf_spec = vlime#GetNthVarArg(a:000, 0, '%')
