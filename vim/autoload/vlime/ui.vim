@@ -8,6 +8,7 @@ function! vlime#ui#New()
                 \ 'SetCurrentThread': function('vlime#ui#SetCurrentThread'),
                 \ 'OnDebug': function('vlime#ui#OnDebug'),
                 \ 'OnDebugActivate': function('vlime#ui#OnDebugActivate'),
+                \ 'OnDebugReturn': function('vlime#ui#OnDebugReturn'),
                 \ 'OnWriteString': function('vlime#ui#OnWriteString'),
                 \ 'OnReadString': function('vlime#ui#OnReadString'),
                 \ 'OnIndentationUpdate': function('vlime#ui#OnIndentationUpdate'),
@@ -67,6 +68,18 @@ function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
                 \ vlime#ui#SLDBBufName(a:conn, a:thread), v:false, v:true)
     if dbg_buf > 0
         normal! gg
+    endif
+endfunction
+
+function! vlime#ui#OnDebugReturn(conn, thread, level, stepping)
+    let buf_name = vlime#ui#SLDBBufName(a:conn, a:thread)
+    let bufnr = bufnr(buf_name)
+    if bufnr > 0
+        let buf_level = getbufvar(bufnr, 'vlime_sldb_level', -1)
+        if buf_level == a:level
+            call setbufvar(bufnr, '&buflisted', 0)
+            execute 'bunload! ' . bufnr
+        endif
     endif
 endfunction
 
@@ -229,8 +242,6 @@ function! vlime#ui#ChooseCurRestart()
     if len(matches) > 0
         let nth = matches[1] + 0
         call b:vlime_conn.InvokeNthRestartForEmacs(b:vlime_sldb_level, nth)
-        set nobuflisted
-        bunload!
     endif
 endfunction
 
@@ -240,8 +251,6 @@ function! vlime#ui#RestartCurFrame()
     if len(matches) > 0
         let nth = matches[1] + 0
         call b:vlime_conn.RestartFrame(nth)
-        set nobuflisted
-        bunload!
     endif
 endfunction
 
@@ -261,8 +270,6 @@ function! vlime#ui#StepCurOrLastFrame(opr)
     elseif a:opr == 'out'
         call b:vlime_conn.SLDBOut(nth)
     endif
-    set nobuflisted
-    bunload!
 endfunction
 
 function! vlime#ui#OpenBuffer(name, create, show)
@@ -445,8 +452,8 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     nnoremap <buffer> s :call vlime#ui#StepCurOrLastFrame('step')<cr>
     nnoremap <buffer> x :call vlime#ui#StepCurOrLastFrame('next')<cr>
     nnoremap <buffer> o :call vlime#ui#StepCurOrLastFrame('out')<cr>
-    nnoremap <buffer> c :call b:vlime_conn.SLDBContinue()<cr>:wincmd c<cr>
-    nnoremap <buffer> a :call b:vlime_conn.SLDBAbort()<cr>:wincmd c<cr>
+    nnoremap <buffer> c :call b:vlime_conn.SLDBContinue()<cr>
+    nnoremap <buffer> a :call b:vlime_conn.SLDBAbort()<cr>
 endfunction
 
 function! s:AppendString(str)

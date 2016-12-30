@@ -51,6 +51,7 @@ function! vlime#New(...)
                     \ 'NEW-PACKAGE': function('vlime#OnNewPackage'),
                     \ 'DEBUG': function('vlime#OnDebug'),
                     \ 'DEBUG-ACTIVATE': function('vlime#OnDebugActivate'),
+                    \ 'DEBUG-RETURN': function('vlime#OnDebugReturn'),
                     \ 'WRITE-STRING': function('vlime#OnWriteString'),
                     \ 'READ-STRING': function('vlime#OnReadString'),
                     \ 'INDENTATION-UPDATE': function('vlime#OnIndentationUpdate'),
@@ -426,6 +427,13 @@ function! vlime#OnDebugActivate(conn, msg)
     if type(a:conn.ui) != v:t_none
         let [_msg_type, thread, level, select] = a:msg
         call a:conn.ui.OnDebugActivate(a:conn, thread, level, select)
+    endif
+endfunction
+
+function! vlime#OnDebugReturn(conn, msg)
+    if type(a:conn.ui) != v:t_none
+        let [_msg_type, thread, level, stepping] = a:msg
+        call a:conn.ui.OnDebugReturn(a:conn, thread, level, stepping)
     endif
 endfunction
 
