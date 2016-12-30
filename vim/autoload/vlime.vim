@@ -41,6 +41,8 @@ function! vlime#New(...)
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
                 \ 'SLDBStep': function('vlime#SLDBStep'),
+                \ 'SLDBNext': function('vlime#SLDBNext'),
+                \ 'SLDBOut': function('vlime#SLDBOut'),
                 \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
                 \ 'RestartFrame': function('vlime#RestartFrame'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
@@ -261,6 +263,20 @@ function! vlime#SLDBStep(frame, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-STEP'), a:frame]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBStep']))
+endfunction
+
+" vlime#SLDBNext(frame[, callback])
+function! vlime#SLDBNext(frame, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-NEXT'), a:frame]),
+                \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBNext']))
+endfunction
+
+" vlime#SLDBOut(frame[, callback])
+function! vlime#SLDBOut(frame, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-OUT'), a:frame]),
+                \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBOut']))
 endfunction
 
 " vlime#InvokeNthRestartForEmacs(level, restart[, callback])

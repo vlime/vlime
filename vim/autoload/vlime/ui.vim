@@ -66,12 +66,7 @@ function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
     let dbg_buf = vlime#ui#OpenBuffer(
                 \ vlime#ui#SLDBBufName(a:conn, a:thread), v:false, v:true)
     if dbg_buf > 0
-        let pos = search('^\s*[0-9]\+\.\s\+\*[A-Z]\+\s\+-\s.\+$')
-        if pos <= 0
-            call search('^\s*[0-9]\+\.\s\+[A-Z]\+\s\+-\s.\+$')
-        endif
-        " Is this necessary?
-        redraw
+        normal! gg
     endif
 endfunction
 
@@ -250,15 +245,24 @@ function! vlime#ui#RestartCurFrame()
     endif
 endfunction
 
-function! vlime#ui#StepCurFrame()
+function! vlime#ui#StepCurOrLastFrame(opr)
     let line = getline('.')
     let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
     if len(matches) > 0
         let nth = matches[1] + 0
-        call b:vlime_conn.SLDBStep(nth)
-        set nobuflisted
-        bunload!
+    else
+        let nth = 0
     endif
+
+    if a:opr == 'step'
+        call b:vlime_conn.SLDBStep(nth)
+    elseif a:opr == 'next'
+        call b:vlime_conn.SLDBNext(nth)
+    elseif a:opr == 'out'
+        call b:vlime_conn.SLDBOut(nth)
+    endif
+    set nobuflisted
+    bunload!
 endfunction
 
 function! vlime#ui#OpenBuffer(name, create, show)
@@ -438,7 +442,11 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     " TODO: Move to a separate function?
     nnoremap <buffer> <cr> :call vlime#ui#ChooseCurRestart()<cr>
     nnoremap <buffer> r :call vlime#ui#RestartCurFrame()<cr>
-    nnoremap <buffer> s :call vlime#ui#StepCurFrame()<cr>
+    nnoremap <buffer> s :call vlime#ui#StepCurOrLastFrame('step')<cr>
+    nnoremap <buffer> x :call vlime#ui#StepCurOrLastFrame('next')<cr>
+    nnoremap <buffer> o :call vlime#ui#StepCurOrLastFrame('out')<cr>
+    nnoremap <buffer> c :call b:vlime_conn.SLDBContinue()<cr>:wincmd c<cr>
+    nnoremap <buffer> a :call b:vlime_conn.SLDBAbort()<cr>:wincmd c<cr>
 endfunction
 
 function! s:AppendString(str)
