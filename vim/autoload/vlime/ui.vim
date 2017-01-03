@@ -369,6 +369,54 @@ function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
     endif
 endfunction
 
+function! vlime#ui#OpenFrameSource()
+    function! s:OpenFrameSourceCB(conn, result)
+        if a:result[0]['name'] != 'LOCATION'
+            call vlime#ui#ErrMsg(a:result[1])
+            return
+        endif
+        let file_loc = a:result[1][1]
+        let file_buf = bufnr(file_loc)
+        let buf_exists = v:true
+        if file_buf > 0
+            let buf_win = bufwinnr(file_buf)
+            if buf_win > 0
+                execute buf_win . 'wincmd w'
+            else
+                let win_list = win_findbuf(file_buf)
+                if len(win_list) > 0
+                    call win_gotoid(win_list[0])
+                else
+                    let buf_exists = v:false
+                endif
+            endif
+        else
+            let buf_exists = v:false
+        endif
+
+        if !buf_exists
+            if filereadable(file_loc)
+                execute 'tabedit ' . escape(file_loc, ' \')
+            else
+                call vlime#ui#ErrMsg('Not readable: ' . file_loc)
+                return
+            endif
+        endif
+
+        let src_line = byte2line(a:result[2][1])
+        execute 'normal! ' . src_line . 'gg'
+    endfunction
+
+    let line = getline('.')
+    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
+    if len(matches) > 0
+        let nth = matches[1] + 0
+    else
+        let nth = 0
+    endif
+    call b:vlime_conn.FrameSourceLocation(nth, function('s:OpenFrameSourceCB'))
+endfunction
+
 function! vlime#ui#OpenBuffer(name, create, show)
     let buf = bufnr(a:name, a:create)
     if buf > 0
@@ -564,6 +612,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     " TODO: Move to a separate function?
     nnoremap <buffer> <cr> :call vlime#ui#ChooseCurRestart()<cr>
     nnoremap <buffer> d :call vlime#ui#ShowFrameDetails()<cr>
+    nnoremap <buffer> S :call vlime#ui#OpenFrameSource()<cr>
     nnoremap <buffer> r :call vlime#ui#RestartCurFrame()<cr>
     nnoremap <buffer> s :call vlime#ui#StepCurOrLastFrame('step')<cr>
     nnoremap <buffer> x :call vlime#ui#StepCurOrLastFrame('next')<cr>
