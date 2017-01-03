@@ -72,7 +72,8 @@ endfunction
 
 function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
     let dbg_buf = vlime#ui#OpenBuffer(
-                \ vlime#ui#SLDBBufName(a:conn, a:thread), v:false, v:true)
+                \ vlime#ui#SLDBBufName(a:conn, a:thread),
+                \ v:false, 'botright split')
     if dbg_buf > 0
         normal! gg
     endif
@@ -97,15 +98,15 @@ function! vlime#ui#OnWriteString(conn, str, str_type)
         if !getbufvar(repl_buf, 'vlime_buffer_initialized', v:false)
             call setbufvar(repl_buf, 'vlime_buffer_initialized', v:true)
             call s:SetVlimeBufferOpts(repl_buf, a:conn)
-            let old_winnr = winnr()
+            let old_win_id = win_getid()
             try
-                call vlime#ui#OpenBuffer(repl_buf, v:false, v:true)
+                call vlime#ui#OpenBuffer(repl_buf, v:false, 'botright split')
                 call s:ShowREPLBanner(a:conn)
                 nnoremap <buffer> <c-c>
                             \ :call b:vlime_conn.Interrupt(
                                 \ {'name': 'REPL-THREAD', 'package': 'KEYWORD'})<cr>
             finally
-                execute old_winnr . 'wincmd w'
+                call win_gotoid(old_win_id)
             endtry
         endif
 
@@ -113,12 +114,12 @@ function! vlime#ui#OnWriteString(conn, str, str_type)
         if repl_winnr > 0
             " If the REPL buffer is visible, move to that window to enable
             " automatic scrolling
-            let old_winnr = winnr()
+            let old_win_id = win_getid()
             try
                 execute repl_winnr . 'wincmd w'
                 call vlime#ui#AppendString(a:str)
             finally
-                execute old_winnr . 'wincmd w'
+                call win_gotoid(old_win_id)
             endtry
         else
             call vlime#ui#WithBuffer(repl_buf,
@@ -309,7 +310,11 @@ function! vlime#ui#ShowFrameSourceLocation(frame, append)
         let content .= "\nLocation:\n"
         let content .= '  File: ' . a:result[1][1] . "\n"
         let content .= '  Position: ' . a:result[2][1] . "\n"
-        let content .= '  Snippet: ' . a:result[3][1] . "\n"
+
+        let snippet_lines = split(a:result[3][1], "\n")
+        let snippet = join(map(snippet_lines, '"    " . v:val'), "\n")
+        let content .= "  Snippet:\n" . snippet . "\n"
+
         if a:append
             call vlime#ui#ShowPreview(content, v:true)
         else
@@ -321,8 +326,8 @@ function! vlime#ui#ShowFrameSourceLocation(frame, append)
                 \ function('s:ShowFrameSourceLocationCB', [a:frame, a:append]))
 endfunction
 
-function! vlime#ui#ShowFrameLocals()
-    function! s:ShowFrameLocalsCB(frame, conn, result)
+function! vlime#ui#ShowFrameDetails()
+    function! s:ShowFrameDetailsCB(frame, conn, result)
         let content = 'Frame: ' . a:frame . "\n"
         let locals = a:result[0]
         if type(locals) != v:t_none
@@ -346,10 +351,11 @@ function! vlime#ui#ShowFrameLocals()
         if type(catch_tags) != v:t_none
             let content .= "\nCatch tags:\n"
             for ct in catch_tags
-                let content .= '  ' . ct
+                let content .= '  ' . ct . "\n"
             endfor
         endif
         call vlime#ui#ShowPreview(content, v:false, 12)
+        call vlime#ui#ShowFrameSourceLocation(a:frame, v:true)
     endfunction
 
     let line = getline('.')
@@ -361,22 +367,21 @@ function! vlime#ui#ShowFrameLocals()
     endif
 
     call b:vlime_conn.FrameLocalsAndCatchTags(nth,
-                \ function('s:ShowFrameLocalsCB', [nth]))
+                \ function('s:ShowFrameDetailsCB', [nth]))
 endfunction
 
 function! vlime#ui#OpenBuffer(name, create, show)
     let buf = bufnr(a:name, a:create)
     if buf > 0
-        if type(a:show) == v:t_string && a:show == 'preview'
-            execute 'pedit! ' . substitute(a:name, '\(\s\)', '\\\1', 'g')
-        elseif type(a:show) == v:t_string && a:show[0:7] == 'preview '
-            let prefix = a:show[8:]
-            execute prefix . ' pedit! ' . substitute(a:name, '\(\s\)', '\\\1', 'g')
-        elseif a:show
+        if (type(a:show) == v:t_string && len(a:show) > 0) || a:show
             " Found it. Try to put it in a window
             let win_nr = bufwinnr(buf)
             if win_nr < 0
-                execute 'botright split #' . buf
+                if type(a:show) == v:t_string
+                    execute a:show . ' #' . buf
+                else
+                    execute 'split #' . buf
+                endif
             else
                 execute win_nr . 'wincmd w'
             endif
@@ -388,35 +393,31 @@ endfunction
 " vlime#ui#ShowPreview(content, append[, win_size])
 function! vlime#ui#ShowPreview(content, append, ...)
     let win_size = vlime#GetNthVarArg(a:000, 0)
-    if type(win_size) != v:t_none
-        let old_pwheight = &previewheight
-        pclose!
-        try
-            let &previewheight = win_size
-            let buf = vlime#ui#OpenBuffer(
-                        \ vlime#ui#PreviewBufName(), v:true, 'preview topleft')
-        finally
-            let &previewheight = old_pwheight
-        endtry
-    else
+    let old_win_id = win_getid()
+    try
         let buf = vlime#ui#OpenBuffer(
-                    \ vlime#ui#PreviewBufName(), v:true, 'preview topleft')
-    endif
+                    \ vlime#ui#PreviewBufName(), v:true, 'topleft split')
+        if buf > 0
+            " We already switched to the preview window
+            if type(win_size) != v:t_none
+                execute 'resize ' . win_size
+                set winfixheight
+                set winfixwidth
+            endif
 
-    if buf > 0
-        if !getbufvar(buf, 'vlime_buffer_initialized', v:false)
-            call setbufvar(buf, 'vlime_buffer_initialized', v:true)
-            call s:SetVlimeBufferOpts(buf, v:null)
+            if !getbufvar(buf, 'vlime_buffer_initialized', v:false)
+                call setbufvar(buf, 'vlime_buffer_initialized', v:true)
+                call s:SetVlimeBufferOpts(buf, v:null)
+            endif
+            if a:append
+                call vlime#ui#AppendString(a:content)
+            else
+                call vlime#ui#ReplaceContent(a:content)
+            endif
         endif
-        if a:append
-            " XXX: Appending doesn't work and I don't know why
-            call vlime#ui#WithBuffer(buf,
-                        \ function('vlime#ui#AppendString', [a:content]))
-        else
-            call vlime#ui#WithBuffer(buf,
-                        \ function('vlime#ui#ReplaceContent', [a:content]))
-        endif
-    endif
+    finally
+        call win_gotoid(old_win_id)
+    endtry
 
     return buf
 endfunction
@@ -563,7 +564,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
 
     " TODO: Move to a separate function?
     nnoremap <buffer> <cr> :call vlime#ui#ChooseCurRestart()<cr>
-    nnoremap <buffer> S :call vlime#ui#ShowFrameLocals()<cr>
+    nnoremap <buffer> d :call vlime#ui#ShowFrameDetails()<cr>
     nnoremap <buffer> r :call vlime#ui#RestartCurFrame()<cr>
     nnoremap <buffer> s :call vlime#ui#StepCurOrLastFrame('step')<cr>
     nnoremap <buffer> x :call vlime#ui#StepCurOrLastFrame('next')<cr>
