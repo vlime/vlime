@@ -116,12 +116,13 @@ function! vlime#ui#OnWriteString(conn, str, str_type)
             let old_winnr = winnr()
             try
                 execute repl_winnr . 'wincmd w'
-                call s:AppendString(a:str)
+                call vlime#ui#AppendString(a:str)
             finally
                 execute old_winnr . 'wincmd w'
             endtry
         else
-            call vlime#ui#WithBuffer(repl_buf, function('s:AppendString', [a:str]))
+            call vlime#ui#WithBuffer(repl_buf,
+                        \ function('vlime#ui#AppendString', [a:str]))
         endif
     endif
 endfunction
@@ -291,6 +292,35 @@ function! vlime#ui#StepCurOrLastFrame(opr)
     endif
 endfunction
 
+function! vlime#ui#ShowFrameSourceLocation(frame, append)
+    function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
+        echom string(a:result)
+
+        if a:result[0]['name'] != 'LOCATION'
+            call vlime#ui#ErrMsg(a:result[1])
+            return
+        endif
+
+        if a:append
+            let content = ''
+        else
+            let content = 'Frame: ' . a:frame . "\n"
+        endif
+        let content .= "\nLocation:\n"
+        let content .= '  File: ' . a:result[1][1] . "\n"
+        let content .= '  Position: ' . a:result[2][1] . "\n"
+        let content .= '  Snippet: ' . a:result[3][1] . "\n"
+        if a:append
+            call vlime#ui#ShowPreview(content, v:true)
+        else
+            call vlime#ui#ShowPreview(content, v:false, 12)
+        endif
+    endfunction
+
+    call b:vlime_conn.FrameSourceLocation(a:frame,
+                \ function('s:ShowFrameSourceLocationCB', [a:frame, a:append]))
+endfunction
+
 function! vlime#ui#ShowFrameLocals()
     function! s:ShowFrameLocalsCB(frame, conn, result)
         let content = 'Frame: ' . a:frame . "\n"
@@ -380,9 +410,11 @@ function! vlime#ui#ShowPreview(content, append, ...)
         endif
         if a:append
             " XXX: Appending doesn't work and I don't know why
-            call vlime#ui#WithBuffer(buf, function('s:AppendString', [a:content]))
+            call vlime#ui#WithBuffer(buf,
+                        \ function('vlime#ui#AppendString', [a:content]))
         else
-            call vlime#ui#WithBuffer(buf, function('s:ReplaceContent', [a:content]))
+            call vlime#ui#WithBuffer(buf,
+                        \ function('vlime#ui#ReplaceContent', [a:content]))
         endif
     endif
 
@@ -412,6 +444,12 @@ function! vlime#ui#IndentCurLine(indent)
     let line = getline('.')
     call setline('.', substitute(line, '^\(\s*\)', indent_str, ''))
     normal! ^
+endfunction
+
+function! vlime#ui#ErrMsg(msg)
+    echohl ErrorMsg
+    echom a:msg
+    echohl None
 endfunction
 
 function! s:NormalizePackageName(name)
@@ -489,7 +527,8 @@ endfunction
 function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     normal! ggVG"_d
 
-    call s:AppendString('Thread: ' . a:thread . '; Level: ' . a:level . "\n\n")
+    call vlime#ui#AppendString(
+                \ 'Thread: ' . a:thread . '; Level: ' . a:level . "\n\n")
 
     let condition_str = ''
     for c in a:condition
@@ -498,7 +537,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
         endif
     endfor
     let condition_str .= "\n"
-    call s:AppendString(condition_str)
+    call vlime#ui#AppendString(condition_str)
 
     let restarts_str = "Restarts:\n"
     let [max_name_len, has_star] = s:FindMaxRestartNameLen(a:restarts)
@@ -512,7 +551,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
         let ri += 1
     endwhile
     let restarts_str .= "\n"
-    call s:AppendString(restarts_str)
+    call vlime#ui#AppendString(restarts_str)
 
     let frames_str = "Frames:\n"
     let max_digits = len(string(len(a:frames) - 1))
@@ -520,10 +559,11 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
         let idx_str = s:Pad(string(f[0]), '.', max_digits)
         let frames_str .= ('  ' . idx_str . f[1] . "\n")
     endfor
-    call s:AppendString(frames_str)
+    call vlime#ui#AppendString(frames_str)
 
     " TODO: Move to a separate function?
     nnoremap <buffer> <cr> :call vlime#ui#ChooseCurRestart()<cr>
+    nnoremap <buffer> S :call vlime#ui#ShowFrameLocals()<cr>
     nnoremap <buffer> r :call vlime#ui#RestartCurFrame()<cr>
     nnoremap <buffer> s :call vlime#ui#StepCurOrLastFrame('step')<cr>
     nnoremap <buffer> x :call vlime#ui#StepCurOrLastFrame('next')<cr>
@@ -532,7 +572,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     nnoremap <buffer> a :call b:vlime_conn.SLDBAbort()<cr>
 endfunction
 
-function! s:AppendString(str)
+function! vlime#ui#AppendString(str)
     let i = len(a:str) - 1
     let nl = 0
     while i >= 0 && a:str[i] == "\n"
@@ -564,9 +604,9 @@ function! s:AppendString(str)
     endtry
 endfunction
 
-function! s:ReplaceContent(str)
+function! vlime#ui#ReplaceContent(str)
     normal! ggVG"_d
-    call s:AppendString(a:str)
+    call vlime#ui#AppendString(a:str)
     normal! gg
 endfunction
 
@@ -580,5 +620,5 @@ function! s:ShowREPLBanner(conn)
     endif
     let banner_len = len(banner)
     let banner .= ("\n" . repeat('=', banner_len) . "\n")
-    call s:AppendString(banner)
+    call vlime#ui#AppendString(banner)
 endfunction

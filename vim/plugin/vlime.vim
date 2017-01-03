@@ -64,7 +64,7 @@ function! VlimeConnectREPL(host, port, ...)
         call conn.Connect(a:host, a:port)
     catch
         call VlimeCloseConnection(conn)
-        call s:ErrMsg(v:exception)
+        call vlime#ui#ErrMsg(v:exception)
         return
     endtry
     call s:CleanUpNullBufConnections()
@@ -82,7 +82,7 @@ endfunction
 function! VlimeSelectConnection(quiet)
     if len(g:vlime_connections) == 0
         if !a:quiet
-            call s:ErrMsg('Vlime not connected.')
+            call vlime#ui#ErrMsg('Vlime not connected.')
         endif
         return v:null
     else
@@ -100,14 +100,14 @@ function! VlimeSelectConnection(quiet)
         let conn_nr = inputlist(conn_names)
         if conn_nr == 0
             if !a:quiet
-                call s:ErrMsg('Canceled.')
+                call vlime#ui#ErrMsg('Canceled.')
             endif
             return v:null
         else
             let conn = get(g:vlime_connections, conn_nr, v:null)
             if type(conn) == v:t_none
                 if !a:quiet
-                    call s:ErrMsg('Invalid connection ID: ' . conn_nr)
+                    call vlime#ui#ErrMsg('Invalid connection ID: ' . conn_nr)
                 endif
                 return v:null
             else
@@ -552,12 +552,6 @@ endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)
     echom 'Loaded: ' . a:fname
-endfunction
-
-function! s:ErrMsg(msg)
-    echohl ErrorMsg
-    echom a:msg
-    echohl None
 endfunction
 
 function! s:CleanUpNullBufConnections()

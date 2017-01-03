@@ -46,6 +46,7 @@ function! vlime#New(...)
                 \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
                 \ 'RestartFrame': function('vlime#RestartFrame'),
                 \ 'FrameLocalsAndCatchTags': function('vlime#FrameLocalsAndCatchTags'),
+                \ 'FrameSourceLocation': function('vlime#FrameSourceLocation'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -305,6 +306,15 @@ function! vlime#FrameLocalsAndCatchTags(frame, ...) dict
                     \ [s:SYM('SWANK', 'FRAME-LOCALS-AND-CATCH-TAGS'), a:frame]),
                 \ function('s:SimpleSendCB',
                     \ [self, Callback, 'vlime#FrameLocalsAndCatchTags']))
+endfunction
+
+" vlime#FrameSourceLocation(frame[, callback]) dict
+function! vlime#FrameSourceLocation(frame, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'FRAME-SOURCE-LOCATION'), a:frame]),
+                \ function('s:SimpleSendCB',
+                    \ [self, Callback, 'vlime#FrameSourceLocation']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
