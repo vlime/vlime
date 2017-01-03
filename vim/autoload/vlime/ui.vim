@@ -263,29 +263,22 @@ function! vlime#ui#CurSelection(...)
 endfunction
 
 function! vlime#ui#ChooseCurRestart()
-    let line = getline('.')
-    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+\*\?[A-Z\-]\+\s\+-\s.\+$')
-    if len(matches) > 0
-        let nth = matches[1] + 0
+    let nth = s:MatchRestart()
+    if nth >= 0
         call b:vlime_conn.InvokeNthRestartForEmacs(b:vlime_sldb_level, nth)
     endif
 endfunction
 
 function! vlime#ui#RestartCurFrame()
-    let line = getline('.')
-    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
-    if len(matches) > 0
-        let nth = matches[1] + 0
+    let nth = s:MatchFrame()
+    if nth >= 0
         call b:vlime_conn.RestartFrame(nth)
     endif
 endfunction
 
 function! vlime#ui#StepCurOrLastFrame(opr)
-    let line = getline('.')
-    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
-    if len(matches) > 0
-        let nth = matches[1] + 0
-    else
+    let nth = s:MatchFrame()
+    if nth < 0
         let nth = 0
     endif
 
@@ -299,11 +292,8 @@ function! vlime#ui#StepCurOrLastFrame(opr)
 endfunction
 
 function! vlime#ui#ShowFrameDetails()
-    let line = getline('.')
-    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
-    if len(matches) > 0
-        let nth = matches[1] + 0
-    else
+    let nth = s:MatchFrame()
+    if nth < 0
         let nth = 0
     endif
     call vlime#ChainCallbacks(
@@ -407,11 +397,8 @@ function! vlime#ui#OpenFrameSource()
         execute 'normal! ' . src_line . 'gg'
     endfunction
 
-    let line = getline('.')
-    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
-    if len(matches) > 0
-        let nth = matches[1] + 0
-    else
+    let nth = s:MatchFrame()
+    if nth < 0
         let nth = 0
     endif
     call b:vlime_conn.FrameSourceLocation(nth, function('s:OpenFrameSourceCB'))
@@ -670,4 +657,17 @@ function! s:ShowREPLBanner(conn)
     let banner_len = len(banner)
     let banner .= ("\n" . repeat('=', banner_len) . "\n")
     call vlime#ui#AppendString(banner)
+endfunction
+
+function! s:MatchRestart()
+    let line = getline('.')
+    let matches = matchlist(line,
+                \ '^\s*\([0-9]\+\)\.\s\+\*\?[A-Z\-]\+\s\+-\s.\+$')
+    return (len(matches) > 0) ? (matches[1] + 0) : -1
+endfunction
+
+function! s:MatchFrame()
+    let line = getline('.')
+    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
+    return (len(matches) > 0) ? (matches[1] + 0) : -1
 endfunction
