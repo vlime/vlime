@@ -455,12 +455,12 @@ endfunction
 function! VlimeInteractionMode()
     if getbufvar(bufnr('%'), 'vlime_interaction_mode', v:false)
         let b:vlime_interaction_mode = v:false
-        nnoremap <cr> <cr>
-        vnoremap <cr> <cr>
+        nnoremap <buffer> <cr> <cr>
+        vnoremap <buffer> <cr> <cr>
     else
         let b:vlime_interaction_mode = v:true
-        nnoremap <cr> :call VlimeSendCurThingToREPL('thing')<cr>
-        vnoremap <cr> :<c-u>call VlimeSendCurThingToREPL('selection')<cr>
+        nnoremap <buffer> <cr> :call VlimeSendCurThingToREPL('thing')<cr>
+        vnoremap <buffer> <cr> :<c-u>call VlimeSendCurThingToREPL('selection')<cr>
     endif
 endfunction
 
