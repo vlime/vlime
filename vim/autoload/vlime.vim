@@ -57,6 +57,7 @@ function! vlime#New(...)
                     \ 'WRITE-STRING': function('vlime#OnWriteString'),
                     \ 'READ-STRING': function('vlime#OnReadString'),
                     \ 'INDENTATION-UPDATE': function('vlime#OnIndentationUpdate'),
+                    \ 'INVALID-RPC': function('vlime#OnInvalidRPC'),
                     \ }
                 \ }
     return obj
@@ -479,6 +480,13 @@ function! vlime#OnIndentationUpdate(conn, msg)
     endif
 endfunction
 
+function! vlime#OnInvalidRPC(conn, msg)
+    if type(a:conn.ui) != v:t_none
+        let [_msg_type, id, err_msg] = a:msg
+        call a:conn.ui.OnInvalidRPC(a:conn, id, err_msg)
+    endif
+endfunction
+
 " ------------------ end of server event handlers ------------------
 
 function! vlime#OnServerEvent(chan, msg) dict
@@ -538,6 +546,30 @@ function! vlime#PListToDict(plist)
         let i += 2
     endwhile
     return d
+endfunction
+
+function! vlime#ChainCallbacks(...)
+    let cbs = a:000
+    if len(cbs) <= 0
+        return
+    endif
+
+    function! s:ChainCallbackCB(cbs, ...)
+        if len(a:cbs) < 1
+            return
+        endif
+        let CB = function(a:cbs[0], a:000)
+        call CB()
+
+        if len(a:cbs) < 2
+            return
+        endif
+        let NextFunc = a:cbs[1]
+        call NextFunc(function('s:ChainCallbackCB', [a:cbs[2:]]))
+    endfunction
+
+    let FirstFunc = cbs[0]
+    call FirstFunc(function('s:ChainCallbackCB', [cbs[1:]]))
 endfunction
 
 function! s:SearchPList(plist, name)

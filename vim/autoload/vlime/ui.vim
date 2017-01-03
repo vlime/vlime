@@ -12,6 +12,7 @@ function! vlime#ui#New()
                 \ 'OnWriteString': function('vlime#ui#OnWriteString'),
                 \ 'OnReadString': function('vlime#ui#OnReadString'),
                 \ 'OnIndentationUpdate': function('vlime#ui#OnIndentationUpdate'),
+                \ 'OnInvalidRPC': function('vlime#ui#OnInvalidRPC'),
                 \ }
     return obj
 endfunction
@@ -143,6 +144,10 @@ function! vlime#ui#OnIndentationUpdate(conn, indent_info)
     for i in a:indent_info
         let a:conn.cb_data['indent_info'][i[0]] = [i[1], i[2]]
     endfor
+endfunction
+
+function! vlime#ui#OnInvalidRPC(conn, rpc_id, err_msg)
+    call vlime#ui#ErrMsg(a:err_msg)
 endfunction
 
 function! vlime#ui#WithBuffer(buf, Func)
@@ -293,71 +298,7 @@ function! vlime#ui#StepCurOrLastFrame(opr)
     endif
 endfunction
 
-function! vlime#ui#ShowFrameSourceLocation(frame, append)
-    function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
-        echom string(a:result)
-
-        if a:result[0]['name'] != 'LOCATION'
-            call vlime#ui#ErrMsg(a:result[1])
-            return
-        endif
-
-        if a:append
-            let content = ''
-        else
-            let content = 'Frame: ' . a:frame . "\n"
-        endif
-        let content .= "\nLocation:\n"
-        let content .= '  File: ' . a:result[1][1] . "\n"
-        let content .= '  Position: ' . a:result[2][1] . "\n"
-
-        let snippet_lines = split(a:result[3][1], "\n")
-        let snippet = join(map(snippet_lines, '"    " . v:val'), "\n")
-        let content .= "  Snippet:\n" . snippet . "\n"
-
-        if a:append
-            call vlime#ui#ShowPreview(content, v:true)
-        else
-            call vlime#ui#ShowPreview(content, v:false, 12)
-        endif
-    endfunction
-
-    call b:vlime_conn.FrameSourceLocation(a:frame,
-                \ function('s:ShowFrameSourceLocationCB', [a:frame, a:append]))
-endfunction
-
 function! vlime#ui#ShowFrameDetails()
-    function! s:ShowFrameDetailsCB(frame, conn, result)
-        let content = 'Frame: ' . a:frame . "\n"
-        let locals = a:result[0]
-        if type(locals) != v:t_none
-            let content .= "\nLocals:\n"
-            let rlocals = []
-            let max_name_len = 0
-            for lc in locals
-                let rlc = vlime#PListToDict(lc)
-                call add(rlocals, rlc)
-                if len(rlc['NAME']) > max_name_len
-                    let max_name_len = len(rlc['NAME'])
-                endif
-            endfor
-            for rlc in rlocals
-                let content .= '  '     " Indentation
-                let content .= s:Pad(rlc['NAME'], ':', max_name_len)
-                let content .= (rlc['VALUE'] . "\n")
-            endfor
-        endif
-        let catch_tags = a:result[1]
-        if type(catch_tags) != v:t_none
-            let content .= "\nCatch tags:\n"
-            for ct in catch_tags
-                let content .= '  ' . ct . "\n"
-            endfor
-        endif
-        call vlime#ui#ShowPreview(content, v:false, 12)
-        call vlime#ui#ShowFrameSourceLocation(a:frame, v:true)
-    endfunction
-
     let line = getline('.')
     let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
     if len(matches) > 0
@@ -365,9 +306,67 @@ function! vlime#ui#ShowFrameDetails()
     else
         let nth = 0
     endif
+    call vlime#ChainCallbacks(
+                \ function(b:vlime_conn.FrameLocalsAndCatchTags, [nth]),
+                \ function('s:ShowFrameLocalsCB', [nth]),
+                \ function(b:vlime_conn.FrameSourceLocation, [nth]),
+                \ function('s:ShowFrameSourceLocationCB', [nth, v:true]))
+endfunction
 
-    call b:vlime_conn.FrameLocalsAndCatchTags(nth,
-                \ function('s:ShowFrameDetailsCB', [nth]))
+function! s:ShowFrameLocalsCB(frame, conn, result)
+    let content = 'Frame: ' . a:frame . "\n"
+    let locals = a:result[0]
+    if type(locals) != v:t_none
+        let content .= "\nLocals:\n"
+        let rlocals = []
+        let max_name_len = 0
+        for lc in locals
+            let rlc = vlime#PListToDict(lc)
+            call add(rlocals, rlc)
+            if len(rlc['NAME']) > max_name_len
+                let max_name_len = len(rlc['NAME'])
+            endif
+        endfor
+        for rlc in rlocals
+            let content .= '  '     " Indentation
+            let content .= s:Pad(rlc['NAME'], ':', max_name_len)
+            let content .= (rlc['VALUE'] . "\n")
+        endfor
+    endif
+    let catch_tags = a:result[1]
+    if type(catch_tags) != v:t_none
+        let content .= "\nCatch tags:\n"
+        for ct in catch_tags
+            let content .= '  ' . ct . "\n"
+        endfor
+    endif
+    call vlime#ui#ShowPreview(content, v:false, 12)
+endfunction
+
+function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
+    if a:result[0]['name'] != 'LOCATION'
+        call vlime#ui#ErrMsg(a:result[1])
+        return
+    endif
+
+    if a:append
+        let content = ''
+    else
+        let content = 'Frame: ' . a:frame . "\n"
+    endif
+    let content .= "\nLocation:\n"
+    let content .= '  File: ' . a:result[1][1] . "\n"
+    let content .= '  Position: ' . a:result[2][1] . "\n"
+
+    let snippet_lines = split(a:result[3][1], "\n")
+    let snippet = join(map(snippet_lines, '"    " . v:val'), "\n")
+    let content .= "  Snippet:\n" . snippet . "\n"
+
+    if a:append
+        call vlime#ui#ShowPreview(content, v:true)
+    else
+        call vlime#ui#ShowPreview(content, v:false, 12)
+    endif
 endfunction
 
 function! vlime#ui#OpenBuffer(name, create, show)

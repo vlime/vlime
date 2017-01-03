@@ -68,7 +68,21 @@ function! VlimeConnectREPL(host, port, ...)
         return
     endtry
     call s:CleanUpNullBufConnections()
-    call conn.ConnectionInfo(v:true, function('s:OnConnectionInfoComplete'))
+
+    let contribs = exists('g:vlime_contribs') ?
+                \ g:vlime_contribs : [
+                    \ 'SWANK-ASDF', 'SWANK-PACKAGE-FU',
+                    \ 'SWANK-PRESENTATIONS', 'SWANK-FANCY-INSPECTOR',
+                    \ 'SWANK-C-P-C', 'SWANK-ARGLISTS', 'SWANK-REPL',
+                    \ 'SWANK-FUZZY']
+
+    call vlime#ChainCallbacks(
+                \ function(conn.ConnectionInfo, [v:true]),
+                \ function('s:OnConnectionInfoComplete'),
+                \ function(conn.SwankRequire, [contribs]),
+                \ function('s:OnSwankRequireComplete'),
+                \ function(conn.CreateREPL, [v:null]),
+                \ function('s:OnCreateREPLComplete'))
 endfunction
 
 function! VlimeSelectCurConnection()
@@ -260,7 +274,7 @@ function! VlimeSwankRequire(contribs)
     if type(conn) == v:t_none
         return
     endif
-    call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete', [v:false]))
+    call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete'))
 endfunction
 
 function! VlimeCurOperatorArgList()
@@ -486,26 +500,15 @@ function! s:OnCreateREPLComplete(conn, result)
     echom a:conn.cb_data['name'] . ' established.'
 endfunction
 
-function! s:OnSwankRequireComplete(create_repl, conn, result)
+function! s:OnSwankRequireComplete(conn, result)
     echom '-- OnSwankRequireComplete -------------------------'
     let a:conn.cb_data['contribs'] = a:result
-    if a:create_repl && s:ConnHasContrib(a:conn, 'SWANK-REPL')
-        call a:conn.CreateREPL(v:null, function('s:OnCreateREPLComplete'))
-    endif
 endfunction
 
 function! s:OnConnectionInfoComplete(conn, result)
     echom '-- OnConnectionInfoComplete -------------------------'
     let a:conn.cb_data['version'] = a:result['VERSION']
     let a:conn.cb_data['pid'] = a:result['PID']
-    let contribs = exists('g:vlime_contribs') ?
-                \ g:vlime_contribs : [
-                    \ 'SWANK-ASDF', 'SWANK-PACKAGE-FU',
-                    \ 'SWANK-PRESENTATIONS', 'SWANK-FANCY-INSPECTOR',
-                    \ 'SWANK-C-P-C', 'SWANK-ARGLISTS', 'SWANK-REPL',
-                    \ 'SWANK-FUZZY']
-    call a:conn.SwankRequire(contribs,
-                \ function('s:OnSwankRequireComplete', [v:true]))
 endfunction
 
 function! s:OnFuzzyCompletionsComplete(col, conn, result)
