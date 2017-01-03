@@ -45,6 +45,7 @@ function! vlime#New(...)
                 \ 'SLDBOut': function('vlime#SLDBOut'),
                 \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
                 \ 'RestartFrame': function('vlime#RestartFrame'),
+                \ 'FrameLocalsAndCatchTags': function('vlime#FrameLocalsAndCatchTags'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -181,7 +182,7 @@ function! vlime#ConnectionInfo(...) dict
     function! s:ConnectionInfoCB(conn, Callback, return_dict, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#ConnectionInfo')
         if a:return_dict
-            call s:TryToCall(a:Callback, [a:conn, s:PListToDict(a:msg[1][1])])
+            call s:TryToCall(a:Callback, [a:conn, vlime#PListToDict(a:msg[1][1])])
         else
             call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
         endif
@@ -295,6 +296,15 @@ function! vlime#RestartFrame(frame, ...) dict
                     \ [s:SYM('SWANK', 'RESTART-FRAME'), a:frame]),
                 \ function('s:SLDBSendCB',
                     \ [self, Callback, 'vlime#RestartFrame']))
+endfunction
+
+" vlime#FrameLocalsAndCatchTags(frame[, callback]) dict
+function! vlime#FrameLocalsAndCatchTags(frame, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'FRAME-LOCALS-AND-CATCH-TAGS'), a:frame]),
+                \ function('s:SimpleSendCB',
+                    \ [self, Callback, 'vlime#FrameLocalsAndCatchTags']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
@@ -510,7 +520,7 @@ function! s:GetNthVarArg(args, n, ...)
     endif
 endfunction
 
-function! s:PListToDict(plist)
+function! vlime#PListToDict(plist)
     let d = {}
     let i = 0
     while i < len(a:plist)

@@ -61,7 +61,7 @@ function! vlime#ui#SetCurrentThread(thread, ...) dict
 endfunction
 
 function! vlime#ui#OnDebug(conn, thread, level, condition, restarts, frames, conts) dict
-    let dbg_buf = s:InitSLDBBuf(self, a:conn, a:thread, a:level)
+    let dbg_buf = s:InitSLDBBuf(self, a:conn, a:thread, a:level, a:frames)
     call setbufvar(dbg_buf, '&modifiable', 1)
     call vlime#ui#WithBuffer(
                 \ dbg_buf,
@@ -291,6 +291,49 @@ function! vlime#ui#StepCurOrLastFrame(opr)
     endif
 endfunction
 
+function! vlime#ui#ShowFrameLocals()
+    function! s:ShowFrameLocalsCB(frame, conn, result)
+        let content = 'Frame: ' . a:frame . "\n"
+        let locals = a:result[0]
+        if type(locals) != v:t_none
+            let content .= "\nLocals:\n"
+            let rlocals = []
+            let max_name_len = 0
+            for lc in locals
+                let rlc = vlime#PListToDict(lc)
+                call add(rlocals, rlc)
+                if len(rlc['NAME']) > max_name_len
+                    let max_name_len = len(rlc['NAME'])
+                endif
+            endfor
+            for rlc in rlocals
+                let content .= '  '     " Indentation
+                let content .= s:Pad(rlc['NAME'], ':', max_name_len)
+                let content .= (rlc['VALUE'] . "\n")
+            endfor
+        endif
+        let catch_tags = a:result[1]
+        if type(catch_tags) != v:t_none
+            let content .= "\nCatch tags:\n"
+            for ct in catch_tags
+                let content .= '  ' . ct
+            endfor
+        endif
+        call vlime#ui#ShowPreview(content, v:false, 12)
+    endfunction
+
+    let line = getline('.')
+    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
+    if len(matches) > 0
+        let nth = matches[1] + 0
+    else
+        let nth = 0
+    endif
+
+    call b:vlime_conn.FrameLocalsAndCatchTags(nth,
+                \ function('s:ShowFrameLocalsCB', [nth]))
+endfunction
+
 function! vlime#ui#OpenBuffer(name, create, show)
     let buf = bufnr(a:name, a:create)
     if buf > 0
@@ -387,8 +430,8 @@ function! s:NormalizePackageName(name)
     return toupper(r_name)
 endfunction
 
-function! s:PadIdx(idx, sep, max_digits)
-    return a:idx . a:sep . repeat(' ', a:max_digits + 1 - len(string(a:idx)))
+function! s:Pad(prefix, sep, max_len)
+    return a:prefix . a:sep . repeat(' ', a:max_len + 1 - len(a:prefix))
 endfunction
 
 function! s:FindMaxRestartNameLen(restarts)
@@ -433,10 +476,11 @@ function! s:SetVlimeBufferOpts(buf, conn)
     call setbufvar(a:buf, 'vlime_conn', a:conn)
 endfunction
 
-function! s:InitSLDBBuf(ui, conn, thread, level)
+function! s:InitSLDBBuf(ui, conn, thread, level, frames)
     let buf = bufnr(vlime#ui#SLDBBufName(a:conn, a:thread), v:true)
     call s:SetVlimeBufferOpts(buf, a:conn)
     call setbufvar(buf, 'vlime_sldb_level', a:level)
+    call setbufvar(buf, 'vlime_sldb_frames', a:frames)
     call a:ui.SetCurrentThread(a:thread, buf)
     return buf
 endfunction
@@ -462,7 +506,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     let ri = 0
     while ri < len(a:restarts)
         let r = a:restarts[ri]
-        let idx_str = s:PadIdx(ri, '.', max_digits)
+        let idx_str = s:Pad(string(ri), '.', max_digits)
         let restart_line = s:FormatRestartLine(r, max_name_len, has_star)
         let restarts_str .= ('  ' . idx_str . restart_line . "\n")
         let ri += 1
@@ -473,7 +517,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     let frames_str = "Frames:\n"
     let max_digits = len(string(len(a:frames) - 1))
     for f in a:frames
-        let idx_str = s:PadIdx(f[0], '.', max_digits)
+        let idx_str = s:Pad(string(f[0]), '.', max_digits)
         let frames_str .= ('  ' . idx_str . f[1] . "\n")
     endfor
     call s:AppendString(frames_str)
