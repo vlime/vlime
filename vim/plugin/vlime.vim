@@ -574,7 +574,7 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
     endif
     let old_pos = getcurpos()
     try
-        call vlime#ui#ShowPreview(a:result, v:false, 2)
+        call vlime#ui#ShowPreview(a:conn, a:result, v:false, 2)
     finally
         call setpos('.', old_pos)
     endtry
@@ -587,7 +587,7 @@ endfunction
 function! s:ShowAsyncResult(conn, result)
     let old_pos = getcurpos()
     try
-        call vlime#ui#ShowPreview(a:result, v:false, 12)
+        call vlime#ui#ShowPreview(a:conn, a:result, v:false, 12)
     finally
         call setpos('.', old_pos)
     endtry
