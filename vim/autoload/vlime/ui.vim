@@ -714,6 +714,7 @@ function! s:FillInspectorBuf(content, thread, itag)
 
     nnoremap <buffer> <cr> :call vlime#ui#InspectorSelect()<cr>
     nnoremap <buffer> <space> :call vlime#ui#InspectorSelect()<cr>
+    nnoremap <buffer> p :call vlime#ui#InspectorPop()<cr>
 endfunction
 
 function! vlime#ui#ResetInspectorBuffer(bufnr)
@@ -756,6 +757,13 @@ function! vlime#ui#InspectorSelect()
         call b:vlime_conn.InspectNthPart(coord['id'],
                     \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
     endif
+endfunction
+
+function! vlime#ui#InspectorPop()
+    call b:vlime_conn.InspectorPop(
+                \ {c, r ->
+                    \ (type(r) == v:t_none) ?
+                    \ v:null : c.ui.OnInspect(c, r, v:null, v:null)})
 endfunction
 
 function! vlime#ui#AppendString(str)
