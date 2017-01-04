@@ -233,7 +233,8 @@ function! VlimeInspectCurThing(thing)
         return
     endif
 
-    call conn.InitInspector(str, function('s:OnInitInspectorComplete'))
+    call conn.InitInspector(str,
+                \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
 endfunction
 
 function! VlimeCompileCurFile()
@@ -472,6 +473,15 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>do :call VlimeDescribeCurSymbol('operator')<cr>
     nnoremap <buffer> <LocalLeader>da :call VlimeDescribeCurSymbol('atom')<cr>
 
+    " Inspection
+    nnoremap <buffer> <LocalLeader>II :call VlimeInspectCurThing('thing')<cr>
+    nnoremap <buffer> <LocalLeader>Ii :call VlimeInspectCurThing('thing')<cr>
+    nnoremap <buffer> <LocalLeader>IE :call VlimeInspectCurThing('expr')<cr>
+    nnoremap <buffer> <LocalLeader>Ie :call VlimeInspectCurThing('expr')<cr>
+    nnoremap <buffer> <LocalLeader>IA :call VlimeInspectCurThing('atom')<cr>
+    nnoremap <buffer> <LocalLeader>Ia :call VlimeInspectCurThing('atom')<cr>
+    vnoremap <buffer> <LocalLeader>I :<c-u>call VlimeInspectCurThing('selection')<cr>
+
     " Other stuff
     nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
     nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
@@ -572,10 +582,6 @@ endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)
     echom 'Loaded: ' . a:fname
-endfunction
-
-function! s:OnInitInspectorComplete(conn, result)
-    call a:conn.ui.OnInspect(a:conn, a:result, v:null, v:null)
 endfunction
 
 function! s:ShowAsyncResult(conn, result)

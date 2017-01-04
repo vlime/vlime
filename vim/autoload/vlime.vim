@@ -30,6 +30,7 @@ function! vlime#New(...)
                 \ 'SimpleCompletions': function('vlime#SimpleCompletions'),
                 \ 'FuzzyCompletions': function('vlime#FuzzyCompletions'),
                 \ 'ReturnString': function('vlime#ReturnString'),
+                \ 'Return': function('vlime#Return'),
                 \ 'SwankMacroExpandOne': function('vlime#SwankMacroExpandOne'),
                 \ 'SwankMacroExpand': function('vlime#SwankMacroExpand'),
                 \ 'SwankMacroExpandAll': function('vlime#SwankMacroExpandAll'),
@@ -48,6 +49,8 @@ function! vlime#New(...)
                 \ 'FrameLocalsAndCatchTags': function('vlime#FrameLocalsAndCatchTags'),
                 \ 'FrameSourceLocation': function('vlime#FrameSourceLocation'),
                 \ 'InitInspector': function('vlime#InitInspector'),
+                \ 'InspectNthPart': function('vlime#InspectNthPart'),
+                \ 'InspectorCallNthAction': function('vlime#InspectorCallNthAction'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -57,6 +60,7 @@ function! vlime#New(...)
                     \ 'DEBUG-RETURN': function('vlime#OnDebugReturn'),
                     \ 'WRITE-STRING': function('vlime#OnWriteString'),
                     \ 'READ-STRING': function('vlime#OnReadString'),
+                    \ 'READ-FROM-MINIBUFFER': function('vlime#OnReadFromMiniBuffer'),
                     \ 'INDENTATION-UPDATE': function('vlime#OnIndentationUpdate'),
                     \ 'INVALID-RPC': function('vlime#OnInvalidRPC'),
                     \ 'INSPECT': function('vlime#OnInspect'),
@@ -293,7 +297,7 @@ function! vlime#InvokeNthRestartForEmacs(level, restart, ...) dict
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#InvokeNthRestartForEmacs']))
 endfunction
 
-" vlime#RestartFrame(frame[, callback]) dict
+" vlime#RestartFrame(frame[, callback])
 function! vlime#RestartFrame(frame, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
@@ -302,7 +306,7 @@ function! vlime#RestartFrame(frame, ...) dict
                     \ [self, Callback, 'vlime#RestartFrame']))
 endfunction
 
-" vlime#FrameLocalsAndCatchTags(frame[, callback]) dict
+" vlime#FrameLocalsAndCatchTags(frame[, callback])
 function! vlime#FrameLocalsAndCatchTags(frame, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
@@ -311,7 +315,7 @@ function! vlime#FrameLocalsAndCatchTags(frame, ...) dict
                     \ [self, Callback, 'vlime#FrameLocalsAndCatchTags']))
 endfunction
 
-" vlime#FrameSourceLocation(frame[, callback]) dict
+" vlime#FrameSourceLocation(frame[, callback])
 function! vlime#FrameSourceLocation(frame, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
@@ -320,13 +324,31 @@ function! vlime#FrameSourceLocation(frame, ...) dict
                     \ [self, Callback, 'vlime#FrameSourceLocation']))
 endfunction
 
-" vlime#InitInspector(thing[, callback]) dict
+" vlime#InitInspector(thing[, callback])
 function! vlime#InitInspector(thing, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INIT-INSPECTOR'), a:thing]),
                 \ function('s:SimpleSendCB',
                     \ [self, Callback, 'vlime#InitInspector']))
+endfunction
+
+" vlime#InspectNthPart(nth[, callback])
+function! vlime#InspectNthPart(nth, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'INSPECT-NTH-PART'), a:nth]),
+                \ function('s:SimpleSendCB',
+                    \ [self, Callback, 'vlime#InspectNthPart']))
+endfunction
+
+" vlime#InspectorCallNthAction(nth[, callback])
+function! vlime#InspectorCallNthAction(nth, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'INSPECTOR-CALL-NTH-ACTION'), a:nth]),
+                \ function('s:SimpleSendCB',
+                    \ [self, Callback, 'vlime#InspectorCallNthAction']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
@@ -485,6 +507,14 @@ function! vlime#OnReadString(conn, msg)
     if type(a:conn.ui) != v:t_none
         let [_msg_type, thread, ttag] = a:msg
         call a:conn.ui.OnReadString(a:conn, thread, ttag)
+    endif
+endfunction
+
+function! vlime#OnReadFromMiniBuffer(conn, msg)
+    if type(a:conn.ui) != v:t_none
+        let [_msg_type, thread, ttag, prompt, init_val] = a:msg
+        call a:conn.ui.OnReadFromMiniBuffer(
+                    \ a:conn, thread, ttag, prompt, init_val)
     endif
 endfunction
 

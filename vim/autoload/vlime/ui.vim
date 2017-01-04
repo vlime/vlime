@@ -11,6 +11,7 @@ function! vlime#ui#New()
                 \ 'OnDebugReturn': function('vlime#ui#OnDebugReturn'),
                 \ 'OnWriteString': function('vlime#ui#OnWriteString'),
                 \ 'OnReadString': function('vlime#ui#OnReadString'),
+                \ 'OnReadFromMiniBuffer': function('vlime#ui#OnReadFromMiniBuffer'),
                 \ 'OnIndentationUpdate': function('vlime#ui#OnIndentationUpdate'),
                 \ 'OnInvalidRPC': function('vlime#ui#OnInvalidRPC'),
                 \ 'OnInspect': function('vlime#ui#OnInspect'),
@@ -136,6 +137,39 @@ function! vlime#ui#OnReadString(conn, thread, ttag)
         let input_str .= "\n"
     endif
     call a:conn.ReturnString(a:thread, a:ttag, input_str)
+endfunction
+
+function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val)
+    let buf = vlime#ui#OpenBuffer(
+                \ vlime#ui#MiniBufName(a:prompt), v:true, 'botright split')
+    call s:SetVlimeBufferOpts(buf, a:conn)
+    resize 4
+    set winfixheight
+    set winfixwidth
+
+    call vlime#ui#AppendString('; ' . a:prompt . "\n")
+    if type(a:init_val) != v:t_none
+        call vlime#ui#AppendString(a:init_val)
+    endif
+    execute 'nnoremap <buffer> <cr> :call vlime#ui#ReturnMiniBufferContent('
+                \ . a:thread . ', ' . a:ttag . ')<cr>'
+endfunction
+
+function! vlime#ui#ReturnMiniBufferContent(thread, ttag)
+    let content = vlime#ui#CurBufferContent()
+    call b:vlime_conn.Return(a:thread, a:ttag, content)
+    bunload!
+endfunction
+
+function! vlime#ui#CurBufferContent()
+    let old_reg = @x
+    try
+        normal! ggVG"xy
+        let lines = split(@x, "\n")
+        return join(filter(lines, "match(v:val, '^\s*;.*$') < 0"), "\n")
+    finally
+        let @x = old_reg
+    endtry
 endfunction
 
 function! vlime#ui#OnIndentationUpdate(conn, indent_info)
@@ -481,6 +515,10 @@ function! vlime#ui#InspectorBufName()
     return 'vlime / inspect'
 endfunction
 
+function! vlime#ui#MiniBufName(prompt)
+    return 'vlime / input / ' . a:prompt
+endfunction
+
 function! vlime#ui#IndentCurLine(indent)
     if &expandtab
         let indent_str = repeat(' ', a:indent)
@@ -624,7 +662,9 @@ endfunction
 function! s:InitInspectorBuf(ui, conn, thread)
     let buf = bufnr(vlime#ui#InspectorBufName(), v:true)
     call s:SetVlimeBufferOpts(buf, a:conn)
-    call a:ui.SetCurrentThread(a:thread, buf)
+    if type(a:thread) != v:t_none
+        call a:ui.SetCurrentThread(a:thread, buf)
+    endif
     return buf
 endfunction
 
@@ -665,16 +705,58 @@ function! s:FillInspectorBuf(content, thread, itag)
     call s:FillInspectorBufContent(r_content['CONTENT'], coords)
     let b:vlime_inspector_coords = coords
 
-    if type(a:thread) != v:t_none && type(a:itag) != v:t_none
-        augroup InspectorLeaveAu
-            autocmd!
+    augroup InspectorLeaveAu
+        autocmd!
+        execute 'autocmd BufWinLeave <buffer> call vlime#ui#ResetInspectorBuffer(' . bufnr('%') . ')'
+        if type(a:thread) != v:t_none && type(a:itag) != v:t_none
             execute 'autocmd BufWinLeave <buffer> call b:vlime_conn.Return('
                         \ . a:thread . ', ' . a:itag . ', v:null)'
-        augroup end
-    else
-        augroup InspectorLeaveAu
-            autocmd!
-        augroup end
+        endif
+    augroup end
+
+    nnoremap <buffer> <cr> :call vlime#ui#InspectorSelect()<cr>
+    nnoremap <buffer> <space> :call vlime#ui#InspectorSelect()<cr>
+endfunction
+
+function! vlime#ui#ResetInspectorBuffer(bufnr)
+    call setbufvar(a:bufnr, 'vlime_conn', v:null)
+    call setbufvar(a:bufnr, 'vlime_inspector_coords', [])
+    execute 'bunload! ' . a:bufnr
+endfunction
+
+function! vlime#ui#InspectorSelect()
+    let cur_pos = getcurpos()
+    let coord = v:null
+    for c in b:vlime_inspector_coords
+        if c['begin'][0] == c['end'][0] && cur_pos[1] == c['begin'][0]
+                    \ && cur_pos[2] >= c['begin'][1]
+                    \ && cur_pos[2] <= c['end'][1]
+            let coord = c
+            break
+        elseif c['begin'][0] < c['end'][0]
+            if cur_pos[1] == c['begin'][0] && cur_pos[2] >= c['begin'][1]
+                let coord = c
+                break
+            elseif cur_pos[1] == c['end'][0] && cur_pos[2] <= c['end'][1]
+                let coord = c
+                break
+            elseif cur_pos[1] > c['begin'][0] && cur_pos[1] < c['end'][0]
+                let coord = c
+                break
+            endif
+        endif
+    endfor
+
+    if type(coord) == v:t_none
+        return
+    endif
+
+    if coord['type'] == 'ACTION'
+        call b:vlime_conn.InspectorCallNthAction(coord['id'],
+                    \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
+    elseif coord['type'] == 'VALUE'
+        call b:vlime_conn.InspectNthPart(coord['id'],
+                    \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
     endif
 endfunction
 
