@@ -58,6 +58,7 @@ function! vlime#New(...)
                     \ 'READ-STRING': function('vlime#OnReadString'),
                     \ 'INDENTATION-UPDATE': function('vlime#OnIndentationUpdate'),
                     \ 'INVALID-RPC': function('vlime#OnInvalidRPC'),
+                    \ 'INSPECT': function('vlime#OnInspect'),
                     \ }
                 \ }
     return obj
@@ -366,6 +367,10 @@ function! vlime#ReturnString(thread, ttag, str) dict
     call self.Send([s:KW('EMACS-RETURN-STRING'), a:thread, a:ttag, a:str])
 endfunction
 
+function! vlime#Return(thread, ttag, val) dict
+    call self.Send([s:KW('EMACS-RETURN'), a:thread, a:ttag, a:val])
+endfunction
+
 " vlime#SwankMacroExpandOne(expr[, callback])
 function! vlime#SwankMacroExpandOne(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
@@ -484,6 +489,13 @@ function! vlime#OnInvalidRPC(conn, msg)
     if type(a:conn.ui) != v:t_none
         let [_msg_type, id, err_msg] = a:msg
         call a:conn.ui.OnInvalidRPC(a:conn, id, err_msg)
+    endif
+endfunction
+
+function! vlime#OnInspect(conn, msg)
+    if type(a:conn.ui) != v:t_none
+        let [_msg_type, i_content, i_thread, i_tag] = a:msg
+        call a:conn.ui.OnInspect(a:conn, i_content, i_thread, i_tag)
     endif
 endfunction
 

@@ -13,6 +13,7 @@ function! vlime#ui#New()
                 \ 'OnReadString': function('vlime#ui#OnReadString'),
                 \ 'OnIndentationUpdate': function('vlime#ui#OnIndentationUpdate'),
                 \ 'OnInvalidRPC': function('vlime#ui#OnInvalidRPC'),
+                \ 'OnInspect': function('vlime#ui#OnInspect'),
                 \ }
     return obj
 endfunction
@@ -148,6 +149,10 @@ endfunction
 
 function! vlime#ui#OnInvalidRPC(conn, rpc_id, err_msg)
     call vlime#ui#ErrMsg(a:err_msg)
+endfunction
+
+function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag)
+    " TODO
 endfunction
 
 function! vlime#ui#WithBuffer(buf, Func)
