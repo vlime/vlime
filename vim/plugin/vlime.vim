@@ -161,19 +161,19 @@ endfunction
 
 function! VlimeSendCurThingToREPL(thing)
     if a:thing == 'thing'
-        let thing = vlime#ui#CurExpr()
-        if len(thing) <= 0
-            let thing = vlime#ui#CurAtom()
+        let str = vlime#ui#CurExpr()
+        if len(str) <= 0
+            let str = vlime#ui#CurAtom()
         endif
     elseif a:thing == 'expr'
-        let thing = vlime#ui#CurExpr()
+        let str = vlime#ui#CurExpr()
     elseif a:thing == 'atom'
-        let thing = vlime#ui#CurAtom()
+        let str = vlime#ui#CurAtom()
     elseif a:thing == 'selection'
-        let thing = vlime#ui#CurSelection()
+        let str = vlime#ui#CurSelection()
     endif
 
-    if len(thing) <= 0
+    if len(str) <= 0
         return
     endif
 
@@ -184,7 +184,7 @@ function! VlimeSendCurThingToREPL(thing)
 
     call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
-                \ function(conn.ListenerEval, [thing]))
+                \ function(conn.ListenerEval, [str]))
 endfunction
 
 function! VlimeCompileCurThing(thing)
@@ -208,6 +208,32 @@ function! VlimeCompileCurThing(thing)
                 \ str, bufnr('%'),
                 \ line2byte(str_line) + str_col - 1,
                 \ expand('%:p'))
+endfunction
+
+function! VlimeInspectCurThing(thing)
+    if a:thing == 'thing'
+        let str = vlime#ui#CurExpr()
+        if len(str) <= 0
+            let str = vlime#ui#CurAtom()
+        endif
+    elseif a:thing == 'expr'
+        let str = vlime#ui#CurExpr()
+    elseif a:thing == 'atom'
+        let str = vlime#ui#CurAtom()
+    elseif a:thing == 'selection'
+        let str = vlime#ui#CurSelection()
+    endif
+
+    if len(str) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.InitInspector(str, function('s:OnInitInspectorComplete'))
 endfunction
 
 function! VlimeCompileCurFile()
@@ -544,6 +570,14 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
     endtry
 endfunction
 
+function! s:OnLoadFileComplete(fname, conn, result)
+    echom 'Loaded: ' . a:fname
+endfunction
+
+function! s:OnInitInspectorComplete(conn, result)
+    call a:conn.ui.OnInspect(a:conn, a:result, v:null, v:null)
+endfunction
+
 function! s:ShowAsyncResult(conn, result)
     let old_pos = getcurpos()
     try
@@ -551,10 +585,6 @@ function! s:ShowAsyncResult(conn, result)
     finally
         call setpos('.', old_pos)
     endtry
-endfunction
-
-function! s:OnLoadFileComplete(fname, conn, result)
-    echom 'Loaded: ' . a:fname
 endfunction
 
 function! s:CleanUpNullBufConnections()

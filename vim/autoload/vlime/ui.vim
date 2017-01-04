@@ -152,7 +152,11 @@ function! vlime#ui#OnInvalidRPC(conn, rpc_id, err_msg)
 endfunction
 
 function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag)
-    " TODO
+    let insp_buf = s:InitInspectorBuf(a:conn.ui, a:conn, a:i_thread)
+    call vlime#ui#OpenBuffer(insp_buf, v:false, 'botright split')
+    call setbufvar(insp_buf, '&modifiable', 1)
+    call s:FillInspectorBuf(a:i_content, a:i_thread, a:i_tag)
+    call setbufvar(insp_buf, '&modifiable', 0)
 endfunction
 
 function! vlime#ui#WithBuffer(buf, Func)
@@ -335,7 +339,7 @@ function! s:ShowFrameLocalsCB(frame, conn, result)
             let content .= '  ' . ct . "\n"
         endfor
     endif
-    call vlime#ui#ShowPreview(content, v:false, 12)
+    call vlime#ui#ShowPreview(a:conn, content, v:false, 12)
 endfunction
 
 function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
@@ -358,9 +362,9 @@ function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
     let content .= "  Snippet:\n" . snippet . "\n"
 
     if a:append
-        call vlime#ui#ShowPreview(content, v:true)
+        call vlime#ui#ShowPreview(a:conn, content, v:true)
     else
-        call vlime#ui#ShowPreview(content, v:false, 12)
+        call vlime#ui#ShowPreview(a:conn, content, v:false, 12)
     endif
 endfunction
 
@@ -429,8 +433,8 @@ function! vlime#ui#OpenBuffer(name, create, show)
     return buf
 endfunction
 
-" vlime#ui#ShowPreview(content, append[, win_size])
-function! vlime#ui#ShowPreview(content, append, ...)
+" vlime#ui#ShowPreview(conn, content, append[, win_size])
+function! vlime#ui#ShowPreview(conn, content, append, ...)
     let win_size = vlime#GetNthVarArg(a:000, 0)
     let old_win_id = win_getid()
     try
@@ -446,7 +450,7 @@ function! vlime#ui#ShowPreview(content, append, ...)
 
             if !getbufvar(buf, 'vlime_buffer_initialized', v:false)
                 call setbufvar(buf, 'vlime_buffer_initialized', v:true)
-                call s:SetVlimeBufferOpts(buf, v:null)
+                call s:SetVlimeBufferOpts(buf, a:conn)
             endif
             if a:append
                 call vlime#ui#AppendString(a:content)
@@ -471,6 +475,10 @@ endfunction
 
 function! vlime#ui#PreviewBufName()
     return 'vlime / preview'
+endfunction
+
+function! vlime#ui#InspectorBufName()
+    return 'vlime / inspect'
 endfunction
 
 function! vlime#ui#IndentCurLine(indent)
@@ -611,6 +619,63 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     nnoremap <buffer> o :call vlime#ui#StepCurOrLastFrame('out')<cr>
     nnoremap <buffer> c :call b:vlime_conn.SLDBContinue()<cr>
     nnoremap <buffer> a :call b:vlime_conn.SLDBAbort()<cr>
+endfunction
+
+function! s:InitInspectorBuf(ui, conn, thread)
+    let buf = bufnr(vlime#ui#InspectorBufName(), v:true)
+    call s:SetVlimeBufferOpts(buf, a:conn)
+    call a:ui.SetCurrentThread(a:thread, buf)
+    return buf
+endfunction
+
+function! s:FillInspectorBufContent(content, coords)
+    if type(a:content) == v:t_string
+        call vlime#ui#AppendString(a:content)
+        normal! G$
+    elseif type(a:content) == v:t_list
+        if len(a:content) == 3 && type(a:content[0]) == v:t_dict
+            let begin_pos = getcurpos()
+            if begin_pos[2] != 1 || len(getline('.')) > 0
+                let begin_pos[2] += 1
+            endif
+            call s:FillInspectorBufContent(a:content[1], a:coords)
+            let end_pos = getcurpos()
+            call add(a:coords, {
+                        \ 'begin': [begin_pos[1], begin_pos[2]],
+                        \ 'end': [end_pos[1], end_pos[2]],
+                        \ 'type': a:content[0]['name'],
+                        \ 'id': a:content[2],
+                        \ })
+        else
+            for c in a:content
+                call s:FillInspectorBufContent(c, a:coords)
+            endfor
+        endif
+    endif
+endfunction
+
+function! s:FillInspectorBuf(content, thread, itag)
+    call vlime#ui#ReplaceContent(string(a:content))
+
+    let r_content = vlime#PListToDict(a:content)
+    call vlime#ui#ReplaceContent(r_content['TITLE'] . "\n====================\n\n")
+    normal! G$
+
+    let coords = []
+    call s:FillInspectorBufContent(r_content['CONTENT'], coords)
+    let b:vlime_inspector_coords = coords
+
+    if type(a:thread) != v:t_none && type(a:itag) != v:t_none
+        augroup InspectorLeaveAu
+            autocmd!
+            execute 'autocmd BufWinLeave <buffer> call b:vlime_conn.Return('
+                        \ . a:thread . ', ' . a:itag . ', v:null)'
+        augroup end
+    else
+        augroup InspectorLeaveAu
+            autocmd!
+        augroup end
+    endif
 endfunction
 
 function! vlime#ui#AppendString(str)

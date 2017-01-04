@@ -47,6 +47,7 @@ function! vlime#New(...)
                 \ 'RestartFrame': function('vlime#RestartFrame'),
                 \ 'FrameLocalsAndCatchTags': function('vlime#FrameLocalsAndCatchTags'),
                 \ 'FrameSourceLocation': function('vlime#FrameSourceLocation'),
+                \ 'InitInspector': function('vlime#InitInspector'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -317,6 +318,15 @@ function! vlime#FrameSourceLocation(frame, ...) dict
                     \ [s:SYM('SWANK', 'FRAME-SOURCE-LOCATION'), a:frame]),
                 \ function('s:SimpleSendCB',
                     \ [self, Callback, 'vlime#FrameSourceLocation']))
+endfunction
+
+" vlime#InitInspector(thing[, callback]) dict
+function! vlime#InitInspector(thing, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'INIT-INSPECTOR'), a:thing]),
+                \ function('s:SimpleSendCB',
+                    \ [self, Callback, 'vlime#InitInspector']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
