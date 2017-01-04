@@ -82,7 +82,7 @@ function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
     endif
 endfunction
 
-function! vlime#ui#OnDebugReturn(conn, thread, level, stepping)
+function! vlime#ui#OnDebugReturn(conn, thread, level, stepping) dict
     let buf_name = vlime#ui#SLDBBufName(a:conn, a:thread)
     let bufnr = bufnr(buf_name)
     if bufnr > 0
@@ -94,7 +94,7 @@ function! vlime#ui#OnDebugReturn(conn, thread, level, stepping)
     endif
 endfunction
 
-function! vlime#ui#OnWriteString(conn, str, str_type)
+function! vlime#ui#OnWriteString(conn, str, str_type) dict
     let repl_buf = vlime#ui#OpenBuffer(
                 \ vlime#ui#REPLBufName(a:conn), v:true, v:false)
     if repl_buf > 0
@@ -131,7 +131,7 @@ function! vlime#ui#OnWriteString(conn, str, str_type)
     endif
 endfunction
 
-function! vlime#ui#OnReadString(conn, thread, ttag)
+function! vlime#ui#OnReadString(conn, thread, ttag) dict
     let input_str = input('Input string: ')
     if input_str[len(input_str)-1] != "\n"
         let input_str .= "\n"
@@ -139,7 +139,7 @@ function! vlime#ui#OnReadString(conn, thread, ttag)
     call a:conn.ReturnString(a:thread, a:ttag, input_str)
 endfunction
 
-function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val)
+function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val) dict
     let buf = vlime#ui#OpenBuffer(
                 \ vlime#ui#MiniBufName(a:prompt), v:true, 'botright split')
     call s:SetVlimeBufferOpts(buf, a:conn)
@@ -172,7 +172,7 @@ function! vlime#ui#CurBufferContent()
     endtry
 endfunction
 
-function! vlime#ui#OnIndentationUpdate(conn, indent_info)
+function! vlime#ui#OnIndentationUpdate(conn, indent_info) dict
     if !has_key(a:conn.cb_data, 'indent_info')
         let a:conn.cb_data['indent_info'] = {}
     endif
@@ -181,11 +181,11 @@ function! vlime#ui#OnIndentationUpdate(conn, indent_info)
     endfor
 endfunction
 
-function! vlime#ui#OnInvalidRPC(conn, rpc_id, err_msg)
+function! vlime#ui#OnInvalidRPC(conn, rpc_id, err_msg) dict
     call vlime#ui#ErrMsg(a:err_msg)
 endfunction
 
-function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag)
+function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     let insp_buf = s:InitInspectorBuf(a:conn.ui, a:conn, a:i_thread)
     call vlime#ui#OpenBuffer(insp_buf, v:false, 'botright split')
     call setbufvar(insp_buf, '&modifiable', 1)
@@ -695,8 +695,6 @@ function! s:FillInspectorBufContent(content, coords)
 endfunction
 
 function! s:FillInspectorBuf(content, thread, itag)
-    call vlime#ui#ReplaceContent(string(a:content))
-
     let r_content = vlime#PListToDict(a:content)
     call vlime#ui#ReplaceContent(r_content['TITLE'] . "\n====================\n\n")
     normal! G$
