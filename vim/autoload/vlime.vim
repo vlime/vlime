@@ -601,6 +601,10 @@ function! s:GetNthVarArg(args, n, ...)
 endfunction
 
 function! vlime#PListToDict(plist)
+    if type(a:plist) == v:t_none
+        return {}
+    endif
+
     let d = {}
     let i = 0
     while i < len(a:plist)

@@ -188,9 +188,21 @@ endfunction
 function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     let insp_buf = s:InitInspectorBuf(a:conn.ui, a:conn, a:i_thread)
     call vlime#ui#OpenBuffer(insp_buf, v:false, 'botright split')
+
+    let r_content = vlime#PListToDict(a:i_content)
+    let old_title = getline(1)
+    if get(r_content, 'TITLE', v:null) == old_title
+        let old_cur = getcurpos()
+    else
+        let old_cur = [0, 1, 1, 0, 1]
+    endif
+
     call setbufvar(insp_buf, '&modifiable', 1)
-    call s:FillInspectorBuf(a:i_content, a:i_thread, a:i_tag)
+    call s:FillInspectorBuf(r_content, a:i_thread, a:i_tag)
     call setbufvar(insp_buf, '&modifiable', 0)
+    call setpos('.', old_cur)
+    " Needed for displaying the content of the current buffer correctly
+    redraw
 endfunction
 
 function! vlime#ui#WithBuffer(buf, Func)
@@ -695,12 +707,11 @@ function! s:FillInspectorBufContent(content, coords)
 endfunction
 
 function! s:FillInspectorBuf(content, thread, itag)
-    let r_content = vlime#PListToDict(a:content)
-    call vlime#ui#ReplaceContent(r_content['TITLE'] . "\n====================\n\n")
+    call vlime#ui#ReplaceContent(a:content['TITLE'] . "\n====================\n\n")
     normal! G$
 
     let coords = []
-    call s:FillInspectorBufContent(r_content['CONTENT'], coords)
+    call s:FillInspectorBufContent(a:content['CONTENT'], coords)
     let b:vlime_inspector_coords = coords
 
     augroup InspectorLeaveAu
@@ -760,10 +771,15 @@ function! vlime#ui#InspectorSelect()
 endfunction
 
 function! vlime#ui#InspectorPop()
-    call b:vlime_conn.InspectorPop(
-                \ {c, r ->
-                    \ (type(r) == v:t_none) ?
-                    \ v:null : c.ui.OnInspect(c, r, v:null, v:null)})
+    function! s:OnInspectorPopComplete(conn, result)
+        if type(a:result) == v:t_none
+            call vlime#ui#ErrMsg('The inspector stack is empty.')
+        else
+            call a:conn.ui.OnInspect(a:conn, a:result, v:null, v:null)
+        endif
+    endfunction
+
+    call b:vlime_conn.InspectorPop(function('s:OnInspectorPopComplete'))
 endfunction
 
 function! vlime#ui#AppendString(str)
