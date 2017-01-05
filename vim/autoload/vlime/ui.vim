@@ -104,16 +104,8 @@ endfunction
 function! vlime#ui#OnReadString(conn, thread, ttag) dict
     call vlime#ui#InputFromMiniBuffer(
                 \ a:conn, 'Input string:', v:null,
-                \ 'call vlime#ui#OnReadStringInputComplete('
+                \ 'call vlime#ui#ReadStringInputComplete('
                     \ . a:thread . ', ' . a:ttag . ') \| bunload!')
-endfunction
-
-function! vlime#ui#OnReadStringInputComplete(thread, ttag)
-    let content = vlime#ui#CurBufferContent()
-    if content[len(content)-1] != "\n"
-        let content .= "\n"
-    endif
-    call b:vlime_conn.ReturnString(a:thread, a:ttag, content)
 endfunction
 
 function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val) dict
@@ -121,22 +113,6 @@ function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val) di
                 \ a:conn, a:prompt, a:init_val,
                 \ 'call vlime#ui#ReturnMiniBufferContent('
                     \ . a:thread . ', ' . a:ttag . ') \| bunload!')
-endfunction
-
-function! vlime#ui#ReturnMiniBufferContent(thread, ttag)
-    let content = vlime#ui#CurBufferContent()
-    call b:vlime_conn.Return(a:thread, a:ttag, content)
-endfunction
-
-function! vlime#ui#CurBufferContent()
-    let old_reg = @x
-    try
-        normal! ggVG"xy
-        let lines = split(@x, "\n")
-        return join(filter(lines, "match(v:val, '^\s*;.*$') < 0"), "\n")
-    finally
-        let @x = old_reg
-    endtry
 endfunction
 
 function! vlime#ui#OnIndentationUpdate(conn, indent_info) dict
@@ -173,15 +149,17 @@ function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     redraw
 endfunction
 
-function! vlime#ui#WithBuffer(buf, Func)
-    let old_buf = bufnr('%')
-    let cur_buf = bufnr(a:buf)
-    try
-        execute 'hide buffer ' . cur_buf
-        return a:Func()
-    finally
-        execute 'buffer ' . old_buf
-    endtry
+function! vlime#ui#ReadStringInputComplete(thread, ttag)
+    let content = vlime#ui#CurBufferContent()
+    if content[len(content)-1] != "\n"
+        let content .= "\n"
+    endif
+    call b:vlime_conn.ReturnString(a:thread, a:ttag, content)
+endfunction
+
+function! vlime#ui#ReturnMiniBufferContent(thread, ttag)
+    let content = vlime#ui#CurBufferContent()
+    call b:vlime_conn.Return(a:thread, a:ttag, content)
 endfunction
 
 function! vlime#ui#CurChar()
@@ -285,6 +263,28 @@ function! vlime#ui#CurSelection(...)
     endtry
 endfunction
 
+function! vlime#ui#CurBufferContent()
+    let old_reg = @x
+    try
+        normal! ggVG"xy
+        let lines = split(@x, "\n")
+        return join(filter(lines, "match(v:val, '^\s*;.*$') < 0"), "\n")
+    finally
+        let @x = old_reg
+    endtry
+endfunction
+
+function! vlime#ui#WithBuffer(buf, Func)
+    let old_buf = bufnr('%')
+    let cur_buf = bufnr(a:buf)
+    try
+        execute 'hide buffer ' . cur_buf
+        return a:Func()
+    finally
+        execute 'buffer ' . old_buf
+    endtry
+endfunction
+
 function! vlime#ui#OpenBuffer(name, create, show)
     let buf = bufnr(a:name, a:create)
     if buf > 0
@@ -335,73 +335,6 @@ function! vlime#ui#ShowPreview(conn, content, append, ...)
     endtry
 
     return buf
-endfunction
-
-function! vlime#ui#SLDBBufName(conn, thread)
-    return 'vlime / sldb / ' . a:conn.cb_data.name . ' / ' . a:thread
-endfunction
-
-function! vlime#ui#REPLBufName(conn)
-    return 'vlime / repl / ' . a:conn.cb_data.name
-endfunction
-
-function! vlime#ui#PreviewBufName()
-    return 'vlime / preview'
-endfunction
-
-function! vlime#ui#InspectorBufName()
-    return 'vlime / inspect'
-endfunction
-
-function! vlime#ui#MiniBufName(prompt)
-    return 'vlime / input / ' . a:prompt
-endfunction
-
-function! vlime#ui#IndentCurLine(indent)
-    if &expandtab
-        let indent_str = repeat(' ', a:indent)
-    else
-        " Ah! So bad! Such evil!
-        let indent_str = repeat("\<tab>", a:indent / &tabstop)
-        let indent_str .= repeat(' ', a:indent % &tabstop)
-    endif
-    let line = getline('.')
-    call setline('.', substitute(line, '^\(\s*\)', indent_str, ''))
-    normal! ^
-endfunction
-
-function! vlime#ui#ErrMsg(msg)
-    echohl ErrorMsg
-    echom a:msg
-    echohl None
-endfunction
-
-function! s:NormalizePackageName(name)
-    let pattern1 = '^\(\(#\?:\)\|''\)\(.\+\)'
-    let pattern2 = '"\(.\+\)"'
-    let matches = matchlist(a:name, pattern1)
-    let r_name = ''
-    if len(matches) > 0
-        let r_name = matches[3]
-    else
-        let matches = matchlist(a:name, pattern2)
-        if len(matches) > 0
-            let r_name = matches[1]
-        endif
-    endif
-    return toupper(r_name)
-endfunction
-
-function! vlime#ui#Pad(prefix, sep, max_len)
-    return a:prefix . a:sep . repeat(' ', a:max_len + 1 - len(a:prefix))
-endfunction
-
-function! vlime#ui#SetVlimeBufferOpts(buf, conn)
-    call setbufvar(a:buf, '&buftype', 'nofile')
-    call setbufvar(a:buf, '&bufhidden', 'hide')
-    call setbufvar(a:buf, '&swapfile', 0)
-    call setbufvar(a:buf, '&buflisted', 1)
-    call setbufvar(a:buf, 'vlime_conn', a:conn)
 endfunction
 
 function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
@@ -462,5 +395,72 @@ function! vlime#ui#ReplaceContent(str)
     normal! ggVG"_d
     call vlime#ui#AppendString(a:str)
     normal! gg
+endfunction
+
+function! vlime#ui#IndentCurLine(indent)
+    if &expandtab
+        let indent_str = repeat(' ', a:indent)
+    else
+        " Ah! So bad! Such evil!
+        let indent_str = repeat("\<tab>", a:indent / &tabstop)
+        let indent_str .= repeat(' ', a:indent % &tabstop)
+    endif
+    let line = getline('.')
+    call setline('.', substitute(line, '^\(\s*\)', indent_str, ''))
+    normal! ^
+endfunction
+
+function! vlime#ui#Pad(prefix, sep, max_len)
+    return a:prefix . a:sep . repeat(' ', a:max_len + 1 - len(a:prefix))
+endfunction
+
+function! vlime#ui#ErrMsg(msg)
+    echohl ErrorMsg
+    echom a:msg
+    echohl None
+endfunction
+
+function! vlime#ui#SetVlimeBufferOpts(buf, conn)
+    call setbufvar(a:buf, '&buftype', 'nofile')
+    call setbufvar(a:buf, '&bufhidden', 'hide')
+    call setbufvar(a:buf, '&swapfile', 0)
+    call setbufvar(a:buf, '&buflisted', 1)
+    call setbufvar(a:buf, 'vlime_conn', a:conn)
+endfunction
+
+function! vlime#ui#SLDBBufName(conn, thread)
+    return 'vlime / sldb / ' . a:conn.cb_data.name . ' / ' . a:thread
+endfunction
+
+function! vlime#ui#REPLBufName(conn)
+    return 'vlime / repl / ' . a:conn.cb_data.name
+endfunction
+
+function! vlime#ui#PreviewBufName()
+    return 'vlime / preview'
+endfunction
+
+function! vlime#ui#InspectorBufName()
+    return 'vlime / inspect'
+endfunction
+
+function! vlime#ui#MiniBufName(prompt)
+    return 'vlime / input / ' . a:prompt
+endfunction
+
+function! s:NormalizePackageName(name)
+    let pattern1 = '^\(\(#\?:\)\|''\)\(.\+\)'
+    let pattern2 = '"\(.\+\)"'
+    let matches = matchlist(a:name, pattern1)
+    let r_name = ''
+    if len(matches) > 0
+        let r_name = matches[3]
+    else
+        let matches = matchlist(a:name, pattern2)
+        if len(matches) > 0
+            let r_name = matches[1]
+        endif
+    endif
+    return toupper(r_name)
 endfunction
 
