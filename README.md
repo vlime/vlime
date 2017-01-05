@@ -52,7 +52,7 @@ Run the server:
 
     sbcl --load <vlime repo>/lisp/start-vlime.lisp
 
-Use Vim to start editing a Lisp source file. These keys are mapped:
+Use Vim to start editing a Lisp source file. These keys are mapped in normal mode:
 
 Connection management:
 
@@ -130,6 +130,9 @@ keys are available in the SLDB buffer:
 * `C`: Inspect the current condition object.
 * `i`: Evaluate and inspect an expression in the frame under the cursor (or
        the most recent frame).
+
+In the inspector buffer, one can use `<cr>` and `<space>` to interact with
+buttons and values etc.
 
 License
 =======
