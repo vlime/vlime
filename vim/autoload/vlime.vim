@@ -52,6 +52,7 @@ function! vlime#New(...)
                 \ 'InspectNthPart': function('vlime#InspectNthPart'),
                 \ 'InspectorCallNthAction': function('vlime#InspectorCallNthAction'),
                 \ 'InspectorPop': function('vlime#InspectorPop'),
+                \ 'InspectCurrentCondition': function('vlime#InspectCurrentCondition'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -352,13 +353,22 @@ function! vlime#InspectorCallNthAction(nth, ...) dict
                     \ [self, Callback, 'vlime#InspectorCallNthAction']))
 endfunction
 
-" vlime#InspectorPop([callback]) dict
+" vlime#InspectorPop([callback])
 function! vlime#InspectorPop(...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INSPECTOR-POP')]),
                 \ function('s:SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectorPop']))
+endfunction
+
+" vlime#InspectCurrentCondition([callback])
+function! vlime#InspectCurrentCondition(...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'INSPECT-CURRENT-CONDITION')]),
+                \ function('s:SimpleSendCB',
+                    \ [self, Callback, 'vlime#InspectCurrentCondition']))
 endfunction
 
 " vlime#SetPackage(package[, callback])

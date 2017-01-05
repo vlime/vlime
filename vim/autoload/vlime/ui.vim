@@ -669,6 +669,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     nnoremap <buffer> o :call vlime#ui#StepCurOrLastFrame('out')<cr>
     nnoremap <buffer> c :call b:vlime_conn.SLDBContinue()<cr>
     nnoremap <buffer> a :call b:vlime_conn.SLDBAbort()<cr>
+    nnoremap <buffer> C :call vlime#ui#InspectCurCondition()<cr>
 endfunction
 
 function! s:InitInspectorBuf(ui, conn, thread)
@@ -707,7 +708,8 @@ function! s:FillInspectorBufContent(content, coords)
 endfunction
 
 function! s:FillInspectorBuf(content, thread, itag)
-    call vlime#ui#ReplaceContent(a:content['TITLE'] . "\n====================\n\n")
+    call vlime#ui#ReplaceContent(a:content['TITLE'] . "\n"
+                \ . repeat('=', len(a:content['TITLE'])) . "\n\n")
     normal! G$
 
     let coords = []
@@ -780,6 +782,11 @@ function! vlime#ui#InspectorPop()
     endfunction
 
     call b:vlime_conn.InspectorPop(function('s:OnInspectorPopComplete'))
+endfunction
+
+function! vlime#ui#InspectCurCondition()
+    call b:vlime_conn.InspectCurrentCondition(
+                \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
 endfunction
 
 function! vlime#ui#AppendString(str)
