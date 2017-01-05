@@ -132,11 +132,18 @@ function! vlime#ui#OnWriteString(conn, str, str_type) dict
 endfunction
 
 function! vlime#ui#OnReadString(conn, thread, ttag) dict
-    let input_str = input('Input string: ')
-    if input_str[len(input_str)-1] != "\n"
-        let input_str .= "\n"
+    call vlime#ui#InputFromMiniBuffer(
+                \ a:conn, 'Input string:', v:null,
+                \ 'call vlime#ui#OnReadStringInputComplete('
+                    \ . a:thread . ', ' . a:ttag . ') \| bunload!')
+endfunction
+
+function! vlime#ui#OnReadStringInputComplete(thread, ttag)
+    let content = vlime#ui#CurBufferContent()
+    if content[len(content)-1] != "\n"
+        let content .= "\n"
     endif
-    call a:conn.ReturnString(a:thread, a:ttag, input_str)
+    call b:vlime_conn.ReturnString(a:thread, a:ttag, content)
 endfunction
 
 function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val) dict
@@ -813,7 +820,7 @@ function! vlime#ui#InspectInCurFrame()
                 \ b:vlime_conn, 'Inspect in frame (evaluated):',
                 \ v:null,
                 \ 'call vlime#ui#InspectInCurFrameInputComplete('
-                    \. nth . ', ' . thread . ') \| bunload!')
+                    \ . nth . ', ' . thread . ') \| bunload!')
 endfunction
 
 function! vlime#ui#InspectInCurFrameInputComplete(frame, thread)
