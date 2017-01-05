@@ -140,25 +140,15 @@ function! vlime#ui#OnReadString(conn, thread, ttag) dict
 endfunction
 
 function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val) dict
-    let buf = vlime#ui#OpenBuffer(
-                \ vlime#ui#MiniBufName(a:prompt), v:true, 'botright split')
-    call s:SetVlimeBufferOpts(buf, a:conn)
-    resize 4
-    set winfixheight
-    set winfixwidth
-
-    call vlime#ui#AppendString('; ' . a:prompt . "\n")
-    if type(a:init_val) != v:t_none
-        call vlime#ui#AppendString(a:init_val)
-    endif
-    execute 'nnoremap <buffer> <cr> :call vlime#ui#ReturnMiniBufferContent('
-                \ . a:thread . ', ' . a:ttag . ')<cr>'
+    call vlime#ui#InputFromMiniBuffer(
+                \ a:conn, a:prompt, a:init_val,
+                \ 'call vlime#ui#ReturnMiniBufferContent('
+                    \ . a:thread . ', ' . a:ttag . ') \| bunload!')
 endfunction
 
 function! vlime#ui#ReturnMiniBufferContent(thread, ttag)
     let content = vlime#ui#CurBufferContent()
     call b:vlime_conn.Return(a:thread, a:ttag, content)
-    bunload!
 endfunction
 
 function! vlime#ui#CurBufferContent()
@@ -670,6 +660,7 @@ function! s:FillSLDBBuf(thread, level, condition, restarts, frames)
     nnoremap <buffer> c :call b:vlime_conn.SLDBContinue()<cr>
     nnoremap <buffer> a :call b:vlime_conn.SLDBAbort()<cr>
     nnoremap <buffer> C :call vlime#ui#InspectCurCondition()<cr>
+    nnoremap <buffer> i :call vlime#ui#InspectInCurFrame()<cr>
 endfunction
 
 function! s:InitInspectorBuf(ui, conn, thread)
@@ -787,6 +778,50 @@ endfunction
 function! vlime#ui#InspectCurCondition()
     call b:vlime_conn.InspectCurrentCondition(
                 \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
+endfunction
+
+function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
+    let buf = vlime#ui#OpenBuffer(
+                \ vlime#ui#MiniBufName(a:prompt), v:true, 'botright split')
+    call s:SetVlimeBufferOpts(buf, a:conn)
+    call setbufvar(buf, '&buflisted', 0)
+    resize 4
+    set winfixheight
+    set winfixwidth
+
+    call vlime#ui#AppendString('; ' . a:prompt . "\n")
+    if type(a:init_val) != v:t_none
+        call vlime#ui#AppendString(a:init_val)
+    endif
+
+    augroup MiniBufferLeaveAu
+        autocmd!
+        execute 'autocmd BufWinLeave <buffer> bunload! ' . buf
+    augroup end
+
+    execute 'nnoremap <buffer> <cr> :' . a:complete_command . '<cr>'
+endfunction
+
+function! vlime#ui#InspectInCurFrame()
+    let nth = s:MatchFrame()
+    if nth < 0
+        let nth = 0
+    endif
+
+    let thread = b:vlime_conn.GetCurrentThread()
+    call vlime#ui#InputFromMiniBuffer(
+                \ b:vlime_conn, 'Inspect in frame (evaluated):',
+                \ v:null,
+                \ 'call vlime#ui#InspectInCurFrameInputComplete('
+                    \. nth . ', ' . thread . ') \| bunload!')
+endfunction
+
+function! vlime#ui#InspectInCurFrameInputComplete(frame, thread)
+    let content = vlime#ui#CurBufferContent()
+    call b:vlime_conn.WithThread(a:thread,
+                \ function(b:vlime_conn.InspectInFrame,
+                    \ [content, a:frame,
+                        \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)}]))
 endfunction
 
 function! vlime#ui#AppendString(str)

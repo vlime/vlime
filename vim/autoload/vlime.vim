@@ -53,6 +53,7 @@ function! vlime#New(...)
                 \ 'InspectorCallNthAction': function('vlime#InspectorCallNthAction'),
                 \ 'InspectorPop': function('vlime#InspectorPop'),
                 \ 'InspectCurrentCondition': function('vlime#InspectCurrentCondition'),
+                \ 'InspectInFrame': function('vlime#InspectInFrame'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -369,6 +370,15 @@ function! vlime#InspectCurrentCondition(...) dict
                     \ [s:SYM('SWANK', 'INSPECT-CURRENT-CONDITION')]),
                 \ function('s:SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectCurrentCondition']))
+endfunction
+
+" vlime#InspectInFrame(thing, frame[, callback])
+function! vlime#InspectInFrame(thing, frame, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'INSPECT-IN-FRAME'), a:thing, a:frame]),
+                \ function('s:SimpleSendCB',
+                    \ [self, Callback, 'vlime#InspectInFrame']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
