@@ -123,8 +123,16 @@ function! vlime#ui#sldb#InspectInCurFrame()
     call vlime#ui#InputFromMiniBuffer(
                 \ b:vlime_conn, 'Inspect in frame (evaluated):',
                 \ v:null,
-                \ 'call vlime#ui#InspectInCurFrameInputComplete('
+                \ 'call vlime#ui#sldb#InspectInCurFrameInputComplete('
                     \ . nth . ', ' . thread . ') \| bunload!')
+endfunction
+
+function! vlime#ui#sldb#InspectInCurFrameInputComplete(frame, thread)
+    let content = vlime#ui#CurBufferContent()
+    call b:vlime_conn.WithThread(a:thread,
+                \ function(b:vlime_conn.InspectInFrame,
+                    \ [content, a:frame,
+                        \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)}]))
 endfunction
 
 function! s:FindMaxRestartNameLen(restarts)
