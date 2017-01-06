@@ -43,8 +43,8 @@ function! VlimeConnectREPL(host, port, ...)
                 \ function('s:OnConnectionInfoComplete'),
                 \ function(conn.SwankRequire, [contribs]),
                 \ function('s:OnSwankRequireComplete'),
-                \ function(conn.CreateREPL, [v:null]),
-                \ function('s:OnCreateREPLComplete'))
+                \ function('vlime#contrib#CallInitializers', [conn]),
+                \ function('s:OnCallInitializersComplete'))
 endfunction
 
 function! VlimeSelectCurConnection()
@@ -449,8 +449,7 @@ function! s:ConnHasContrib(conn, contrib)
                 \ index(a:conn.cb_data['contribs'], a:contrib) >= 0
 endfunction
 
-function! s:OnCreateREPLComplete(conn, result)
-    echom '-- OnCreateREPLComplete -------------------------'
+function! s:OnCallInitializersComplete(conn)
     echom a:conn.cb_data['name'] . ' established.'
 endfunction
 

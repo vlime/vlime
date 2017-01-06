@@ -215,7 +215,7 @@ function! vlime#SwankRequire(contrib, ...) dict
     endif
 
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SWANK-REQUIRE'), required]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SwankRequire']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SwankRequire']))
 endfunction
 
 " vlime#CreateREPL([coding_system[, callback]])
@@ -314,7 +314,7 @@ function! vlime#FrameLocalsAndCatchTags(frame, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'FRAME-LOCALS-AND-CATCH-TAGS'), a:frame]),
-                \ function('s:SimpleSendCB',
+                \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#FrameLocalsAndCatchTags']))
 endfunction
 
@@ -323,7 +323,7 @@ function! vlime#FrameSourceLocation(frame, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'FRAME-SOURCE-LOCATION'), a:frame]),
-                \ function('s:SimpleSendCB',
+                \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#FrameSourceLocation']))
 endfunction
 
@@ -332,7 +332,7 @@ function! vlime#InitInspector(thing, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INIT-INSPECTOR'), a:thing]),
-                \ function('s:SimpleSendCB',
+                \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InitInspector']))
 endfunction
 
@@ -341,7 +341,7 @@ function! vlime#InspectNthPart(nth, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INSPECT-NTH-PART'), a:nth]),
-                \ function('s:SimpleSendCB',
+                \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectNthPart']))
 endfunction
 
@@ -350,7 +350,7 @@ function! vlime#InspectorCallNthAction(nth, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INSPECTOR-CALL-NTH-ACTION'), a:nth]),
-                \ function('s:SimpleSendCB',
+                \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectorCallNthAction']))
 endfunction
 
@@ -359,7 +359,7 @@ function! vlime#InspectorPop(...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INSPECTOR-POP')]),
-                \ function('s:SimpleSendCB',
+                \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectorPop']))
 endfunction
 
@@ -368,7 +368,7 @@ function! vlime#InspectCurrentCondition(...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INSPECT-CURRENT-CONDITION')]),
-                \ function('s:SimpleSendCB',
+                \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectCurrentCondition']))
 endfunction
 
@@ -377,7 +377,7 @@ function! vlime#InspectInFrame(thing, frame, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'INSPECT-IN-FRAME'), a:thing, a:frame]),
-                \ function('s:SimpleSendCB',
+                \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectInFrame']))
 endfunction
 
@@ -398,7 +398,7 @@ endfunction
 function! vlime#DescribeSymbol(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'DESCRIBE-SYMBOL'), a:symbol]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#DescribeSymbol']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#DescribeSymbol']))
 endfunction
 
 " vlime#OperatorArgList(operator[, callback])
@@ -406,7 +406,7 @@ function! vlime#OperatorArgList(operator, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'OPERATOR-ARGLIST'), a:operator, self.GetCurrentPackage()[0]]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#OperatorArgList']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#OperatorArgList']))
 endfunction
 
 " vlime#SimpleCompletions(symbol[, callback])
@@ -414,7 +414,7 @@ function! vlime#SimpleCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'SIMPLE-COMPLETIONS'), a:symbol, self.GetCurrentPackage()[0]]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SimpleCompletions']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SimpleCompletions']))
 endfunction
 
 " vlime#FuzzyCompletions(symbol[, callback])
@@ -422,7 +422,7 @@ function! vlime#FuzzyCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'FUZZY-COMPLETIONS'), a:symbol, self.GetCurrentPackage()[0]]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#FuzzyCompletions']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#FuzzyCompletions']))
 endfunction
 
 function! vlime#ReturnString(thread, ttag, str) dict
@@ -438,7 +438,7 @@ function! vlime#SwankMacroExpandOne(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND-1'), a:expr]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpandOne']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpandOne']))
 endfunction
 
 " vlime#SwankMacroExpand(expr[, callback])
@@ -446,7 +446,7 @@ function! vlime#SwankMacroExpand(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND'), a:expr]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpand']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpand']))
 endfunction
 
 " vlime#SwankMacroExpandAll(expr[, callback])
@@ -454,7 +454,7 @@ function! vlime#SwankMacroExpandAll(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'SWANK-MACROEXPAND-ALL'), a:expr]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpandAll']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpandAll']))
 endfunction
 
 " vlime#DisassembleForm(expr[, callback])
@@ -462,7 +462,7 @@ function! vlime#DisassembleForm(expr, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'DISASSEMBLE-FORM'), a:expr]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#DisassembleForm']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#DisassembleForm']))
 endfunction
 
 " vlime#CompileStringForEmacs(expr, buffer, position, filename[, callback])
@@ -473,7 +473,7 @@ function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dic
                         \ a:expr, a:buffer,
                         \ [s:CL('QUOTE'), [[s:KW('POSITION'), a:position]]],
                         \ a:filename, v:null]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#CompileStringForEmacs']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#CompileStringForEmacs']))
 endfunction
 
 
@@ -483,14 +483,14 @@ function! vlime#CompileFileForEmacs(filename, ...) dict
     let Callback = s:GetNthVarArg(a:000, 1)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'COMPILE-FILE-FOR-EMACS'), a:filename, load]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#CompileFileForEmacs']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#CompileFileForEmacs']))
 endfunction
 
 " vlime#LoadFile(filename[, callback])
 function! vlime#LoadFile(filename, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'LOAD-FILE'), a:filename]),
-                \ function('s:SimpleSendCB', [self, Callback, 'vlime#LoadFile']))
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#LoadFile']))
 endfunction
 
 " ------------------ server event handlers ------------------
@@ -592,7 +592,7 @@ function! vlime#GetNthVarArg(args, n, ...)
     return Ref()
 endfunction
 
-function! s:SimpleSendCB(conn, Callback, caller, chan, msg) abort
+function! vlime#SimpleSendCB(conn, Callback, caller, chan, msg) abort
     call s:CheckReturnStatus(a:msg, a:caller)
     call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
 endfunction
