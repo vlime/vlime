@@ -14,6 +14,8 @@ function! vlime#ui#repl#InitREPLBuf(conn)
                                 \ {'name': 'REPL-THREAD', 'package': 'KEYWORD'})<cr>
                 nnoremap <buffer> <LocalLeader>I
                             \ :call vlime#ui#repl#InspectCurREPLPresentation()<cr>
+                nnoremap <buffer> <LocalLeader>C
+                            \ :call vlime#ui#repl#ClearREPLBuffer()<cr>
             finally
                 call win_gotoid(old_win_id)
             endtry
@@ -67,6 +69,14 @@ function! vlime#ui#repl#InspectCurREPLPresentation()
                             \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)},
                             \ 'vlime#contrib#SwankPresentationsInit']))
     endif
+endfunction
+
+function! vlime#ui#repl#ClearREPLBuffer()
+    set modifiable
+    normal! ggVG"_d
+    unlet b:vlime_repl_coords
+    call s:ShowREPLBanner(b:vlime_conn)
+    set nomodifiable
 endfunction
 
 function! s:ShowREPLBanner(conn)
