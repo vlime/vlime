@@ -29,6 +29,9 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
 
     nnoremap <buffer> <cr> :call vlime#ui#inspector#InspectorSelect()<cr>
     nnoremap <buffer> <space> :call vlime#ui#inspector#InspectorSelect()<cr>
+    nnoremap <buffer> <tab> :call vlime#ui#inspector#NextField(v:true)<cr>
+    nnoremap <buffer> <c-n> :call vlime#ui#inspector#NextField(v:true)<cr>
+    nnoremap <buffer> <c-p> :call vlime#ui#inspector#NextField(v:false)<cr>
     nnoremap <buffer> p :call vlime#ui#inspector#InspectorPop()<cr>
 endfunction
 
@@ -88,6 +91,44 @@ function! vlime#ui#inspector#InspectorSelect()
     endif
 endfunction
 
+function! vlime#ui#inspector#NextField(forward)
+    if len(b:vlime_inspector_coords) <= 0
+        return
+    endif
+
+    let cur_pos = getcurpos()
+    let sorted_coords = sort(copy(b:vlime_inspector_coords),
+                \ function('s:CoordSorter', [a:forward]))
+    let next_coord = v:null
+    for c in sorted_coords
+        if a:forward
+            if c['begin'][0] > cur_pos[1]
+                let next_coord = c
+                break
+            elseif c['begin'][0] == cur_pos[1] && c['begin'][1] > cur_pos[2]
+                let next_coord = c
+                break
+            endif
+        else
+            if c['begin'][0] < cur_pos[1]
+                let next_coord = c
+                break
+            elseif c['begin'][0] == cur_pos[1] && c['begin'][1] < cur_pos[2]
+                let next_coord = c
+                break
+            endif
+        endif
+    endfor
+
+    if type(next_coord) == v:t_none
+        let next_coord = sorted_coords[0]
+    endif
+
+    call setpos('.', [0, next_coord['begin'][0],
+                    \ next_coord['begin'][1], 0,
+                    \ next_coord['begin'][1]])
+endfunction
+
 function! vlime#ui#inspector#InspectorPop()
     call b:vlime_conn.InspectorPop(function('s:OnInspectorPopComplete'))
 endfunction
@@ -100,3 +141,18 @@ function! s:OnInspectorPopComplete(conn, result)
     endif
 endfunction
 
+function! s:CoordSorter(direction, c1, c2)
+    if a:c1['begin'][0] > a:c2['begin'][0]
+        return a:direction ? 1 : -1
+    elseif a:c1['begin'][0] == a:c2['begin'][0]
+        if a:c1['begin'][1] > a:c2['begin'][1]
+            return a:direction ? 1 : -1
+        elseif a:c1['begin'][1] == a:c2['begin'][1]
+            return 0
+        else
+            return a:direction ? -1 : 1
+        endif
+    else
+        return a:direction ? -1 : 1
+    endif
+endfunction
