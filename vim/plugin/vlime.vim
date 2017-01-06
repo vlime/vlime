@@ -192,6 +192,21 @@ function! VlimeLoadCurFile()
     endif
 endfunction
 
+function! VlimeSetCurPackage()
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    let pkg = conn.GetCurrentPackage()
+    let pkg = input('Set package: ', pkg[0])
+    if len(pkg) <= 0
+        call vlime#ui#ErrMsg('Canceled.')
+        return
+    endif
+    call conn.SetPackage(pkg)
+endfunction
+
 function! VlimeSwankRequire(contribs)
     let conn = VlimeGetConnection()
     if type(conn) == v:t_none
@@ -382,6 +397,7 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
     nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
     nnoremap <buffer> <LocalLeader>a :call VlimeDisassembleCurForm()<cr>
+    nnoremap <buffer> <LocalLeader>p :call VlimeSetCurPackage()<cr>
 endfunction
 
 function! VlimeInteractionMode()
