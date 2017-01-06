@@ -69,22 +69,9 @@ function! vlime#ui#inspector#InspectorSelect()
     let cur_pos = getcurpos()
     let coord = v:null
     for c in b:vlime_inspector_coords
-        if c['begin'][0] == c['end'][0] && cur_pos[1] == c['begin'][0]
-                    \ && cur_pos[2] >= c['begin'][1]
-                    \ && cur_pos[2] <= c['end'][1]
+        if vlime#ui#MatchCoord(c, cur_pos[1], cur_pos[2])
             let coord = c
             break
-        elseif c['begin'][0] < c['end'][0]
-            if cur_pos[1] == c['begin'][0] && cur_pos[2] >= c['begin'][1]
-                let coord = c
-                break
-            elseif cur_pos[1] == c['end'][0] && cur_pos[2] <= c['end'][1]
-                let coord = c
-                break
-            elseif cur_pos[1] > c['begin'][0] && cur_pos[1] < c['end'][0]
-                let coord = c
-                break
-            endif
         endif
     endfor
 

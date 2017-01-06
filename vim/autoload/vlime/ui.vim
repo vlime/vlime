@@ -428,6 +428,30 @@ function! vlime#ui#SetVlimeBufferOpts(buf, conn)
     call setbufvar(a:buf, 'vlime_conn', a:conn)
 endfunction
 
+function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
+    let c_begin = get(a:coord, 'begin', v:null)
+    let c_end = get(a:coord, 'end', v:null)
+    if type(c_begin) == v:t_none || type(c_end) == v:t_none
+        return v:false
+    endif
+
+    if c_begin[0] == c_end[0] && a:cur_line == c_begin[0]
+                \ && a:cur_col >= c_begin[1]
+                \ && a:cur_col <= c_end[1]
+        return v:true
+    elseif c_begin[0] < c_end[0]
+        if a:cur_line == c_begin[0] && a:cur_col >= c_begin[1]
+            return v:true
+        elseif a:cur_line == c_end[0] && a:cur_col <= c_end[1]
+            return v:true
+        elseif a:cur_line > c_begin[0] && a:cur_line < c_end[0]
+            return v:true
+        endif
+    endif
+
+    return v:false
+endfunction
+
 function! vlime#ui#SLDBBufName(conn, thread)
     return 'vlime / sldb / ' . a:conn.cb_data.name . ' / ' . a:thread
 endfunction
