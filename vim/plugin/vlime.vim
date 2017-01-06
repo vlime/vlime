@@ -216,12 +216,25 @@ function! VlimeSwankRequire(contribs)
 endfunction
 
 function! VlimeCurOperatorArgList()
-    let op = vlime#ui#CurOperator()
+    let conn = VlimeGetConnection(v:true)
+    if type(conn) == v:t_none
+        return
+    endif
+
+    let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
+    if s_line <= 0 || s_col <= 0
+        return
+    endif
+
+    let old_cur = getcurpos()
+    try
+        call setpos('.', [0, s_line, s_col, 0])
+        let op = vlime#ui#CurOperator()
+    finally
+        call setpos('.', old_cur)
+    endtry
+
     if len(op) > 0
-        let conn = VlimeGetConnection(v:true)
-        if type(conn) == v:t_none
-            return
-        endif
         call conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))
     endif
 endfunction
@@ -296,17 +309,17 @@ function! VlimeKey(key)
 endfunction
 
 function! VlimeCalcCurIndent()
-    "return lispindent(line('.'))
-    let line_no = line('.')
     let conn = VlimeGetConnection(v:true)
     if type(conn) == v:t_none
         return lispindent(line_no)
     endif
 
-    let indent_info = get(conn.cb_data, 'indent_info', {})
+    let line_no = line('.')
 
-    let line = getline('.')
     let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
+    if s_line <= 0 || s_col <= 0
+        return lispindent(line_no)
+    endif
 
     let old_cur = getcurpos()
     try
@@ -332,6 +345,7 @@ function! VlimeCalcCurIndent()
         endif
     endif
 
+    let indent_info = get(conn.cb_data, 'indent_info', {})
     if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
         return vs_col + 1
     else
