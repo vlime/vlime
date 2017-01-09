@@ -284,7 +284,7 @@
         (vom:debug "Connection count: ~s" (hash-table-count *connections*))))))
 
 
-(defun client-read-cb (socket stream)
+(defun client-read-cb (socket stream swank_host swank_port)
   (let* ((data-cache '())
          (client-conn (gethash socket *connections*))
          (line-list (async-stream-read-line stream client-conn data-cache)))
@@ -331,14 +331,15 @@
      json)))
 
 
-(defun main ()
+(defun main (host port swank_host swank_port)
   (vom:config t :debug)
   (let ((*connections* (make-hash-table)))
     (with-event-loop (:catch-app-errors t)
       (let ((server (as::tcp-server-new
-                      "127.0.0.1"
-                      7002
-                      #'client-read-cb
+                      host port
+                      #'(lambda (socket stream)
+                          (client-read-cb socket stream
+                                          swank_host swank_port))
                       :event-cb #'socket-event-cb
                       :connect-cb #'client-connect-cb
                       :stream t)))

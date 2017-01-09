@@ -11,4 +11,4 @@
 
 (load-vlime)
 (swank:create-server :port 4005 :style :spawn :dont-close t)
-(vlime:main)
+(vlime:main "0.0.0.0" 7002 "127.0.0.1" 4005)
