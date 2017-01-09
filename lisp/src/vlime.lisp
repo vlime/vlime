@@ -177,33 +177,13 @@
          nil)))))
 
 
-(defun parse-form (input-str)
-  (with-standard-io-syntax
-    (let ((*read-eval* nil))
-      (read-from-string input-str))))
-
-
 (defun handle-swank-msg (msg swank-conn)
-  (let* ((form (parse-form (babel:octets-to-string msg)))
-         (msg-type (car form)))
-    (if (eql msg-type :return)
-      (let* ((json (seq-swank-to-client (form-to-json form)))
-             (encoded (with-output-to-string (json-out)
-                        (yason:encode json json-out))))
-        (with-slots ((client-conn peer)) swank-conn
-          (write-sequence (babel:string-to-octets encoded)
-                          (connection-stream client-conn))
-          (write-sequence (babel:string-to-octets (format nil "~a" #\newline))
-                          (connection-stream client-conn))))
-      (let* ((json (form-to-json form))
-             (active-msg (list 0 json))
-             (encoded (with-output-to-string (json-out)
-                        (yason:encode active-msg json-out))))
-        (with-slots ((client-conn peer)) swank-conn
-          (write-sequence (babel:string-to-octets encoded)
-                          (connection-stream client-conn))
-          (write-sequence (babel:string-to-octets (format nil "~a" #\newline))
-                          (connection-stream client-conn)))))))
+  (let* ((msg-str (babel:octets-to-string msg))
+         (msg-to-client (msg-swank-to-client msg-str)))
+    (with-slots ((client-conn peer)) swank-conn
+      (write-sequence
+        (babel:string-to-octets msg-to-client)
+        (connection-stream client-conn)))))
 
 
 (defun swank-read-cb (socket stream)
@@ -223,57 +203,21 @@
                    err)))))))
 
 
-(defun seq-client-to-swank (form)
-  (let ((seq (car form))
-        (payload (cadr form)))
-    (concatenate 'list payload (list seq))))
-
-
-(defun seq-swank-to-client (form)
-  (let ((seq (car (last form)))
-        (payload (subseq form 0 (1- (length form)))))
-    (list seq payload)))
-
-
-(defun client-emacs-rex-p (form)
-  (and (listp form)
-       (listp (nth 1 form))
-       (eql (car (nth 1 form)) :emacs-rex)))
-
-
-(defun remove-client-seq (form)
-  (nth 1 form))
-
-
 (defun handle-client-msg (msg client-conn)
   (let* ((msg-str (babel:octets-to-string msg))
-         (json (yason:parse msg-str))
-         (form (json-to-form json)))
-    (if (client-emacs-rex-p form)
-      (let* ((emacs-rex-form (seq-client-to-swank form))
-             (form-str (with-standard-io-syntax (write-to-string emacs-rex-form)))
-             (form-str-len (length form-str))
-             (out-str (format nil "~6,'0x~a" form-str-len form-str)))
-        (with-slots ((swank-conn peer)) client-conn
-          (write-sequence
-            (babel:string-to-octets out-str)
-            (connection-stream swank-conn))))
-      (let* ((one-way-form (remove-client-seq form))
-             (form-str (with-standard-io-syntax (write-to-string one-way-form)))
-             (form-str-len (length form-str))
-             (out-str (format nil "~6,'0x~a" form-str-len form-str)))
-        (with-slots ((swank-conn peer)) client-conn
-          (write-sequence
-            (babel:string-to-octets out-str)
-            (connection-stream swank-conn)))))))
+         (msg-to-swank (msg-client-to-swank msg-str)))
+    (with-slots ((swank-conn peer)) client-conn
+      (write-sequence
+        (babel:string-to-octets msg-to-swank)
+        (connection-stream swank-conn)))))
 
 
-(defun ensure-swank-connection (client-conn)
+(defun ensure-swank-connection (client-conn swank-host swank-port)
   (with-slots ((swank-conn peer)) client-conn
     (when (not swank-conn)
       (vom:debug "Connecting to peer...")
       (let* ((swank-stream
-               (tcp-connect "127.0.0.1" 4005
+               (tcp-connect swank-host swank-port
                             #'swank-read-cb
                             :event-cb  #'socket-event-cb
                             :stream t))
@@ -284,7 +228,7 @@
         (vom:debug "Connection count: ~s" (hash-table-count *connections*))))))
 
 
-(defun client-read-cb (socket stream swank_host swank_port)
+(defun client-read-cb (socket stream swank-host swank-port)
   (let* ((data-cache '())
          (client-conn (gethash socket *connections*))
          (line-list (async-stream-read-line stream client-conn data-cache)))
@@ -292,46 +236,13 @@
       (with-slots ((client-stream stream)) client-conn
         (when (not client-stream)
           (setf client-stream stream)))
-      (ensure-swank-connection client-conn)
+      (ensure-swank-connection client-conn swank-host swank-port)
       (vom:debug "Raw data from ~s: ~s" socket line-list)
       (dolist (line line-list)
         (handle-client-msg line client-conn)))))
 
 
-(defun form-to-json (form)
-  (cond
-    ((listp form)
-     (mapcar #'form-to-json form))
-    ((eql form t)
-     ; special case to prevent T from being serialized as a normal symbol,
-     ; thus saving some space
-     form)
-    ((symbolp form)
-     (let ((sym-obj (make-hash-table :test #'equal))
-           (sym-name (symbol-name form))
-           (sym-package (package-name (symbol-package form))))
-       (setf (gethash "name" sym-obj) sym-name)
-       (setf (gethash "package" sym-obj) sym-package)
-       sym-obj))
-    (t
-     ; Numbers & strings
-     form)))
-
-
-(defun json-to-form (json)
-  (cond
-    ((listp json)
-     (mapcar #'json-to-form json))
-    ((hash-table-p json)
-     (let ((sym-name (gethash "name" json))
-           (sym-package (gethash "package" json)))
-       (intern sym-name sym-package)))
-    (t
-     ; Numbers & strings
-     json)))
-
-
-(defun main (host port swank_host swank_port)
+(defun main (host port swank-host swank-port)
   (vom:config t :debug)
   (let ((*connections* (make-hash-table)))
     (with-event-loop (:catch-app-errors t)
@@ -339,7 +250,7 @@
                       host port
                       #'(lambda (socket stream)
                           (client-read-cb socket stream
-                                          swank_host swank_port))
+                                          swank-host swank-port))
                       :event-cb #'socket-event-cb
                       :connect-cb #'client-connect-cb
                       :stream t)))
