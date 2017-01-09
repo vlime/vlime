@@ -309,12 +309,12 @@ function! VlimeKey(key)
 endfunction
 
 function! VlimeCalcCurIndent()
+    let line_no = line('.')
+
     let conn = VlimeGetConnection(v:true)
     if type(conn) == v:t_none
         return lispindent(line_no)
     endif
-
-    let line_no = line('.')
 
     let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
     if s_line <= 0 || s_col <= 0
