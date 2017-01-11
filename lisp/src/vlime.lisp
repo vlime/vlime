@@ -153,8 +153,8 @@
          (line-list (parse-line data client-conn)))
     (when line-list
       (ensure-swank-connection client-conn swank-host swank-port)
-      (vom:debug "Raw data from ~s: ~s" socket line-list)
       (dolist (line line-list)
+        (vom:debug "Message from ~s: ~s" socket line)
         (handle-client-msg line client-conn)))))
 
 
