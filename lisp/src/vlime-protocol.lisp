@@ -10,9 +10,14 @@
            #:form-to-json
            #:json-to-form
            #:msg-client-to-swank
-           #:msg-swank-to-client))
+           #:msg-swank-to-client
+           #:parse-line
+           #:parse-swank-msg))
 
 (in-package #:vlime-protocl)
+
+
+(defparameter +swank-msg-len-size+ 6)
 
 
 (defun parse-form (input-str)
@@ -103,3 +108,47 @@
              (encoded (with-output-to-string (json-out)
                         (yason:encode active-msg json-out))))
         (concatenate 'string encoded (format nil "~a" #\newline))))))
+
+
+(defun parse-line (data read-buffer)
+  (setf read-buffer
+        (concatenate '(vector (unsigned-byte 8)) read-buffer data))
+  (let ((lf-pos (position (char-code #\linefeed) read-buffer)))
+    (loop
+      when lf-pos
+        collect (babel:octets-to-string (subseq read-buffer 0 (1+ lf-pos))) into lines
+        and do
+          (setf read-buffer (subseq read-buffer (1+ lf-pos)))
+          (setf lf-pos
+                (position (char-code #\linefeed) read-buffer :start 0))
+      else
+        return (values lines read-buffer))))
+
+
+(defun parse-swank-msg-len (buffer)
+  (parse-integer
+    (babel:octets-to-string (subseq buffer 0 +swank-msg-len-size+))
+    :radix 16))
+
+
+(defun parse-swank-msg (data read-buffer)
+  (setf read-buffer
+        (concatenate '(vector (unsigned-byte 8)) read-buffer data))
+  (let ((msg-total-len
+          (when (>= (length read-buffer) +swank-msg-len-size+)
+            (+ +swank-msg-len-size+
+               (parse-swank-msg-len read-buffer)))))
+    (loop
+      when (and msg-total-len (>= (length read-buffer) msg-total-len))
+        collect (babel:octets-to-string
+                  (subseq read-buffer +swank-msg-len-size+ msg-total-len))
+                into msgs
+        and do
+          (setf read-buffer (subseq read-buffer msg-total-len))
+          (if (>= (length read-buffer) +swank-msg-len-size+)
+            (setf msg-total-len
+                  (+ +swank-msg-len-size+
+                     (parse-swank-msg-len read-buffer)))
+            (setf msg-total-len nil))
+      else
+        return (values msgs read-buffer))))

@@ -12,6 +12,7 @@
   :components ((:module "src"
                 :pathname "src"
                 :components ((:file "vlime-protocol")
+                             (:file "vlime-connection")
                              (:file "aio-sbcl")
                              (:file "vlime-sbcl" :depends-on ("vlime-protocol" "aio-sbcl")))))
   :in-order-to ((test-op (test-op #:vlime-test))))

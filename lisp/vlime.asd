@@ -12,5 +12,6 @@
   :components ((:module "src"
                 :pathname "src"
                 :components ((:file "vlime-protocol")
+                             (:file "vlime-connection")
                              (:file "vlime" :depends-on ("vlime-protocol")))))
   :in-order-to ((test-op (test-op #:vlime-test))))
