@@ -1,3 +1,11 @@
+(in-package #:cl-user)
+
+(defpackage #:vlime
+  (:use #:cl
+        #:cl-async
+        #:vlime-protocl)
+  (:export #:main))
+
 (in-package #:vlime)
 
 
