@@ -216,9 +216,10 @@
   (multiple-value-bind (data data-len peer-host peer-port)
                        (socket-receive socket buf nil)
     (declare (ignore peer-host peer-port))
-    (when (> data-len 0)
+    ; NOTE: When there's no data at all, DATA and DATA-LEN would be NIL.
+    (when (and data data-len (> data-len 0))
       (push (subseq data 0 data-len) data-list))
-    (if (< data-len (length buf))
+    (if (or (not data) (not data-len) (< data-len (length buf)))
       (apply #'concatenate
              '(vector (unsigned-byte 8))
              (reverse data-list))
