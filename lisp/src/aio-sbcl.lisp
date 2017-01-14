@@ -6,7 +6,18 @@
         #:sb-sys
         #:sb-bsd-sockets)
   (:export #:aio-error
+           #:aio-error-afd
+           #:aio-error-code
+           #:aio-error-where
            #:aio-fd
+           #:aio-fd-fd
+           #:aio-fd-socket
+           #:aio-fd-write-buffer
+           #:aio-fd-read-handle
+           #:aio-fd-write-handle
+           #:aio-fd-read-cb
+           #:aio-fd-write-cb
+           #:aio-fd-error-cb
            #:aio-fd-write
            #:aio-fd-close
            #:aio-fd-enable-read-handle
@@ -26,7 +37,11 @@
 
 
 (define-condition aio-error (error)
-  ((code
+  ((afd
+     :initarg :afd
+     :initform nil
+     :reader aio-error-afd)
+   (code
      :initarg :code
      :initform nil
      :reader aio-error-code)
@@ -91,6 +106,7 @@
 
 (defgeneric aio-fd-enable-read-handle (afd)
   (:method ((afd aio-fd))
+    (vom:debug "aio-fd-enable-read-handle: ~s" (aio-fd-fd afd))
     (with-slots (fd read-handle) afd
       (when (not read-handle)
         (setf read-handle (add-fd-handler fd :input #'socket-input-cb))))))
@@ -98,6 +114,7 @@
 
 (defgeneric aio-fd-disable-read-handle (afd &key clear-cb)
   (:method ((afd aio-fd) &key (clear-cb nil))
+    (vom:debug "aio-fd-disable-read-handle: ~s" (aio-fd-fd afd))
     (with-slots (read-handle read-cb) afd
       (when clear-cb
         (setf read-cb nil))
@@ -108,6 +125,7 @@
 
 (defgeneric aio-fd-enable-write-handle (afd)
   (:method ((afd aio-fd))
+    (vom:debug "aio-fd-enable-write-handle: ~s" (aio-fd-fd afd))
     (with-slots (fd write-handle) afd
       (when (not write-handle)
         (setf write-handle (add-fd-handler fd :output #'socket-output-cb))))))
@@ -115,6 +133,7 @@
 
 (defgeneric aio-fd-disable-write-handle (afd &key clear-cb)
   (:method ((afd aio-fd) &key (clear-cb nil))
+    (vom:debug "aio-fd-disable-write-handle: ~s" (aio-fd-fd afd))
     (with-slots (write-handle write-cb) afd
       (when clear-cb
         (setf write-cb nil))
@@ -227,6 +246,7 @@
                      (call-read-cb afd data)
                      (handle-condition
                        (make-condition 'aio-error
+                                       :afd afd
                                        :where `(socket-input-cb, fd)
                                        :code :eof))))))))))))
 
@@ -234,8 +254,10 @@
 (defun socket-output-cb (fd)
   (let ((afd (gethash fd *fd-map*)))
     (when afd
+      (vom:debug ">>>>>>>>> ~s: socket-output-cb" fd)
       (with-slots (socket write-buffer write-cb error-cb) afd
         (labels ((write-buffered ()
+                   (vom:debug ">>>>>>>>> ~s: write-buffered" fd)
                    (let ((data (pop write-buffer)))
                      (if data
                        (let ((bytes-written
@@ -244,6 +266,8 @@
                                  (t (c)
                                    (handle-condition c)
                                    0))))
+                         (vom:debug ">>>>>>>>> ~s: bytes-to-write: ~s, bytes-written: ~s"
+                                    fd (length data) bytes-written)
                          (if (< bytes-written (length data))
                            (progn
                              (push (subseq data bytes-written) write-buffer)
@@ -251,6 +275,7 @@
                            (write-buffered)))
                        t)))
                  (handle-condition (c)
+                   (vom:debug ">>>>>>>>> ~s: handle-condition: ~s" fd c)
                    (aio-fd-disable-write-handle afd)
                    (when error-cb
                      (funcall error-cb afd c)))
@@ -281,12 +306,12 @@
 (defun socket-connect-cb (fd)
   (let ((afd (gethash fd *fd-map*)))
     (when afd
-      (with-slots (read-cb write-cb) afd
+      (with-slots (read-cb write-cb write-buffer) afd
         (vom:debug "fd ~s: Connected" fd)
         (aio-fd-disable-write-handle afd)
         (when read-cb
           (aio-fd-enable-read-handle afd))
-        (when write-cb
+        (when (or write-cb write-buffer)
           (aio-fd-enable-write-handle afd))))))
 
 
