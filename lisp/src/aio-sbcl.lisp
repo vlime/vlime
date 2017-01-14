@@ -90,7 +90,6 @@
   (:method ((afd aio-fd) data)
     (with-slots (fd write-buffer write-handle) afd
       (setf write-buffer (append write-buffer (list data)))
-      (vom:debug ">>>>>>>>> ~s: Activating socket-output-cb" fd)
       (aio-fd-enable-write-handle afd))))
 
 
@@ -254,7 +253,6 @@
 (defun socket-output-cb (fd)
   (let ((afd (gethash fd *fd-map*)))
     (when afd
-      (vom:debug ">>>>>>>>> ~s: socket-output-cb" fd)
       (with-slots (socket write-buffer write-cb error-cb) afd
         (labels ((write-buffered ()
                    (vom:debug ">>>>>>>>> ~s: write-buffered" fd)
@@ -299,7 +297,7 @@
             (if write-cb
               (call-write-cb)
               (progn
-                (vom:debug ">>>>>>>>> ~s: Nothing to write. Removing write-handle..." (aio-fd-fd afd))
+                (vom:debug "~s: Nothing to write." (aio-fd-fd afd))
                 (aio-fd-disable-write-handle afd)))))))))
 
 
