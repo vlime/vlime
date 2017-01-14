@@ -4,7 +4,8 @@
 (defpackage #:aio-sbcl
   (:use #:cl
         #:sb-sys
-        #:sb-bsd-sockets)
+        #:sb-bsd-sockets
+        #:sb-introspect)
   (:export #:aio-error
            #:aio-error-afd
            #:aio-error-code
@@ -203,7 +204,7 @@
 
 
 (defun arity (fn)
-  (let ((arglist (sb-introspect:function-lambda-list fn)))
+  (let ((arglist (function-lambda-list fn)))
     (or (loop for arg in arglist
               for idx = 0 then (1+ idx)
               when (and (> (length (symbol-name arg)) 0)

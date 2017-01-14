@@ -5,6 +5,7 @@
   :license "MIT"
   :version "0.1.0"
   :depends-on (#:sb-bsd-sockets
+               #:sb-introspect
                #:yason
                #:babel
                #:swank
