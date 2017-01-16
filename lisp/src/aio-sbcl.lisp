@@ -6,7 +6,9 @@
         #:sb-sys
         #:sb-bsd-sockets
         #:sb-introspect)
-  (:export #:aio-error
+  (:export #:*fd-map*
+           #:*static-buffer*
+           #:aio-error
            #:aio-error-afd
            #:aio-error-code
            #:aio-error-where

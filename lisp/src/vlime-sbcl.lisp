@@ -74,14 +74,16 @@
 
 (defun main (host port swank-host swank-port)
   (vom:config t :debug)
-  (let ((vlime-connection:*connections* (make-hash-table)))
-    (with-event-loop
-      (let ((server (tcp-server
-                      host port
-                      :client-read-cb #'(lambda (afd data)
-                                          (client-read-cb
-                                            afd data
-                                            swank-host swank-port))
-                      :client-write-cb #'client-connect-cb
-                      :client-error-cb #'socket-error-cb)))
-        (vom:debug "Server created: ~s" server)))))
+  (setf vlime-connection:*connections* (make-hash-table))
+  (setf aio-sbcl:*fd-map* (make-hash-table))
+  (setf aio-sbcl:*static-buffer* (make-array 4096 :element-type '(unsigned-byte 8)))
+
+  (let ((server (tcp-server
+                  host port
+                  :client-read-cb #'(lambda (afd data)
+                                      (client-read-cb
+                                        afd data
+                                        swank-host swank-port))
+                  :client-write-cb #'client-connect-cb
+                  :client-error-cb #'socket-error-cb)))
+    (vom:debug "Server created: ~s" server)))
