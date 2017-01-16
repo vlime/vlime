@@ -16,6 +16,9 @@
 (defparameter +lf+ (format nil "~c" #\linefeed))
 
 
+(defvar *read-buffer-map* nil)
+
+
 (defun socket-error-cb (afd condition)
   (declare (ignore afd))
   (handler-case (error condition)
@@ -42,8 +45,8 @@
   (let ((swank-conn (lookup-connection afd)))
     (multiple-value-bind (msg-list buffered)
                          (parse-swank-msg
-                           data (connection-read-buffer swank-conn))
-      (setf (connection-read-buffer swank-conn) buffered)
+                           data (gethash afd *read-buffer-map* #()))
+      (setf (gethash afd *read-buffer-map*) buffered)
       (when msg-list
         (dolist (msg msg-list)
           (vom:debug "Message from SWANK: ~s" msg)
@@ -55,8 +58,8 @@
   (let ((client-conn (lookup-connection afd)))
     (multiple-value-bind (line-list buffered)
                          (parse-line
-                           data (connection-read-buffer client-conn))
-      (setf (connection-read-buffer client-conn) buffered)
+                           data (gethash afd *read-buffer-map* #()))
+      (setf (gethash afd *read-buffer-map*) buffered)
       (when line-list
         (ensure-peer-connection
           client-conn
@@ -78,6 +81,7 @@
   (setf vlime-connection:*connections* (make-hash-table))
   (setf aio-sbcl:*fd-map* (make-hash-table))
   (setf aio-sbcl:*static-buffer* (make-array 4096 :element-type '(unsigned-byte 8)))
+  (setf *read-buffer-map* (make-hash-table))
 
   (let ((server (tcp-server
                   host port

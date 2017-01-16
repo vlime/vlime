@@ -10,6 +10,9 @@
 (in-package #:vlime)
 
 
+(defvar *read-buffer-map* nil)
+
+
 (defun socket-event-cb (event)
   (handler-case (error event)
     (socket-eof ()
@@ -33,8 +36,8 @@
   (let ((swank-conn (lookup-connection socket)))
     (multiple-value-bind (msg-list buffered)
                          (parse-swank-msg
-                           data (connection-read-buffer swank-conn))
-      (setf (connection-read-buffer swank-conn) buffered)
+                           data (gethash socket *read-buffer-map* #()))
+      (setf (gethash socket *read-buffer-map*) buffered)
       (when msg-list
         (dolist (msg msg-list)
           (vom:debug "Message from SWANK: ~s" msg)
@@ -54,8 +57,8 @@
   (let ((client-conn (lookup-connection socket)))
     (multiple-value-bind (line-list buffered)
                          (parse-line
-                           data (connection-read-buffer client-conn))
-      (setf (connection-read-buffer client-conn) buffered)
+                           data (gethash socket *read-buffer-map* #()))
+      (setf (gethash socket *read-buffer-map*) buffered)
       (when line-list
         (ensure-peer-connection
           client-conn
@@ -72,7 +75,8 @@
 
 (defun main (host port swank-host swank-port)
   (vom:config t :debug)
-  (let ((vlime-connection:*connections* (make-hash-table)))
+  (let ((vlime-connection:*connections* (make-hash-table))
+        (*read-buffer-map* (make-hash-table)))
     (with-event-loop (:catch-app-errors t)
       (let ((server (as::tcp-server-new
                       host port

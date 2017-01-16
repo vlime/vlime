@@ -5,7 +5,6 @@
   (:export #:*connections*
            #:connection
            #:connection-socket
-           #:connection-read-buffer
            #:connection-peer
            #:make-connection
            #:lookup-connection
@@ -24,10 +23,6 @@
      :accessor connection-socket
      :initarg :socket
      :initform nil)
-   (read-buffer
-     :accessor connection-read-buffer
-     :initarg :read-buffer
-     :initform (vector))
    (peer
      :accessor connection-peer
      :initarg :peer
