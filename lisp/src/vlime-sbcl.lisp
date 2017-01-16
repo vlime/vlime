@@ -5,7 +5,8 @@
         #:aio-sbcl
         #:vlime-protocl
         #:vlime-connection)
-  (:export #:main))
+  (:export #:main
+           #:main-threaded))
 
 (in-package #:vlime-sbcl)
 
@@ -86,4 +87,97 @@
                                         swank-host swank-port))
                   :client-write-cb #'client-connect-cb
                   :client-error-cb #'socket-error-cb)))
-    (vom:debug "Server created: ~s" server)))
+    (vom:debug "Server created: ~s" server)
+    server))
+
+
+;; --------- Threaded blocking server implementation ---------
+
+
+(defun server-listener (socket swank-host swank-port)
+  (vom:debug "Server created: ~s" socket)
+  (loop
+    (let ((client-socket (sb-bsd-sockets:socket-accept socket)))
+      (swank/backend:spawn
+        #'(lambda ()
+            (vlime-control-thread
+              client-socket swank-host swank-port))))))
+
+
+(defun vlime-control-thread (client-socket swank-host swank-port)
+  (vom:debug "New client: ~s" client-socket)
+  (let* ((read-buffer (make-array 4096 :element-type '(unsigned-byte 8)))
+         (control-thread (swank/backend:current-thread))
+         (swank-socket
+           (make-instance 'sb-bsd-sockets:inet-socket
+                          :type :stream :protocol :tcp)))
+    (sb-bsd-sockets:socket-connect swank-socket swank-host swank-port)
+    (labels ((read-loop (socket data-msg eof-msg)
+               (loop
+                 (multiple-value-bind
+                     (data data-len peer-host peer-port)
+                     (sb-bsd-sockets:socket-receive socket read-buffer nil)
+                   (declare (ignore peer-host peer-port))
+                   (if (or (not data) (not data-len) (<= data-len 0))
+                     (swank/backend:send control-thread `(,eof-msg))
+                     (swank/backend:send
+                       control-thread `(,data-msg ,(subseq data 0 data-len)))))))
+             (client-read-loop () (read-loop client-socket :client-data :client-eof))
+             (swank-read-loop () (read-loop swank-socket :swank-data :swank-eof)))
+
+      (let ((client-read-thread (swank/backend:spawn #'client-read-loop))
+            (swank-read-thread (swank/backend:spawn #'swank-read-loop))
+            (client-read-buffer #())
+            (swank-read-buffer #()))
+        (loop
+          (let ((msg (swank/backend:receive)))
+            (ecase (car msg)
+              (:client-data
+                (vom:debug "client-data msg")
+                (multiple-value-bind (line-list buffered)
+                                     (parse-line (nth 1 msg) client-read-buffer)
+                  (setf client-read-buffer buffered)
+                  (when line-list
+                    (dolist (line line-list)
+                      (vom:debug "Message from ~s: ~s" client-socket line)
+                      (when (and (string/= line +cr-lf+)
+                                 (string/= line +cr+)
+                                 (string/= line +lf+))
+                        (sb-bsd-sockets:socket-send
+                          swank-socket
+                          (babel:string-to-octets (msg-client-to-swank line))
+                          nil))))))
+
+              (:swank-data
+                (vom:debug "swank-data msg")
+                (multiple-value-bind (msg-list buffered)
+                                     (parse-swank-msg (nth 1 msg) swank-read-buffer)
+                  (setf swank-read-buffer buffered)
+                  (when msg-list
+                    (dolist (msg msg-list)
+                      (vom:debug "Message from SWANK: ~s" msg)
+                      (sb-bsd-sockets:socket-send
+                        client-socket
+                        (babel:string-to-octets (msg-swank-to-client msg))
+                        nil)))))
+
+              ((:exit :client-eof :swank-eof)
+                (vom:debug "EOF: ~s" msg)
+                (swank/backend:kill-thread swank-read-thread)
+                (swank/backend:kill-thread client-read-thread)
+                (sb-bsd-sockets:socket-close swank-socket)
+                (sb-bsd-sockets:socket-close client-socket)
+                (return-from vlime-control-thread)))))))))
+
+
+(defun main-threaded (host port swank-host swank-port)
+  (vom:config t :debug)
+  (let ((server-socket
+          (make-instance 'sb-bsd-sockets:inet-socket
+                         :type :stream :protocol :tcp)))
+    (setf (sb-bsd-sockets:sockopt-reuse-address server-socket) t)
+    (sb-bsd-sockets:socket-bind server-socket host port)
+    (sb-bsd-sockets:socket-listen server-socket 128)
+    (swank/backend:spawn
+      #'(lambda ()
+          (server-listener server-socket swank-host swank-port)))))
