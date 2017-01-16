@@ -11,4 +11,7 @@
 
 (load-vlime)
 (swank:create-server :port 4005 :style :spawn :dont-close t)
+#-win32
 (vlime-sbcl:main #(0 0 0 0) 7002 #(127 0 0 1) 4005)
+#+win32
+(vlime-sbcl:main-threaded #(0 0 0 0) 7002 #(127 0 0 1) 4005)
