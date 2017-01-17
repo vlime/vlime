@@ -292,14 +292,13 @@ function! vlime#ui#OpenBuffer(name, create, show)
             " Found it. Try to put it in a window
             let win_nr = bufwinnr(buf)
             if win_nr < 0
-                try
-                    if type(a:show) == v:t_string
-                        execute a:show . ' #' . buf
-                    else
-                        execute 'split #' . buf
-                    endif
-                catch /^Vim\%((\a\+)\)\=:E303/  " Unable to open swap file (We don't care)
-                endtry
+                " Use silent! to suppress the 'Illegal file name' message
+                " and E303: Unable to open swap file...
+                if type(a:show) == v:t_string
+                    silent! execute a:show . ' #' . buf
+                else
+                    silent! execute 'split #' . buf
+                endif
             else
                 execute win_nr . 'wincmd w'
             endif
