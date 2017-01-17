@@ -115,12 +115,25 @@
          (swank-socket
            (make-instance 'sb-bsd-sockets:inet-socket
                           :type :stream :protocol :tcp)))
-    (sb-bsd-sockets:socket-connect swank-socket swank-host swank-port)
+    (handler-case
+      (sb-bsd-sockets:socket-connect swank-socket swank-host swank-port)
+      (t (c)
+         (vom:error "Failed to connect to SWANK: ~s ~s: ~a"
+                    swank-host swank-port c)
+         (sb-bsd-sockets:socket-close swank-socket)
+         (sb-bsd-sockets:socket-close client-socket)
+         (return-from vlime-control-thread)))
+
     (labels ((read-loop (socket data-msg eof-msg)
                (loop
                  (multiple-value-bind
                      (data data-len peer-host peer-port)
-                     (sb-bsd-sockets:socket-receive socket read-buffer nil)
+                     (handler-case
+                       (sb-bsd-sockets:socket-receive socket read-buffer nil)
+                       (t (c)
+                          (vom:error "read-loop: ~s: ~a" socket c)
+                          (swank/backend:send control-thread `(,eof-msg))
+                          (return-from read-loop)))
                    (declare (ignore peer-host peer-port))
                    (if (or (not data) (not data-len) (<= data-len 0))
                      (swank/backend:send control-thread `(,eof-msg))
@@ -147,10 +160,14 @@
                       (when (and (string/= line +cr-lf+)
                                  (string/= line +cr+)
                                  (string/= line +lf+))
-                        (sb-bsd-sockets:socket-send
-                          swank-socket
-                          (babel:string-to-octets (msg-client-to-swank line))
-                          nil))))))
+                        (handler-case
+                          (sb-bsd-sockets:socket-send
+                            swank-socket
+                            (babel:string-to-octets (msg-client-to-swank line))
+                            nil)
+                          (t (c)
+                             (vom:debug ":client-data: ~a" c)
+                             (swank/backend:send control-thread '(:swank-write-error)))))))))
 
               (:swank-data
                 (vom:debug "swank-data msg")
@@ -160,13 +177,17 @@
                   (when msg-list
                     (dolist (msg msg-list)
                       (vom:debug "Message from SWANK: ~s" msg)
-                      (sb-bsd-sockets:socket-send
-                        client-socket
-                        (babel:string-to-octets (msg-swank-to-client msg))
-                        nil)))))
+                      (handler-case
+                        (sb-bsd-sockets:socket-send
+                          client-socket
+                          (babel:string-to-octets (msg-swank-to-client msg))
+                          nil)
+                        (t (c)
+                           (vom:debug ":swank-data: ~a" c)
+                           (swank/backend:send control-thread '(:client-write-error))))))))
 
-              ((:exit :client-eof :swank-eof)
-                (vom:debug "EOF: ~s" msg)
+              ((:exit :client-eof :swank-eof :client-write-error :swank-write-error)
+                (vom:debug "Control thread stopping: ~s" msg)
                 (swank/backend:kill-thread swank-read-thread)
                 (swank/backend:kill-thread client-read-thread)
                 (sb-bsd-sockets:socket-close swank-socket)
