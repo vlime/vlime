@@ -254,6 +254,21 @@ function! VlimeDescribeCurSymbol(sym_type)
     endif
 endfunction
 
+function! VlimeXRefCurSymbol(sym_type, ref_type)
+    if a:sym_type == 'operator'
+        let sym = vlime#ui#CurOperator()
+    elseif a:sym_type == 'atom'
+        let sym = vlime#ui#CurAtom()
+    endif
+    if len(sym) > 0
+        let conn = VlimeGetConnection()
+        if type(conn) == v:t_none
+            return
+        endif
+        call conn.XRef(a:ref_type, sym, function('s:OnXRefComplete'))
+    endif
+endfunction
+
 function! VlimeCompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
@@ -394,6 +409,15 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>of :call VlimeCompileCurFile()<cr>
     vnoremap <buffer> <LocalLeader>o :<c-u>call VlimeCompileCurThing('selection')<cr>
 
+    " Cross references (XRef)
+    nnoremap <buffer> <LocalLeader>xc :call VlimeXRefCurSymbol('atom', 'CALLS')<cr>
+    nnoremap <buffer> <LocalLeader>xC :call VlimeXRefCurSymbol('atom', 'CALLS-WHO')<cr>
+    nnoremap <buffer> <LocalLeader>xr :call VlimeXRefCurSymbol('atom', 'REFERENCES')<cr>
+    nnoremap <buffer> <LocalLeader>xb :call VlimeXRefCurSymbol('atom', 'BINDS')<cr>
+    nnoremap <buffer> <LocalLeader>xs :call VlimeXRefCurSymbol('atom', 'SETS')<cr>
+    nnoremap <buffer> <LocalLeader>xe :call VlimeXRefCurSymbol('atom', 'MACROEXPANDS')<cr>
+    nnoremap <buffer> <LocalLeader>xm :call VlimeXRefCurSymbol('atom', 'SPECIALIZES')<cr>
+
     " Describing things
     nnoremap <buffer> <LocalLeader>do :call VlimeDescribeCurSymbol('operator')<cr>
     nnoremap <buffer> <LocalLeader>da :call VlimeDescribeCurSymbol('atom')<cr>
@@ -499,6 +523,12 @@ endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)
     echom 'Loaded: ' . a:fname
+endfunction
+
+function! s:OnXRefComplete(conn, result)
+    if type(a:conn.ui) != v:t_none
+        call a:conn.ui.OnXRef(a:conn, a:result)
+    endif
 endfunction
 
 function! s:ShowAsyncResult(conn, result)

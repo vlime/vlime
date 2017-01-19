@@ -243,35 +243,6 @@ function! s:OpenFrameSourceCB(conn, result)
         call vlime#ui#ErrMsg(a:result[1])
         return
     endif
-    let file_loc = a:result[1][1]
-    let file_buf = bufnr(file_loc)
-    let buf_exists = v:true
-    if file_buf > 0
-        let buf_win = bufwinnr(file_buf)
-        if buf_win > 0
-            execute buf_win . 'wincmd w'
-        else
-            let win_list = win_findbuf(file_buf)
-            if len(win_list) > 0
-                call win_gotoid(win_list[0])
-            else
-                let buf_exists = v:false
-            endif
-        endif
-    else
-        let buf_exists = v:false
-    endif
-
-    if !buf_exists
-        if filereadable(file_loc)
-            execute 'tabedit ' . escape(file_loc, ' \')
-        else
-            call vlime#ui#ErrMsg('Not readable: ' . file_loc)
-            return
-        endif
-    endif
-
-    let src_line = byte2line(a:result[2][1])
-    execute 'normal! ' . src_line . 'gg'
+    call vlime#ui#JumpToOrOpenFile(a:result[1][1], a:result[2][1])
 endfunction
 

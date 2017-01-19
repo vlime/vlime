@@ -15,6 +15,7 @@ function! vlime#ui#New()
                 \ 'OnIndentationUpdate': function('vlime#ui#OnIndentationUpdate'),
                 \ 'OnInvalidRPC': function('vlime#ui#OnInvalidRPC'),
                 \ 'OnInspect': function('vlime#ui#OnInspect'),
+                \ 'OnXRef': function('vlime#ui#OnXRef'),
                 \ }
     return obj
 endfunction
@@ -147,6 +148,22 @@ function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     call setpos('.', old_cur)
     " Needed for displaying the content of the current buffer correctly
     redraw
+endfunction
+
+function! vlime#ui#OnXRef(conn, xref_list)
+    if type(a:xref_list) == v:t_none
+        call vlime#ui#ErrMsg('No xref found.')
+    elseif type(a:xref_list) == v:t_dict &&
+                \ a:xref_list['name'] == 'NOT-IMPLEMENTED'
+        call vlime#ui#ErrMsg('Not implemented.')
+    else
+        let xref_buf = vlime#ui#xref#InitXRefBuf(a:conn)
+        call vlime#ui#OpenBuffer(xref_buf, v:false, 'botright split')
+        resize 12
+        call setbufvar(xref_buf, '&modifiable', 1)
+        call vlime#ui#xref#FillXRefBuf(a:xref_list)
+        call setbufvar(xref_buf, '&modifiable', 0)
+    endif
 endfunction
 
 function! vlime#ui#ReadStringInputComplete(thread, ttag)
@@ -454,6 +471,40 @@ function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
     return v:false
 endfunction
 
+function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos)
+    let file_buf = bufnr(a:file_path)
+    let buf_exists = v:true
+    if file_buf > 0
+        let buf_win = bufwinnr(file_buf)
+        if buf_win > 0
+            execute buf_win . 'wincmd w'
+        else
+            let win_list = win_findbuf(file_buf)
+            if len(win_list) > 0
+                call win_gotoid(win_list[0])
+            else
+                let buf_exists = v:false
+            endif
+        endif
+    else
+        let buf_exists = v:false
+    endif
+
+    if !buf_exists
+        if filereadable(a:file_path)
+            execute 'tabedit ' . escape(a:file_path, ' \')
+        else
+            call vlime#ui#ErrMsg('Not readable: ' . a:file_path)
+            return
+        endif
+    endif
+
+    if type(a:byte_pos) != v:t_none
+        let src_line = byte2line(a:byte_pos)
+        execute 'normal! ' . src_line . 'gg'
+    endif
+endfunction
+
 function! vlime#ui#SLDBBufName(conn, thread)
     return 'vlime / sldb / ' . a:conn.cb_data.name . ' / ' . a:thread
 endfunction
@@ -472,6 +523,10 @@ endfunction
 
 function! vlime#ui#MiniBufName(prompt)
     return 'vlime / input / ' . a:prompt
+endfunction
+
+function! vlime#ui#XRefBufName(conn)
+    return 'vlime / xref / ' . a:conn.cb_data.name
 endfunction
 
 function! s:NormalizePackageName(name)
