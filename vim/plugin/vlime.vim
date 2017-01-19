@@ -381,7 +381,6 @@ function! VlimeSetup(...)
                 \ g:vlime_address : ['127.0.0.1', 7002]
 
     setlocal omnifunc=VlimeCompleteFunc
-    setlocal filetype=lisp
     setlocal indentexpr=VlimeCalcCurIndent()
 
     inoremap <buffer> <space> <space><c-r>=VlimeKey('space')<cr>
