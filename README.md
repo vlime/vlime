@@ -92,7 +92,7 @@ Compiling:
 * `<LocalLeader>of`: Compile the current file.
 * `<LocalLeader>o`: (In visual mode) Compile the current selection.
 
-Cross references:
+Cross references (xref):
 
 * `<LocalLeader>xc`: Show callers of the function under the cursor.
 * `<LocalLeader>xC`: Show callees of the function under the cursor.
@@ -156,6 +156,8 @@ keys are available in the SLDB buffer:
 
 In the inspector buffer, one can use `<cr>` and `<space>` to interact with
 buttons and values etc.
+
+In the xref buffer, use `<cr>` to jump to the selected reference spot.
 
 License
 =======
