@@ -92,6 +92,16 @@ Compiling:
 * `<LocalLeader>of`: Compile the current file.
 * `<LocalLeader>o`: (In visual mode) Compile the current selection.
 
+Cross references:
+
+* `<LocalLeader>xc`: Show callers of the function under the cursor.
+* `<LocalLeader>xC`: Show callees of the function under the cursor.
+* `<LocalLeader>xr`: Show references of the variable under the cursor.
+* `<LocalLeader>xb`: Show bindings of the variable under the cursor.
+* `<LocalLeader>xs`: Show who sets the value of the variable under the cursor.
+* `<LocalLeader>xe`: Show who expands the macro under the cursor.
+* `<LocalLeader>xm`: Show specialized methods for the class under the cursor.
+
 Describing things:
 
 * `<LocalLeader>do`: Describe the "operator" of the s-expression under the cursor.
