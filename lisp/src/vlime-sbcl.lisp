@@ -51,7 +51,7 @@
         (dolist (msg msg-list)
           (vom:debug "Message from SWANK: ~s" msg)
           (aio-fd-write (connection-socket (connection-peer swank-conn))
-                        (babel:string-to-octets (msg-swank-to-client msg))))))))
+                        (msg-swank-to-client msg :octets)))))))
 
 
 (defun client-read-cb (afd data swank-host swank-port)
@@ -73,7 +73,7 @@
                      (string/= line +cr+)
                      (string/= line +lf+))
             (aio-fd-write (connection-socket (connection-peer client-conn))
-                          (babel:string-to-octets (msg-client-to-swank line)))))))))
+                          (msg-client-to-swank line :octets))))))))
 
 
 (defun main (host port swank-host swank-port)
@@ -163,7 +163,7 @@
                         (handler-case
                           (sb-bsd-sockets:socket-send
                             swank-socket
-                            (babel:string-to-octets (msg-client-to-swank line))
+                            (msg-client-to-swank line :octets)
                             nil)
                           (t (c)
                              (vom:debug ":client-data: ~a" c)
@@ -180,7 +180,7 @@
                       (handler-case
                         (sb-bsd-sockets:socket-send
                           client-socket
-                          (babel:string-to-octets (msg-swank-to-client msg))
+                          (msg-swank-to-client msg :octets)
                           nil)
                         (t (c)
                            (vom:debug ":swank-data: ~a" c)

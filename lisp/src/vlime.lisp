@@ -44,7 +44,7 @@
           (handler-case
             (as:write-socket-data
               (connection-socket (connection-peer swank-conn))
-              (babel:string-to-octets (msg-swank-to-client msg)))
+              (msg-swank-to-client msg :octets))
             (error (err)
                    (vom:debug
                      "Failed to handle SWANK message: ~s~a: ~s"
@@ -70,7 +70,7 @@
           (vom:debug "Message from ~s: ~s" socket line)
           (as:write-socket-data
             (connection-socket (connection-peer client-conn))
-            (babel:string-to-octets (msg-client-to-swank line))))))))
+            (msg-client-to-swank line :octets)))))))
 
 
 (defun main (host port swank-host swank-port)

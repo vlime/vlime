@@ -83,33 +83,65 @@
      json)))
 
 
-(defun msg-client-to-swank (msg)
+(defun msg-client-to-swank (msg return-type)
+  (when (not (stringp msg))
+    (setf msg (babel:octets-to-string msg)))
+
   (let* ((json (yason:parse msg))
          (form (json-to-form json)))
     (if (client-emacs-rex-p form)
       (let* ((emacs-rex-form (seq-client-to-swank form))
              (form-str (with-standard-io-syntax (write-to-string emacs-rex-form)))
-             (form-str-len (length form-str)))
-        (format nil "~6,'0x~a" form-str-len form-str))
+             (form-bytes (babel:string-to-octets form-str))
+             (form-bytes-len (length form-bytes)))
+        (ecase return-type
+          (:octets
+            (concatenate '(vector (unsigned-byte 8))
+                         (babel:string-to-octets (format nil "~6,'0x" form-bytes-len))
+                         form-bytes))
+          (:string
+            (format nil "~6,'0x~a" form-bytes-len form-str))))
       (let* ((one-way-form (remove-client-seq form))
              (form-str (with-standard-io-syntax (write-to-string one-way-form)))
-             (form-str-len (length form-str)))
-        (format nil "~6,'0x~a" form-str-len form-str)))))
+             (form-bytes (babel:string-to-octets form-str))
+             (form-bytes-len (length form-bytes)))
+        (ecase return-type
+          (:octets
+            (concatenate '(vector (unsigned-byte 8))
+                         (babel:string-to-octets (format nil "~6,'0x" form-bytes-len))
+                         form-bytes))
+          (:string
+            (format nil "~6,'0x~a" form-bytes-len form-str)))))))
 
 
-(defun msg-swank-to-client (msg)
+(defun msg-swank-to-client (msg return-type)
+  (when (not (stringp msg))
+    (setf msg (babel:octets-to-string msg)))
+
   (let* ((form (parse-form msg))
          (msg-type (car form)))
     (if (eql msg-type :return)
       (let* ((json (seq-swank-to-client (form-to-json form)))
              (encoded (with-output-to-string (json-out)
-                        (yason:encode json json-out))))
-        (concatenate 'string encoded (format nil "~a" #\newline)))
+                        (yason:encode json json-out)))
+             (full-line (concatenate
+                          'string encoded (format nil "~c~c" #\return #\linefeed))))
+        (ecase return-type
+          (:octets
+            (babel:string-to-octets full-line))
+          (:string
+            full-line)))
       (let* ((json (form-to-json form))
              (active-msg (list 0 json))
              (encoded (with-output-to-string (json-out)
-                        (yason:encode active-msg json-out))))
-        (concatenate 'string encoded (format nil "~a" #\newline))))))
+                        (yason:encode active-msg json-out)))
+             (full-line (concatenate
+                          'string encoded (format nil "~c~c" #\return #\linefeed))))
+        (ecase return-type
+          (:octets
+            (babel:string-to-octets full-line))
+          (:string
+            full-line))))))
 
 
 (defun parse-line (data read-buffer)

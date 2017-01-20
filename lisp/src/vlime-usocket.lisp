@@ -47,7 +47,7 @@
                        (handler-case
                          (read-line client-stream)
                          (t (c)
-                            (swank/backend:send control-thread `(:client-eof ,c))        
+                            (swank/backend:send control-thread `(:client-eof ,c))
                             nil))))
                  (when line
                    (swank/backend:send control-thread `(:client-data ,line))
@@ -98,9 +98,8 @@
                     (vom:debug "Message from client: ~s" line)
                     (handler-case
                       (progn
-                        (write-sequence (babel:string-to-octets
-                                          (msg-client-to-swank line))
-                                        swank-stream)
+                        (write-sequence
+                          (msg-client-to-swank line :octets) swank-stream)
                         (finish-output swank-stream))))
                   (t (c)
                      (swank/backend:send control-thread `(:client-data-error ,c)))))
@@ -110,7 +109,7 @@
                 (handler-case
                   (let ((swank-msg (babel:octets-to-string (nth 1 msg))))
                     (vom:debug "Message from SWANK: ~s" swank-msg)
-                    (write-sequence (msg-swank-to-client swank-msg)
+                    (write-sequence (msg-swank-to-client swank-msg :string)
                                     client-stream)
                     (finish-output client-stream))
                   (t (c)
