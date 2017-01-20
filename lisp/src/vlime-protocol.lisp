@@ -2,7 +2,8 @@
 
 (defpackage #:vlime-protocl
   (:use #:cl)
-  (:export #:parse-form
+  (:export #:+swank-msg-len-size+
+           #:parse-form
            #:seq-client-to-swank
            #:seq-swank-to-client
            #:client-emacs-rex-p
@@ -12,6 +13,7 @@
            #:msg-client-to-swank
            #:msg-swank-to-client
            #:parse-line
+           #:parse-swank-msg-len
            #:parse-swank-msg))
 
 (in-package #:vlime-protocl)
