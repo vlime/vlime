@@ -358,7 +358,8 @@ endfunction
 
 function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
     let buf = vlime#ui#OpenBuffer(
-                \ vlime#ui#MiniBufName(a:prompt), v:true, 'botright split')
+                \ vlime#ui#MiniBufName(a:conn, a:prompt),
+                \ v:true, 'botright split')
     call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
     call setbufvar(buf, '&buflisted', 0)
     resize 4
@@ -505,28 +506,37 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos)
     endif
 endfunction
 
+if !exists('g:vlime_buf_name_sep')
+    let g:vlime_buf_name_sep = ' | '
+endif
+
 function! vlime#ui#SLDBBufName(conn, thread)
-    return 'vlime / sldb / ' . a:conn.cb_data.name . ' / ' . a:thread
+    return join(['vlime', 'sldb', a:conn.cb_data.name, a:thread],
+                \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#REPLBufName(conn)
-    return 'vlime / repl / ' . a:conn.cb_data.name
+    return join(['vlime', 'repl', a:conn.cb_data.name],
+                \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#PreviewBufName()
-    return 'vlime / preview'
+    return join(['vlime', 'preview'], g:vlime_buf_name_sep)
 endfunction
 
-function! vlime#ui#InspectorBufName()
-    return 'vlime / inspect'
+function! vlime#ui#InspectorBufName(conn)
+    return join(['vlime', 'inspect', a:conn.cb_data.name],
+                \ g:vlime_buf_name_sep)
 endfunction
 
-function! vlime#ui#MiniBufName(prompt)
-    return 'vlime / input / ' . a:prompt
+function! vlime#ui#MiniBufName(conn, prompt)
+    return join(['vlime', 'input', a:conn.cb_data.name, a:prompt],
+                \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#XRefBufName(conn)
-    return 'vlime / xref / ' . a:conn.cb_data.name
+    return join(['vlime', 'xref', a:conn.cb_data.name],
+                \ g:vlime_buf_name_sep)
 endfunction
 
 function! s:NormalizePackageName(name)
