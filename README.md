@@ -33,8 +33,8 @@ Must-have:
 The lisp code has three backends, and each has different dependencies.
 
 For maximum compatibility with different CL implementations, just use the
-`usocket` backend. It should work on any CL implementation that runs SWANK,
-thanks to the awesome `usocket` library.
+`usocket` backend. It should work on any CL implementation that runs SWANK
+(not tested, help wanted), thanks to the awesome `usocket` library.
 
 Currently Vlime can only detect s-expressions inside parentheses. To make your
 life easier, use [paredit](https://github.com/kovisoft/paredit).
