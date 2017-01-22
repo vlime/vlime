@@ -24,19 +24,17 @@ key bindings etc.
 Dependencies
 ============
 
-* Quicklisp
+Must-have:
+
 * Vim 8.0+ and +channel
+* Quicklisp
+* An Internet connection to install other dependencies from Quicklisp
 
-The lisp code has two backends, and each has different dependencies.
+The lisp code has three backends, and each has different dependencies.
 
-The `cl-async` backend should work on most decent Common Lisp implementations,
-but it depends on `libuv` and `gcc`.
-
-The `sbcl` backend works only on SBCL. It's much more lightweight, and has
-less dependencies.
-
-If you are using SBCL, choose the `sbcl` backend. Otherwise, use the `cl-async`
-backend.
+For maximum compatibility with different CL implementations, just use the
+`usocket` backend. It should work on any CL implementation that runs SWANK,
+thanks to the awesome `usocket` library.
 
 Currently Vlime can only detect s-expressions inside parentheses. To make your
 life easier, use [paredit](https://github.com/kovisoft/paredit).
@@ -44,28 +42,22 @@ life easier, use [paredit](https://github.com/kovisoft/paredit).
 Installation
 ============
 
-1. If you choose to use the `cl-async` backend, make sure your system has
-   libuv and gcc.
-2. Set up Quicklisp properly.
-3. Clone this repo, and create a symlink to Vlime's `lisp` directory in your
+1. Set up Quicklisp properly.
+2. Clone this repo, and create a symlink to Vlime's `lisp` directory in your
    `local-projects` directory.
-4. In your REPL, invoke `(ql:quickload :vlime)` (for `cl-async` backend) or
-   `(ql:quickload :vlime-sbcl)` (for `sbcl` backend).
-5. Install the Vim plugin in Vlime's `vim` directory using your usual way
+3. In your REPL, invoke `(ql:quickload :vlime-usocket)`.
+4. Install the Vim plugin from Vlime's `vim` directory using your usual way
    (Vundle or something).
 
 Usage
 =====
 
-Run the server first. `cl-async` backend:
+Run the server first:
 
-    sbcl --load <vlime repo>/lisp/start-vlime.lisp
+    sbcl --load <vlime repo>/lisp/start-vlime-usocket.lisp
 
-`sbcl` backend:
-
-    sbcl --load <vlime repo>/lisp/start-vlime-sbcl.lisp
-
-Use Vim to start editing a Lisp source file. These keys are mapped in normal mode:
+Use Vim to start editing a CL source file. These keys are mapped (in normal
+mode unless specified otherwise):
 
 Connection management:
 
