@@ -21,6 +21,10 @@ Current State
 Vlime is currently in a pre-alpha state. One should expect changes in APIs and
 key bindings etc.
 
+Note that there is a bug in the channel implementation of Vim which may cause
+large messages to be dropped incorrectly. Vlime may act strange until this bug
+is fixed. [Details](https://groups.google.com/d/topic/vim_dev/Rl0X_R5pjxk/discussion).
+
 Dependencies
 ============
 
