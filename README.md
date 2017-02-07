@@ -33,11 +33,29 @@ Must-have:
 The lisp code has three backends, and each has different dependencies.
 
 For maximum compatibility with different CL implementations, just use the
-`usocket` backend. It should work on any CL implementation that runs SWANK
-(not tested, help wanted), thanks to the awesome `usocket` library.
+`usocket` backend.
 
 Currently Vlime can only detect s-expressions inside parentheses. To make your
 life easier, use [paredit](https://github.com/kovisoft/paredit).
+
+Supported CL Implementations
+============================
+
+Some major CL implementations are listed below. The implementations marked
+with `O` work fine with Vlime. If you tried out Vlime with an implementation
+not listed here, please let me know.
+
+```
+Implementation  Version  Working  Notes
+--------------------------------------------------------------
+ABCL            1.4.0       X     Networking code malfunction
+Allegro CL      10.0        O     Tested with the Express Edition
+CLISP           2.49+       X     No multithreading support
+ECL             16.1.3      X     Partial multithreading support
+CCL             1.11        O
+SBCL            1.3.13      O
+LispWorks       n/a         ?     Not tested at all
+```
 
 Installation
 ============
