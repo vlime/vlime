@@ -96,11 +96,9 @@
                 (handler-case
                   (let ((line (nth 1 msg)))
                     (vom:debug "Message from client: ~s" line)
-                    (handler-case
-                      (progn
-                        (write-sequence
-                          (msg-client-to-swank line :octets) swank-stream)
-                        (finish-output swank-stream))))
+                    (write-sequence (msg-client-to-swank line :octets)
+                                    swank-stream)
+                    (finish-output swank-stream))
                   (t (c)
                      (swank/backend:send control-thread `(:client-data-error ,c)))))
 
