@@ -105,7 +105,7 @@
               (:swank-data
                 (vom:debug "swank-data msg")
                 (handler-case
-                  (let ((swank-msg (babel:octets-to-string (nth 1 msg))))
+                  (let ((swank-msg (swank/backend:utf8-to-string (nth 1 msg))))
                     (vom:debug "Message from SWANK: ~s" swank-msg)
                     (write-sequence (msg-swank-to-client swank-msg :string)
                                     client-stream)

@@ -85,30 +85,30 @@
 
 (defun msg-client-to-swank (msg return-type)
   (when (not (stringp msg))
-    (setf msg (babel:octets-to-string msg)))
+    (setf msg (swank/backend:utf8-to-string msg)))
 
   (let* ((json (yason:parse msg))
          (form (json-to-form json)))
     (if (client-emacs-rex-p form)
       (let* ((emacs-rex-form (seq-client-to-swank form))
              (form-str (with-standard-io-syntax (write-to-string emacs-rex-form)))
-             (form-bytes (babel:string-to-octets form-str))
+             (form-bytes (swank/backend:string-to-utf8 form-str))
              (form-bytes-len (length form-bytes)))
         (ecase return-type
           (:octets
             (concatenate '(vector (unsigned-byte 8))
-                         (babel:string-to-octets (format nil "~6,'0x" form-bytes-len))
+                         (swank/backend:string-to-utf8 (format nil "~6,'0x" form-bytes-len))
                          form-bytes))
           (:string
             (format nil "~6,'0x~a" form-bytes-len form-str))))
       (let* ((one-way-form (remove-client-seq form))
              (form-str (with-standard-io-syntax (write-to-string one-way-form)))
-             (form-bytes (babel:string-to-octets form-str))
+             (form-bytes (swank/backend:string-to-utf8 form-str))
              (form-bytes-len (length form-bytes)))
         (ecase return-type
           (:octets
             (concatenate '(vector (unsigned-byte 8))
-                         (babel:string-to-octets (format nil "~6,'0x" form-bytes-len))
+                         (swank/backend:string-to-utf8 (format nil "~6,'0x" form-bytes-len))
                          form-bytes))
           (:string
             (format nil "~6,'0x~a" form-bytes-len form-str)))))))
@@ -116,7 +116,7 @@
 
 (defun msg-swank-to-client (msg return-type)
   (when (not (stringp msg))
-    (setf msg (babel:octets-to-string msg)))
+    (setf msg (swank/backend:utf8-to-string msg)))
 
   (let* ((form (parse-form msg))
          (msg-type (car form)))
@@ -128,7 +128,7 @@
                           'string encoded (format nil "~c~c" #\return #\linefeed))))
         (ecase return-type
           (:octets
-            (babel:string-to-octets full-line))
+            (swank/backend:string-to-utf8 full-line))
           (:string
             full-line)))
       (let* ((json (form-to-json form))
@@ -139,7 +139,7 @@
                           'string encoded (format nil "~c~c" #\return #\linefeed))))
         (ecase return-type
           (:octets
-            (babel:string-to-octets full-line))
+            (swank/backend:string-to-utf8 full-line))
           (:string
             full-line))))))
 
@@ -150,7 +150,7 @@
   (let ((lf-pos (position (char-code #\linefeed) read-buffer)))
     (loop
       when lf-pos
-        collect (babel:octets-to-string (subseq read-buffer 0 (1+ lf-pos))) into lines
+        collect (swank/backend:utf8-to-string (subseq read-buffer 0 (1+ lf-pos))) into lines
         and do
           (setf read-buffer (subseq read-buffer (1+ lf-pos)))
           (setf lf-pos
@@ -161,7 +161,7 @@
 
 (defun parse-swank-msg-len (buffer)
   (parse-integer
-    (babel:octets-to-string (subseq buffer 0 +swank-msg-len-size+))
+    (swank/backend:utf8-to-string (subseq buffer 0 +swank-msg-len-size+))
     :radix 16))
 
 
@@ -174,7 +174,7 @@
                (parse-swank-msg-len read-buffer)))))
     (loop
       when (and msg-total-len (>= (length read-buffer) msg-total-len))
-        collect (babel:octets-to-string
+        collect (swank/backend:utf8-to-string
                   (subseq read-buffer +swank-msg-len-size+ msg-total-len))
                 into msgs
         and do
