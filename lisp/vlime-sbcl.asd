@@ -7,7 +7,6 @@
   :depends-on (#:sb-bsd-sockets
                #:sb-introspect
                #:yason
-               #:babel
                #:swank
                #:vom)
   :components ((:module "src"

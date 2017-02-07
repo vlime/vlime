@@ -6,7 +6,6 @@
   :version "0.1.0"
   :depends-on (#:cl-async
                #:yason
-               #:babel
                #:swank
                #:vom)
   :components ((:module "src"
