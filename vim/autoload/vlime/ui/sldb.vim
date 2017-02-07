@@ -227,9 +227,11 @@ function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
     let content .= '  File: ' . a:result[1][1] . "\n"
     let content .= '  Position: ' . a:result[2][1] . "\n"
 
-    let snippet_lines = split(a:result[3][1], "\n")
-    let snippet = join(map(snippet_lines, '"    " . v:val'), "\n")
-    let content .= "  Snippet:\n" . snippet . "\n"
+    if type(a:result[3]) != v:t_none
+        let snippet_lines = split(a:result[3][1], "\n")
+        let snippet = join(map(snippet_lines, '"    " . v:val'), "\n")
+        let content .= "  Snippet:\n" . snippet . "\n"
+    endif
 
     if a:append
         call vlime#ui#ShowPreview(a:conn, content, v:true)
