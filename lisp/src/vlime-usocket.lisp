@@ -18,7 +18,7 @@
           #'(lambda ()
               (vlime-control-thread
                 client-socket swank-host swank-port))
-          :name (format nil "Vlime Control Thread" swank-host swank-port)))
+          :name "Vlime Control Thread"))
       (t (c)
          (vom:error "server-listener: ~a" c)
          (socket-close socket)
@@ -120,10 +120,16 @@
 
               ((:exit :client-eof :swank-eof :client-data-error :swank-data-error)
                 (vom:debug "Control thread stopping: ~s" msg)
-                (swank/backend:kill-thread swank-read-thread)
-                (swank/backend:kill-thread client-read-thread)
-                (socket-close swank-socket)
-                (socket-close client-socket)
+                (let ((thread-list (list swank-read-thread
+                                         client-read-thread))
+                      (current-thread (swank/backend:current-thread)))
+                  (dolist (thread thread-list)
+                    (when (and (swank/backend:thread-alive-p thread)
+                               (not (equal current-thread thread)))
+                      (swank/backend:kill-thread thread))))
+                (let ((stream-list (list swank-stream client-stream)))
+                  (dolist (stream stream-list)
+                    (close stream)))
                 (return-from vlime-control-thread)))))))))
 
 
