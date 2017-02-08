@@ -17,7 +17,8 @@
         (swank/backend:spawn
           #'(lambda ()
               (vlime-control-thread
-                client-socket swank-host swank-port))))
+                client-socket swank-host swank-port))
+          :name (format nil "Vlime Control Thread" swank-host swank-port)))
       (t (c)
          (vom:error "server-listener: ~a" c)
          (socket-close socket)
@@ -86,8 +87,12 @@
                      (swank/backend:send control-thread `(:swank-data ,msg-buf))
                      (swank-read-loop msg-len-buf))))))
 
-      (let ((client-read-thread (swank/backend:spawn #'client-read-loop))
-            (swank-read-thread (swank/backend:spawn #'swank-read-loop)))
+      (let ((client-read-thread (swank/backend:spawn
+                                  #'client-read-loop
+                                  :name "Vlime Client Reader"))
+            (swank-read-thread (swank/backend:spawn
+                                 #'swank-read-loop
+                                 :name "Vlime SWANK Reader")))
         (loop
           (let ((msg (swank/backend:receive)))
             (ecase (car msg)
@@ -131,4 +136,5 @@
                          :element-type 'character)))
     (swank/backend:spawn
       #'(lambda ()
-          (server-listener server-socket swank-host swank-port)))))
+          (server-listener server-socket swank-host swank-port))
+      :name (format nil "Vlime Server Listener ~a ~a" host port))))
