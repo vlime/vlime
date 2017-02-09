@@ -21,10 +21,6 @@ Current State
 Vlime is currently in a pre-alpha state. One should expect changes in APIs and
 key bindings etc.
 
-Note that there is a bug in the channel implementation of Vim which may cause
-large messages to be dropped incorrectly. Vlime may act strange until this bug
-is fixed. [Details](https://groups.google.com/d/topic/vim_dev/Rl0X_R5pjxk/discussion).
-
 Dependencies
 ============
 
@@ -33,6 +29,11 @@ Must-have:
 * Vim 8.0+ and +channel
 * Quicklisp
 * An Internet connection to install other dependencies from Quicklisp
+
+Note that there was a bug in the channel implementation of Vim, which may
+cause large messages to be dropped incorrectly. This was fixed in 8.0.0312,
+so using 8.0.0312 or a more recent version is strongly recommended.
+[Details](https://groups.google.com/d/topic/vim_dev/Rl0X_R5pjxk/discussion).
 
 The lisp code has three backends, and each has different dependencies.
 
@@ -45,9 +46,9 @@ life easier, use [paredit](https://github.com/kovisoft/paredit).
 Supported CL Implementations
 ============================
 
-Some major CL implementations are listed below. The implementations marked
-with `O` work fine with Vlime. If you tried out Vlime with an implementation
-not listed here, please let me know.
+Some major CL implementations are listed below. The ones marked with `O` work
+fine with Vlime. If you tried out Vlime with an implementation not listed
+here, please let me know.
 
 ```
 Implementation  Version  Working  Notes
