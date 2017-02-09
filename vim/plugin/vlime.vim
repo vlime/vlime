@@ -477,12 +477,10 @@ function! s:OnCallInitializersComplete(conn)
 endfunction
 
 function! s:OnSwankRequireComplete(conn, result)
-    echom '-- OnSwankRequireComplete -------------------------'
     let a:conn.cb_data['contribs'] = a:result
 endfunction
 
 function! s:OnConnectionInfoComplete(conn, result)
-    echom '-- OnConnectionInfoComplete -------------------------'
     let a:conn.cb_data['version'] = a:result['VERSION']
     let a:conn.cb_data['pid'] = a:result['PID']
 endfunction

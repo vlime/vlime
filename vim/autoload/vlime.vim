@@ -581,9 +581,6 @@ endfunction
 
 function! vlime#OnServerEvent(chan, msg) dict
     let chan_info = ch_info(self.channel)
-    echom '==========================='
-    echom chan_info['hostname'] . ':' . chan_info['port'] .
-                \ ' -> ' . string(a:msg)
     let msg_type = a:msg[0]
     let Handler = get(self.server_event_handlers, msg_type['name'], v:null)
     if type(Handler) == v:t_func
