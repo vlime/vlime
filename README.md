@@ -55,7 +55,7 @@ CLISP           2.49+       X     No multithreading support
 ECL             16.1.3      X     Partial multithreading support
 CCL             1.11        O
 SBCL            1.3.13      O
-LispWorks       n/a         ?     Not tested at all
+LispWorks       6.1         O     Tested with the Personal Edition
 ```
 
 Usage
