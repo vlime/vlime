@@ -27,6 +27,7 @@ Dependencies
 Must-have:
 
 * Vim 8.0+ and +channel
+* ASDF
 * Quicklisp
 * An Internet connection to install other dependencies from Quicklisp
 
@@ -34,11 +35,6 @@ Note that there was a bug in the channel implementation of Vim, which may
 cause large messages to be dropped incorrectly. This was fixed in 8.0.0312,
 so using 8.0.0312 or a more recent version is strongly recommended.
 [Details](https://groups.google.com/d/topic/vim_dev/Rl0X_R5pjxk/discussion).
-
-The lisp code has three backends, and each has different dependencies.
-
-For maximum compatibility with different CL implementations, just use the
-`usocket` backend.
 
 Currently Vlime can only detect s-expressions inside parentheses. To make your
 life easier, use [paredit](https://github.com/kovisoft/paredit).
@@ -62,25 +58,20 @@ SBCL            1.3.13      O
 LispWorks       n/a         ?     Not tested at all
 ```
 
-Installation
-============
-
-1. Set up Quicklisp properly.
-2. Clone this repo, and create a symlink to Vlime's `lisp` directory in your
-   `local-projects` directory.
-3. In your REPL, invoke `(ql:quickload :vlime-usocket)`.
-4. Install the Vim plugin from Vlime's `vim` directory using your usual way
-   (Vundle or something).
-
 Usage
 =====
 
-Run the server first:
+1. Set up Quicklisp properly.
+2. Clone this repo.
+3. Install the Vim plugin from Vlime's `vim` directory using your usual way
+   (Vundle or something).
+4. Run the server: `sbcl --load <vlime repo>/lisp/start-vlime.lisp`
 
-    sbcl --load <vlime repo>/lisp/start-vlime-usocket.lisp
+If it's your first time running the server, Vlime will try to install it's
+dependencies via Quicklisp.
 
-Use Vim to start editing a CL source file. These keys are mapped (in normal
-mode unless specified otherwise):
+When the server is up and running, use Vim to start editing a CL source file.
+These keys are mapped (in normal mode unless specified otherwise):
 
 Connection management:
 
