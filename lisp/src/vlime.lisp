@@ -63,5 +63,5 @@
         (delete-file swank-port-file))
       ;((nil)) ; TODO
       (t
-        (dyn-call "VOM" "ERROR"
-                  "Communication style ~s not supported." preferred-style)))))
+        (format *error-output*
+                "Vlime: Communication style ~s not supported.~%" preferred-style)))))
