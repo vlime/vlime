@@ -133,14 +133,16 @@
                 (return-from vlime-control-thread)))))))))
 
 
-(defun main (host port swank-host swank-port)
+(in-package #:vlime)
+
+(defmethod start-server ((backend (eql :usocket)) host port swank-host swank-port)
   (vom:config t :debug)
   (let ((server-socket
-          (socket-listen host port
-                         :reuse-address t
-                         :backlog 128
-                         :element-type 'character)))
+          (usocket:socket-listen host port
+                                 :reuse-address t
+                                 :backlog 128
+                                 :element-type 'character)))
     (swank/backend:spawn
       #'(lambda ()
-          (server-listener server-socket swank-host swank-port))
+          (vlime-usocket::server-listener server-socket swank-host swank-port))
       :name (format nil "Vlime Server Listener ~a ~a" host port))))

@@ -1,0 +1,12 @@
+;; vim: filetype=lisp
+(asdf:defsystem #:vlime
+  :description "Asynchronous Vim <-> Swank interface"
+  :author "Kay Z. <l04m33@gmail.com>"
+  :license "MIT"
+  :version "0.1.0"
+  :depends-on (#:swank
+               #:yason
+               #:vom)
+  :components ((:module "src"
+                :pathname "src"
+                :components ((:file "vlime")))))
