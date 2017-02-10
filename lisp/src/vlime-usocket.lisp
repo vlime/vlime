@@ -43,49 +43,47 @@
          (client-stream (socket-stream client-socket))
          (swank-stream (socket-stream swank-socket)))
 
-    (labels ((client-read-loop ()
-               (let ((line
-                       (handler-case
-                         (read-line client-stream)
-                         (t (c)
-                            (swank/backend:send control-thread `(:client-eof ,c))
-                            nil))))
-                 (when line
-                   (swank/backend:send control-thread `(:client-data ,line))
-                   (client-read-loop))))
+    (labels ((read-client-data (buf)
+               (loop for byte = (read-byte client-stream)
+                     when (not (eql byte (char-code #\linefeed)))
+                       do (vector-push-extend byte buf)
+                     else
+                       return buf))
+
+             (client-read-loop (&optional (data-buf (make-array 0
+                                                                :element-type '(unsigned-byte 8)
+                                                                :adjustable t
+                                                                :fill-pointer 0)))
+               (handler-case
+                 (swank/backend:send control-thread
+                                     `(:client-data ,(copy-seq (read-client-data data-buf))))
+                 (t (c)
+                    (swank/backend:send control-thread `(:client-eof ,c))
+                    (return-from client-read-loop)))
+               (client-read-loop))
 
              (read-swank-data (buf)
+               (let ((read-len (read-sequence buf swank-stream)))
+                 (if (< read-len (length buf))
+                   (progn
+                     (swank/backend:send control-thread `(:swank-eof))
+                     nil)
+                   read-len)))
+
+             (swank-read-loop (&optional (msg-len-buf (make-array
+                                                        +swank-msg-len-size+
+                                                        :element-type '(unsigned-byte 8))))
                (handler-case
-                 (let ((read-len (read-sequence buf swank-stream)))
-                   (if (< read-len (length buf))
-                     (progn
-                       (swank/backend:send control-thread `(:swank-eof))
-                       nil)
-                     read-len))
+                 (if (read-swank-data msg-len-buf)
+                   (let* ((msg-len (parse-swank-msg-len msg-len-buf))
+                          (msg-buf (make-array msg-len :element-type '(unsigned-byte 8))))
+                     (when (read-swank-data msg-buf)
+                       (swank/backend:send control-thread `(:swank-data ,msg-buf))))
+                   (return-from swank-read-loop))
                  (t (c)
                     (swank/backend:send control-thread `(:swank-eof ,c))
-                    nil)))
-
-             (swank-read-loop (&optional (msg-len-buf nil))
-               (when (not msg-len-buf)
-                 (setf msg-len-buf
-                       (make-array
-                         +swank-msg-len-size+
-                         :element-type '(unsigned-byte 8))))
-               (when (read-swank-data msg-len-buf)
-                 (let* ((msg-len (handler-case
-                                   (parse-swank-msg-len msg-len-buf)
-                                   (t (c)
-                                      (swank/backend:send control-thread `(:swank-eof ,c))
-                                      (return-from swank-read-loop))))
-                        (msg-buf (handler-case
-                                   (make-array msg-len :element-type '(unsigned-byte 8))
-                                   (t (c)
-                                      (swank/backend:send control-thread `(:swank-eof ,c))
-                                      (return-from swank-read-loop)))))
-                   (when (read-swank-data msg-buf)
-                     (swank/backend:send control-thread `(:swank-data ,msg-buf))
-                     (swank-read-loop msg-len-buf))))))
+                    (return-from swank-read-loop)))
+               (swank-read-loop msg-len-buf)))
 
       (let ((client-read-thread (swank/backend:spawn
                                   #'client-read-loop
@@ -99,7 +97,7 @@
               (:client-data
                 (vom:debug "client-data msg")
                 (handler-case
-                  (let ((line (nth 1 msg)))
+                  (let ((line (swank/backend:utf8-to-string (nth 1 msg))))
                     (vom:debug "Message from client: ~s" line)
                     (write-sequence (msg-client-to-swank line :octets)
                                     swank-stream)
@@ -112,7 +110,7 @@
                 (handler-case
                   (let ((swank-msg (swank/backend:utf8-to-string (nth 1 msg))))
                     (vom:debug "Message from SWANK: ~s" swank-msg)
-                    (write-sequence (msg-swank-to-client swank-msg :string)
+                    (write-sequence (msg-swank-to-client swank-msg :octets)
                                     client-stream)
                     (finish-output client-stream))
                   (t (c)
@@ -141,7 +139,7 @@
           (usocket:socket-listen host port
                                  :reuse-address t
                                  :backlog 128
-                                 :element-type 'character)))
+                                 :element-type '(unsigned-byte 8))))
     (swank/backend:spawn
       #'(lambda ()
           (vlime-usocket::server-listener server-socket swank-host swank-port))
