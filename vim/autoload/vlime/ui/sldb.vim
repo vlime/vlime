@@ -57,6 +57,7 @@ function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
     nnoremap <buffer> a :call b:vlime_conn.SLDBAbort()<cr>
     nnoremap <buffer> C :call vlime#ui#sldb#InspectCurCondition()<cr>
     nnoremap <buffer> i :call vlime#ui#sldb#InspectInCurFrame()<cr>
+    nnoremap <buffer> e :call vlime#ui#sldb#EvalStringInCurFrame()<cr>
 endfunction
 
 function! vlime#ui#sldb#ChooseCurRestart()
@@ -133,6 +134,32 @@ function! vlime#ui#sldb#InspectInCurFrameInputComplete(frame, thread)
                 \ function(b:vlime_conn.InspectInFrame,
                     \ [content, a:frame,
                         \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)}]))
+endfunction
+
+function! vlime#ui#sldb#EvalStringInCurFrame()
+    let nth = s:MatchFrame()
+    if nth < 0
+        let nth = 0
+    endif
+
+    let thread = b:vlime_conn.GetCurrentThread()
+    call vlime#ui#InputFromMiniBuffer(
+                \ b:vlime_conn, 'Eval in frame:',
+                \ v:null,
+                \ 'call vlime#ui#sldb#EvalStringInCurFrameInputComplete('
+                    \ . nth . ', '
+                    \ . thread
+                    \ . ', "' . escape(b:vlime_conn.GetCurrentPackage()[0], '"')
+                    \ . '") \| bunload!')
+endfunction
+
+function! vlime#ui#sldb#EvalStringInCurFrameInputComplete(frame, thread, package)
+    let content = vlime#ui#CurBufferContent()
+    call b:vlime_conn.WithThread(a:thread,
+                \ function(b:vlime_conn.EvalStringInFrame,
+                    \ [content, a:frame, a:package,
+                        \ {c, r -> c.ui.OnWriteString(c, r . "\n",
+                            \ {'name': 'FRAME-EVAL-RESULT', 'package': 'KEYWORD'})}]))
 endfunction
 
 function! s:FindMaxRestartNameLen(restarts)

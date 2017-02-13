@@ -49,6 +49,7 @@ function! vlime#New(...)
                 \ 'RestartFrame': function('vlime#RestartFrame'),
                 \ 'FrameLocalsAndCatchTags': function('vlime#FrameLocalsAndCatchTags'),
                 \ 'FrameSourceLocation': function('vlime#FrameSourceLocation'),
+                \ 'EvalStringInFrame': function('vlime#EvalStringInFrame'),
                 \ 'InitInspector': function('vlime#InitInspector'),
                 \ 'InspectNthPart': function('vlime#InspectNthPart'),
                 \ 'InspectorCallNthAction': function('vlime#InspectorCallNthAction'),
@@ -326,6 +327,16 @@ function! vlime#FrameSourceLocation(frame, ...) dict
                     \ [s:SYM('SWANK', 'FRAME-SOURCE-LOCATION'), a:frame]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#FrameSourceLocation']))
+endfunction
+
+" vlime#EvalStringInFrame(str, frame, package[, callback]) dict
+function! vlime#EvalStringInFrame(str, frame, package, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'EVAL-STRING-IN-FRAME'),
+                        \ a:str, a:frame, a:package]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#EvalStringInFrame']))
 endfunction
 
 " vlime#InitInspector(thing[, callback])
