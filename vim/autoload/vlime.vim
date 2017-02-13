@@ -45,6 +45,7 @@ function! vlime#New(...)
                 \ 'SLDBStep': function('vlime#SLDBStep'),
                 \ 'SLDBNext': function('vlime#SLDBNext'),
                 \ 'SLDBOut': function('vlime#SLDBOut'),
+                \ 'SLDBDisassemble': function('vlime#SLDBDisassemble'),
                 \ 'InvokeNthRestartForEmacs': function('vlime#InvokeNthRestartForEmacs'),
                 \ 'RestartFrame': function('vlime#RestartFrame'),
                 \ 'FrameLocalsAndCatchTags': function('vlime#FrameLocalsAndCatchTags'),
@@ -292,6 +293,14 @@ function! vlime#SLDBOut(frame, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-OUT'), a:frame]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBOut']))
+endfunction
+
+" vlime#SLDBDisassemble(frame[, callback]) dict
+function! vlime#SLDBDisassemble(frame, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-DISASSEMBLE'), a:frame]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#SLDBDisassemble']))
 endfunction
 
 " vlime#InvokeNthRestartForEmacs(level, restart[, callback])

@@ -58,6 +58,7 @@ function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
     nnoremap <buffer> C :call vlime#ui#sldb#InspectCurCondition()<cr>
     nnoremap <buffer> i :call vlime#ui#sldb#InspectInCurFrame()<cr>
     nnoremap <buffer> e :call vlime#ui#sldb#EvalStringInCurFrame()<cr>
+    nnoremap <buffer> D :call vlime#ui#sldb#DisassembleCurFrame()<cr>
 endfunction
 
 function! vlime#ui#sldb#ChooseCurRestart()
@@ -160,6 +161,20 @@ function! vlime#ui#sldb#EvalStringInCurFrameInputComplete(frame, thread, package
                     \ [content, a:frame, a:package,
                         \ {c, r -> c.ui.OnWriteString(c, r . "\n",
                             \ {'name': 'FRAME-EVAL-RESULT', 'package': 'KEYWORD'})}]))
+endfunction
+
+function! vlime#ui#sldb#DisassembleCurFrame()
+    let nth = s:MatchFrame()
+    if nth < 0
+        let nth = 0
+    endif
+
+    let thread = b:vlime_conn.GetCurrentThread()
+    call b:vlime_conn.WithThread(thread,
+                \ function(b:vlime_conn.SLDBDisassemble,
+                    \ [nth,
+                        \ {c, r ->
+                            \ vlime#ui#ShowPreview(c, r, v:false, 12)}]))
 endfunction
 
 function! s:FindMaxRestartNameLen(restarts)
