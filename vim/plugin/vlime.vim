@@ -269,6 +269,23 @@ function! VlimeXRefCurSymbol(sym_type, ref_type)
     endif
 endfunction
 
+function! VlimeSetBreakpoint()
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call vlime#ui#InputFromMiniBuffer(
+                \ conn, 'Set breakpoint at function:',
+                \ v:null,
+                \ 'call VlimeSetBreakpointInputComplete() \| bunload!')
+endfunction
+
+function! VlimeSetBreakpointInputComplete()
+    let content = vlime#ui#CurBufferContent()
+    call b:vlime_conn.SLDBBreak(content, function('s:OnSLDBBreakComplete'))
+endfunction
+
 function! VlimeCompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
@@ -435,6 +452,7 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
     nnoremap <buffer> <LocalLeader>a :call VlimeDisassembleCurForm()<cr>
     nnoremap <buffer> <LocalLeader>p :call VlimeSetCurPackage()<cr>
+    nnoremap <buffer> <LocalLeader>b :call VlimeSetBreakpoint()<cr>
 endfunction
 
 function! VlimeInteractionMode()
@@ -526,6 +544,10 @@ function! s:OnXRefComplete(conn, result)
     if type(a:conn.ui) != v:t_none
         call a:conn.ui.OnXRef(a:conn, a:result)
     endif
+endfunction
+
+function! s:OnSLDBBreakComplete(conn, result)
+    echom 'Breakpoint set.'
 endfunction
 
 function! s:ShowAsyncResult(conn, result)

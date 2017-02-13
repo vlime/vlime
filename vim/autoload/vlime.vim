@@ -41,6 +41,7 @@ function! vlime#New(...)
                 \ 'XRef': function('vlime#XRef'),
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
+                \ 'SLDBBreak': function('vlime#SLDBBreak'),
                 \ 'SLDBContinue': function('vlime#SLDBContinue'),
                 \ 'SLDBStep': function('vlime#SLDBStep'),
                 \ 'SLDBNext': function('vlime#SLDBNext'),
@@ -266,6 +267,14 @@ function! vlime#SLDBAbort(...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-ABORT')]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBAbort']))
+endfunction
+
+" vlime#SLDBBreak(func_name[, callback])
+function! vlime#SLDBBreak(func_name, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-BREAK'), a:func_name]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#SLDBBreak']))
 endfunction
 
 " vlime#SLDBContinue([callback])
