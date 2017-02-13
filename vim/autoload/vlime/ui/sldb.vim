@@ -59,6 +59,7 @@ function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
     nnoremap <buffer> i :call vlime#ui#sldb#InspectInCurFrame()<cr>
     nnoremap <buffer> e :call vlime#ui#sldb#EvalStringInCurFrame()<cr>
     nnoremap <buffer> D :call vlime#ui#sldb#DisassembleCurFrame()<cr>
+    nnoremap <buffer> R :call vlime#ui#sldb#ReturnFromCurFrame()<cr>
 endfunction
 
 function! vlime#ui#sldb#ChooseCurRestart()
@@ -175,6 +176,27 @@ function! vlime#ui#sldb#DisassembleCurFrame()
                     \ [nth,
                         \ {c, r ->
                             \ vlime#ui#ShowPreview(c, r, v:false, 12)}]))
+endfunction
+
+function! vlime#ui#sldb#ReturnFromCurFrame()
+    let nth = s:MatchFrame()
+    if nth < 0
+        let nth = 0
+    endif
+
+    let thread = b:vlime_conn.GetCurrentThread()
+    call vlime#ui#InputFromMiniBuffer(
+                \ b:vlime_conn, 'Return from frame (evaluated):',
+                \ v:null,
+                \ 'call vlime#ui#sldb#ReturnFromCurFrameInputComplete('
+                    \ . nth . ', ' . thread . ') \| bunload!')
+endfunction
+
+function! vlime#ui#sldb#ReturnFromCurFrameInputComplete(frame, thread)
+    let content = vlime#ui#CurBufferContent()
+    call b:vlime_conn.WithThread(a:thread,
+                \ function(b:vlime_conn.SLDBReturnFromFrame,
+                    \ [a:frame, content]))
 endfunction
 
 function! s:FindMaxRestartNameLen(restarts)
