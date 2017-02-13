@@ -287,6 +287,21 @@ function! VlimeAproposListInputComplete()
                 \ function('s:OnAproposListComplete'))
 endfunction
 
+function! VlimeDocumentationSymbol(sym_type)
+    if a:sym_type == 'operator'
+        let sym = vlime#ui#CurOperator()
+    elseif a:sym_type == 'atom'
+        let sym = vlime#ui#CurAtom()
+    endif
+    if len(sym) > 0
+        let conn = VlimeGetConnection()
+        if type(conn) == v:t_none
+            return
+        endif
+        call conn.DocumentationSymbol(sym, function('s:OnDocumentationSymbolComplete'))
+    endif
+endfunction
+
 function! VlimeSetBreakpoint()
     let conn = VlimeGetConnection()
     if type(conn) == v:t_none
@@ -456,6 +471,8 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>do :call VlimeDescribeCurSymbol('operator')<cr>
     nnoremap <buffer> <LocalLeader>da :call VlimeDescribeCurSymbol('atom')<cr>
     nnoremap <buffer> <LocalLeader>ds :call VlimeAproposList()<cr>
+    nnoremap <buffer> <LocalLeader>ddo :call VlimeDocumentationSymbol('operator')<cr>
+    nnoremap <buffer> <LocalLeader>dda :call VlimeDocumentationSymbol('atom')<cr>
 
     " Inspection
     nnoremap <buffer> <LocalLeader>II :call VlimeInspectCurThing('thing')<cr>
@@ -583,6 +600,10 @@ function! s:OnAproposListComplete(conn, result)
         endfor
         call vlime#ui#ShowPreview(a:conn, content, v:false, 12)
     endif
+endfunction
+
+function! s:OnDocumentationSymbolComplete(conn, result)
+    call vlime#ui#ShowPreview(a:conn, a:result, v:false, 12)
 endfunction
 
 function! s:OnSLDBBreakComplete(conn, result)

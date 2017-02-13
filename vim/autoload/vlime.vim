@@ -40,6 +40,7 @@ function! vlime#New(...)
                 \ 'LoadFile': function('vlime#LoadFile'),
                 \ 'XRef': function('vlime#XRef'),
                 \ 'AproposListForEmacs': function('vlime#AproposListForEmacs'),
+                \ 'DocumentationSymbol': function('vlime#DocumentationSymbol'),
                 \ 'Interrupt': function('vlime#Interrupt'),
                 \ 'SLDBAbort': function('vlime#SLDBAbort'),
                 \ 'SLDBBreak': function('vlime#SLDBBreak'),
@@ -546,6 +547,13 @@ function! vlime#AproposListForEmacs(name, external_only, case_sensitive, package
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'APROPOS-LIST-FOR-EMACS'),
                     \ a:name, a:external_only, a:case_sensitive, a:package]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#AproposListForEmacs']))
+endfunction
+
+" vlime#DocumentationSymbol(sym_name[, callback])
+function! vlime#DocumentationSymbol(sym_name, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex([s:SYM('SWANK', 'DOCUMENTATION-SYMBOL'), a:sym_name]),
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#DocumentationSymbol']))
 endfunction
 
 " ------------------ server event handlers ------------------

@@ -112,7 +112,9 @@ Describing things:
 
 * `<LocalLeader>do`: Describe the "operator" of the s-expression under the cursor.
 * `<LocalLeader>da`: Describe the atom under the cursor.
-* `<LocalLeader>da`: Apropos search.
+* `<LocalLeader>ds`: Apropos search.
+* `<LocalLeader>ddo`: Show the documentation for the "operator" of the s-expression under the cursor.
+* `<LocalLeader>dda`: Show the documentation for the atom under the cursor.
 
 Inspection:
 
