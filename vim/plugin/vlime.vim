@@ -269,6 +269,24 @@ function! VlimeXRefCurSymbol(sym_type, ref_type)
     endif
 endfunction
 
+function! VlimeAproposList()
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+    call vlime#ui#InputFromMiniBuffer(
+                \ conn, 'Apropos search:',
+                \ v:null,
+                \ 'call VlimeAproposListInputComplete() \| bunload!')
+endfunction
+
+function! VlimeAproposListInputComplete()
+    let content = vlime#ui#CurBufferContent()
+    call b:vlime_conn.AproposListForEmacs(
+                \ content, v:false, v:false, v:null,
+                \ function('s:OnAproposListComplete'))
+endfunction
+
 function! VlimeSetBreakpoint()
     let conn = VlimeGetConnection()
     if type(conn) == v:t_none
@@ -543,6 +561,26 @@ endfunction
 function! s:OnXRefComplete(conn, result)
     if type(a:conn.ui) != v:t_none
         call a:conn.ui.OnXRef(a:conn, a:result)
+    endif
+endfunction
+
+function! s:OnAproposListComplete(conn, result)
+    if type(a:result) == v:t_none
+        call vlime#ui#ShowPreview(a:conn, 'No result found.', v:false, 12)
+    else
+        let content = ''
+        for item in a:result
+            let item_dict = vlime#PListToDict(item)
+            let content .= item_dict['DESIGNATOR']
+            let flags = map(filter(keys(item_dict), {f -> f != 'DESIGNATOR'}), {i, f -> tolower(f)})
+            if len(flags) > 0
+                let content .= ' ('
+                let content .= join(flags, ', ')
+                let content .= ')'
+            endif
+            let content .= "\n"
+        endfor
+        call vlime#ui#ShowPreview(a:conn, content, v:false, 12)
     endif
 endfunction
 
