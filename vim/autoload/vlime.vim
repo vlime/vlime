@@ -39,6 +39,7 @@ function! vlime#New(...)
                 \ 'CompileFileForEmacs': function('vlime#CompileFileForEmacs'),
                 \ 'LoadFile': function('vlime#LoadFile'),
                 \ 'XRef': function('vlime#XRef'),
+                \ 'FindDefinitionsForEmacs': function('vlime#FindDefinitionsForEmacs'),
                 \ 'AproposListForEmacs': function('vlime#AproposListForEmacs'),
                 \ 'DocumentationSymbol': function('vlime#DocumentationSymbol'),
                 \ 'Interrupt': function('vlime#Interrupt'),
@@ -539,6 +540,13 @@ function! vlime#XRef(ref_type, name, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'XREF'), s:KW(a:ref_type), a:name]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#XRef']))
+endfunction
+
+" vlime#FindDefinitionsForEmacs(name[, callback])
+function! vlime#FindDefinitionsForEmacs(name, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex([s:SYM('SWANK', 'FIND-DEFINITIONS-FOR-EMACS'), a:name]),
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#FindDefinitionsForEmacs']))
 endfunction
 
 " vlime#AproposListForEmacs(name, external_only, case_sensitive, package[, callback])
