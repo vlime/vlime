@@ -128,6 +128,8 @@ Other stuff:
 * `<LocalLeader>i`: Interaction Mode.
 * `<LocalLeader>l`: Load the current file.
 * `<LocalLeader>a`: Disassemble the form under the cursor.
+* `<LocalLeader>p`: Specify the package for the current buffer.
+* `<LocalLeader>b`: Set a breakpoint at entry to a function.
 
 `<LocalLeader>` defaults to backslash `\`. In addition, you can use `<tab>`
 instead of `<c-x><c-o>` to invoke omni-completion.
@@ -159,6 +161,10 @@ keys are available in the SLDB buffer:
 * `C`: Inspect the current condition object.
 * `i`: Evaluate and inspect an expression in the frame under the cursor (or
        the most recent frame).
+* `e`: Evaluate an expression in the frame under the cursor (or the most
+       recent frame).
+* `D`: Disassemble the frame under the cursor (or the most recent frame).
+* `R`: Return a manually specified result from the frame under the cursor.
 
 In the inspector buffer, one can use `<cr>` and `<space>` to interact with
 buttons and values etc.
