@@ -49,10 +49,10 @@ here, please let me know.
 ```
 Implementation  Version  Working  Notes
 --------------------------------------------------------------
-ABCL            1.4.0       X     Networking code malfunction
+ABCL            1.4.0       O     Supported by the vlime-patched backend
 Allegro CL      10.0        O     Tested with the Express Edition
-CLISP           2.49+       X     No multithreading support
-ECL             16.1.3      X     Partial multithreading support
+CLISP           2.49+       O     No multithreading support
+ECL             16.1.3      X     Data type issues
 CCL             1.11        O
 SBCL            1.3.13      O
 LispWorks       6.1         O     Tested with the Personal Edition
