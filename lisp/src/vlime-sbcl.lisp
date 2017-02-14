@@ -3,7 +3,7 @@
 (defpackage #:vlime-sbcl
   (:use #:cl
         #:aio-sbcl
-        #:vlime-protocl
+        #:vlime-protocol
         #:vlime-connection)
   (:export #:main
            #:main-threaded))

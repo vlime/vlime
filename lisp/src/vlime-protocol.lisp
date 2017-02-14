@@ -1,6 +1,6 @@
 (in-package #:cl-user)
 
-(defpackage #:vlime-protocl
+(defpackage #:vlime-protocol
   (:use #:cl)
   (:export #:+swank-msg-len-size+
            #:parse-form
@@ -16,7 +16,7 @@
            #:parse-swank-msg-len
            #:parse-swank-msg))
 
-(in-package #:vlime-protocl)
+(in-package #:vlime-protocol)
 
 
 (defparameter +swank-msg-len-size+ 6)
