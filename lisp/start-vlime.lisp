@@ -16,4 +16,4 @@
     t))
 
 (when (load-vlime)
-  (dyn-call "VLIME" "MAIN" *vlime-home*))
+  (dyn-call "VLIME" "MAIN"))
