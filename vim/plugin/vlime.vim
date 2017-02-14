@@ -482,8 +482,7 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>xs :call VlimeXRefCurSymbol('atom', 'SETS')<cr>
     nnoremap <buffer> <LocalLeader>xe :call VlimeXRefCurSymbol('atom', 'MACROEXPANDS')<cr>
     nnoremap <buffer> <LocalLeader>xm :call VlimeXRefCurSymbol('atom', 'SPECIALIZES')<cr>
-    nnoremap <buffer> <LocalLeader>xdo :call VlimeJumpToCurDefinition('operator')<cr>
-    nnoremap <buffer> <LocalLeader>xda :call VlimeJumpToCurDefinition('atom')<cr>
+    nnoremap <buffer> <LocalLeader>xd :call VlimeJumpToCurDefinition('atom')<cr>
 
     " Describing things
     nnoremap <buffer> <LocalLeader>do :call VlimeDescribeCurSymbol('operator')<cr>

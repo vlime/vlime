@@ -107,6 +107,7 @@ Cross references (xref):
 * `<LocalLeader>xs`: Show who sets the value of the variable under the cursor.
 * `<LocalLeader>xe`: Show who expands the macro under the cursor.
 * `<LocalLeader>xm`: Show specialized methods for the class under the cursor.
+* `<LocalLeader>xd`: Show the definition for the name under the cursor.
 
 Describing things:
 
