@@ -6,7 +6,8 @@
   :version "0.1.0"
   :depends-on (#:vlime
                #:sb-bsd-sockets
-               #:sb-introspect)
+               #:sb-introspect
+               #:vom)
   :components ((:module "src"
                 :pathname "src"
                 :components ((:file "vlime-protocol")

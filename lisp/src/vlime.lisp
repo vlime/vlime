@@ -61,7 +61,10 @@
           (let* ((swank-port (read pf)))
             (start-server :sbcl #(0 0 0 0) 7002 #(127 0 0 1) swank-port)))
         (delete-file swank-port-file))
-      ;((nil)) ; TODO
+      ((nil)
+       (try-to-load :vlime-patched)
+       (dyn-call "VLIME-PATCHED" "PATCH-SWANK")
+       (dyn-call "SWANK" "CREATE-SERVER" :port 7002 :dont-close t))
       (t
         (format *error-output*
                 "Vlime: Communication style ~s not supported.~%" preferred-style)))))
