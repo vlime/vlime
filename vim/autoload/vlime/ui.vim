@@ -233,7 +233,7 @@ function! vlime#ui#CurExprEndPos(cur_char)
 endfunction
 
 function! vlime#ui#CurInPackage()
-    let pattern = '^\s*(\_s*in-package\_s\+\(.\+\)\_s*)'
+    let pattern = '(\_s*in-package\_s\+\(.\+\)\_s*)'
     let old_cur_pos = getcurpos()
     let package_line = search(pattern, 'bcW')
     if package_line <= 0
