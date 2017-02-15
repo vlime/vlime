@@ -8,13 +8,44 @@ function! vlime#ui#inspector#InitInspectorBuf(ui, conn, thread)
 endfunction
 
 function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
+    let b:vlime_inspector_title = a:content['TITLE']
     call vlime#ui#ReplaceContent(a:content['TITLE'] . "\n"
                 \ . repeat('=', len(a:content['TITLE'])) . "\n\n")
     normal! G$
 
     let coords = []
     call vlime#ui#inspector#FillInspectorBufContent(
-                \ a:content['CONTENT'], coords)
+                \ a:content['CONTENT'][0], coords)
+
+    let b:vlime_inspector_content_start = a:content['CONTENT'][2]
+    let b:vlime_inspector_content_end = a:content['CONTENT'][3]
+    let b:vlime_inspector_content_more =
+                \ a:content['CONTENT'][1] > b:vlime_inspector_content_end
+    let range_buttons = []
+    if b:vlime_inspector_content_start > 0
+        call add(range_buttons,
+                    \ [{'name': 'RANGE', 'package': 'KEYWORD'},
+                        \ "[prev range]", -1])
+    endif
+    if b:vlime_inspector_content_more
+        if len(range_buttons) > 0
+            call add(range_buttons, '  ')
+        endif
+        call add(range_buttons,
+                    \ [{'name': 'RANGE', 'package': 'KEYWORD'},
+                        \ "[next range]", 1])
+    endif
+    if len(range_buttons) > 0
+        call add(range_buttons, '  ')
+        call add(range_buttons,
+                    \ [{'name': 'RANGE', 'package': 'KEYWORD'},
+                        \ "[all content]", 0])
+        if len(getline('.')) > 0
+            let range_buttons = ["\n", range_buttons]
+        endif
+        call vlime#ui#inspector#FillInspectorBufContent(range_buttons, coords)
+    endif
+
     let b:vlime_inspector_coords = coords
 
     augroup InspectorLeaveAu
@@ -88,6 +119,31 @@ function! vlime#ui#inspector#InspectorSelect()
     elseif coord['type'] == 'VALUE'
         call b:vlime_conn.InspectNthPart(coord['id'],
                     \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
+    elseif coord['type'] == 'RANGE'
+        let range_size = b:vlime_inspector_content_end -
+                    \ b:vlime_inspector_content_start
+        if coord['id'] > 0
+            let next_start = b:vlime_inspector_content_end
+            let next_end = b:vlime_inspector_content_end + range_size
+            call b:vlime_conn.InspectorRange(next_start, next_end,
+                        \ {c, r -> c.ui.OnInspect(c,
+                            \ [{'name': 'TITLE', 'package': 'KEYWORD'}, b:vlime_inspector_title,
+                                \ {'name': 'CONTENT', 'package': 'KEYWORD'}, r],
+                            \ v:null, v:null)})
+        elseif coord['id'] < 0
+            let next_start = max([0, b:vlime_inspector_content_start - range_size])
+            let next_end = b:vlime_inspector_content_start
+            call b:vlime_conn.InspectorRange(next_start, next_end,
+                        \ {c, r -> c.ui.OnInspect(c,
+                            \ [{'name': 'TITLE', 'package': 'KEYWORD'}, b:vlime_inspector_title,
+                                \ {'name': 'CONTENT', 'package': 'KEYWORD'}, r],
+                            \ v:null, v:null)})
+        else
+            echom 'Fetching all inspector content, please wait...'
+            let acc = {'TITLE': b:vlime_inspector_title, 'CONTENT': [[], 0, 0, 0]}
+            call b:vlime_conn.InspectorRange(0, range_size,
+                        \ function('s:InspectorFetchAllCB', [acc]))
+        endif
     endif
 endfunction
 
@@ -138,6 +194,24 @@ function! s:OnInspectorPopComplete(conn, result)
         call vlime#ui#ErrMsg('The inspector stack is empty.')
     else
         call a:conn.ui.OnInspect(a:conn, a:result, v:null, v:null)
+    endif
+endfunction
+
+function! s:InspectorFetchAllCB(acc, conn, result)
+    if type(a:result[0]) != v:t_none
+        let a:acc['CONTENT'][0] += a:result[0]
+    endif
+    if a:result[1] > a:result[3]
+        let range_size = a:result[3] - a:result[2]
+        call a:conn.InspectorRange(a:result[3], a:result[3] + range_size,
+                    \ function('s:InspectorFetchAllCB', [a:acc]))
+    else
+        let a:acc['CONTENT'][1] = len(a:acc['CONTENT'][0])
+        let a:acc['CONTENT'][3] = a:acc['CONTENT'][1]
+        let full_content = [{'name': 'TITLE', 'package': 'KEYWORD'}, a:acc['TITLE'],
+                    \ {'name': 'CONTENT', 'package': 'KEYWORD'}, a:acc['CONTENT']]
+        call a:conn.ui.OnInspect(a:conn, full_content, v:null, v:null)
+        echom 'Done fetching inspector content.'
     endif
 endfunction
 

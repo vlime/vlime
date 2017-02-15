@@ -57,6 +57,7 @@ function! vlime#New(...)
                 \ 'FrameSourceLocation': function('vlime#FrameSourceLocation'),
                 \ 'EvalStringInFrame': function('vlime#EvalStringInFrame'),
                 \ 'InitInspector': function('vlime#InitInspector'),
+                \ 'InspectorRange': function('vlime#InspectorRange'),
                 \ 'InspectNthPart': function('vlime#InspectNthPart'),
                 \ 'InspectorCallNthAction': function('vlime#InspectorCallNthAction'),
                 \ 'InspectorPop': function('vlime#InspectorPop'),
@@ -376,6 +377,15 @@ function! vlime#InitInspector(thing, ...) dict
                     \ [s:SYM('SWANK', 'INIT-INSPECTOR'), a:thing]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InitInspector']))
+endfunction
+
+" vlime#InspectorRange(r_start, r_end[, callback])
+function! vlime#InspectorRange(r_start, r_end, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'INSPECTOR-RANGE'), a:r_start, a:r_end]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#InspectorRange']))
 endfunction
 
 " vlime#InspectNthPart(nth[, callback])
