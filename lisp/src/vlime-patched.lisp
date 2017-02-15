@@ -19,13 +19,18 @@
         when (not (eql byte (char-code #\linefeed)))
           do (vector-push-extend byte buf)
         else
-          return buf))
+          ; ECL needs BUF to be coerced.
+          ; It may not be necessary for other implementations.
+          return (coerce buf '(vector (unsigned-byte 8)))))
 
 (defun patch-swank ()
   (defun swank/rpc:read-message (stream package)
     (let* ((bin-line (vlime-patched::read-binary-line stream))
            (line (swank/backend:utf8-to-string bin-line))
            (json (yason:parse line)))
+      ; We dump and read the form again,
+      ; to get the extra behaviors of READ-FORM.
+      ; Some implementations won't work without this.
       (let ((form
               (swank/rpc::read-form
                 (swank/rpc::prin1-to-string-for-emacs
