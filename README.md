@@ -52,7 +52,7 @@ Implementation  Version  Working  Notes
 ABCL            1.4.0       O     Supported by the vlime-patched backend
 Allegro CL      10.0        O     Tested with the Express Edition
 CLISP           2.49+       O     No multithreading support
-ECL             16.1.3      X     Data type issues
+ECL             16.1.3      O     No SLDB support
 CCL             1.11        O
 SBCL            1.3.13      O
 LispWorks       6.1         O     Tested with the Personal Edition
