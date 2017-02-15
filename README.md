@@ -171,7 +171,7 @@ keys are available in the SLDB buffer:
 * `R`: Return a manually specified result from the frame under the cursor.
 
 In the inspector buffer, one can use `<cr>` and `<space>` to interact with
-buttons and values etc.
+buttons and values etc. To refresh the inspector content, press `R`.
 
 In the xref buffer, use `<cr>` to jump to the selected reference spot.
 
