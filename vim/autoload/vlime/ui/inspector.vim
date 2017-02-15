@@ -64,6 +64,7 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
     nnoremap <buffer> <c-n> :call vlime#ui#inspector#NextField(v:true)<cr>
     nnoremap <buffer> <c-p> :call vlime#ui#inspector#NextField(v:false)<cr>
     nnoremap <buffer> p :call vlime#ui#inspector#InspectorPop()<cr>
+    nnoremap <buffer> R :call b:vlime_conn.InspectorReinspect({c, r -> c.ui.OnInspect(c, r, v:null, v:null)})<cr>
 endfunction
 
 function! vlime#ui#inspector#FillInspectorBufContent(content, coords)
