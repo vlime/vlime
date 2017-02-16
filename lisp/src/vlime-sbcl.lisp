@@ -36,7 +36,7 @@
 (defun client-connect-cb (afd)
   (unless (lookup-connection afd)
     (make-connection :socket afd)
-    (vom:debug "New connection from ~s" afd)
+    (vom:info "New connection from ~s" afd)
     (vom:debug "Connection count: ~s" (count-connections)))
   (aio-fd-disable-write-handle afd :clear-cb t))
 
@@ -79,7 +79,7 @@
 (in-package #:vlime)
 
 (defmethod start-server ((backend (eql :sbcl)) host port swank-host swank-port)
-  (vom:config t :debug)
+  (vom:config t :info)
   (setf vlime-connection:*connections* (make-hash-table))
   (setf aio-sbcl:*fd-map* (make-hash-table))
   (setf aio-sbcl:*static-buffer* (make-array 4096 :element-type '(unsigned-byte 8)))
@@ -93,5 +93,5 @@
                                         swank-host swank-port))
                   :client-write-cb #'vlime-sbcl::client-connect-cb
                   :client-error-cb #'vlime-sbcl::socket-error-cb)))
-    (vom:debug "Server created: ~s" server)
+    (vom:info "Server created: ~s" server)
     server))

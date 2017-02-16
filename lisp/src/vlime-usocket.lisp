@@ -10,7 +10,7 @@
 
 
 (defun server-listener (socket swank-host swank-port)
-  (vom:debug "Server created: ~s" socket)
+  (vom:info "Server created: ~s" socket)
   (loop
     (handler-case
       (let ((client-socket (socket-accept socket)))
@@ -27,7 +27,7 @@
 
 
 (defun vlime-control-thread (client-socket swank-host swank-port)
-  (vom:debug "New client: ~s" client-socket)
+  (vom:info "New client: ~s" client-socket)
 
   (let* ((control-thread (swank/backend:current-thread))
          (swank-socket
@@ -117,7 +117,7 @@
                      (swank/backend:send control-thread `(:swank-data-error ,c)))))
 
               ((:exit :client-eof :swank-eof :client-data-error :swank-data-error)
-                (vom:debug "Control thread stopping: ~s" msg)
+                (vom:info "Control thread stopping: ~s" msg)
                 (let ((thread-list (list swank-read-thread
                                          client-read-thread))
                       (current-thread (swank/backend:current-thread)))
@@ -134,7 +134,7 @@
 (in-package #:vlime)
 
 (defmethod start-server ((backend (eql :usocket)) host port swank-host swank-port)
-  (vom:config t :debug)
+  (vom:config t :info)
   (let ((server-socket
           (usocket:socket-listen host port
                                  :reuse-address t
