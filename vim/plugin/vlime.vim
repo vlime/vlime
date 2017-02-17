@@ -490,6 +490,7 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>ds :call VlimeAproposList()<cr>
     nnoremap <buffer> <LocalLeader>ddo :call VlimeDocumentationSymbol('operator')<cr>
     nnoremap <buffer> <LocalLeader>dda :call VlimeDocumentationSymbol('atom')<cr>
+    nnoremap <buffer> <LocalLeader>dr :call VlimeCurOperatorArgList()<cr>
 
     " Inspection
     nnoremap <buffer> <LocalLeader>II :call VlimeInspectCurThing('thing')<cr>

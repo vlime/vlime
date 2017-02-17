@@ -245,6 +245,8 @@ Mappings available in CL source files:         *vlime-mappings-source*
             s-expression under the cursor.
         <LocalLeader>dda
             Show the documentation for the atom under the cursor.
+        <LocalLeader>dr
+            Show the arglist for the s-expression under the cursor.
 
     Inspection                       *vlime-mappings-invoke-inspector*
         <LocalLeader>II           *vlime-mappings-invoke-inspector-II*
