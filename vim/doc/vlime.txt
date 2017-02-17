@@ -1,0 +1,400 @@
+*vlime.txt*  A Common Lisp dev environment for Vim
+
+======================================================================
+CONTENTS                                              *vlime-contents*
+
+    1. Introduction ................................ |vlime-intro|
+    2. Concepts ................................. |vlime-concepts|
+    3. Usage ....................................... |vlime-usage|
+        3.1 Starting Up ......................... |vlime-start-up|
+        3.2 Completions ...................... |vlime-completions|
+        3.3 Automatic Indentation ............ |vlime-auto-indent|
+        3.4 REPL .................................... |vlime-repl|
+        3.5 Debugger ............................ |vlime-debugger|
+        3.6 Inspector .......................... |vlime-inspector|
+        3.7 Cross References ........................ |vlime-xref|
+    4. Mappings ................................. |vlime-mappings|
+    5. Configuration .............................. |vlime-config|
+    6. License ................................... |vlime-license|
+    7. Bugs ......................................... |vlime-bugs|
+    8. Contributing .............................. |vlime-contrib|
+
+======================================================================
+1. Introduction                                          *vlime-intro*
+
+Vlime is a Common Lisp dev environment for Vim, similar to SLIME for
+Emacs and SLIMV for Vim.
+
+It provides REPL integration, as well as omni-completions, cross
+reference utilities, a nice inspector, debugger support, and many
+other great facilities to aid you in your glorious Common Lisp hacking
+quest.
+
+These Common Lisp implementations are supported:
+
+    Implementation  Version  Notes
+    ---------------------------------------------------------------
+    ABCL            1.4.0    Supported by the vlime-patched backend
+    Allegro CL      10.0     Tested with the Express Edition
+    CLISP           2.49+    No multithreading support
+    ECL             16.1.3   No SLDB support
+    CCL             1.11
+    SBCL            1.3.13
+    LispWorks       6.1      Tested with the Personal Edition
+
+======================================================================
+2. Concepts                                           *vlime-concepts*
+
+Connection                                          *vlime-connection*
+    A connection between Vim and a Vlime server. Most of Vlime's
+    functionalities need an active connection to work. Each Vim
+    process can have multiple connections. See |vlime-mappings-conn|
+    for available operations regarding connections.
+
+The Current Connection                      *vlime-current-connection*
+    A connection (|vlime-connection|) that's bound to the current Vim
+    buffer. All Vlime operations in the current buffer will use this
+    connection. Vlime will try to choose and remember an open
+    connection for a buffer automatically, but it's also possible to
+    select one via |vlime-mappings-conn-cs|.
+
+The Current Package                            *vlime-current-package*
+    A Common Lisp package that's bound to the current Vim buffer. All
+    Vlime operations that concern about the Common Lisp package, such
+    as omni-completions, will use this value. Vlime will try to figure
+    out the current package automatically, but it's also possible to
+    select a package via |vlime-mappings-misc-p|.
+
+======================================================================
+3. Usage                                                 *vlime-usage*
+
+----------------------------------------------------------------------
+3.1 Starting Up                                       *vlime-start-up*
+
+    1. Set up Quicklisp properly.
+    2. Run the server:
+
+        sbcl --load <vlime repo>/lisp/start-vlime.lisp
+
+    3. Start editing a Common Lisp source file, and use
+       |vlime-mappings-conn-cc| to create a new
+       connection.
+    4. Vlime shoud now be fully functional. See |vlime-mappings| for
+       all available operations.
+
+Note: If it's your first time running the server, Vlime will try to
+      install it's dependencies via Quicklisp.
+
+----------------------------------------------------------------------
+3.2 Completions                                    *vlime-completions*
+
+Pressing <Tab> in insert mode will trigger omni-completion. Vlime has
+swank-fuzzy enabled by default, so you can, for example, input "vpe"
+and then press <Tab> for "vector-push-extend".
+
+Note: Vlime currently doesn't set a limit to the number of completion
+      results showed. A large number of results may delay the
+      completion menu a bit, temporarily showing the error message
+      "Pattern not found".
+
+----------------------------------------------------------------------
+3.3 Automatic Indentation                          *vlime-auto-indent*
+
+The auto indent feature will just work as you type. It supports both
+space and tab characters. Which to use is determined by the
+|expandtab| Vim option.
+
+To adjust mis-indented lines, press <Tab> at the start of those lines
+in insert mode, or use |=| command.
+
+----------------------------------------------------------------------
+3.4 REPL                                                  *vlime-repl*
+
+The REPL integration is different from other Lisp environments, in
+that Vlime's REPL buffer is read-only. One can send text to the REPL
+from any other buffer using normal mode commands such as
+|vlime-mappings-send-ss| instead.
+
+Note: It's a design decision to make the REPL buffer read-only, since
+      emulating a command line in Vim buffers is often complicated and
+      buggy.
+
+                                              *vlime-interaction-mode*
+There's an interaction mode to make sending things to the REPL easier.
+It's enabled via |vlime-mappings-misc-i| in Common Lisp source
+buffers. In this mode, simply pressing <CR> will send the s-expression
+under the cursor.
+
+One can inspect the evaluation results right from the REPL buffer. See
+|vlime-mappings-repl| for key mappings.
+
+----------------------------------------------------------------------
+3.5 Debugger                                          *vlime-debugger*
+
+The debugger works just like SLDB in SLIME. It pops up a buffer when a
+condition is signalled. The buffer shows a list of restarts and a
+backtrace. One cane press <CR> on a restart to select it.
+
+The debugger can also do single-stepping, examine the local variables,
+restart frames, evaluate expressions in frames, etc., provided the
+Common Lisp implementation Vlime server is running on supports these.
+For more available operations in the debugger buffer, see
+|vlime-mappings-debugger|.
+
+----------------------------------------------------------------------
+3.6 Inspector                                        *vlime-inspector*
+
+The inspector can be used to examine the slot values of instances,
+the members of structs, the items of hashtables, etc. It's a very
+handy tool in many circumstances.
+
+There're multiple ways to invoke the inspector, but the most
+convenient one is using |vlime-mappings-invoke-inspector-II| on an
+expression.
+
+The content shown in the inspector buffer usually contains multiple
+interactable fields and buttons. Pressing <Tab> will move the cursor
+between theses fields/buttons, and <CR> interact with them.
+
+For more available operations in the inspector buffer, see
+|vlime-mappings-inspector|.
+
+----------------------------------------------------------------------
+3.7 Cross References                                      *vlime-xref*
+
+The cross references (a.k.a xref) buffer shows where a symbol is
+referenced. For example, use |vlime-mappings-invoke-xref-xc| on a
+function name to see where the function is called. Pressing <CR> on an
+entry inside the xref buffer will take you directly to the reference
+location.
+
+For more xref types and key mappings, see |vlime-mappings|.
+
+======================================================================
+4. Mappings                                           *vlime-mappings*
+
+Most normal mode and visual mode mappings in Vlime starts with
+|<LocalLeader>|, which defaults to the backslash "\". All the mappings
+listed below are defined in normal mode, unless specified otherwise.
+
+Mappings available in CL source files:         *vlime-mappings-source*
+
+    Connection Management                        *vlime-mappings-conn*
+        <LocalLeader>cc                       *vlime-mappings-conn-cc*
+            Connect to Vlime server.
+        <LocalLeader>cs                       *vlime-mappings-conn-cs*
+            Switch Vlime connections.
+        <LocalLeader>cd
+            Disconnect.
+        <LocalLeader>cr
+            Rename the current connection.
+
+    Sending Stuff To The REPL                    *vlime-mappings-send*
+        <LocalLeader>ss                       *vlime-mappings-send-ss*
+            If there's an s-expression under the cursor, send it to
+            the REPL, else send the atom under the cursor, if any.
+        <LocalLeader>se
+            Send the s-expression under the cursor to the REPL.
+        <LocalLeader>sa
+            Send the atom under the cursor to the REPL.
+        <LocalLeader>s
+            (In visual mode) Send the current selection to the REPL.
+
+    Expanding Macros                    *vlime-mappings-expand-macros*
+        <LocalLeader>m1
+            Expand the macro under the cursor.
+        <LocalLeader>ma
+            Expand the macro under the cursor and all nested macros.
+
+    Compiling                                 *vlime-mappings-compile*
+        <LocalLeader>oe
+            Compile the form under the cursor.
+        <LocalLeader>of
+            Compile the current file.
+        <LocalLeader>o
+            (In visual mode) Compile the current selection.
+
+    Cross References (xref)               *vlime-mappings-invoke-xref*
+        <LocalLeader>xc                *vlime-mappings-invoke-xref-xc*
+            Show callers of the function under the cursor.
+        <LocalLeader>xC
+            Show callees of the function under the cursor.
+        <LocalLeader>xr
+            Show references of the variable under the cursor.
+        <LocalLeader>xb
+            Show bindings of the variable under the cursor.
+        <LocalLeader>xs
+            Show who sets the value of the variable under the cursor.
+        <LocalLeader>xe
+            Show who expands the macro under the cursor.
+        <LocalLeader>xm
+            Show specialized methods for the class under the cursor.
+        <LocalLeader>xd
+            Show the definition for the name under the cursor.
+
+    Describing Things                        *vlime-mappings-describe*
+        <LocalLeader>do
+            Describe the "operator" of the s-expression under the
+            cursor.
+        <LocalLeader>da
+            Describe the atom under the cursor.
+        <LocalLeader>ds
+            Apropos search.
+        <LocalLeader>ddo
+            Show the documentation for the "operator" of the
+            s-expression under the cursor.
+        <LocalLeader>dda
+            Show the documentation for the atom under the cursor.
+
+    Inspection                       *vlime-mappings-invoke-inspector*
+        <LocalLeader>II           *vlime-mappings-invoke-inspector-II*
+            If there's an s-expression under the cursor, evaluate it,
+            else evaluate the atom under the cursor, if any. The
+            evaluation result is then shown in the inspector.
+        <LocalLeader>Ii
+            Same as <LocalLeader>II
+        <LocalLeader>IE
+            Evaluate and inspect the s-expression under the cursor.
+        <LocalLeader>Ie
+            Same as <LocalLeader>IE
+        <LocalLeader>IA
+            Evaluate and inspect the atom under the cursor.
+        <LocalLeader>Ia
+            Same as <LocalLeader>IA
+        <LocalLeader>I
+            (In visual mode) Evaluate and inspect the current
+            selection.
+
+    Other Stuff                                  *vlime-mappings-misc*
+        <LocalLeader>i                         *vlime-mappings-misc-i*
+            Interaction Mode.
+        <LocalLeader>l
+            Load the current file.
+        <LocalLeader>a
+            Disassemble the form under the cursor.
+        <LocalLeader>p                         *vlime-mappings-misc-p*
+            Specify the package for the current buffer.
+        <LocalLeader>b
+            Set a breakpoint at entry to a function.
+
+Mappings available in the REPL buffer:           *vlime-mappings-repl*
+
+    CTRL-c
+        Interrupt the REPL thread.
+    <LocalLeader>I
+        Inspect the evaluation result under the cursor.
+    <LocalLeader>C
+        Clear the REPL buffer.
+
+Mappings available in the debugger:          *vlime-mappings-debugger*
+
+    <CR>
+        Choose a restart.
+    d
+        Show the details (local variables and source location etc.)
+        of the frame under the cursor.
+    S
+        Jump to the source code for the frame under the cursor.
+    r
+        Restart the frame under the cursor.
+    s
+        Start stepping in the frame under the cursor.
+    x
+        Step over the current function call.
+    o
+        Step out of the current function.
+    c
+        Invoke the restart labeled CONTINUE.
+    a
+        Invoke the restart labeled ABORT.
+    C
+        Inspect the current condition object.
+    i
+        Evaluate and inspect an expression in the frame under the
+        cursor.
+    e
+        Evaluate an expression in the frame under the cursor.
+    D
+        Disassemble the frame under the cursor.
+    R
+        Return a manually specified result from the frame under the
+        cursor.
+
+Mappings available in the inspector:        *vlime-mappings-inspector*
+
+    <CR>
+        Activate the interactable field/button under the cursor.
+    <Space>
+        Same as <CR>
+    <Tab>
+        Select the next interactable field/button.
+    CTRL-n
+        Same as <Tab>
+    CTRL-p
+        Select the previous interactable field/button.
+    p
+        Return to the previous inspected object.
+    R
+        Refresh the inspector.
+
+======================================================================
+5. Configuration                                        *vlime-config*
+
+These variables can be set in |vimrc|, to affect the behavior of
+Vlime:
+
+g:vlime_contribs
+    A list of Swank contribs to load when initializing a Vlime
+    connection. Default: ['SWANK-ASDF', 'SWANK-PACKAGE-FU',
+    'SWANK-PRESENTATIONS', 'SWANK-FANCY-INSPECTOR', 'SWANK-C-P-C',
+    'SWANK-ARGLISTS', 'SWANK-REPL', 'SWANK-FUZZY']
+
+g:vlime_address
+    A list specifying the address of a Vlime server. Default:
+    ['127.0.0.1', 7002]
+
+g:vlime_user_contrib_initializers
+    A list of user contrib initializers. If your Swank contrib module
+    needs special initialization, add an initializer function here.
+    See autoload/vlime/contrib.vim for examples. Default: []
+
+g:vlime_buf_name_sep
+    A string used as the separator between segments of Vlime special
+    buffer names. The default works fine on Linux and Windows, but if
+    your OS or Vim complained about illegal characters in filenames,
+    try changing this variable. Default: ' | '
+
+======================================================================
+6. License                                             *vlime-license*
+
+This plugin is licensed under the terms of the MIT license. See
+LICENSE.txt for details.
+
+======================================================================
+7. Bugs                                                   *vlime-bugs*
+
+* In Vim prior to version 8.0.0312, there was a bug in the channel
+  implementation that caused large messages to be dropped incorrectly.
+  Channel messages from Vlime server can be quite large, so using
+  8.0.0312 or a more recent version is strongly recommended.
+
+* Vlime is asynchronous. When the server takes too much time to
+  process a request, you can still invoke other commands or input
+  text, but the delayed result may cause some interference when it
+  arrives.
+
+* The Vim interface may sometimes freeze until a command is issued
+  (e.g. move the cursor).
+
+Please file an issue on https://github.com/l04m33/vlime/issues if you
+find any other problem.
+
+======================================================================
+8. Contributing                                        *vlime-contrib*
+
+The source repo for Vlime is hosted on GitHub:
+
+    https://github.com/l04m33/vlime
+
+Please send pull requests, and feel free to contact me at
+l04m33(at)gmail.com if you have any suggestions for improving Vlime.

@@ -2,10 +2,11 @@ Intro
 =====
 
 Vlime is a Common Lisp dev environment for Vim, similar to SLIME for Emacs and
-SLIMV for Vim (and yes, I dug around SLIMV's source code when writing Vlime).
+SLIMV for Vim.
 
-Vlime provides REPL integration inside Vim, as well as omni-completions and
-basic SLDB support. And, optionally, it makes you a lot sexier.
+It provides REPL integration, as well as omni-completions, cross reference
+utilities, a nice inspector, debugger support, and many other great facilities
+to aid you in your glorious Common Lisp hacking quest.
 
 Why?
 ====
@@ -42,20 +43,20 @@ life easier, use [paredit](https://github.com/kovisoft/paredit).
 Supported CL Implementations
 ============================
 
-Some major CL implementations are listed below. The ones marked with `O` work
-fine with Vlime. If you tried out Vlime with an implementation not listed
-here, please let me know.
+The CL implementations listed below are supported. If you tried out Vlime with
+an implementation not listed here, please let me know (see the Contributing
+section below for contact info).
 
 ```
-Implementation  Version  Working  Notes
---------------------------------------------------------------
-ABCL            1.4.0       O     Supported by the vlime-patched backend
-Allegro CL      10.0        O     Tested with the Express Edition
-CLISP           2.49+       O     No multithreading support
-ECL             16.1.3      O     No SLDB support
-CCL             1.11        O
-SBCL            1.3.13      O
-LispWorks       6.1         O     Tested with the Personal Edition
+Implementation  Version  Notes
+-----------------------------------------------------
+ABCL            1.4.0    Supported by the vlime-patched backend
+Allegro CL      10.0     Tested with the Express Edition
+CLISP           2.49+    No multithreading support
+ECL             16.1.3   No SLDB support
+CCL             1.11     
+SBCL            1.3.13   
+LispWorks       6.1      Tested with the Personal Edition
 ```
 
 Usage
@@ -71,111 +72,20 @@ If it's your first time running the server, Vlime will try to install it's
 dependencies via Quicklisp.
 
 When the server is up and running, use Vim to start editing a CL source file.
-These keys are mapped (in normal mode unless specified otherwise):
 
-Connection management:
-
-* `<LocalLeader>cc`: Connect to Vlime server.
-* `<LocalLeader>cs`: Switch Vlime connections.
-* `<LocalLeader>cd`: Disconnect.
-* `<LocalLeader>cr`: Rename the current connection.
-
-Sending stuff to the REPL:
-
-* `<LocalLeader>ss`: Send the "thing" (an s-expression or an atom) under the cursor to the REPL.
-* `<LocalLeader>se`: Send the s-expression under the cursor to the REPL.
-* `<LocalLeader>sa`: Send the atom under the cursor to the REPL.
-* `<LocalLeader>s`: (In visual mode) Send the current selection to the REPL.
-
-Expanding macros:
-
-* `<LocalLeader>m1`: Expand the macro under the cursor.
-* `<LocalLeader>ma`: Expand the macro under the cursor and all nested macros.
-
-Compiling:
-
-* `<LocalLeader>oe`: Compile the form under the cursor.
-* `<LocalLeader>of`: Compile the current file.
-* `<LocalLeader>o`: (In visual mode) Compile the current selection.
-
-Cross references (xref):
-
-* `<LocalLeader>xc`: Show callers of the function under the cursor.
-* `<LocalLeader>xC`: Show callees of the function under the cursor.
-* `<LocalLeader>xr`: Show references of the variable under the cursor.
-* `<LocalLeader>xb`: Show bindings of the variable under the cursor.
-* `<LocalLeader>xs`: Show who sets the value of the variable under the cursor.
-* `<LocalLeader>xe`: Show who expands the macro under the cursor.
-* `<LocalLeader>xm`: Show specialized methods for the class under the cursor.
-* `<LocalLeader>xd`: Show the definition for the name under the cursor.
-
-Describing things:
-
-* `<LocalLeader>do`: Describe the "operator" of the s-expression under the cursor.
-* `<LocalLeader>da`: Describe the atom under the cursor.
-* `<LocalLeader>ds`: Apropos search.
-* `<LocalLeader>ddo`: Show the documentation for the "operator" of the s-expression under the cursor.
-* `<LocalLeader>dda`: Show the documentation for the atom under the cursor.
-
-Inspection:
-
-* `<LocalLeader>II`: Evaluate and inspect the "thing" (an s-expression or an atom) under the cursor.
-* `<LocalLeader>Ii`: Same as `<LocalLeader>II`
-* `<LocalLeader>IE`: Evaluate and inspect the s-expression under the cursor.
-* `<LocalLeader>Ie`: Same as `<LocalLeader>IE`
-* `<LocalLeader>IA`: Evaluate and inspect the atom under the cursor.
-* `<LocalLeader>Ia`: Same as `<LocalLeader>IA`
-* `<LocalLeader>I` : (In visual mode) Evaluate and inspect the current selection.
-
-Other stuff:
-
-* `<LocalLeader>i`: Interaction Mode.
-* `<LocalLeader>l`: Load the current file.
-* `<LocalLeader>a`: Disassemble the form under the cursor.
-* `<LocalLeader>p`: Specify the package for the current buffer.
-* `<LocalLeader>b`: Set a breakpoint at entry to a function.
-
-`<LocalLeader>` defaults to backslash `\`. In addition, you can use `<tab>`
-instead of `<c-x><c-o>` to invoke omni-completion.
-
-Most of Vlime's functionalities need an active connection to the server. Press
-`<LocalLeader>cc` to create one. And Vlime supports multiple connections, use
-`<LocalLeader>cs` to select the connection to use for the current buffer.
-
-In `Interaction Mode` (entered via `<LocalLeader>i`), you can place the cursor
-on an s-expression and then press `<cr>` to send it to the REPL.
-
-In the REPL output buffer, `<c-c>` will interrupt the REPL thread.
-
-When there's an unhandled condition or a thread is interrupted, the SLDB
-buffer will appear, with posible restarts and stack frames as it's content.
-Pressing `<cr>` on one of the restart options will invoke that restart. These
-keys are available in the SLDB buffer:
-
-* `<cr>`: Choose a restart.
-* `d`: Show the details (local variables and source location etc.) of the
-       frame under the cursor (or the most recent frame).
-* `S`: Jump to the source code for the frame under the cursor (or the most recent frame).
-* `r`: Restart the frame under the cursor.
-* `s`: Start stepping in the frame under the cursor (or the most recent frame).
-* `x`: Step over the current function call.
-* `o`: Step out of the current function.
-* `c`: Invoke the restart labeled CONTINUE.
-* `a`: Invoke the restart labeled ABORT.
-* `C`: Inspect the current condition object.
-* `i`: Evaluate and inspect an expression in the frame under the cursor (or
-       the most recent frame).
-* `e`: Evaluate an expression in the frame under the cursor (or the most
-       recent frame).
-* `D`: Disassemble the frame under the cursor (or the most recent frame).
-* `R`: Return a manually specified result from the frame under the cursor.
-
-In the inspector buffer, one can use `<cr>` and `<space>` to interact with
-buttons and values etc. To refresh the inspector content, press `R`.
-
-In the xref buffer, use `<cr>` to jump to the selected reference spot.
+See `:help vlime` for the full documentation.
 
 License
 =======
 
 MIT. See `LICENSE.txt`.
+
+Contributing
+============
+
+The source repo for Vlime is hosted on GitHub:
+
+    https://github.com/l04m33/vlime
+
+Please send pull requests, and feel free to contact me at l04m33(at)gmail.com
+if you have any suggestions for improving Vlime.
