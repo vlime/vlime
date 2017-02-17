@@ -6,12 +6,14 @@ function! vlime#New(...)
     let obj = {
                 \ 'cb_data': cb_data,
                 \ 'channel': v:null,
+                \ 'remote_prefix': '',
                 \ 'ui': ui,
                 \ 'Connect': function('vlime#Connect'),
                 \ 'IsConnected': function('vlime#IsConnected'),
                 \ 'Close': function('vlime#Close'),
                 \ 'Call': function('vlime#Call'),
                 \ 'Send': function('vlime#Send'),
+                \ 'FixRemotePath': function('vlime#FixRemotePath'),
                 \ 'GetCurrentPackage': function('vlime#GetCurrentPackage'),
                 \ 'SetCurrentPackage': function('vlime#SetCurrentPackage'),
                 \ 'GetCurrentThread': function('vlime#GetCurrentThread'),
@@ -84,7 +86,8 @@ endfunction
 
 " ================== methods for vlime connections ==================
 
-function! vlime#Connect(host, port) dict
+" vlime#Connect(host, port[, remote_prefix])
+function! vlime#Connect(host, port, ...) dict
     let self.channel = ch_open(
                 \ a:host . ':' . string(a:port),
                 \ {'mode': 'json',
@@ -93,6 +96,10 @@ function! vlime#Connect(host, port) dict
         call self.Close()
         throw 'vlime#Connect: failed to open channel'
     endif
+
+    let remote_prefix = vlime#GetNthVarArg(a:000, 0, '')
+    let self['remote_prefix'] = remote_prefix
+
     return self
 endfunction
 
@@ -129,6 +136,18 @@ function! vlime#Send(msg, ...) dict
         call ch_sendexpr(self.channel, a:msg, options)
     else
         call ch_sendexpr(self.channel, a:msg)
+    endif
+endfunction
+
+function! vlime#FixRemotePath(path) dict
+    if type(a:path) == v:t_string
+        return self['remote_prefix'] . a:path
+    elseif type(a:path) == v:t_list && type(a:path[0]) == v:t_dict
+                \ && a:path[0]['name'] == 'LOCATION'
+        let a:path[1][1] = self['remote_prefix'] . a:path[1][1]
+        return a:path
+    else
+        throw 'vlime#FixRemotePath: unknown path: ' . string(a:path)
     endif
 endfunction
 
@@ -354,11 +373,20 @@ endfunction
 
 " vlime#FrameSourceLocation(frame[, callback])
 function! vlime#FrameSourceLocation(frame, ...) dict
+    function! s:FrameSourceLocationCB(conn, Callback, chan, msg)
+        call s:CheckReturnStatus(a:msg,  'vlime#FrameSourceLocation')
+        if a:msg[1][1][0]['name'] == 'LOCATION'
+            let fixed_loc = a:conn.FixRemotePath(a:msg[1][1])
+        else
+            let fixed_loc = a:msg[1][1]
+        endif
+        call s:TryToCall(a:Callback, [a:conn, fixed_loc])
+    endfunction
+
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'FRAME-SOURCE-LOCATION'), a:frame]),
-                \ function('vlime#SimpleSendCB',
-                    \ [self, Callback, 'vlime#FrameSourceLocation']))
+                \ function('s:FrameSourceLocationCB', [self, Callback]))
 endfunction
 
 " vlime#EvalStringInFrame(str, frame, package[, callback]) dict
@@ -557,16 +585,36 @@ endfunction
 
 " vlime#XRef(ref_type, name[, callback])
 function! vlime#XRef(ref_type, name, ...) dict
+    function! s:XRefCB(conn, Callback, chan, msg)
+        call s:CheckReturnStatus(a:msg,  'vlime#XRef')
+        if type(a:msg[1][1]) != v:t_none
+            for ref_spec in a:msg[1][1]
+                let ref_spec[1] = a:conn.FixRemotePath(ref_spec[1])
+            endfor
+        endif
+        call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
+    endfunction
+
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'XREF'), s:KW(a:ref_type), a:name]),
-                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#XRef']))
+                \ function('s:XRefCB', [self, Callback]))
 endfunction
 
 " vlime#FindDefinitionsForEmacs(name[, callback])
 function! vlime#FindDefinitionsForEmacs(name, ...) dict
+    function! s:FindDefinitionsForEmacsCB(conn, Callback, chan, msg)
+        call s:CheckReturnStatus(a:msg, 'vlime#FindDefinitionsForEmacs')
+        if type(a:msg[1][1]) != v:t_none
+            for def_spec in a:msg[1][1]
+                let def_spec[1] = a:conn.FixRemotePath(def_spec[1])
+            endfor
+        endif
+        call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
+    endfunction
+
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'FIND-DEFINITIONS-FOR-EMACS'), a:name]),
-                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#FindDefinitionsForEmacs']))
+                \ function('s:FindDefinitionsForEmacsCB', [self, Callback]))
 endfunction
 
 " vlime#AproposListForEmacs(name, external_only, case_sensitive, package[, callback])

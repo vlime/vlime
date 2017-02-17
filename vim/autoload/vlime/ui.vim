@@ -492,7 +492,7 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos)
     endif
 
     if !buf_exists
-        if filereadable(a:file_path)
+        if a:file_path[0:6] == 'sftp://' || filereadable(a:file_path)
             execute 'tabedit ' . escape(a:file_path, ' \')
         else
             call vlime#ui#ErrMsg('Not readable: ' . a:file_path)

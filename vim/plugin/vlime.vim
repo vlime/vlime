@@ -15,15 +15,18 @@ function! VlimeRenameCurConnection()
     call VlimeRenameConnection(conn, new_name)
 endfunction
 
-" VlimeConnectREPL(host, port[, name])
+" VlimeConnectREPL(host, port[, remote_prefix[, name]])
 function! VlimeConnectREPL(host, port, ...)
-    if a:0 > 0
-        let conn = VlimeNewConnection(a:1)
-    else
+    let remote_prefix = vlime#GetNthVarArg(a:000, 0, '')
+    let name = vlime#GetNthVarArg(a:000, 1, v:null)
+
+    if type(name) == v:t_none
         let conn = VlimeNewConnection()
+    else
+        let conn = VlimeNewConnection(name)
     endif
     try
-        call conn.Connect(a:host, a:port)
+        call conn.Connect(a:host, a:port, remote_prefix)
     catch
         call VlimeCloseConnection(conn)
         call vlime#ui#ErrMsg(v:exception)
