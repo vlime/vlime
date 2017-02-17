@@ -587,11 +587,7 @@ endfunction
 function! vlime#XRef(ref_type, name, ...) dict
     function! s:XRefCB(conn, Callback, chan, msg)
         call s:CheckReturnStatus(a:msg,  'vlime#XRef')
-        if type(a:msg[1][1]) != v:t_none
-            for ref_spec in a:msg[1][1]
-                let ref_spec[1] = a:conn.FixRemotePath(ref_spec[1])
-            endfor
-        endif
+        call s:FixXRefListPaths(a:conn, a:msg[1][1])
         call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
     endfunction
 
@@ -604,11 +600,7 @@ endfunction
 function! vlime#FindDefinitionsForEmacs(name, ...) dict
     function! s:FindDefinitionsForEmacsCB(conn, Callback, chan, msg)
         call s:CheckReturnStatus(a:msg, 'vlime#FindDefinitionsForEmacs')
-        if type(a:msg[1][1]) != v:t_none
-            for def_spec in a:msg[1][1]
-                let def_spec[1] = a:conn.FixRemotePath(def_spec[1])
-            endfor
-        endif
+        call s:FixXRefListPaths(a:conn, a:msg[1][1])
         call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
     endfunction
 
@@ -846,6 +838,18 @@ function! s:TryToCall(Callback, args)
         let CB = function(a:Callback, a:args)
         call CB()
     endif
+endfunction
+
+function! s:FixXRefListPaths(conn, xref_list)
+    if type(a:xref_list) == v:t_none
+        return
+    endif
+
+    for spec in a:xref_list
+        if type(spec[0]) == v:t_string && spec[1][0]['name'] == 'LOCATION'
+            let spec[1] = a:conn.FixRemotePath(spec[1])
+        endif
+    endfor
 endfunction
 
 function! vlime#DummyCB(conn, result)

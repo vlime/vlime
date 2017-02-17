@@ -272,7 +272,7 @@ function! VlimeXRefCurSymbol(sym_type, ref_type)
     endif
 endfunction
 
-function! VlimeJumpToCurDefinition(sym_type)
+function! VlimeFindCurDefinition(sym_type)
     if a:sym_type == 'operator'
         let sym = vlime#ui#CurOperator()
     elseif a:sym_type == 'atom'
@@ -283,8 +283,7 @@ function! VlimeJumpToCurDefinition(sym_type)
         if type(conn) == v:t_none
             return
         endif
-        call conn.FindDefinitionsForEmacs(sym,
-                    \ function('s:OnFindDefinitionsForEmacsComplete'))
+        call conn.FindDefinitionsForEmacs(sym, function('s:OnXRefComplete'))
     endif
 endfunction
 
@@ -485,7 +484,7 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>xs :call VlimeXRefCurSymbol('atom', 'SETS')<cr>
     nnoremap <buffer> <LocalLeader>xe :call VlimeXRefCurSymbol('atom', 'MACROEXPANDS')<cr>
     nnoremap <buffer> <LocalLeader>xm :call VlimeXRefCurSymbol('atom', 'SPECIALIZES')<cr>
-    nnoremap <buffer> <LocalLeader>xd :call VlimeJumpToCurDefinition('atom')<cr>
+    nnoremap <buffer> <LocalLeader>xd :call VlimeFindCurDefinition('atom')<cr>
 
     " Describing things
     nnoremap <buffer> <LocalLeader>do :call VlimeDescribeCurSymbol('operator')<cr>
@@ -600,15 +599,6 @@ endfunction
 function! s:OnXRefComplete(conn, result)
     if type(a:conn.ui) != v:t_none
         call a:conn.ui.OnXRef(a:conn, a:result)
-    endif
-endfunction
-
-function! s:OnFindDefinitionsForEmacsComplete(conn, result)
-    if type(a:result) == v:t_none
-        call vlime#ui#ErrMsg('No definition found.')
-    else
-        let loc_spec = a:result[0][1]
-        call vlime#ui#JumpToOrOpenFile(loc_spec[1][1], loc_spec[2][1])
     endif
 endfunction
 

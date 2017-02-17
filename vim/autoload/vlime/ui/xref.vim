@@ -55,19 +55,21 @@ function! vlime#ui#xref#OpenCurXref()
         return
     endif
 
-    let xref_loc = b:vlime_xref_list[xref_coord['id']][1][1:]
+    let xref_loc = b:vlime_xref_list[xref_coord['id']][1]
     let path = s:FindXRefLocationProp('FILE', xref_loc)
     let pos = s:FindXRefLocationProp('POSITION', xref_loc)
 
     if type(path) != v:t_none
         call vlime#ui#JumpToOrOpenFile(path, pos)
+    elseif xref_loc[0]['name'] == 'ERROR'
+        call vlime#ui#ErrMsg(xref_loc[1])
     endif
 endfunction
 
 function! s:FindXRefLocationProp(key, prop_list)
     if type(a:prop_list) != v:t_none
         for p in a:prop_list
-            if p[0]['name'] == a:key
+            if type(p) == v:t_list && p[0]['name'] == a:key
                 return p[1]
             endif
         endfor
