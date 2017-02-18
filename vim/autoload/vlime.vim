@@ -14,6 +14,7 @@ function! vlime#New(...)
                 \ 'Call': function('vlime#Call'),
                 \ 'Send': function('vlime#Send'),
                 \ 'FixRemotePath': function('vlime#FixRemotePath'),
+                \ 'FixLocalPath': function('vlime#FixLocalPath'),
                 \ 'GetCurrentPackage': function('vlime#GetCurrentPackage'),
                 \ 'SetCurrentPackage': function('vlime#SetCurrentPackage'),
                 \ 'GetCurrentThread': function('vlime#GetCurrentThread'),
@@ -148,6 +149,15 @@ function! vlime#FixRemotePath(path) dict
         return a:path
     else
         throw 'vlime#FixRemotePath: unknown path: ' . string(a:path)
+    endif
+endfunction
+
+function! vlime#FixLocalPath(path) dict
+    let prefix_len = len(self['remote_prefix'])
+    if prefix_len > 0 && a:path[0:prefix_len-1] == self['remote_prefix']
+        return a:path[prefix_len:]
+    else
+        return a:path
     endif
 endfunction
 
@@ -558,11 +568,12 @@ endfunction
 " vlime#CompileStringForEmacs(expr, buffer, position, filename[, callback])
 function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
+    let fixed_filename = self.FixLocalPath(a:filename)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'COMPILE-STRING-FOR-EMACS'),
                         \ a:expr, a:buffer,
                         \ [s:CL('QUOTE'), [[s:KW('POSITION'), a:position]]],
-                        \ a:filename, v:null]),
+                        \ fixed_filename, v:null]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#CompileStringForEmacs']))
 endfunction
 
@@ -571,15 +582,17 @@ endfunction
 function! vlime#CompileFileForEmacs(filename, ...) dict
     let load = s:GetNthVarArg(a:000, 0, v:true)
     let Callback = s:GetNthVarArg(a:000, 1)
+    let fixed_filename = self.FixLocalPath(a:filename)
     call self.Send(self.EmacsRex(
-                    \ [s:SYM('SWANK', 'COMPILE-FILE-FOR-EMACS'), a:filename, load]),
+                    \ [s:SYM('SWANK', 'COMPILE-FILE-FOR-EMACS'), fixed_filename, load]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#CompileFileForEmacs']))
 endfunction
 
 " vlime#LoadFile(filename[, callback])
 function! vlime#LoadFile(filename, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
-    call self.Send(self.EmacsRex([s:SYM('SWANK', 'LOAD-FILE'), a:filename]),
+    let fixed_filename = self.FixLocalPath(a:filename)
+    call self.Send(self.EmacsRex([s:SYM('SWANK', 'LOAD-FILE'), fixed_filename]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#LoadFile']))
 endfunction
 
