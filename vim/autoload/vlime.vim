@@ -504,24 +504,36 @@ endfunction
 " vlime#OperatorArgList(operator[, callback])
 function! vlime#OperatorArgList(operator, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
+    let cur_package = self.GetCurrentPackage()
+    if type(cur_package) != v:t_none
+        let cur_package = cur_package[0]
+    endif
     call self.Send(self.EmacsRex(
-                    \ [s:SYM('SWANK', 'OPERATOR-ARGLIST'), a:operator, self.GetCurrentPackage()[0]]),
+                    \ [s:SYM('SWANK', 'OPERATOR-ARGLIST'), a:operator, cur_package]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#OperatorArgList']))
 endfunction
 
 " vlime#SimpleCompletions(symbol[, callback])
 function! vlime#SimpleCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
+    let cur_package = self.GetCurrentPackage()
+    if type(cur_package) != v:t_none
+        let cur_package = cur_package[0]
+    endif
     call self.Send(self.EmacsRex(
-                    \ [s:SYM('SWANK', 'SIMPLE-COMPLETIONS'), a:symbol, self.GetCurrentPackage()[0]]),
+                    \ [s:SYM('SWANK', 'SIMPLE-COMPLETIONS'), a:symbol, cur_package]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SimpleCompletions']))
 endfunction
 
 " vlime#FuzzyCompletions(symbol[, callback])
 function! vlime#FuzzyCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
+    let cur_package = self.GetCurrentPackage()
+    if type(cur_package) != v:t_none
+        let cur_package = cur_package[0]
+    endif
     call self.Send(self.EmacsRex(
-                    \ [s:SYM('SWANK', 'FUZZY-COMPLETIONS'), a:symbol, self.GetCurrentPackage()[0]]),
+                    \ [s:SYM('SWANK', 'FUZZY-COMPLETIONS'), a:symbol, cur_package]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#FuzzyCompletions']))
 endfunction
 
@@ -567,6 +579,7 @@ endfunction
 
 " vlime#CompileStringForEmacs(expr, buffer, position, filename[, callback])
 function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dict
+    " TODO: compilation policies
     let Callback = s:GetNthVarArg(a:000, 0)
     let fixed_filename = self.FixLocalPath(a:filename)
     call self.Send(self.EmacsRex(
@@ -716,7 +729,6 @@ endfunction
 " ------------------ end of server event handlers ------------------
 
 function! vlime#OnServerEvent(chan, msg) dict
-    let chan_info = ch_info(self.channel)
     let msg_type = a:msg[0]
     let Handler = get(self.server_event_handlers, msg_type['name'], v:null)
     if type(Handler) == v:t_func
