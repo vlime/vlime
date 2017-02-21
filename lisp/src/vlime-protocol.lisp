@@ -4,6 +4,7 @@
   (:use #:cl)
   (:export #:+swank-msg-len-size+
            #:parse-form
+           #:write-form
            #:seq-client-to-swank
            #:seq-swank-to-client
            #:client-emacs-rex-p
@@ -24,8 +25,15 @@
 
 (defun parse-form (input-str)
   (with-standard-io-syntax
-    (let ((*read-eval* nil))
+    (let ((*read-eval* nil)
+          (*package* swank::*swank-io-package*))
       (read-from-string input-str))))
+
+
+(defun write-form (form)
+  (with-standard-io-syntax
+    (let ((*package* swank::*swank-io-package*))
+      (write-to-string form))))
 
 
 (defun seq-client-to-swank (form)
@@ -50,10 +58,23 @@
   (nth 1 form))
 
 
+(defun list-form-to-json (list &optional (acc (list)))
+  (if list
+    (if (listp list)
+      (progn
+        (push (form-to-json (car list)) acc)
+        (list-form-to-json (cdr list) acc))
+      (let ((obj (make-hash-table :test #'equal)))
+        (setf (gethash "head" obj) (reverse acc))
+        (setf (gethash "tail" obj) list)
+        obj))
+    (reverse acc)))
+
+
 (defun form-to-json (form)
   (cond
     ((listp form)
-     (mapcar #'form-to-json form))
+     (list-form-to-json form))
     ((eql form t)
      ; special case to prevent T from being serialized as a normal symbol,
      ; thus saving some space
@@ -70,14 +91,26 @@
      form)))
 
 
+(defun set-last-cdr (list obj)
+  (if (and (cdr list) (listp (cdr list)))
+    (set-last-cdr (cdr list) obj)
+    (setf (cdr list) obj)))
+
+
 (defun json-to-form (json)
   (cond
     ((listp json)
      (mapcar #'json-to-form json))
-    ((hash-table-p json)
+    ((and (hash-table-p json) (nth-value 1 (gethash "name" json)))
      (let ((sym-name (gethash "name" json))
            (sym-package (gethash "package" json)))
        (intern sym-name sym-package)))
+    ((and (hash-table-p json) (nth-value 1 (gethash "tail" json)))
+     (let* ((head-list (gethash "head" json))
+            (tail-obj (gethash "tail" json))
+            (head (json-to-form head-list)))
+       (set-last-cdr head tail-obj)
+       head))
     (t
      ; Numbers & strings
      json)))
@@ -91,7 +124,7 @@
          (form (json-to-form json)))
     (if (client-emacs-rex-p form)
       (let* ((emacs-rex-form (seq-client-to-swank form))
-             (form-str (with-standard-io-syntax (write-to-string emacs-rex-form)))
+             (form-str (write-form emacs-rex-form))
              (form-bytes (swank/backend:string-to-utf8 form-str))
              (form-bytes-len (length form-bytes)))
         (ecase return-type
@@ -102,7 +135,7 @@
           (:string
             (format nil "~6,'0x~a" form-bytes-len form-str))))
       (let* ((one-way-form (remove-client-seq form))
-             (form-str (with-standard-io-syntax (write-to-string one-way-form)))
+             (form-str (write-form one-way-form))
              (form-bytes (swank/backend:string-to-utf8 form-str))
              (form-bytes-len (length form-bytes)))
         (ecase return-type
