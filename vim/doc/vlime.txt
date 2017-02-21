@@ -374,7 +374,8 @@ Vlime:
 
 g:vlime_contribs
     A |list| of Swank contribs to load when initializing a Vlime
-    connection. Default: ['SWANK-ASDF', 'SWANK-PACKAGE-FU',
+    connection. Note that the names are case-sensitive. Please use
+    only uppercase. Default: ['SWANK-ASDF', 'SWANK-PACKAGE-FU',
     'SWANK-PRESENTATIONS', 'SWANK-FANCY-INSPECTOR', 'SWANK-C-P-C',
     'SWANK-ARGLISTS', 'SWANK-REPL', 'SWANK-FUZZY']
 
@@ -384,9 +385,10 @@ g:vlime_address
 
 g:vlime_compiler_policy
     A |dict| to hold the compiler policy. Setting this variable would
-    affect the next compiling operation. For example, a value of
-    {'DEBUG': 3, 'SPEED': 0} means no optimization in runtime speed,
-    and maximum debug info. Default: {}
+    affect the subsequent compiling operations. For example, a value
+    of {'DEBUG': 3, 'SPEED': 0} means no optimization in runtime
+    speed, and maximum debug info. Note that the keys are
+    case-sensitive. Please use only uppercase. Default: {}
 
 g:vlime_user_contrib_initializers
     A |dict| of user contrib initializers. If your Swank contrib module
