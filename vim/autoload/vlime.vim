@@ -577,16 +577,16 @@ function! vlime#DisassembleForm(expr, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#DisassembleForm']))
 endfunction
 
-" vlime#CompileStringForEmacs(expr, buffer, position, filename[, callback])
+" vlime#CompileStringForEmacs(expr, buffer, position, filename[, policy[, callback]])
 function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dict
-    " TODO: compilation policies
-    let Callback = s:GetNthVarArg(a:000, 0)
+    let policy = s:TransformCompilerPolicy(s:GetNthVarArg(a:000, 0))
+    let Callback = s:GetNthVarArg(a:000, 1)
     let fixed_filename = self.FixLocalPath(a:filename)
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'COMPILE-STRING-FOR-EMACS'),
                         \ a:expr, a:buffer,
                         \ [s:CL('QUOTE'), [[s:KW('POSITION'), a:position]]],
-                        \ fixed_filename, v:null]),
+                        \ fixed_filename, policy]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#CompileStringForEmacs']))
 endfunction
 
@@ -875,6 +875,18 @@ function! s:FixXRefListPaths(conn, xref_list)
             let spec[1] = a:conn.FixRemotePath(spec[1])
         endif
     endfor
+endfunction
+
+function! s:TransformCompilerPolicy(policy)
+    if type(a:policy) == v:t_dict
+        let plc_list = []
+        for [key, val] in items(a:policy)
+            call add(plc_list, {'head': [s:CL(key)], 'tail': val})
+        endfor
+        return [s:CL('QUOTE'), plc_list]
+    else
+        return a:policy
+    endif
 endfunction
 
 function! vlime#DummyCB(conn, result)

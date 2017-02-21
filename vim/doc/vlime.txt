@@ -382,6 +382,12 @@ g:vlime_address
     A |list| specifying the address of a Vlime server. Default:
     ['127.0.0.1', 7002]
 
+g:vlime_compiler_policy
+    A |dict| to hold the compiler policy. Setting this variable would
+    affect the next compiling operation. For example, a value of
+    {'DEBUG': 3, 'SPEED': 0} means no optimization in runtime speed,
+    and maximum debug info. Default: {}
+
 g:vlime_user_contrib_initializers
     A |dict| of user contrib initializers. If your Swank contrib module
     needs special initialization, add an initializer function here.

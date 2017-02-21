@@ -103,10 +103,16 @@ function! VlimeCompileCurThing(thing)
 
     call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     let [str_line, str_col] = s_pos
+    if exists('g:vlime_compiler_policy')
+        let policy = g:vlime_compiler_policy
+    else
+        let policy = v:null
+    endif
     call conn.CompileStringForEmacs(
                 \ str, bufnr('%'),
                 \ line2byte(str_line) + str_col - 1,
-                \ expand('%:p'))
+                \ expand('%:p'),
+                \ policy)
 endfunction
 
 function! VlimeInspectCurThing(thing)
