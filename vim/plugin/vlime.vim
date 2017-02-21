@@ -153,8 +153,13 @@ function! VlimeCompileCurFile()
         return
     endif
 
+    if exists('g:vlime_compiler_policy')
+        let policy = g:vlime_compiler_policy
+    else
+        let policy = v:null
+    endif
     call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call conn.CompileFileForEmacs(fname)
+    call conn.CompileFileForEmacs(fname, v:true, policy)
 endfunction
 
 function! VlimeExpandCurMacro(expand_all)

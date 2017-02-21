@@ -591,13 +591,17 @@ function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dic
 endfunction
 
 
-" vlime#CompileFileForEmacs(filename[, load[, callback]]) dict
+" vlime#CompileFileForEmacs(filename[, load[, policy[, callback]]]) dict
 function! vlime#CompileFileForEmacs(filename, ...) dict
     let load = s:GetNthVarArg(a:000, 0, v:true)
-    let Callback = s:GetNthVarArg(a:000, 1)
+    let policy = s:TransformCompilerPolicy(s:GetNthVarArg(a:000, 1))
+    let Callback = s:GetNthVarArg(a:000, 2)
     let fixed_filename = self.FixLocalPath(a:filename)
-    call self.Send(self.EmacsRex(
-                    \ [s:SYM('SWANK', 'COMPILE-FILE-FOR-EMACS'), fixed_filename, load]),
+    let cmd = [s:SYM('SWANK', 'COMPILE-FILE-FOR-EMACS'), fixed_filename, load]
+    if type(policy) != v:t_none
+        let cmd += [s:KW('POLICY'), policy]
+    endif
+    call self.Send(self.EmacsRex(cmd),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#CompileFileForEmacs']))
 endfunction
 
