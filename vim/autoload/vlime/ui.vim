@@ -513,6 +513,11 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos)
     if type(a:byte_pos) != v:t_none
         let src_line = byte2line(a:byte_pos)
         execute 'normal! ' . src_line . 'gg'
+        normal! ^
+        let cur_pos = line2byte('.') + col('.') - 1
+        if a:byte_pos - cur_pos > 0
+            execute 'normal! ' . (a:byte_pos - cur_pos) . 'l'
+        endif
     endif
 endfunction
 
