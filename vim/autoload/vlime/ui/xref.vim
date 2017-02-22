@@ -42,9 +42,9 @@ function! vlime#ui#xref#FillXRefBuf(xref_list)
 endfunction
 
 function! vlime#ui#xref#OpenCurXref()
+    let cur_pos = getcurpos()
     let xref_coord = v:null
     for c in b:vlime_xref_coords
-        let cur_pos = getcurpos()
         if vlime#ui#MatchCoord(c, cur_pos[1], cur_pos[2])
             let xref_coord = c
             break

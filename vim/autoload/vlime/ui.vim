@@ -16,6 +16,7 @@ function! vlime#ui#New()
                 \ 'OnInvalidRPC': function('vlime#ui#OnInvalidRPC'),
                 \ 'OnInspect': function('vlime#ui#OnInspect'),
                 \ 'OnXRef': function('vlime#ui#OnXRef'),
+                \ 'OnCompilerNotes': function('vlime#ui#OnCompilerNotes'),
                 \ }
     return obj
 endfunction
@@ -164,6 +165,15 @@ function! vlime#ui#OnXRef(conn, xref_list)
         call vlime#ui#xref#FillXRefBuf(a:xref_list)
         call setbufvar(xref_buf, '&modifiable', 0)
     endif
+endfunction
+
+function! vlime#ui#OnCompilerNotes(conn, note_list)
+    let notes_buf = vlime#ui#compiler_notes#InitCompilerNotesBuffer(a:conn)
+    call vlime#ui#OpenBuffer(notes_buf, v:false, 'botright split')
+    resize 12
+    call setbufvar(notes_buf, '&modifiable', 1)
+    call vlime#ui#compiler_notes#FillCompilerNotesBuf(a:note_list)
+    call setbufvar(notes_buf, '&modifiable', 0)
 endfunction
 
 function! vlime#ui#ReadStringInputComplete(thread, ttag)
@@ -536,6 +546,11 @@ endfunction
 
 function! vlime#ui#XRefBufName(conn)
     return join(['vlime', 'xref', a:conn.cb_data.name],
+                \ g:vlime_buf_name_sep)
+endfunction
+
+function! vlime#ui#CompilerNotesBufName(conn)
+    return join(['vlime', 'notes', a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 

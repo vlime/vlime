@@ -112,7 +112,8 @@ function! VlimeCompileCurThing(thing)
                 \ str, bufnr('%'),
                 \ line2byte(str_line) + str_col - 1,
                 \ expand('%:p'),
-                \ policy)
+                \ policy,
+                \ function('s:OnCompilationComplete'))
 endfunction
 
 function! VlimeInspectCurThing(thing)
@@ -159,7 +160,8 @@ function! VlimeCompileCurFile()
         let policy = v:null
     endif
     call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call conn.CompileFileForEmacs(fname, v:true, policy)
+    call conn.CompileFileForEmacs(fname, v:true, policy,
+                \ function('s:OnCompilationComplete'))
 endfunction
 
 function! VlimeExpandCurMacro(expand_all)
@@ -639,6 +641,22 @@ endfunction
 
 function! s:OnSLDBBreakComplete(conn, result)
     echom 'Breakpoint set.'
+endfunction
+
+function! s:OnCompilationComplete(conn, result)
+    let [_msg_type, notes, successp, duration, loadp, faslfile] = a:result
+    if successp
+        echom 'Compilation finished in ' . string(duration) . ' second(s)'
+        if loadp && type(faslfile) != v:null
+            call a:conn.LoadFile(faslfile, function('s:OnLoadFileComplete', [faslfile]))
+        endif
+    else
+        call vlime#ui#ErrMsg('Compilation failed.')
+    endif
+
+    if type(notes) != v:t_none && type(a:conn.ui) != v:t_none
+        call a:conn.ui.OnCompilerNotes(a:conn, notes)
+    endif
 endfunction
 
 function! s:ShowAsyncResult(conn, result)
