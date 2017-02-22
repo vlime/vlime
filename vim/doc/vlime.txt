@@ -13,7 +13,8 @@ CONTENTS                                              *vlime-contents*
         3.5 Debugger ............................ |vlime-debugger|
         3.6 Inspector .......................... |vlime-inspector|
         3.7 Cross References ........................ |vlime-xref|
-        3.8 Remote Servers ................. |vlime-remote-server|
+        3.8 Compiler Messages ............... |vlime-compiler-msg|
+        3.9 Remote Servers ................. |vlime-remote-server|
     4. Mappings ................................. |vlime-mappings|
     5. Configuration .............................. |vlime-config|
     6. License ................................... |vlime-license|
@@ -172,7 +173,16 @@ location.
 For more xref types and key mappings, see |vlime-mappings|.
 
 ----------------------------------------------------------------------
-3.8 Remote Servers                               *vlime-remote-server*
+3.8 Compiler Messages                             *vlime-compiler-msg*
+
+When issuing compilation commands specified in
+|vlime-mappings-compile|, any message (warnings and errors etc.)
+emitted by the compiler would pop up in a dedicated buffer. Just
+select a message by pressing <CR>, and Vlime will take you to the
+referenced source location.
+
+----------------------------------------------------------------------
+3.9 Remote Servers                               *vlime-remote-server*
 
 Vlime can connect to a server running on a remote machine. The most
 secure way is to use SSH tunnels. Say we want to run a Vlime server on
