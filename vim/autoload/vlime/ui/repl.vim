@@ -14,6 +14,8 @@ function! vlime#ui#repl#InitREPLBuf(conn)
                                 \ {'name': 'REPL-THREAD', 'package': 'KEYWORD'})<cr>
                 nnoremap <buffer> <LocalLeader>I
                             \ :call vlime#ui#repl#InspectCurREPLPresentation()<cr>
+                nnoremap <buffer> <LocalLeader>y
+                            \ :call vlime#ui#repl#YankCurREPLPresentation()<cr>
                 nnoremap <buffer> <LocalLeader>C
                             \ :call vlime#ui#repl#ClearREPLBuffer()<cr>
             finally
@@ -46,17 +48,8 @@ function! vlime#ui#repl#AppendOutput(repl_buf, str)
 endfunction
 
 function! vlime#ui#repl#InspectCurREPLPresentation()
-    let cur_pos = getcurpos()
-    let coords = getbufvar('%', 'vlime_repl_coords', {})
-    let p_coord = v:null
-    for k in keys(coords)
-        let c = coords[k]
-        if vlime#ui#MatchCoord(c, cur_pos[1], cur_pos[2])
-            let p_coord = c
-            break
-        endif
-    endfor
-
+    let p_coord = s:FindCurCoord(
+                \ getcurpos(), getbufvar('%', 'vlime_repl_coords', {}))
     if type(p_coord) == v:t_none
         return
     endif
@@ -68,6 +61,19 @@ function! vlime#ui#repl#InspectCurREPLPresentation()
                         \ [b:vlime_conn,
                             \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)},
                             \ 'vlime#contrib#SwankPresentationsInit']))
+    endif
+endfunction
+
+function! vlime#ui#repl#YankCurREPLPresentation()
+    let p_coord = s:FindCurCoord(
+                \ getcurpos(), getbufvar('%', 'vlime_repl_coords', {}))
+    if type(p_coord) == v:t_none
+        return
+    endif
+
+    if p_coord['type'] == 'PRESENTATION'
+        let @0 = '(swank:lookup-presented-object ' . p_coord['id'] . ')'
+        echom 'Presented object yanked.'
     endif
 endfunction
 
@@ -92,3 +98,12 @@ function! s:ShowREPLBanner(conn)
     call vlime#ui#AppendString(banner)
 endfunction
 
+function! s:FindCurCoord(cur_pos, coords)
+    for k in keys(a:coords)
+        let c = a:coords[k]
+        if vlime#ui#MatchCoord(c, a:cur_pos[1], a:cur_pos[2])
+            return c
+        endif
+    endfor
+    return v:null
+endfunction
