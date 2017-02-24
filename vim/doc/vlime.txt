@@ -136,7 +136,7 @@ One can inspect the evaluation results right from the REPL buffer. See
 
 The debugger works just like SLDB in SLIME. It pops up a buffer when a
 condition is signalled. The buffer shows a list of restarts and a
-backtrace. One cane press <CR> on a restart to select it.
+backtrace. One can press <CR> on a restart to select it.
 
 The debugger can also do single-stepping, examine the local variables,
 restart frames, evaluate expressions in frames, etc., provided the
@@ -171,7 +171,8 @@ function name to see where the function is called. Pressing <CR> on an
 entry inside the xref buffer will take you directly to the reference
 location.
 
-For more xref types and key mappings, see |vlime-mappings|.
+For more xref types and key mappings, see
+|vlime-mappings-invoke-xref|.
 
 ----------------------------------------------------------------------
 3.8 Compiler Messages                             *vlime-compiler-msg*
