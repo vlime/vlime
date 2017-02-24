@@ -47,6 +47,7 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
 
     nnoremap <buffer> <c-c> :call vlime#ui#threads#InterruptCurThread()<cr>
     nnoremap <buffer> K :call vlime#ui#threads#KillCurThread()<cr>
+    nnoremap <buffer> D :call vlime#ui#threads#DebugCurThread()<cr>
     nnoremap <buffer> r :call vlime#ui#threads#Refresh()<cr>
 endfunction
 
@@ -72,6 +73,15 @@ function! vlime#ui#threads#KillCurThread()
     else
         call vlime#ui#ErrMsg('Canceled.')
     endif
+endfunction
+
+function! vlime#ui#threads#DebugCurThread()
+    let coord = s:FindCurCoord(
+                \ getcurpos(), getbufvar('%', 'vlime_thread_coords', {}))
+    if type(coord) == v:t_none
+        return
+    endif
+    call b:vlime_conn.DebugNthThread(coord['nth'])
 endfunction
 
 " vlime#ui#threads#Refresh([conn[, keep_cur_pos]])

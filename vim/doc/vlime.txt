@@ -403,6 +403,8 @@ Mappings available in the thread list:    *vlime-mappings-thread-list*
         activated.
     K
         Kill the thread under the cursor.
+    D
+        Invoke the debugger in the thread under the cursor.
     r
         Refresh the thread list.
 

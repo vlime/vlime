@@ -69,6 +69,7 @@ function! vlime#New(...)
                 \ 'InspectInFrame': function('vlime#InspectInFrame'),
                 \ 'ListThreads': function('vlime#ListThreads'),
                 \ 'KillNthThread': function('vlime#KillNthThread'),
+                \ 'DebugNthThread': function('vlime#DebugNthThread'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -499,6 +500,15 @@ function! vlime#KillNthThread(nth, ...) dict
                     \ [s:SYM('SWANK', 'KILL-NTH-THREAD'), a:nth]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#KillNthThread']))
+endfunction
+
+" vlime#DebugNthThread(nth[, callback])
+function! vlime#DebugNthThread(nth, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'DEBUG-NTH-THREAD'), a:nth]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#DebugNthThread']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
