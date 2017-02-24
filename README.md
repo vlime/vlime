@@ -16,6 +16,18 @@ Why?
   implementation would be awesome.
 * Vim 8 has these nice `channel` APIs, why not try them out?
 
+How Does It Work?
+=================
+
+Vlime consists of a server written in Common Lisp, and a client written in
+Vimscript.
+
+The server is basically a wrapped Swank server. The extra wrapper code
+translates the messages from JSON to Swank commands, and vise versa.
+
+The client handles user input, emits JSON messages, and communicates with the
+server via Vim channels.
+
 Current State
 =============
 
