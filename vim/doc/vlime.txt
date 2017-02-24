@@ -205,7 +205,7 @@ Mars:
         sbcl --load <vlime repo>/lisp/start-vlime.lisp
 
 This command will also set up local port forwarding, so that we can
-connect to the server right here on Earch. Then, in Vim, call
+connect to the server right here on Earth. Then, in Vim, call
 VlimeConnectREPL():
 
     :call VlimeConnectREPL('127.0.0.1', 7002, 'sftp://watney@mars-hab/')
