@@ -17,6 +17,7 @@ function! vlime#ui#New()
                 \ 'OnInspect': function('vlime#ui#OnInspect'),
                 \ 'OnXRef': function('vlime#ui#OnXRef'),
                 \ 'OnCompilerNotes': function('vlime#ui#OnCompilerNotes'),
+                \ 'OnThreads': function('vlime#ui#OnThreads'),
                 \ }
     return obj
 endfunction
@@ -174,6 +175,15 @@ function! vlime#ui#OnCompilerNotes(conn, note_list)
     call setbufvar(notes_buf, '&modifiable', 1)
     call vlime#ui#compiler_notes#FillCompilerNotesBuf(a:note_list)
     call setbufvar(notes_buf, '&modifiable', 0)
+endfunction
+
+function! vlime#ui#OnThreads(conn, thread_list)
+    let threads_buf = vlime#ui#threads#InitThreadsBuffer(a:conn)
+    call vlime#ui#OpenBuffer(threads_buf, v:false, 'botright split')
+    resize 12
+    call setbufvar(threads_buf, '&modifiable', 1)
+    call vlime#ui#threads#FillThreadsBuf(a:thread_list)
+    call setbufvar(threads_buf, '&modifiable', 0)
 endfunction
 
 function! vlime#ui#ReadStringInputComplete(thread, ttag)
@@ -558,6 +568,11 @@ endfunction
 
 function! vlime#ui#CompilerNotesBufName(conn)
     return join(['vlime', 'notes', a:conn.cb_data.name],
+                \ g:vlime_buf_name_sep)
+endfunction
+
+function! vlime#ui#ThreadsBufName(conn)
+    return join(['vlime', 'threads', a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 

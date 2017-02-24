@@ -350,6 +350,15 @@ function! VlimeSetBreakpointInputComplete()
     call b:vlime_conn.SLDBBreak(content, function('s:OnSLDBBreakComplete'))
 endfunction
 
+function! VlimeListThreads()
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.ListThreads(function('s:OnListThreadsComplete'))
+endfunction
+
 function! VlimeCompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
@@ -522,6 +531,7 @@ function! VlimeSetup(...)
     nnoremap <buffer> <LocalLeader>a :call VlimeDisassembleCurForm()<cr>
     nnoremap <buffer> <LocalLeader>p :call VlimeSetCurPackage()<cr>
     nnoremap <buffer> <LocalLeader>b :call VlimeSetBreakpoint()<cr>
+    nnoremap <buffer> <LocalLeader>t :call VlimeListThreads()<cr>
 endfunction
 
 function! VlimeInteractionMode()
@@ -656,6 +666,12 @@ function! s:OnCompilationComplete(conn, result)
 
     if type(notes) != v:t_none && type(a:conn.ui) != v:t_none
         call a:conn.ui.OnCompilerNotes(a:conn, notes)
+    endif
+endfunction
+
+function! s:OnListThreadsComplete(conn, result)
+    if type(a:conn.ui) != v:t_none
+        call a:conn.ui.OnThreads(a:conn, a:result)
     endif
 endfunction
 

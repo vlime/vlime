@@ -14,7 +14,8 @@ CONTENTS                                              *vlime-contents*
         3.6 Inspector .......................... |vlime-inspector|
         3.7 Cross References ........................ |vlime-xref|
         3.8 Compiler Messages ............... |vlime-compiler-msg|
-        3.9 Remote Servers ................. |vlime-remote-server|
+        3.9 Managing Threads ................. |vlime-thread-list|
+        3.10 Remote Servers ................ |vlime-remote-server|
     4. Mappings ................................. |vlime-mappings|
     5. Configuration .............................. |vlime-config|
     6. License ................................... |vlime-license|
@@ -182,7 +183,18 @@ select a message by pressing <CR>, and Vlime will take you to the
 referenced source location.
 
 ----------------------------------------------------------------------
-3.9 Remote Servers                               *vlime-remote-server*
+3.9 Managing Threads                               *vlime-thread-list*
+
+For CL implementations that support threads, there's a simple buffer
+that shows all running threads. Just use |vlime-mappings-misc-t| to
+show it.
+
+While in the thread list, you can perform tasks such as killing a
+thread, or activating the debugger in a thread. See
+|vlime-mappings-thread-list| for a full list of available operations.
+
+----------------------------------------------------------------------
+3.10 Remote Servers                              *vlime-remote-server*
 
 Vlime can connect to a server running on a remote machine. The most
 secure way is to use SSH tunnels. Say we want to run a Vlime server on
@@ -315,6 +327,9 @@ Mappings available in CL source files:         *vlime-mappings-source*
             Specify the package for the current buffer.
         <LocalLeader>b
             Set a breakpoint at entry to a function.
+        <LocalLeader>t                         *vlime-mappings-misc-t*
+            Show a list of the running threads. See
+            |vlime-thread-list|.
 
 Mappings available in the REPL buffer:           *vlime-mappings-repl*
 
@@ -380,6 +395,16 @@ Mappings available in the inspector:        *vlime-mappings-inspector*
         Return to the previous inspected object.
     R
         Refresh the inspector.
+
+Mappings available in the thread list:    *vlime-mappings-thread-list*
+
+    CTRL-c
+        Interrupt the thread under the cursor. The debugger will be
+        activated.
+    K
+        Kill the thread under the cursor.
+    r
+        Refresh the thread list.
 
 ======================================================================
 5. Configuration                                        *vlime-config*

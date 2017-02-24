@@ -67,6 +67,8 @@ function! vlime#New(...)
                 \ 'InspectorPop': function('vlime#InspectorPop'),
                 \ 'InspectCurrentCondition': function('vlime#InspectCurrentCondition'),
                 \ 'InspectInFrame': function('vlime#InspectInFrame'),
+                \ 'ListThreads': function('vlime#ListThreads'),
+                \ 'KillNthThread': function('vlime#KillNthThread'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -479,6 +481,24 @@ function! vlime#InspectInFrame(thing, frame, ...) dict
                     \ [s:SYM('SWANK', 'INSPECT-IN-FRAME'), a:thing, a:frame]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectInFrame']))
+endfunction
+
+" vlime#ListThreads([callback])
+function! vlime#ListThreads(...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'LIST-THREADS')]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#ListThreads']))
+endfunction
+
+" vlime#KillNthThread(nth[, callback])
+function! vlime#KillNthThread(nth, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'KILL-NTH-THREAD'), a:nth]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#KillNthThread']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
