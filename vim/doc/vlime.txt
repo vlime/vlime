@@ -466,6 +466,9 @@ LICENSE.txt for details.
 * The Vim interface may sometimes freeze until a command is issued
   (e.g. move the cursor).
 
+* When Vlime creates a new window, or refreshes the content of an
+  existing window, some windows may be resiezed improperly.
+
 Please file an issue on https://github.com/l04m33/vlime/issues if you
 find any other problem.
 
