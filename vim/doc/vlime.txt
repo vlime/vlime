@@ -66,7 +66,7 @@ The Current Package                            *vlime-current-package*
     Vlime operations that concern about the Common Lisp package, such
     as omni-completions, will use this value. Vlime will try to figure
     out the current package automatically, but it's also possible to
-    select a package via |vlime-mappings-misc-p|.
+    specify a package via |vlime-mappings-misc-p|.
 
 ======================================================================
 3. Usage                                                 *vlime-usage*
@@ -114,13 +114,22 @@ in insert mode, or use |=| command.
 3.4 REPL                                                  *vlime-repl*
 
 The REPL integration is different from other Lisp environments, in
-that Vlime's REPL buffer is read-only. One can send text to the REPL
-from any other buffer using normal mode commands such as
-|vlime-mappings-send-ss| instead.
+that Vlime's REPL buffer is read-only. One can send expressions to the
+REPL from any lisp source buffer using normal mode commands such as
+|vlime-mappings-send-ss|, instead of typing the input directly in the
+REPL buffer.
 
 Note: It's a design decision to make the REPL buffer read-only, since
       emulating a command line in Vim buffers is often complicated and
       buggy.
+
+                                                  *vlime-input-buffer*
+When the REPL needs user input, e.g. (read) or (read-line) is
+being evaluated, a dedicated buffer for string input would pop up at
+the bottom. Write the input inside this buffer, and hit <CR> in normal
+mode, then the REPL would receive your text. The input buffer is a
+generic mechanism for the commands that need user input, for example
+|vlime-mappings-debugger-i|.
 
                                               *vlime-interaction-mode*
 There's an interaction mode to make sending things to the REPL easier.
@@ -157,7 +166,9 @@ expression.
 
 The content shown in the inspector buffer usually contains multiple
 interactable fields and buttons. Pressing <Tab> will move the cursor
-between theses fields/buttons, and <CR> interact with them.
+between theses fields/buttons, and <CR> interact with them. If the
+interaction needs extra user input, an input buffer would pop up. See
+|vlime-input-buffer|.
 
 For more available operations in the inspector buffer, see
 |vlime-mappings-inspector|.
@@ -187,8 +198,8 @@ referenced source location.
 3.9 Managing Threads                               *vlime-thread-list*
 
 For CL implementations that support threads, there's a simple buffer
-that shows all running threads. Just use |vlime-mappings-misc-t| to
-show it.
+that shows all running threads. Use |vlime-mappings-misc-t| to show
+it.
 
 While in the thread list, you can perform tasks such as killing a
 thread, or activating the debugger in a thread. See
@@ -289,7 +300,8 @@ Mappings available in CL source files:         *vlime-mappings-source*
         <LocalLeader>da
             Describe the atom under the cursor.
         <LocalLeader>ds
-            Apropos search.
+            Apropos search. An input buffer would pop up, prompting
+            for the search pattern. See |vlime-input-buffer|.
         <LocalLeader>ddo
             Show the documentation for the "operator" of the
             s-expression under the cursor.
@@ -327,7 +339,9 @@ Mappings available in CL source files:         *vlime-mappings-source*
         <LocalLeader>p                         *vlime-mappings-misc-p*
             Specify the package for the current buffer.
         <LocalLeader>b
-            Set a breakpoint at entry to a function.
+            Set a breakpoint at entry to a function. An input buffer
+            would pop up, prompting for the function name. See
+            |vlime-input-buffer|.
         <LocalLeader>t                         *vlime-mappings-misc-t*
             Show a list of the running threads. See
             |vlime-thread-list|.
@@ -369,16 +383,21 @@ Mappings available in the debugger:          *vlime-mappings-debugger*
         Invoke the restart labeled ABORT.
     C
         Inspect the current condition object.
-    i
+    i                                      *vlime-mappings-debugger-i*
         Evaluate and inspect an expression in the frame under the
-        cursor.
+        cursor. An input buffer would pop up, prompting for the
+        expression. See |vlime-input-buffer|.
     e
-        Evaluate an expression in the frame under the cursor.
+        Evaluate an expression in the frame under the cursor. An input
+        buffer would pop up, prompting for the expression. See
+        |vlime-input-buffer|.
     D
         Disassemble the frame under the cursor.
     R
         Return a manually specified result from the frame under the
-        cursor.
+        cursor. An input buffer would pop up, prompting for the
+        expression that would generate the result. See
+        |vlime-input-buffer|.
 
 Mappings available in the inspector:        *vlime-mappings-inspector*
 
