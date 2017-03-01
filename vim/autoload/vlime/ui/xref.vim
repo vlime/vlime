@@ -1,6 +1,8 @@
 function! vlime#ui#xref#InitXRefBuf(conn)
     let buf = bufnr(vlime#ui#XRefBufName(a:conn), v:true)
-    call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    if !vlime#ui#VlimeBufferInitialized(buf)
+        call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    endif
     return buf
 endfunction
 

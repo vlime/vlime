@@ -2,8 +2,7 @@ function! vlime#ui#repl#InitREPLBuf(conn)
     let repl_buf = vlime#ui#OpenBuffer(
                 \ vlime#ui#REPLBufName(a:conn), v:true, v:false)
     if repl_buf > 0
-        if !getbufvar(repl_buf, 'vlime_buffer_initialized', v:false)
-            call setbufvar(repl_buf, 'vlime_buffer_initialized', v:true)
+        if !vlime#ui#VlimeBufferInitialized(repl_buf)
             call vlime#ui#SetVlimeBufferOpts(repl_buf, a:conn)
             let old_win_id = win_getid()
             try

@@ -1,12 +1,16 @@
 function! vlime#ui#compiler_notes#InitCompilerNotesBuffer(conn)
     let buf = bufnr(vlime#ui#CompilerNotesBufName(a:conn), v:true)
-    call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    if !vlime#ui#VlimeBufferInitialized(buf)
+        call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    endif
     return buf
 endfunction
 
 function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
     if type(a:note_list) == v:t_none
         call vlime#ui#ReplaceContent('No message from the compiler.')
+        let b:vlime_compiler_note_coords = {}
+        let b:vlime_compiler_note_list = []
         return
     endif
 

@@ -1,6 +1,8 @@
 function! vlime#ui#sldb#InitSLDBBuf(ui, conn, thread, level, frames)
     let buf = bufnr(vlime#ui#SLDBBufName(a:conn, a:thread), v:true)
-    call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    if !vlime#ui#VlimeBufferInitialized(buf)
+        call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    endif
     call setbufvar(buf, 'vlime_sldb_level', a:level)
     call setbufvar(buf, 'vlime_sldb_frames', a:frames)
     call a:ui.SetCurrentThread(a:thread, buf)

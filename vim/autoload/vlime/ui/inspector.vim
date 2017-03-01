@@ -1,6 +1,8 @@
 function! vlime#ui#inspector#InitInspectorBuf(ui, conn, thread)
     let buf = bufnr(vlime#ui#InspectorBufName(a:conn), v:true)
-    call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    if !vlime#ui#VlimeBufferInitialized(buf)
+        call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    endif
     if type(a:thread) != v:t_none
         call a:ui.SetCurrentThread(a:thread, buf)
     endif

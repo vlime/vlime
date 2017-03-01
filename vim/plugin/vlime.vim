@@ -664,7 +664,7 @@ function! s:OnCompilationComplete(conn, result)
         call vlime#ui#ErrMsg('Compilation failed.')
     endif
 
-    if type(notes) != v:t_none && type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != v:t_none
         call a:conn.ui.OnCompilerNotes(a:conn, notes)
     endif
 endfunction

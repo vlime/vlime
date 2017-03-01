@@ -1,6 +1,8 @@
 function! vlime#ui#threads#InitThreadsBuffer(conn)
     let buf = bufnr(vlime#ui#ThreadsBufName(a:conn), v:true)
-    call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    if !vlime#ui#VlimeBufferInitialized(buf)
+        call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+    endif
     return buf
 endfunction
 

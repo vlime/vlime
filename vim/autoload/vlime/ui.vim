@@ -160,8 +160,7 @@ function! vlime#ui#OnXRef(conn, xref_list)
         call vlime#ui#ErrMsg('Not implemented.')
     else
         let xref_buf = vlime#ui#xref#InitXRefBuf(a:conn)
-        call vlime#ui#OpenBuffer(xref_buf, v:false, 'botright split')
-        resize 12
+        call vlime#ui#OpenBuffer(xref_buf, v:false, 'botright split', 12)
         call setbufvar(xref_buf, '&modifiable', 1)
         call vlime#ui#xref#FillXRefBuf(a:xref_list)
         call setbufvar(xref_buf, '&modifiable', 0)
@@ -170,17 +169,23 @@ endfunction
 
 function! vlime#ui#OnCompilerNotes(conn, note_list)
     let notes_buf = vlime#ui#compiler_notes#InitCompilerNotesBuffer(a:conn)
-    call vlime#ui#OpenBuffer(notes_buf, v:false, 'botright split')
-    resize 12
-    call setbufvar(notes_buf, '&modifiable', 1)
-    call vlime#ui#compiler_notes#FillCompilerNotesBuf(a:note_list)
-    call setbufvar(notes_buf, '&modifiable', 0)
+    let buf_opened = len(win_findbuf(notes_buf)) > 0
+    if buf_opened || type(a:note_list) != v:t_none
+        let old_win_id = win_getid()
+        call vlime#ui#OpenBuffer(notes_buf, v:false, 'botright split', 12)
+        call setbufvar(notes_buf, '&modifiable', 1)
+        call vlime#ui#compiler_notes#FillCompilerNotesBuf(a:note_list)
+        call setbufvar(notes_buf, '&modifiable', 0)
+        if type(a:note_list) == v:t_none
+            " There's no message. Don't stay in the notes window.
+            call win_gotoid(old_win_id)
+        endif
+    endif
 endfunction
 
 function! vlime#ui#OnThreads(conn, thread_list)
     let threads_buf = vlime#ui#threads#InitThreadsBuffer(a:conn)
-    call vlime#ui#OpenBuffer(threads_buf, v:false, 'botright split')
-    resize 12
+    call vlime#ui#OpenBuffer(threads_buf, v:false, 'botright split', 12)
     call setbufvar(threads_buf, '&modifiable', 1)
     call vlime#ui#threads#FillThreadsBuf(a:thread_list)
     call setbufvar(threads_buf, '&modifiable', 0)
@@ -322,7 +327,9 @@ function! vlime#ui#WithBuffer(buf, Func)
     endtry
 endfunction
 
-function! vlime#ui#OpenBuffer(name, create, show)
+" vlime#ui#OpenBuffer(name, create, show[, initial_size])
+function! vlime#ui#OpenBuffer(name, create, show, ...)
+    let initial_size = vlime#GetNthVarArg(a:000, 0)
     let buf = bufnr(a:name, a:create)
     if buf > 0
         if (type(a:show) == v:t_string && len(a:show) > 0) || a:show
@@ -335,6 +342,9 @@ function! vlime#ui#OpenBuffer(name, create, show)
                     silent! execute a:show . ' #' . buf
                 else
                     silent! execute 'split #' . buf
+                endif
+                if type(initial_size) != v:t_none
+                    execute 'resize ' . initial_size
                 endif
             else
                 execute win_nr . 'wincmd w'
@@ -379,10 +389,9 @@ endfunction
 function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
     let buf = vlime#ui#OpenBuffer(
                 \ vlime#ui#MiniBufName(a:conn, a:prompt),
-                \ v:true, 'botright split')
+                \ v:true, 'botright split', 4)
     call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
     call setbufvar(buf, '&buflisted', 0)
-    resize 4
     set winfixheight
     set winfixwidth
 
@@ -466,6 +475,10 @@ function! vlime#ui#SetVlimeBufferOpts(buf, conn)
     call setbufvar(a:buf, '&swapfile', 0)
     call setbufvar(a:buf, '&buflisted', 1)
     call setbufvar(a:buf, 'vlime_conn', a:conn)
+endfunction
+
+function! vlime#ui#VlimeBufferInitialized(buf)
+    return type(getbufvar(a:buf, 'vlime_conn', v:null)) != v:t_none
 endfunction
 
 function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
