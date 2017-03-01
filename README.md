@@ -85,7 +85,8 @@ dependencies via Quicklisp.
 
 When the server is up and running, use Vim to start editing a CL source file.
 
-See `:help vlime` for the full documentation.
+See `:help vlime-tutor` for a tutorial on how to use the main features, and
+`:help vlime` for the full documentation.
 
 License
 =======
