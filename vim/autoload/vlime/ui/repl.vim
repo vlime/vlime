@@ -8,14 +8,14 @@ function! vlime#ui#repl#InitREPLBuf(conn)
             try
                 call vlime#ui#OpenBuffer(repl_buf, v:false, 'botright split')
                 call s:ShowREPLBanner(a:conn)
-                nnoremap <buffer> <c-c>
+                nnoremap <buffer> <silent> <c-c>
                             \ :call b:vlime_conn.Interrupt(
                                 \ {'name': 'REPL-THREAD', 'package': 'KEYWORD'})<cr>
-                nnoremap <buffer> <LocalLeader>I
+                nnoremap <buffer> <silent> <LocalLeader>I
                             \ :call vlime#ui#repl#InspectCurREPLPresentation()<cr>
-                nnoremap <buffer> <LocalLeader>y
+                nnoremap <buffer> <silent> <LocalLeader>y
                             \ :call vlime#ui#repl#YankCurREPLPresentation()<cr>
-                nnoremap <buffer> <LocalLeader>C
+                nnoremap <buffer> <silent> <LocalLeader>C
                             \ :call vlime#ui#repl#ClearREPLBuffer()<cr>
             finally
                 call win_gotoid(old_win_id)
