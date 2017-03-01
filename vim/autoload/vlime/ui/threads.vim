@@ -47,10 +47,10 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
 
     let b:vlime_thread_coords = coords
 
-    nnoremap <buffer> <c-c> :call vlime#ui#threads#InterruptCurThread()<cr>
-    nnoremap <buffer> K :call vlime#ui#threads#KillCurThread()<cr>
-    nnoremap <buffer> D :call vlime#ui#threads#DebugCurThread()<cr>
-    nnoremap <buffer> r :call vlime#ui#threads#Refresh()<cr>
+    nnoremap <buffer> <silent> <c-c> :call vlime#ui#threads#InterruptCurThread()<cr>
+    nnoremap <buffer> <silent> K :call vlime#ui#threads#KillCurThread()<cr>
+    nnoremap <buffer> <silent> D :call vlime#ui#threads#DebugCurThread()<cr>
+    nnoremap <buffer> <silent> r :call vlime#ui#threads#Refresh()<cr>
 endfunction
 
 function! vlime#ui#threads#InterruptCurThread()
