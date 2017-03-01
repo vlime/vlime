@@ -405,7 +405,7 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
         execute 'autocmd BufWinLeave <buffer> bunload! ' . buf
     augroup end
 
-    execute 'nnoremap <buffer> <cr> :' . a:complete_command . '<cr>'
+    execute 'nnoremap <buffer> <silent> <cr> :' . a:complete_command . '<cr>'
 endfunction
 
 function! vlime#ui#AppendString(str)
