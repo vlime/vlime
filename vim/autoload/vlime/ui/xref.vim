@@ -40,7 +40,7 @@ function! vlime#ui#xref#FillXRefBuf(xref_list)
     let b:vlime_xref_coords = coords
     let b:vlime_xref_list = xlist
 
-    nnoremap <buffer> <cr> :call vlime#ui#xref#OpenCurXref()<cr>
+    nnoremap <buffer> <silent> <cr> :call vlime#ui#xref#OpenCurXref()<cr>
 endfunction
 
 function! vlime#ui#xref#OpenCurXref()
@@ -65,6 +65,8 @@ function! vlime#ui#xref#OpenCurXref()
         call vlime#ui#JumpToOrOpenFile(path, pos)
     elseif xref_loc[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(xref_loc[1])
+    else
+        call vlime#ui#ErrMsg('No source available.')
     endif
 endfunction
 
