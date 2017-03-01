@@ -360,7 +360,7 @@ Mappings available in the REPL buffer:           *vlime-mappings-repl*
         Inspect the evaluation result under the cursor.
     <LocalLeader>y
         Yank the evaluation result under the cursor into the default
-        register |quote0|. Note that this yanked value is an
+        register |quotequote|. Note that this yanked value is an
         expression to be evaluated in the same REPL session. It is
         meaningless in other contexts.
     <LocalLeader>C

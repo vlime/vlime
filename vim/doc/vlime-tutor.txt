@@ -475,7 +475,7 @@ their values, plus other useful info:
       N:   1
 
     Location:
-      File: /home/l_amee/fibonacci.lisp
+      File: /home/user/fibonacci.lisp
       Position: 239
       Snippet:
         (generate (1- n) b (+ a b) (push acc a))))
@@ -587,14 +587,14 @@ seen. We can just yank the result from the REPL buffer.
 Keep the inspector open, go back to the REPL buffer, and make sure the
 cursor is still on the printed representation of our
 FIBONACCI:GENERATOR instance. Type "\y" (without the quote marks) to
-yank the object into the register |quote0|.
+yank the object into the register |quotequote|.
 
 Then add a new line in ad-hoc.lisp:
 
     (fibonacci:next )
 
 Place the cursor on the space character just before the right
-parentheses, and type "0p (including the quote mark). The new line
+parentheses, and type "p" (without the quote marks). The new line
 should now look like this:
 
     (fibonacci:next (swank:lookup-presented-object 10))
