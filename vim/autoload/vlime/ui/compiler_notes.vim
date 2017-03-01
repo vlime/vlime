@@ -43,7 +43,7 @@ function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
     let b:vlime_compiler_note_coords = coords
     let b:vlime_compiler_note_list = nlist
 
-    nnoremap <buffer> <cr> :call vlime#ui#compiler_notes#OpenCurNote()<cr>
+    nnoremap <buffer> <silent> <cr> :call vlime#ui#compiler_notes#OpenCurNote()<cr>
 endfunction
 
 function! vlime#ui#compiler_notes#OpenCurNote()
@@ -72,6 +72,8 @@ function! vlime#ui#compiler_notes#OpenCurNote()
         let note_offset = s:FindNoteLocationProp('OFFSET', note_loc)
         let note_offset = note_offset[0] + note_offset[1]
         call vlime#ui#JumpToOrOpenFile(note_buffer[0], note_offset)
+    else
+        call vlime#ui#ErrMsg('No source available.')
     endif
 endfunction
 
