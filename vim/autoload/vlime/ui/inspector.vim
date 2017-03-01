@@ -60,13 +60,13 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
         endif
     augroup end
 
-    nnoremap <buffer> <cr> :call vlime#ui#inspector#InspectorSelect()<cr>
-    nnoremap <buffer> <space> :call vlime#ui#inspector#InspectorSelect()<cr>
-    nnoremap <buffer> <tab> :call vlime#ui#inspector#NextField(v:true)<cr>
-    nnoremap <buffer> <c-n> :call vlime#ui#inspector#NextField(v:true)<cr>
-    nnoremap <buffer> <c-p> :call vlime#ui#inspector#NextField(v:false)<cr>
-    nnoremap <buffer> p :call vlime#ui#inspector#InspectorPop()<cr>
-    nnoremap <buffer> R :call b:vlime_conn.InspectorReinspect({c, r -> c.ui.OnInspect(c, r, v:null, v:null)})<cr>
+    nnoremap <buffer> <silent> <cr> :call vlime#ui#inspector#InspectorSelect()<cr>
+    nnoremap <buffer> <silent> <space> :call vlime#ui#inspector#InspectorSelect()<cr>
+    nnoremap <buffer> <silent> <tab> :call vlime#ui#inspector#NextField(v:true)<cr>
+    nnoremap <buffer> <silent> <c-n> :call vlime#ui#inspector#NextField(v:true)<cr>
+    nnoremap <buffer> <silent> <c-p> :call vlime#ui#inspector#NextField(v:false)<cr>
+    nnoremap <buffer> <silent> p :call vlime#ui#inspector#InspectorPop()<cr>
+    nnoremap <buffer> <silent> R :call b:vlime_conn.InspectorReinspect({c, r -> c.ui.OnInspect(c, r, v:null, v:null)})<cr>
 endfunction
 
 function! vlime#ui#inspector#FillInspectorBufContent(content, coords)
