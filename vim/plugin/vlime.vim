@@ -4,6 +4,7 @@ function! VlimeCloseCurConnection()
         return
     endif
     call VlimeCloseConnection(conn)
+    echom conn.cb_data['name'] . ' disconnected.'
 endfunction
 
 function! VlimeRenameCurConnection()
@@ -473,65 +474,65 @@ function! VlimeSetup(...)
     setlocal omnifunc=VlimeCompleteFunc
     setlocal indentexpr=VlimeCalcCurIndent()
 
-    inoremap <buffer> <space> <space><c-r>=VlimeKey('space')<cr>
-    inoremap <buffer> <cr> <cr><c-r>=VlimeKey("cr")<cr>
-    inoremap <buffer> <tab> <c-r>=VlimeKey("tab")<cr>
+    inoremap <buffer> <silent> <space> <space><c-r>=VlimeKey('space')<cr>
+    inoremap <buffer> <silent> <cr> <cr><c-r>=VlimeKey("cr")<cr>
+    inoremap <buffer> <silent> <tab> <c-r>=VlimeKey("tab")<cr>
 
     " Connection operations
-    execute 'nnoremap <buffer> <LocalLeader>cc :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
-    nnoremap <buffer> <LocalLeader>cs :call VlimeSelectCurConnection()<cr>
-    nnoremap <buffer> <LocalLeader>cd :call VlimeCloseCurConnection()<cr>
-    nnoremap <buffer> <LocalLeader>cr :call VlimeRenameCurConnection()<cr>
+    execute 'nnoremap <buffer> <silent> <LocalLeader>cc :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
+    nnoremap <buffer> <silent> <LocalLeader>cs :call VlimeSelectCurConnection()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>cd :call VlimeCloseCurConnection()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>cr :call VlimeRenameCurConnection()<cr>
 
     " Sending stuff to the REPL
-    nnoremap <buffer> <LocalLeader>ss :call VlimeSendCurThingToREPL('thing')<cr>
-    nnoremap <buffer> <LocalLeader>se :call VlimeSendCurThingToREPL('expr')<cr>
-    nnoremap <buffer> <LocalLeader>sa :call VlimeSendCurThingToREPL('atom')<cr>
-    vnoremap <buffer> <LocalLeader>s :<c-u>call VlimeSendCurThingToREPL('selection')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>ss :call VlimeSendCurThingToREPL('thing')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>se :call VlimeSendCurThingToREPL('expr')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>sa :call VlimeSendCurThingToREPL('atom')<cr>
+    vnoremap <buffer> <silent> <LocalLeader>s :<c-u>call VlimeSendCurThingToREPL('selection')<cr>
 
     " Expanding macros
-    nnoremap <buffer> <LocalLeader>m1 :call VlimeExpandCurMacro(v:false)<cr>
-    nnoremap <buffer> <LocalLeader>ma :call VlimeExpandCurMacro(v:true)<cr>
+    nnoremap <buffer> <silent> <LocalLeader>m1 :call VlimeExpandCurMacro(v:false)<cr>
+    nnoremap <buffer> <silent> <LocalLeader>ma :call VlimeExpandCurMacro(v:true)<cr>
 
     " Compilation operations
-    nnoremap <buffer> <LocalLeader>oe :call VlimeCompileCurThing('expr')<cr>
-    nnoremap <buffer> <LocalLeader>of :call VlimeCompileCurFile()<cr>
-    vnoremap <buffer> <LocalLeader>o :<c-u>call VlimeCompileCurThing('selection')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>oe :call VlimeCompileCurThing('expr')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>of :call VlimeCompileCurFile()<cr>
+    vnoremap <buffer> <silent> <LocalLeader>o :<c-u>call VlimeCompileCurThing('selection')<cr>
 
     " Cross references (XRef)
-    nnoremap <buffer> <LocalLeader>xc :call VlimeXRefCurSymbol('atom', 'CALLS')<cr>
-    nnoremap <buffer> <LocalLeader>xC :call VlimeXRefCurSymbol('atom', 'CALLS-WHO')<cr>
-    nnoremap <buffer> <LocalLeader>xr :call VlimeXRefCurSymbol('atom', 'REFERENCES')<cr>
-    nnoremap <buffer> <LocalLeader>xb :call VlimeXRefCurSymbol('atom', 'BINDS')<cr>
-    nnoremap <buffer> <LocalLeader>xs :call VlimeXRefCurSymbol('atom', 'SETS')<cr>
-    nnoremap <buffer> <LocalLeader>xe :call VlimeXRefCurSymbol('atom', 'MACROEXPANDS')<cr>
-    nnoremap <buffer> <LocalLeader>xm :call VlimeXRefCurSymbol('atom', 'SPECIALIZES')<cr>
-    nnoremap <buffer> <LocalLeader>xd :call VlimeFindCurDefinition('atom')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>xc :call VlimeXRefCurSymbol('atom', 'CALLS')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>xC :call VlimeXRefCurSymbol('atom', 'CALLS-WHO')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>xr :call VlimeXRefCurSymbol('atom', 'REFERENCES')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>xb :call VlimeXRefCurSymbol('atom', 'BINDS')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>xs :call VlimeXRefCurSymbol('atom', 'SETS')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>xe :call VlimeXRefCurSymbol('atom', 'MACROEXPANDS')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>xm :call VlimeXRefCurSymbol('atom', 'SPECIALIZES')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>xd :call VlimeFindCurDefinition('atom')<cr>
 
     " Describing things
-    nnoremap <buffer> <LocalLeader>do :call VlimeDescribeCurSymbol('operator')<cr>
-    nnoremap <buffer> <LocalLeader>da :call VlimeDescribeCurSymbol('atom')<cr>
-    nnoremap <buffer> <LocalLeader>ds :call VlimeAproposList()<cr>
-    nnoremap <buffer> <LocalLeader>ddo :call VlimeDocumentationSymbol('operator')<cr>
-    nnoremap <buffer> <LocalLeader>dda :call VlimeDocumentationSymbol('atom')<cr>
-    nnoremap <buffer> <LocalLeader>dr :call VlimeCurOperatorArgList()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>do :call VlimeDescribeCurSymbol('operator')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>da :call VlimeDescribeCurSymbol('atom')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>ds :call VlimeAproposList()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>ddo :call VlimeDocumentationSymbol('operator')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>dda :call VlimeDocumentationSymbol('atom')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>dr :call VlimeCurOperatorArgList()<cr>
 
     " Inspection
-    nnoremap <buffer> <LocalLeader>II :call VlimeInspectCurThing('thing')<cr>
-    nnoremap <buffer> <LocalLeader>Ii :call VlimeInspectCurThing('thing')<cr>
-    nnoremap <buffer> <LocalLeader>IE :call VlimeInspectCurThing('expr')<cr>
-    nnoremap <buffer> <LocalLeader>Ie :call VlimeInspectCurThing('expr')<cr>
-    nnoremap <buffer> <LocalLeader>IA :call VlimeInspectCurThing('atom')<cr>
-    nnoremap <buffer> <LocalLeader>Ia :call VlimeInspectCurThing('atom')<cr>
-    vnoremap <buffer> <LocalLeader>I :<c-u>call VlimeInspectCurThing('selection')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>II :call VlimeInspectCurThing('thing')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>Ii :call VlimeInspectCurThing('thing')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>IE :call VlimeInspectCurThing('expr')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>Ie :call VlimeInspectCurThing('expr')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>IA :call VlimeInspectCurThing('atom')<cr>
+    nnoremap <buffer> <silent> <LocalLeader>Ia :call VlimeInspectCurThing('atom')<cr>
+    vnoremap <buffer> <silent> <LocalLeader>I :<c-u>call VlimeInspectCurThing('selection')<cr>
 
     " Other stuff
-    nnoremap <buffer> <LocalLeader>i :call VlimeInteractionMode()<cr>
-    nnoremap <buffer> <LocalLeader>l :call VlimeLoadCurFile()<cr>
-    nnoremap <buffer> <LocalLeader>a :call VlimeDisassembleCurForm()<cr>
-    nnoremap <buffer> <LocalLeader>p :call VlimeSetCurPackage()<cr>
-    nnoremap <buffer> <LocalLeader>b :call VlimeSetBreakpoint()<cr>
-    nnoremap <buffer> <LocalLeader>t :call VlimeListThreads()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>i :call VlimeInteractionMode()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>l :call VlimeLoadCurFile()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>a :call VlimeDisassembleCurForm()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>p :call VlimeSetCurPackage()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>b :call VlimeSetBreakpoint()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>t :call VlimeListThreads()<cr>
 endfunction
 
 function! VlimeInteractionMode()
@@ -539,10 +540,12 @@ function! VlimeInteractionMode()
         let b:vlime_interaction_mode = v:false
         nnoremap <buffer> <cr> <cr>
         vnoremap <buffer> <cr> <cr>
+        echom 'Interaction mode disabled.'
     else
         let b:vlime_interaction_mode = v:true
-        nnoremap <buffer> <cr> :call VlimeSendCurThingToREPL('thing')<cr>
-        vnoremap <buffer> <cr> :<c-u>call VlimeSendCurThingToREPL('selection')<cr>
+        nnoremap <buffer> <silent> <cr> :call VlimeSendCurThingToREPL('thing')<cr>
+        vnoremap <buffer> <silent> <cr> :<c-u>call VlimeSendCurThingToREPL('selection')<cr>
+        echom 'Interaction mode enabled.'
     endif
 endfunction
 
