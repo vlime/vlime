@@ -235,8 +235,14 @@ Note: When connecting to a remote server, relative file paths may
 4. Mappings                                           *vlime-mappings*
 
 Most normal mode and visual mode mappings in Vlime starts with
-|<LocalLeader>|, which defaults to the backslash "\". All the mappings
-listed below are defined in normal mode, unless specified otherwise.
+|<LocalLeader>|, which defaults to the backslash "\". If you feel
+uncomfortable reaching out for the backslash key, you may change it by
+adding this line to your |vimrc| file, to use the comma instead:
+
+    let maplocalleader = ','
+
+All the mappings listed below are defined in normal mode, unless
+specified otherwise.
 
 Mappings available in CL source files:         *vlime-mappings-source*
 
@@ -445,7 +451,7 @@ g:vlime_address
     A |list| specifying the address of a Vlime server. Default:
     ['127.0.0.1', 7002]
 
-g:vlime_compiler_policy
+g:vlime_compiler_policy                 *vlime-config-compiler-policy*
     A |dict| to hold the compiler policy. Setting this variable would
     affect the subsequent compiling operations. For example, a value
     of {'DEBUG': 3, 'SPEED': 0} means no optimization in runtime
