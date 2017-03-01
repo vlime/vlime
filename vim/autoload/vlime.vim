@@ -900,7 +900,7 @@ function! s:TryToCall(Callback, args)
 endfunction
 
 function! s:FixXRefListPaths(conn, xref_list)
-    if type(a:xref_list) == v:t_none
+    if type(a:xref_list) != v:t_list
         return
     endif
 
