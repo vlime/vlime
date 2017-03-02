@@ -2,6 +2,11 @@ function! vlime#ui#inspector#InitInspectorBuf(ui, conn, thread)
     let buf = bufnr(vlime#ui#InspectorBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+        " Commands in this group may be triggered by vlime#ui#WithBuffer(...),
+        " but we don't want them triggered here, so clear the group first.
+        augroup InspectorLeaveAu
+            autocmd!
+        augroup end
         call vlime#ui#WithBuffer(buf, function('s:InitInspectorBuf'))
     endif
     if type(a:thread) != v:t_none
