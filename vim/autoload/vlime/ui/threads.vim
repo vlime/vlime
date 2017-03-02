@@ -12,6 +12,7 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
 
     if type(a:thread_list) == v:t_none
         call vlime#ui#ReplaceContent('The thread list is empty.')
+        let b:vlime_thread_coords = {}
         return
     endif
 
