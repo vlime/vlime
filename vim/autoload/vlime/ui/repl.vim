@@ -35,12 +35,9 @@ function! vlime#ui#repl#InspectCurREPLPresentation()
     endif
 
     if p_coord['type'] == 'PRESENTATION'
-        call b:vlime_conn.Send(b:vlime_conn.EmacsRex(
-                        \ [{'package': 'SWANK', 'name': 'INSPECT-PRESENTATION'}, p_coord['id'], v:true]),
-                    \ function('vlime#SimpleSendCB',
-                        \ [b:vlime_conn,
-                            \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)},
-                            \ 'vlime#contrib#SwankPresentationsInit']))
+        call b:vlime_conn.InspectPresentation(
+                    \ p_coord['id'], v:true,
+                    \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
     endif
 endfunction
 

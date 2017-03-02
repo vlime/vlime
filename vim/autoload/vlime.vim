@@ -67,6 +67,7 @@ function! vlime#New(...)
                 \ 'InspectorPop': function('vlime#InspectorPop'),
                 \ 'InspectCurrentCondition': function('vlime#InspectCurrentCondition'),
                 \ 'InspectInFrame': function('vlime#InspectInFrame'),
+                \ 'InspectPresentation': function('vlime#InspectPresentation'),
                 \ 'ListThreads': function('vlime#ListThreads'),
                 \ 'KillNthThread': function('vlime#KillNthThread'),
                 \ 'DebugNthThread': function('vlime#DebugNthThread'),
@@ -482,6 +483,15 @@ function! vlime#InspectInFrame(thing, frame, ...) dict
                     \ [s:SYM('SWANK', 'INSPECT-IN-FRAME'), a:thing, a:frame]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectInFrame']))
+endfunction
+
+" vlime#InspectPresentation(pres_id, reset[, callback])
+function! vlime#InspectPresentation(pres_id, reset, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'INSPECT-PRESENTATION'), a:pres_id, a:reset]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#InspectPresentation']))
 endfunction
 
 " vlime#ListThreads([callback])
