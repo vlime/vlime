@@ -2,6 +2,7 @@ function! vlime#ui#inspector#InitInspectorBuf(ui, conn, thread)
     let buf = bufnr(vlime#ui#InspectorBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+        call vlime#ui#WithBuffer(buf, function('s:InitInspectorBuf'))
     endif
     if type(a:thread) != v:t_none
         call a:ui.SetCurrentThread(a:thread, buf)
@@ -64,14 +65,6 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
                         \ . a:thread . ', ' . a:itag . ', v:null)'
         endif
     augroup end
-
-    nnoremap <buffer> <silent> <cr> :call vlime#ui#inspector#InspectorSelect()<cr>
-    nnoremap <buffer> <silent> <space> :call vlime#ui#inspector#InspectorSelect()<cr>
-    nnoremap <buffer> <silent> <tab> :call vlime#ui#inspector#NextField(v:true)<cr>
-    nnoremap <buffer> <silent> <c-n> :call vlime#ui#inspector#NextField(v:true)<cr>
-    nnoremap <buffer> <silent> <c-p> :call vlime#ui#inspector#NextField(v:false)<cr>
-    nnoremap <buffer> <silent> p :call vlime#ui#inspector#InspectorPop()<cr>
-    nnoremap <buffer> <silent> R :call b:vlime_conn.InspectorReinspect({c, r -> c.ui.OnInspect(c, r, v:null, v:null)})<cr>
 endfunction
 
 function! vlime#ui#inspector#FillInspectorBufContent(content, coords)
@@ -237,4 +230,14 @@ function! s:CoordSorter(direction, c1, c2)
     else
         return a:direction ? -1 : 1
     endif
+endfunction
+
+function! s:InitInspectorBuf()
+    nnoremap <buffer> <silent> <cr> :call vlime#ui#inspector#InspectorSelect()<cr>
+    nnoremap <buffer> <silent> <space> :call vlime#ui#inspector#InspectorSelect()<cr>
+    nnoremap <buffer> <silent> <tab> :call vlime#ui#inspector#NextField(v:true)<cr>
+    nnoremap <buffer> <silent> <c-n> :call vlime#ui#inspector#NextField(v:true)<cr>
+    nnoremap <buffer> <silent> <c-p> :call vlime#ui#inspector#NextField(v:false)<cr>
+    nnoremap <buffer> <silent> p :call vlime#ui#inspector#InspectorPop()<cr>
+    nnoremap <buffer> <silent> R :call b:vlime_conn.InspectorReinspect({c, r -> c.ui.OnInspect(c, r, v:null, v:null)})<cr>
 endfunction

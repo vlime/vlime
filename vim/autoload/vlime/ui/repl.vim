@@ -1,6 +1,5 @@
 function! vlime#ui#repl#InitREPLBuf(conn)
-    let repl_buf = vlime#ui#OpenBuffer(
-                \ vlime#ui#REPLBufName(a:conn), v:true, v:false)
+    let repl_buf = bufnr(vlime#ui#REPLBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(repl_buf)
         call vlime#ui#SetVlimeBufferOpts(repl_buf, a:conn)
         call vlime#ui#WithBuffer(repl_buf, function('s:InitREPLBuf'))

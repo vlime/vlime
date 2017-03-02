@@ -2,6 +2,7 @@ function! vlime#ui#xref#InitXRefBuf(conn)
     let buf = bufnr(vlime#ui#XRefBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+        call vlime#ui#WithBuffer(buf, function('s:InitXRefBuf'))
     endif
     return buf
 endfunction
@@ -43,8 +44,6 @@ function! vlime#ui#xref#FillXRefBuf(xref_list)
 
     let b:vlime_xref_coords = coords
     let b:vlime_xref_list = xlist
-
-    nnoremap <buffer> <silent> <cr> :call vlime#ui#xref#OpenCurXref()<cr>
 endfunction
 
 function! vlime#ui#xref#OpenCurXref()
@@ -83,4 +82,8 @@ function! s:FindXRefLocationProp(key, prop_list)
         endfor
     endif
     return v:null
+endfunction
+
+function! s:InitXRefBuf()
+    nnoremap <buffer> <silent> <cr> :call vlime#ui#xref#OpenCurXref()<cr>
 endfunction

@@ -2,6 +2,7 @@ function! vlime#ui#compiler_notes#InitCompilerNotesBuffer(conn)
     let buf = bufnr(vlime#ui#CompilerNotesBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+        call vlime#ui#WithBuffer(buf, function('s:InitCompilerNotesBuffer'))
     endif
     return buf
 endfunction
@@ -46,8 +47,6 @@ function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
 
     let b:vlime_compiler_note_coords = coords
     let b:vlime_compiler_note_list = nlist
-
-    nnoremap <buffer> <silent> <cr> :call vlime#ui#compiler_notes#OpenCurNote()<cr>
 endfunction
 
 function! vlime#ui#compiler_notes#OpenCurNote()
@@ -90,4 +89,8 @@ function! s:FindNoteLocationProp(key, loc)
         endfor
     endif
     return v:null
+endfunction
+
+function! s:InitCompilerNotesBuffer()
+    nnoremap <buffer> <silent> <cr> :call vlime#ui#compiler_notes#OpenCurNote()<cr>
 endfunction

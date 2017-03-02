@@ -2,6 +2,7 @@ function! vlime#ui#sldb#InitSLDBBuf(ui, conn, thread, level, frames)
     let buf = bufnr(vlime#ui#SLDBBufName(a:conn, a:thread), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+        call vlime#ui#WithBuffer(buf, function('s:InitSLDBBuf'))
     endif
     call setbufvar(buf, 'vlime_sldb_level', a:level)
     call setbufvar(buf, 'vlime_sldb_frames', a:frames)
@@ -50,22 +51,6 @@ function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
     call vlime#ui#AppendString(frames_str)
 
     setlocal nomodifiable
-
-    " TODO: Move to a separate function?
-    nnoremap <buffer> <silent> <cr> :call vlime#ui#sldb#ChooseCurRestart()<cr>
-    nnoremap <buffer> <silent> d :call vlime#ui#sldb#ShowFrameDetails()<cr>
-    nnoremap <buffer> <silent> S :call vlime#ui#sldb#OpenFrameSource()<cr>
-    nnoremap <buffer> <silent> r :call vlime#ui#sldb#RestartCurFrame()<cr>
-    nnoremap <buffer> <silent> s :call vlime#ui#sldb#StepCurOrLastFrame('step')<cr>
-    nnoremap <buffer> <silent> x :call vlime#ui#sldb#StepCurOrLastFrame('next')<cr>
-    nnoremap <buffer> <silent> o :call vlime#ui#sldb#StepCurOrLastFrame('out')<cr>
-    nnoremap <buffer> <silent> c :call b:vlime_conn.SLDBContinue()<cr>
-    nnoremap <buffer> <silent> a :call b:vlime_conn.SLDBAbort()<cr>
-    nnoremap <buffer> <silent> C :call vlime#ui#sldb#InspectCurCondition()<cr>
-    nnoremap <buffer> <silent> i :call vlime#ui#sldb#InspectInCurFrame()<cr>
-    nnoremap <buffer> <silent> e :call vlime#ui#sldb#EvalStringInCurFrame()<cr>
-    nnoremap <buffer> <silent> D :call vlime#ui#sldb#DisassembleCurFrame()<cr>
-    nnoremap <buffer> <silent> R :call vlime#ui#sldb#ReturnFromCurFrame()<cr>
 endfunction
 
 function! vlime#ui#sldb#ChooseCurRestart()
@@ -318,3 +303,19 @@ function! s:OpenFrameSourceCB(conn, result)
     call vlime#ui#JumpToOrOpenFile(a:result[1][1], a:result[2][1])
 endfunction
 
+function! s:InitSLDBBuf()
+    nnoremap <buffer> <silent> <cr> :call vlime#ui#sldb#ChooseCurRestart()<cr>
+    nnoremap <buffer> <silent> d :call vlime#ui#sldb#ShowFrameDetails()<cr>
+    nnoremap <buffer> <silent> S :call vlime#ui#sldb#OpenFrameSource()<cr>
+    nnoremap <buffer> <silent> r :call vlime#ui#sldb#RestartCurFrame()<cr>
+    nnoremap <buffer> <silent> s :call vlime#ui#sldb#StepCurOrLastFrame('step')<cr>
+    nnoremap <buffer> <silent> x :call vlime#ui#sldb#StepCurOrLastFrame('next')<cr>
+    nnoremap <buffer> <silent> o :call vlime#ui#sldb#StepCurOrLastFrame('out')<cr>
+    nnoremap <buffer> <silent> c :call b:vlime_conn.SLDBContinue()<cr>
+    nnoremap <buffer> <silent> a :call b:vlime_conn.SLDBAbort()<cr>
+    nnoremap <buffer> <silent> C :call vlime#ui#sldb#InspectCurCondition()<cr>
+    nnoremap <buffer> <silent> i :call vlime#ui#sldb#InspectInCurFrame()<cr>
+    nnoremap <buffer> <silent> e :call vlime#ui#sldb#EvalStringInCurFrame()<cr>
+    nnoremap <buffer> <silent> D :call vlime#ui#sldb#DisassembleCurFrame()<cr>
+    nnoremap <buffer> <silent> R :call vlime#ui#sldb#ReturnFromCurFrame()<cr>
+endfunction

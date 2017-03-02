@@ -2,6 +2,7 @@ function! vlime#ui#threads#InitThreadsBuffer(conn)
     let buf = bufnr(vlime#ui#ThreadsBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+        call vlime#ui#WithBuffer(buf, function('s:InitThreadsBuf'))
     endif
     return buf
 endfunction
@@ -50,11 +51,6 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
     setlocal nomodifiable
 
     let b:vlime_thread_coords = coords
-
-    nnoremap <buffer> <silent> <c-c> :call vlime#ui#threads#InterruptCurThread()<cr>
-    nnoremap <buffer> <silent> K :call vlime#ui#threads#KillCurThread()<cr>
-    nnoremap <buffer> <silent> D :call vlime#ui#threads#DebugCurThread()<cr>
-    nnoremap <buffer> <silent> r :call vlime#ui#threads#Refresh()<cr>
 endfunction
 
 function! vlime#ui#threads#InterruptCurThread()
@@ -161,4 +157,11 @@ endfunction
 function! s:CalcAllFieldWidths(thread_list)
     return map(copy(a:thread_list[0]),
                 \ {idx, _val -> s:CalcFieldWidth(idx, a:thread_list)})
+endfunction
+
+function! s:InitThreadsBuf()
+    nnoremap <buffer> <silent> <c-c> :call vlime#ui#threads#InterruptCurThread()<cr>
+    nnoremap <buffer> <silent> K :call vlime#ui#threads#KillCurThread()<cr>
+    nnoremap <buffer> <silent> D :call vlime#ui#threads#DebugCurThread()<cr>
+    nnoremap <buffer> <silent> r :call vlime#ui#threads#Refresh()<cr>
 endfunction
