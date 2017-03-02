@@ -97,7 +97,9 @@ endfunction
 
 function! vlime#ui#OnWriteString(conn, str, str_type) dict
     let repl_buf = vlime#ui#repl#InitREPLBuf(a:conn)
-    call vlime#ui#OpenBuffer(repl_buf, v:false, 'botright split')
+    if len(win_findbuf(repl_buf)) <= 0
+        call vlime#ui#OpenBuffer(repl_buf, v:false, 'botright split')
+    endif
     call vlime#ui#repl#AppendOutput(repl_buf, a:str)
 endfunction
 
