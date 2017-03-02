@@ -7,6 +7,8 @@ function! vlime#ui#threads#InitThreadsBuffer(conn)
 endfunction
 
 function! vlime#ui#threads#FillThreadsBuf(thread_list)
+    setlocal modifiable
+
     if type(a:thread_list) == v:t_none
         call vlime#ui#ReplaceContent('The thread list is empty.')
         return
@@ -44,6 +46,8 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
         let idx += 1
     endfor
     normal! gg
+
+    setlocal nomodifiable
 
     let b:vlime_thread_coords = coords
 

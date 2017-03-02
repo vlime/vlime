@@ -11,6 +11,13 @@ endfunction
 
 function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
     let b:vlime_inspector_title = a:content['TITLE']
+    let b:vlime_inspector_content_start = a:content['CONTENT'][2]
+    let b:vlime_inspector_content_end = a:content['CONTENT'][3]
+    let b:vlime_inspector_content_more =
+                \ a:content['CONTENT'][1] > b:vlime_inspector_content_end
+
+    setlocal modifiable
+
     call vlime#ui#ReplaceContent(a:content['TITLE'] . "\n"
                 \ . repeat('=', len(a:content['TITLE'])) . "\n\n")
     normal! G$
@@ -19,10 +26,6 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
     call vlime#ui#inspector#FillInspectorBufContent(
                 \ a:content['CONTENT'][0], coords)
 
-    let b:vlime_inspector_content_start = a:content['CONTENT'][2]
-    let b:vlime_inspector_content_end = a:content['CONTENT'][3]
-    let b:vlime_inspector_content_more =
-                \ a:content['CONTENT'][1] > b:vlime_inspector_content_end
     let range_buttons = []
     if b:vlime_inspector_content_start > 0
         call add(range_buttons,
@@ -47,6 +50,8 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
         endif
         call vlime#ui#inspector#FillInspectorBufContent(range_buttons, coords)
     endif
+
+    setlocal nomodifiable
 
     let b:vlime_inspector_coords = coords
 

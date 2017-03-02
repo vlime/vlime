@@ -11,6 +11,8 @@ endfunction
 
 " Operates on current buffer. Should be called with vlime#ui#WithBuffer(...)
 function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
+    setlocal modifiable
+
     normal! ggVG"_d
 
     call vlime#ui#AppendString(
@@ -46,6 +48,8 @@ function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
         let frames_str .= ('  ' . idx_str . f[1] . "\n")
     endfor
     call vlime#ui#AppendString(frames_str)
+
+    setlocal nomodifiable
 
     " TODO: Move to a separate function?
     nnoremap <buffer> <silent> <cr> :call vlime#ui#sldb#ChooseCurRestart()<cr>

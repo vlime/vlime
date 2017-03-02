@@ -7,6 +7,8 @@ function! vlime#ui#xref#InitXRefBuf(conn)
 endfunction
 
 function! vlime#ui#xref#FillXRefBuf(xref_list)
+    setlocal modifiable
+
     if type(a:xref_list) == v:t_none
         call vlime#ui#ReplaceContent('No xref found.')
         return
@@ -36,6 +38,8 @@ function! vlime#ui#xref#FillXRefBuf(xref_list)
         let idx += 1
     endfor
     normal! gg
+
+    setlocal nomodifiable
 
     let b:vlime_xref_coords = coords
     let b:vlime_xref_list = xlist

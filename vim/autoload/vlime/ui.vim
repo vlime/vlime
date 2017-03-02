@@ -68,12 +68,10 @@ endfunction
 
 function! vlime#ui#OnDebug(conn, thread, level, condition, restarts, frames, conts) dict
     let dbg_buf = vlime#ui#sldb#InitSLDBBuf(self, a:conn, a:thread, a:level, a:frames)
-    call setbufvar(dbg_buf, '&modifiable', 1)
     call vlime#ui#WithBuffer(
                 \ dbg_buf,
                 \ function('vlime#ui#sldb#FillSLDBBuf',
                     \ [a:thread, a:level, a:condition, a:restarts, a:frames]))
-    call setbufvar(dbg_buf, '&modifiable', 0)
 endfunction
 
 function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
@@ -99,9 +97,8 @@ endfunction
 
 function! vlime#ui#OnWriteString(conn, str, str_type) dict
     let repl_buf = vlime#ui#repl#InitREPLBuf(a:conn)
-    if repl_buf > 0
-        call vlime#ui#repl#AppendOutput(repl_buf, a:str)
-    endif
+    call vlime#ui#OpenBuffer(repl_buf, v:false, 'botright split')
+    call vlime#ui#repl#AppendOutput(repl_buf, a:str)
 endfunction
 
 function! vlime#ui#OnReadString(conn, thread, ttag) dict
@@ -144,9 +141,7 @@ function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
         let old_cur = [0, 1, 1, 0, 1]
     endif
 
-    call setbufvar(insp_buf, '&modifiable', 1)
     call vlime#ui#inspector#FillInspectorBuf(r_content, a:i_thread, a:i_tag)
-    call setbufvar(insp_buf, '&modifiable', 0)
     call setpos('.', old_cur)
     " Needed for displaying the content of the current buffer correctly
     redraw
@@ -161,9 +156,7 @@ function! vlime#ui#OnXRef(conn, xref_list)
     else
         let xref_buf = vlime#ui#xref#InitXRefBuf(a:conn)
         call vlime#ui#OpenBuffer(xref_buf, v:false, 'botright split', 12)
-        call setbufvar(xref_buf, '&modifiable', 1)
         call vlime#ui#xref#FillXRefBuf(a:xref_list)
-        call setbufvar(xref_buf, '&modifiable', 0)
     endif
 endfunction
 
@@ -173,9 +166,7 @@ function! vlime#ui#OnCompilerNotes(conn, note_list)
     if buf_opened || type(a:note_list) != v:t_none
         let old_win_id = win_getid()
         call vlime#ui#OpenBuffer(notes_buf, v:false, 'botright split', 12)
-        call setbufvar(notes_buf, '&modifiable', 1)
         call vlime#ui#compiler_notes#FillCompilerNotesBuf(a:note_list)
-        call setbufvar(notes_buf, '&modifiable', 0)
         if type(a:note_list) == v:t_none
             " There's no message. Don't stay in the notes window.
             call win_gotoid(old_win_id)
@@ -186,9 +177,7 @@ endfunction
 function! vlime#ui#OnThreads(conn, thread_list)
     let threads_buf = vlime#ui#threads#InitThreadsBuffer(a:conn)
     call vlime#ui#OpenBuffer(threads_buf, v:false, 'botright split', 12)
-    call setbufvar(threads_buf, '&modifiable', 1)
     call vlime#ui#threads#FillThreadsBuf(a:thread_list)
-    call setbufvar(threads_buf, '&modifiable', 0)
 endfunction
 
 function! vlime#ui#ReadStringInputComplete(thread, ttag)

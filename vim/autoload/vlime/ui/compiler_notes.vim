@@ -7,6 +7,8 @@ function! vlime#ui#compiler_notes#InitCompilerNotesBuffer(conn)
 endfunction
 
 function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
+    setlocal modifiable
+
     if type(a:note_list) == v:t_none
         call vlime#ui#ReplaceContent('No message from the compiler.')
         let b:vlime_compiler_note_coords = {}
@@ -39,6 +41,8 @@ function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
         let idx += 1
     endfor
     normal! gg
+
+    setlocal nomodifiable
 
     let b:vlime_compiler_note_coords = coords
     let b:vlime_compiler_note_list = nlist

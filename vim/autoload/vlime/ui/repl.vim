@@ -1,27 +1,9 @@
 function! vlime#ui#repl#InitREPLBuf(conn)
     let repl_buf = vlime#ui#OpenBuffer(
                 \ vlime#ui#REPLBufName(a:conn), v:true, v:false)
-    if repl_buf > 0
-        if !vlime#ui#VlimeBufferInitialized(repl_buf)
-            call vlime#ui#SetVlimeBufferOpts(repl_buf, a:conn)
-            let old_win_id = win_getid()
-            try
-                call vlime#ui#OpenBuffer(repl_buf, v:false, 'botright split')
-                call s:ShowREPLBanner(a:conn)
-                nnoremap <buffer> <silent> <c-c>
-                            \ :call b:vlime_conn.Interrupt(
-                                \ {'name': 'REPL-THREAD', 'package': 'KEYWORD'})<cr>
-                nnoremap <buffer> <silent> <LocalLeader>I
-                            \ :call vlime#ui#repl#InspectCurREPLPresentation()<cr>
-                nnoremap <buffer> <silent> <LocalLeader>y
-                            \ :call vlime#ui#repl#YankCurREPLPresentation()<cr>
-                nnoremap <buffer> <silent> <LocalLeader>C
-                            \ :call vlime#ui#repl#ClearREPLBuffer()<cr>
-            finally
-                call win_gotoid(old_win_id)
-            endtry
-            call setbufvar(repl_buf, '&modifiable', 0)
-        endif
+    if !vlime#ui#VlimeBufferInitialized(repl_buf)
+        call vlime#ui#SetVlimeBufferOpts(repl_buf, a:conn)
+        call vlime#ui#WithBuffer(repl_buf, function('s:InitREPLBuf'))
     endif
     return repl_buf
 endfunction
@@ -77,11 +59,11 @@ function! vlime#ui#repl#YankCurREPLPresentation()
 endfunction
 
 function! vlime#ui#repl#ClearREPLBuffer()
-    set modifiable
+    setlocal modifiable
     normal! ggVG"_d
     unlet b:vlime_repl_coords
     call s:ShowREPLBanner(b:vlime_conn)
-    set nomodifiable
+    setlocal nomodifiable
 endfunction
 
 function! s:ShowREPLBanner(conn)
@@ -105,4 +87,20 @@ function! s:FindCurCoord(cur_pos, coords)
         endif
     endfor
     return v:null
+endfunction
+
+function! s:InitREPLBuf()
+    setlocal modifiable
+    call s:ShowREPLBanner(b:vlime_conn)
+    setlocal nomodifiable
+
+    nnoremap <buffer> <silent> <c-c>
+                \ :call b:vlime_conn.Interrupt(
+                    \ {'name': 'REPL-THREAD', 'package': 'KEYWORD'})<cr>
+    nnoremap <buffer> <silent> <LocalLeader>I
+                \ :call vlime#ui#repl#InspectCurREPLPresentation()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>y
+                \ :call vlime#ui#repl#YankCurREPLPresentation()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>C
+                \ :call vlime#ui#repl#ClearREPLBuffer()<cr>
 endfunction
