@@ -390,17 +390,15 @@ function! VlimeKey(key)
         call VlimeCurOperatorArgList()
     elseif tolower(a:key) == 'tab'
         let line = getline('.')
-        let old_cur = getcurpos()
-        try
-            normal! ^
-            let old_first_col = virtcol('.')
-        finally
-            call setpos('.', old_cur)
-        endtry
+        let sp_line = substitute(line, "\t", repeat(' ', &tabstop), 'g')
+        let spaces = match(sp_line, '[^[:blank:]]')
+        if spaces < 0
+            let spaces = len(sp_line)
+        endif
         let col = virtcol('.')
-        if col <= old_first_col
+        if col <= spaces + 1
             let indent = VlimeCalcCurIndent()
-            if old_first_col - 1 < indent
+            if spaces < indent
                 call vlime#ui#IndentCurLine(indent)
             else
                 return "\<tab>"
