@@ -76,13 +76,12 @@ function! s:OnPresentationEnd(conn, msg)
 endfunction
 
 function! s:GetBufLastPos()
-    let old_pos = getcurpos()
-    try
-        normal! G$
-        let pos = getcurpos()
-        return [pos[1], pos[2]]
-    finally
-        call setpos('.', old_pos)
-    endtry
+    let last_line_nr = line('$')
+    let last_line = getline(last_line_nr)
+    let last_col_nr = len(last_line)
+    if last_col_nr <= 0
+        let last_col_nr = 1
+    endif
+    return [last_line_nr, last_col_nr]
 endfunction
 
