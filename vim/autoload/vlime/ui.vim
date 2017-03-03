@@ -79,7 +79,7 @@ function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
                 \ vlime#ui#SLDBBufName(a:conn, a:thread),
                 \ v:false, 'botright split')
     if dbg_buf > 0
-        normal! gg
+        call setpos('.', [0, 1, 1, 0, 1])
     endif
 endfunction
 
@@ -279,32 +279,29 @@ endfunction
 " vlime#ui#CurSelection([return_pos])
 function! vlime#ui#CurSelection(...)
     let return_pos = vlime#GetNthVarArg(a:000, 0, v:false)
+    let sel_start = getpos("'<")
+    let sel_end = getpos("'>")
+    let lines = getline(sel_start[1], sel_end[1])
+    if sel_start[1] == sel_end[1]
+        let lines[0] = lines[0][(sel_start[2]-1):(sel_end[2]-1)]
+    else
+        let lines[0] = lines[0][(sel_start[2]-1):]
+        let last_idx = len(lines) - 1
+        let lines[last_idx] = lines[last_idx][:(sel_end[2]-1)]
+    endif
 
     if return_pos
-        let [s_pos, e_pos] = [getpos("'<")[1:2], getpos("'>")[1:2]]
+        return [join(lines, "\n"), sel_start[1:2], sel_end[1:2]]
+    else
+        return join(lines, "\n")
     endif
-    let old_reg = @x
-    try
-        normal! gv"xy
-        if return_pos
-            return [@x, s_pos, e_pos]
-        else
-            return @x
-        endif
-    finally
-        let @x = old_reg
-    endtry
 endfunction
 
 function! vlime#ui#CurBufferContent()
-    let old_reg = @x
-    try
-        normal! ggVG"xy
-        let lines = split(@x, "\n")
-        return join(filter(lines, "match(v:val, '^\s*;.*$') < 0"), "\n")
-    finally
-        let @x = old_reg
-    endtry
+    let last_line_nr = line('$')
+    let line_nr = 1
+    let lines = getline(1, '$')
+    return join(filter(lines, "match(v:val, '^\s*;.*$') < 0"), "\n")
 endfunction
 
 function! vlime#ui#WithBuffer(buf, Func)
@@ -400,41 +397,22 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
 endfunction
 
 function! vlime#ui#AppendString(str)
-    let i = len(a:str) - 1
-    let nl = 0
-    while i >= 0 && a:str[i] == "\n"
-        let i -= 1
-        let nl += 1
-    endwhile
-    let r_str = (i >= 0) ? a:str[0:i] : ''
+    let new_lines = split(a:str, "\n", v:true)
+    let last_line_nr = line('$')
+    let last_line = getline(last_line_nr)
+    call setline(last_line_nr, last_line . new_lines[0])
+    call append('$', new_lines[1:])
 
-    let old_cur = getcurpos()
-    let scroll = (old_cur[1] == line('$'))
-    let old_reg_x = @x
-    try
-        if len(r_str) > 0
-            let @x = r_str
-            normal! G$"xp
-        endif
-        if nl > 0
-            for n in range(nl)
-                call append(line('$'), '')
-            endfor
-        endif
-    finally
-        let @x = old_reg_x
-        if !scroll
-            call setpos('.', old_cur)
-        else
-            normal! G
-        endif
-    endtry
+    let cur_line_nr = line('.')
+    if cur_line_nr == last_line_nr
+        call setpos('.', [0, line('$'), 1, 0, 1])
+    endif
 endfunction
 
 function! vlime#ui#ReplaceContent(str)
-    normal! ggVG"_d
+    1,$delete _
     call vlime#ui#AppendString(a:str)
-    normal! gg
+    call setpos('.', [0, 1, 1, 0, 1])
 endfunction
 
 function! vlime#ui#IndentCurLine(indent)
@@ -446,8 +424,10 @@ function! vlime#ui#IndentCurLine(indent)
         let indent_str .= repeat(' ', a:indent % &tabstop)
     endif
     let line = getline('.')
-    call setline('.', substitute(line, '^\(\s*\)', indent_str, ''))
-    normal! ^
+    let new_line = substitute(line, '^\(\s*\)', indent_str, '')
+    call setline('.', new_line)
+    let spaces = vlime#ui#CalcLeadingSpaces(new_line)
+    call setpos('.', [0, line('.'), spaces + 1, 0, a:indent + 1])
 endfunction
 
 function! vlime#ui#Pad(prefix, sep, max_len)
@@ -528,13 +508,26 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos)
 
     if type(a:byte_pos) != v:t_none
         let src_line = byte2line(a:byte_pos)
-        execute 'normal! ' . src_line . 'gg'
-        normal! ^
+        call setpos('.', [0, src_line, 1, 0, 1])
         let cur_pos = line2byte('.') + col('.') - 1
         if a:byte_pos - cur_pos > 0
-            execute 'normal! ' . (a:byte_pos - cur_pos) . 'l'
+            call setpos('.', [0, src_line, a:byte_pos - cur_pos + 1, 0])
         endif
     endif
+endfunction
+
+function! vlime#ui#CalcLeadingSpaces(str, ...)
+    let expand_tab = vlime#GetNthVarArg(a:000, 0, v:false)
+    if expand_tab
+        let n_str = substitute(a:str, "\t", repeat(' ', &tabstop), 'g')
+    else
+        let n_str = a:str
+    endif
+    let spaces = match(n_str, '[^[:blank:]]')
+    if spaces < 0
+        let spaces = len(n_str)
+    endif
+    return spaces
 endfunction
 
 if !exists('g:vlime_buf_name_sep')

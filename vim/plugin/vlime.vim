@@ -390,11 +390,7 @@ function! VlimeKey(key)
         call VlimeCurOperatorArgList()
     elseif tolower(a:key) == 'tab'
         let line = getline('.')
-        let sp_line = substitute(line, "\t", repeat(' ', &tabstop), 'g')
-        let spaces = match(sp_line, '[^[:blank:]]')
-        if spaces < 0
-            let spaces = len(sp_line)
-        endif
+        let spaces = vlime#ui#CalcLeadingSpaces(line, v:true)
         let col = virtcol('.')
         if col <= spaces + 1
             let indent = VlimeCalcCurIndent()
