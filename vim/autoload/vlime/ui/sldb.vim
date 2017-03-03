@@ -14,7 +14,7 @@ endfunction
 function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
     setlocal modifiable
 
-    normal! ggVG"_d
+    1,$delete _
 
     call vlime#ui#AppendString(
                 \ 'Thread: ' . a:thread . '; Level: ' . a:level . "\n\n")

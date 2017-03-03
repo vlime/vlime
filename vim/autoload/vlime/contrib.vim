@@ -49,7 +49,8 @@ function! s:OnPresentationStart(conn, msg)
     endif
 
     let coords = getbufvar(repl_buf, 'vlime_repl_coords', {})
-    let begin_pos = vlime#ui#WithBuffer(repl_buf, function('s:GetBufLastPos'))
+    let begin_pos = vlime#ui#WithBuffer(repl_buf,
+                \ function('vlime#ui#GetEndOfFileCoord'))
     let coords[a:msg[1]] = {
                 \ 'begin': begin_pos,
                 \ 'type': 'PRESENTATION',
@@ -70,18 +71,8 @@ function! s:OnPresentationEnd(conn, msg)
         return
     endif
 
-    let end_pos = vlime#ui#WithBuffer(repl_buf, function('s:GetBufLastPos'))
+    let end_pos = vlime#ui#WithBuffer(repl_buf,
+                \ function('vlime#ui#GetEndOfFileCoord'))
     let c['end'] = end_pos
     call setbufvar(repl_buf, 'vlime_repl_coords', coords)
 endfunction
-
-function! s:GetBufLastPos()
-    let last_line_nr = line('$')
-    let last_line = getline(last_line_nr)
-    let last_col_nr = len(last_line)
-    if last_col_nr <= 0
-        let last_col_nr = 1
-    endif
-    return [last_line_nr, last_col_nr]
-endfunction
-

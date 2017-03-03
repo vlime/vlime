@@ -24,23 +24,22 @@ function! vlime#ui#xref#FillXRefBuf(xref_list)
     endif
 
     let coords = []
-    normal! ggVG"_d
+    1,$delete _
     let idx = 0
     for xref in xlist
         let begin_pos = getcurpos()
         call vlime#ui#AppendString(xref[0])
-        normal! G$
-        let end_pos = getcurpos()
+        let eof_coord = vlime#ui#GetEndOfFileCoord()
         call vlime#ui#AppendString("\n")
         call add(coords, {
                     \ 'begin': [begin_pos[1], begin_pos[2]],
-                    \ 'end': [end_pos[1], end_pos[2]],
+                    \ 'end': eof_coord,
                     \ 'type': 'XREF',
                     \ 'id': idx,
                     \ })
         let idx += 1
     endfor
-    normal! gg
+    call setpos('.', [0, 1, 1, 0, 1])
 
     setlocal nomodifiable
 

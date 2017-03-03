@@ -19,7 +19,7 @@ function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
 
     let coords = []
     let nlist = []
-    normal! ggVG"_d
+    1,$delete _
     let idx = 0
     let note_count = len(a:note_list)
     for note in a:note_list
@@ -28,20 +28,19 @@ function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
 
         let begin_pos = getcurpos()
         call vlime#ui#AppendString(note_dict['SEVERITY']['name'] . ': ' . note_dict['MESSAGE'])
-        normal! G$
-        let end_pos = getcurpos()
+        let eof_coord = vlime#ui#GetEndOfFileCoord()
         if idx < note_count - 1
             call vlime#ui#AppendString("\n--\n")
         endif
         call add(coords, {
                     \ 'begin': [begin_pos[1], begin_pos[2]],
-                    \ 'end': [end_pos[1], end_pos[2]],
+                    \ 'end': eof_coord,
                     \ 'type': 'NOTE',
                     \ 'id': idx,
                     \ })
         let idx += 1
     endfor
-    normal! gg
+    call setpos('.', [0, 1, 1, 0, 1])
 
     setlocal nomodifiable
 

@@ -25,12 +25,15 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
     let total_width += (len(a:thread_list[0]) * 2)
 
     let coords = []
-    normal! ggVG"_d
+    1,$delete _
     let idx = -1
     for thread in a:thread_list
         let begin_pos = getcurpos()
         call map(thread, function('s:AppendThreadInfoField', [field_widths]))
-        normal! G$
+
+        let eof_coord = vlime#ui#GetEndOfFileCoord()
+        call setpos('.', [0, eof_coord[0], eof_coord[1], 0])
+
         if idx >= 0
             let end_pos = getcurpos()
             call add(coords, {
@@ -47,7 +50,7 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
         endif
         let idx += 1
     endfor
-    normal! gg
+    call setpos('.', [0, 1, 1, 0, 1])
 
     setlocal nomodifiable
 

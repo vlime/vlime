@@ -26,7 +26,8 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
 
     call vlime#ui#ReplaceContent(a:content['TITLE'] . "\n"
                 \ . repeat('=', len(a:content['TITLE'])) . "\n\n")
-    normal! G$
+    let eof_coord = vlime#ui#GetEndOfFileCoord()
+    call setpos('.', [0, eof_coord[0], eof_coord[1], 0])
 
     let coords = []
     call vlime#ui#inspector#FillInspectorBufContent(
@@ -75,7 +76,8 @@ endfunction
 function! vlime#ui#inspector#FillInspectorBufContent(content, coords)
     if type(a:content) == v:t_string
         call vlime#ui#AppendString(a:content)
-        normal! G$
+        let eof_coord = vlime#ui#GetEndOfFileCoord()
+        call setpos('.', [0, eof_coord[0], eof_coord[1], 0])
     elseif type(a:content) == v:t_list
         if len(a:content) == 3 && type(a:content[0]) == v:t_dict
             let begin_pos = getcurpos()

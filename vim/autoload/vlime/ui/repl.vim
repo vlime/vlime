@@ -56,7 +56,7 @@ endfunction
 
 function! vlime#ui#repl#ClearREPLBuffer()
     setlocal modifiable
-    normal! ggVG"_d
+    1,$delete _
     unlet b:vlime_repl_coords
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable

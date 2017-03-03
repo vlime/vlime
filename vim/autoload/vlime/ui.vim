@@ -530,6 +530,16 @@ function! vlime#ui#CalcLeadingSpaces(str, ...)
     return spaces
 endfunction
 
+function! vlime#ui#GetEndOfFileCoord()
+    let last_line_nr = line('$')
+    let last_line = getline(last_line_nr)
+    let last_col_nr = len(last_line)
+    if last_col_nr <= 0
+        let last_col_nr = 1
+    endif
+    return [last_line_nr, last_col_nr]
+endfunction
+
 if !exists('g:vlime_buf_name_sep')
     let g:vlime_buf_name_sep = ' | '
 endif
