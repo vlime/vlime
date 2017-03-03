@@ -8,6 +8,10 @@ It provides REPL integration, as well as omni-completions, cross reference
 utilities, a nice inspector, debugger support, and many other great facilities
 to aid you in your glorious Common Lisp hacking quest.
 
+Short demo:
+
+[![asciicast](https://asciinema.org/a/105583.png)](https://asciinema.org/a/105583)
+
 Why?
 ====
 
