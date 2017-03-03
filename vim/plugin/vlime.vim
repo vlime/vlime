@@ -604,12 +604,7 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
     if type(a:result) == v:t_none
         return
     endif
-    let old_pos = getcurpos()
-    try
-        call vlime#ui#ShowPreview(a:conn, a:result, v:false, 2)
-    finally
-        call setpos('.', old_pos)
-    endtry
+    call vlime#ui#ShowPreview(a:conn, a:result, v:false, 2)
 endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)
@@ -673,12 +668,7 @@ function! s:OnListThreadsComplete(conn, result)
 endfunction
 
 function! s:ShowAsyncResult(conn, result)
-    let old_pos = getcurpos()
-    try
-        call vlime#ui#ShowPreview(a:conn, a:result, v:false, 12)
-    finally
-        call setpos('.', old_pos)
-    endtry
+    call vlime#ui#ShowPreview(a:conn, a:result, v:false, 12)
 endfunction
 
 function! s:CleanUpNullBufConnections()
