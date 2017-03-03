@@ -12,12 +12,14 @@ function! vlime#ui#xref#FillXRefBuf(xref_list)
 
     if type(a:xref_list) == v:t_none
         call vlime#ui#ReplaceContent('No xref found.')
-        let b:vlime_xref_coords = {}
+        let b:vlime_xref_coords = []
         let b:vlime_xref_list = []
         return
     elseif type(a:xref_list) == v:t_dict &&
                 \ a:xref_list['name'] == 'NOT-IMPLEMENTED'
         call vlime#ui#ReplaceContent('Not implemented.')
+        let b:vlime_xref_coords = []
+        let b:vlime_xref_list = []
         return
     else
         let xlist = a:xref_list

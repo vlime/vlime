@@ -12,7 +12,7 @@ function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
 
     if type(a:note_list) == v:t_none
         call vlime#ui#ReplaceContent('No message from the compiler.')
-        let b:vlime_compiler_note_coords = {}
+        let b:vlime_compiler_note_coords = []
         let b:vlime_compiler_note_list = []
         return
     endif
