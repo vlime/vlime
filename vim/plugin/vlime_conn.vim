@@ -148,8 +148,7 @@ function! VlimeNewServer(...)
     let lisp_buf = ch_getbufnr(server_job, 'out')
     call vlime#ui#OpenBuffer(lisp_buf, v:false, 'botright split')
     let server_obj['timer'] = timer_start(500,
-                \ function('s:CheckServerPort',
-                    \ [server_obj['id'], lisp_buf]),
+                \ function('s:CheckServerPort', [server_obj, lisp_buf]),
                 \ {'repeat': -1})
 
     return server_obj
@@ -190,31 +189,35 @@ function! s:MatchServerCreatedPort()
     endif
 endfunction
 
-function! s:CheckServerPort(server_id, lisp_buf, timer)
+function! s:CheckServerPort(server, lisp_buf, timer)
     let port = vlime#ui#WithBuffer(a:lisp_buf,
                 \ function('s:MatchServerCreatedPort'))
     if type(port) == v:t_none
-        return
+        let timer_count = get(a:server, 'port_timer_count', 0)
+        if timer_count >= 20
+            call timer_stop(a:timer)
+            if get(a:server, 'timer', -1) == a:timer
+                call remove(a:server, 'timer')
+            endif
+            call vlime#ui#ErrMsg('VlimeNewServer: failed to wait for ' .
+                        \ a:server['name'] . '. Please inspect server output.')
+        else
+            let a:server['port_timer_count'] = timer_count + 1
+        endif
     else
         call timer_stop(a:timer)
-        let server_obj = get(g:vlime_servers, a:server_id, v:null)
-        if type(server_obj) == v:t_none
-            call vlime#ui#ErrMsg('Server ' . a:server_id . ' not found.')
-        else
-            if get(server_obj, 'timer', -1) == a:timer
-                call remove(server_obj, 'timer')
-            endif
-            let server_obj['port'] = port
-            echom 'Vlime server listening on port ' . port
-            call VlimeConnectREPL('127.0.0.1', port)
+        if get(a:server, 'timer', -1) == a:timer
+            call remove(a:server, 'timer')
         endif
+        let a:server['port'] = port
+        echom 'Vlime server listening on port ' . port
+        call VlimeConnectREPL('127.0.0.1', port)
     endif
 endfunction
 
 function! s:CheckServerStopped(server, timer)
-    let timer_count = get(a:server, 'stop_timer_count', 0)
-
     if job_status(a:server['job']) == 'run'
+        let timer_count = get(a:server, 'stop_timer_count', 0)
         if timer_count >= 20
             if get(a:server, 'timer', -1) == a:timer
                 call remove(a:server, 'timer')
@@ -222,7 +225,6 @@ function! s:CheckServerStopped(server, timer)
             call timer_stop(a:timer)
             call vlime#ui#ErrMsg('VlimeStopServer: failed to stop ' .
                         \ a:server['name'])
-            return
         else
             let a:server['stop_timer_count'] = timer_count + 1
         endif
