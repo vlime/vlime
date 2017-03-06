@@ -583,6 +583,11 @@ function! vlime#ui#ThreadsBufName(conn)
                 \ g:vlime_buf_name_sep)
 endfunction
 
+function! vlime#ui#ServerBufName(server_name)
+    return join(['vlime', 'server', a:server_name],
+                \ g:vlime_buf_name_sep)
+endfunction
+
 function! s:NormalizePackageName(name)
     let pattern1 = '^\(\(#\?:\)\|''\)\(.\+\)'
     let pattern2 = '"\(.\+\)"'
