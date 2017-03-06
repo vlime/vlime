@@ -85,13 +85,16 @@
   (setf aio-sbcl:*static-buffer* (make-array 4096 :element-type '(unsigned-byte 8)))
   (setf vlime-sbcl::*read-buffer-map* (make-hash-table))
 
-  (let ((server (aio-sbcl:tcp-server
-                  host port
-                  :client-read-cb #'(lambda (afd data)
-                                      (vlime-sbcl::client-read-cb
-                                        afd data
-                                        swank-host swank-port))
-                  :client-write-cb #'vlime-sbcl::client-connect-cb
-                  :client-error-cb #'vlime-sbcl::socket-error-cb)))
-    (vom:info "Server created: ~s" server)
-    server))
+  (let* ((server (aio-sbcl:tcp-server
+                   host port
+                   :client-read-cb #'(lambda (afd data)
+                                       (vlime-sbcl::client-read-cb
+                                         afd data
+                                         swank-host swank-port))
+                   :client-write-cb #'vlime-sbcl::client-connect-cb
+                   :client-error-cb #'vlime-sbcl::socket-error-cb))
+         (local-name (multiple-value-list
+                       (sb-bsd-sockets:socket-name
+                         (aio-sbcl:aio-fd-socket server)))))
+    (vom:info "Server created: ~s" local-name)
+    (values server local-name)))

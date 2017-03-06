@@ -10,7 +10,7 @@
 
 
 (defun server-listener (socket swank-host swank-port)
-  (vom:info "Server created: ~s" socket)
+  (vom:info "Server created: ~s" (multiple-value-list (get-local-name socket)))
   (loop
     (handler-case
       (let ((client-socket (socket-accept socket)))
@@ -140,7 +140,9 @@
                                  :reuse-address t
                                  :backlog 128
                                  :element-type '(unsigned-byte 8))))
-    (swank/backend:spawn
-      #'(lambda ()
-          (vlime-usocket::server-listener server-socket swank-host swank-port))
-      :name (format nil "Vlime Server Listener ~a ~a" host port))))
+    (values
+      (swank/backend:spawn
+        #'(lambda ()
+            (vlime-usocket::server-listener server-socket swank-host swank-port))
+        :name (format nil "Vlime Server Listener ~a ~a" host port))
+      (multiple-value-list (usocket:get-local-name server-socket)))))

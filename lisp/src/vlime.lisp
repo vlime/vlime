@@ -37,7 +37,7 @@
     (asdf:missing-dependency ()
       (install-with-quicklisp package))))
 
-(defun main (&key backend)
+(defun main (&key backend (port 0) port-file)
   (when (not backend)
     (let ((preferred-style (dyn-call "SWANK/BACKEND" "PREFERRED-COMMUNICATION-STYLE")))
       (case preferred-style
@@ -52,24 +52,34 @@
                   "Vlime: Communication style ~s not supported.~%" preferred-style)
           (return-from main)))))
 
-  (let* ((swank-port nil)
-         (announce-swank-port
-           #'(lambda (port)
-               (setf swank-port port)))
-         (swank-comm-style
-           (dyn-call "SWANK/BACKEND" "PREFERRED-COMMUNICATION-STYLE")))
-    (ecase backend
-      (:vlime-usocket
-        (try-to-load :vlime-usocket)
-        (dyn-call "SWANK" "SETUP-SERVER"
-                  0 announce-swank-port swank-comm-style t nil)
-        (start-server :usocket #(0 0 0 0) 7002 #(127 0 0 1) swank-port))
-      (:vlime-sbcl
-        (try-to-load :vlime-sbcl)
-        (dyn-call "SWANK" "SETUP-SERVER"
-                  0 announce-swank-port swank-comm-style t nil)
-        (start-server :sbcl #(0 0 0 0) 7002 #(127 0 0 1) swank-port))
-      (:vlime-patched
-        (try-to-load :vlime-patched)
-        (dyn-call "VLIME-PATCHED" "PATCH-SWANK")
-        (dyn-call "SWANK" "CREATE-SERVER" :port 7002 :dont-close t)))))
+  (let ((swank-port nil)
+        (swank-comm-style
+          (dyn-call "SWANK/BACKEND" "PREFERRED-COMMUNICATION-STYLE")))
+    (labels ((announce-swank-port (port)
+               (setf swank-port port))
+             (start-vlime-server ()
+               (multiple-value-bind (server local-name)
+                                    (start-server :usocket #(0 0 0 0) port #(127 0 0 1) swank-port)
+                 (declare (ignore server))
+                 (when port-file
+                   (with-open-file (pf port-file
+                                    :direction :output
+                                    :if-exists :supersede
+                                    :if-does-not-exist :create)
+                     (with-standard-io-syntax
+                       (write (nth 1 local-name) :stream pf)))))))
+      (ecase backend
+        (:vlime-usocket
+          (try-to-load :vlime-usocket)
+          (dyn-call "SWANK" "SETUP-SERVER"
+                    0 #'announce-swank-port swank-comm-style t nil)
+          (start-vlime-server))
+        (:vlime-sbcl
+          (try-to-load :vlime-sbcl)
+          (dyn-call "SWANK" "SETUP-SERVER"
+                    0 #'announce-swank-port swank-comm-style t nil)
+          (start-vlime-server))
+        (:vlime-patched
+          (try-to-load :vlime-patched)
+          (dyn-call "VLIME-PATCHED" "PATCH-SWANK")
+          (dyn-call "SWANK" "CREATE-SERVER" :port port :dont-close t))))))

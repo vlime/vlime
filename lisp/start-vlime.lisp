@@ -1,19 +1,12 @@
-(require :asdf)
+(in-package #:cl-user)
+(defpackage #:vlime-loader
+  (:use #:cl))
+(in-package #:vlime-loader)
+
 
 (defparameter *vlime-home* (make-pathname :directory (pathname-directory *load-truename*)))
 
-(defun dyn-call (package sym &rest args)
-  (apply (symbol-function (find-symbol sym package)) args))
+(let ((load-vlime-src (merge-pathnames (parse-namestring "load-vlime.lisp") *vlime-home*)))
+    (load load-vlime-src))
 
-(defun load-vlime ()
-  (let ((vlime-src (merge-pathnames (parse-namestring "src/vlime.lisp") *vlime-home*)))
-    (load vlime-src)
-    (asdf:initialize-source-registry
-      `(:source-registry
-         (:directory ,*vlime-home*)
-         :inherit-configuration))
-    (dyn-call "VLIME" "TRY-TO-LOAD" :vlime)
-    t))
-
-(when (load-vlime)
-  (dyn-call "VLIME" "MAIN"))
+(vlime:main :port 7002)
