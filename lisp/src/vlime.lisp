@@ -57,17 +57,19 @@
           (dyn-call "SWANK/BACKEND" "PREFERRED-COMMUNICATION-STYLE")))
     (labels ((announce-swank-port (port)
                (setf swank-port port))
+             (announce-vlime-port (port)
+               (when port-file
+                 (with-open-file (pf port-file
+                                  :direction :output
+                                  :if-exists :supersede
+                                  :if-does-not-exist :create)
+                   (with-standard-io-syntax
+                     (write port :stream pf)))))
              (start-vlime-server ()
                (multiple-value-bind (server local-name)
                                     (start-server :usocket #(0 0 0 0) port #(127 0 0 1) swank-port)
                  (declare (ignore server))
-                 (when port-file
-                   (with-open-file (pf port-file
-                                    :direction :output
-                                    :if-exists :supersede
-                                    :if-does-not-exist :create)
-                     (with-standard-io-syntax
-                       (write (nth 1 local-name) :stream pf)))))))
+                 (announce-vlime-port (nth 1 local-name)))))
       (ecase backend
         (:vlime-usocket
           (try-to-load :vlime-usocket)
@@ -82,4 +84,9 @@
         (:vlime-patched
           (try-to-load :vlime-patched)
           (dyn-call "VLIME-PATCHED" "PATCH-SWANK")
-          (dyn-call "SWANK" "CREATE-SERVER" :port port :dont-close t))))))
+          (dyn-call "SWANK" "SETUP-SERVER"
+                    port
+                    #'(lambda (port)
+                        (format t "Server created: (#(127 0 0 1) ~a)~%" port)
+                        (announce-vlime-port port))
+                    swank-comm-style t nil))))))
