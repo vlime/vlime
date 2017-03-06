@@ -102,6 +102,57 @@ function! VlimeGetConnection(...) abort
     return b:vlime_conn
 endfunction
 
+let s:vlime_home = expand('<sfile>:p:h:h:h')
+
+function! VlimeNewServer()
+    let job = job_start(
+                \ 'sbcl --load /home/l_amee/workspace/ql_env/dummy/setup.lisp --load ' .
+                    \ s:vlime_home . '/lisp/load-vlime.lisp --eval (vlime:main)',
+                \ {'in_io': 'pipe',
+                    \ 'out_io': 'buffer',
+                    \ 'err_io': 'buffer',
+                    \ 'out_name': 'sbcl_test_2',
+                    \ 'err_name': 'sbcl_test_2',
+                    \ 'in_mode': 'nl',
+                    \ 'out_mode': 'nl',
+                    \ 'err_mode': 'nl',
+                    \ 'out_modifiable': 0,
+                    \ 'err_modifiable': 0})
+    let lisp_buf = ch_getbufnr(job, 'out')
+    call vlime#ui#OpenBuffer(lisp_buf, v:false, 'botright split')
+    call timer_start(500, function('s:CheckServerPort', [lisp_buf]), {'repeat': -1})
+    return job
+endfunction
+
+function! s:CheckServerPort(lisp_buf, timer)
+    function! s:DoCheckServerPort()
+        let pattern = 'Server created: (#([[:digit:][:blank:]]\+)\s\+\(\d\+\))'
+        let old_pos = getcurpos()
+        try
+            call setpos('.', [0, 1, 1, 0, 1])
+            let port_line_nr = search(pattern, 'n')
+        finally
+            call setpos('.', old_pos)
+        endtry
+        if port_line_nr > 0
+            let port_line = getline(port_line_nr)
+            let matched = matchlist(port_line, pattern)
+            return str2nr(matched[1])
+        else
+            return v:null
+        endif
+    endfunction
+
+    let port = vlime#ui#WithBuffer(a:lisp_buf, function('s:DoCheckServerPort'))
+    if type(port) == v:t_none
+        return
+    else
+        call timer_stop(a:timer)
+        echom 'Vlime server listening on port ' . port
+        call VlimeConnectREPL('127.0.0.1', port)
+    endif
+endfunction
+
 function! s:NormalizeConnectionID(id)
     if type(a:id) == v:t_dict
         return a:id.cb_data['id']
