@@ -114,20 +114,17 @@ let s:cur_src_path = resolve(expand('<sfile>:p'))
 let s:vlime_home = fnamemodify(s:cur_src_path, ':h:h:h')
 let s:path_sep = s:cur_src_path[len(s:vlime_home)]
 
-function! VlimeBuildServerCommandFor_sbcl(cl_cmd, vlime_loader, vlime_eval)
-    return join([a:cl_cmd, '--load', a:vlime_loader, '--eval', a:vlime_eval], ' ')
+function! VlimeBuildServerCommandFor_sbcl(vlime_loader, vlime_eval)
+    return join(['sbcl', '--load', a:vlime_loader, '--eval', a:vlime_eval], ' ')
 endfunction
 
-function! VlimeBuildServerCommandFor_ccl(cl_cmd, vlime_loader, vlime_eval)
-    return join([a:cl_cmd, '--load', a:vlime_loader, '--eval', a:vlime_eval], ' ')
+function! VlimeBuildServerCommandFor_ccl(vlime_loader, vlime_eval)
+    return join(['ccl', '--load', a:vlime_loader, '--eval', a:vlime_eval], ' ')
 endfunction
 
 function! VlimeBuildServerCommand()
     let cl_impl = exists('g:vlime_cl_impl') ? g:vlime_cl_impl : 'sbcl'
-    let cl_cmd = exists('g:vlime_cl_cmd') ? g:vlime_cl_cmd : cl_impl
-    let vlime_loader = exists('g:vlime_loader') ?
-                \ g:vlime_loader :
-                \ join([s:vlime_home, 'lisp', 'load-vlime.lisp'], s:path_sep)
+    let vlime_loader = join([s:vlime_home, 'lisp', 'load-vlime.lisp'], s:path_sep)
 
     try
         let Builder = function('VlimeBuildServerCommandFor_' . cl_impl)
@@ -136,7 +133,7 @@ function! VlimeBuildServerCommand()
                     \ string(cl_impl) . ' not supported'
     endtry
 
-    return Builder(cl_cmd, vlime_loader, '(vlime:main)')
+    return Builder(vlime_loader, '(vlime:main)')
 endfunction
 
 " VlimeNewServer([auto_connect[, name]])

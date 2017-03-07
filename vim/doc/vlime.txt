@@ -258,7 +258,8 @@ Mappings available in CL source files:         *vlime-mappings-source*
 
     Server Management                          *vlime-mappings-server*
         <LocalLeader>rr                     *vlime-mappings-server-rr*
-            Run a new Vlime server and connect to it.
+            Run a new Vlime server and connect to it. To customize the
+            server, see |vlime-config-cl-impl|.
         <LocalLeader>rv
             View the console output of a server.
         <LocalLeader>rs
@@ -450,6 +451,55 @@ Mappings available in the thread list:    *vlime-mappings-thread-list*
 These variables can be set in |vimrc|, to affect the behavior of
 Vlime:
 
+g:vlime_cl_impl                                 *vlime-config-cl-impl*
+    A |string| to designate the CL implementation to use when starting
+    a server via |vlime-mappings-server-rr|. This option has no effect
+    when connecting to an existing server via
+    |vlime-mappings-conn-cc|. Default: 'sbcl'
+
+    You can define a function named
+    'VlimeBuildServerCommandFor_<impl>' to build a command line for
+    your implementation. For example, add these to your |vimrc|:
+
+        let g:vlime_cl_impl = 'my_sbcl'
+        function! VlimeBuildServerCommandFor_my_sbcl(vlime_loader, vlime_eval)
+            return join(['/path/to/my/custom/sbcl',
+                        \ '--load', '/path/to/my/custom/quicklisp/setup.lisp',
+                        \ '--load', a:vlime_loader,
+                        \ '--eval', a:vlime_eval], ' ')
+        endfunction
+
+    Then restart Vim and call VlimeBuildServerCommand() to see whether
+    the new command is OK:
+
+        :echo VlimeBuildServerCommand()
+
+    This command will be executed to start a Vlime server when the
+    |vlime-mappings-server-rr| command is invoked.
+
+    Vlime has these builder functions predefined:
+
+        " For SBCL, the default
+        VlimeBuildServerCommandFor_sbcl()
+        " For Clozure CL, set g:vlime_cl_impl to 'ccl'
+        VlimeBuildServerCommandFor_ccl()
+
+    If you use other implementations, such as clisp and abcl, or need
+    to pass special arguments to the command, you'll need to define
+    the builder functions.
+
+Note: If you use symlinks on Windows systems to point to Vlime, it may
+      fail to locate the server entry point automatically. In this
+      case you'll have to define a command builder function and
+      overwrite 'vlime_loader' with the absolute path of
+      'load-vlime.lisp':
+
+          function! VlimeBuildServerCommandFor_xxx(vlime_loader, vlime_eval)
+              return join(['sbcl',
+                          \ '--load', 'c:\path\to\load-vlime.lisp',
+                          \ '--eval', a:vlime_eval], ' ')
+          endfunction
+
 g:vlime_contribs
     A |list| of Swank contribs to load when initializing a Vlime
     connection. Note that the names are case-sensitive. Please use
@@ -458,7 +508,8 @@ g:vlime_contribs
     'SWANK-ARGLISTS', 'SWANK-REPL', 'SWANK-FUZZY']
 
 g:vlime_address
-    A |list| specifying the address of a Vlime server. Default:
+    A |list| specifying the address of a Vlime server. This address
+    will be used in the |vlime-mappings-conn-cc| command.  Default:
     ['127.0.0.1', 7002]
 
 g:vlime_compiler_policy                 *vlime-config-compiler-policy*
