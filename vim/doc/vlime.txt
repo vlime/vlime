@@ -250,7 +250,9 @@ Mappings available in CL source files:         *vlime-mappings-source*
         <LocalLeader>cc                       *vlime-mappings-conn-cc*
             Connect to Vlime server.
         <LocalLeader>cs                       *vlime-mappings-conn-cs*
-            Switch Vlime connections.
+            Switch Vlime connections. This command shows a list of
+            connections, and the current connection will be marked
+            with an asterisk "*" at the end.
         <LocalLeader>cd
             Disconnect.
         <LocalLeader>cR

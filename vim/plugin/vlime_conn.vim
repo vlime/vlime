@@ -43,12 +43,19 @@ function! VlimeSelectConnection(quiet)
         endif
         return v:null
     else
+        let cur_conn = getbufvar('%', 'vlime_conn', v:null)
+        let cur_conn_id = (type(cur_conn) == v:t_none) ? -1 : cur_conn.cb_data['id']
+
         let conn_names = []
         for k in sort(keys(g:vlime_connections), 'n')
             let conn = g:vlime_connections[k]
             let chan_info = ch_info(conn.channel)
-            call add(conn_names, k . '. ' . conn.cb_data['name'] .
-                        \ ' (' . chan_info['hostname'] . ':' . chan_info['port'] . ')')
+            let disp_name = k . '. ' . conn.cb_data['name'] .
+                        \ ' (' . chan_info['hostname'] . ':' . chan_info['port'] . ')'
+            if cur_conn_id == conn.cb_data['id']
+                let disp_name .= ' *'
+            endif
+            call add(conn_names, disp_name)
         endfor
 
         echohl Question
