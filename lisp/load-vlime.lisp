@@ -7,7 +7,9 @@
 
 (require :asdf)
 
-(defparameter *vlime-home* (make-pathname :directory (pathname-directory *load-truename*)))
+(defparameter *vlime-home*
+  (make-pathname :directory (pathname-directory *load-truename*)
+                 :device (pathname-device *load-truename*)))
 
 (defun dyn-call (package sym &rest args)
   (apply (symbol-function (find-symbol sym package)) args))
