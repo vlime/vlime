@@ -253,8 +253,18 @@ Mappings available in CL source files:         *vlime-mappings-source*
             Switch Vlime connections.
         <LocalLeader>cd
             Disconnect.
-        <LocalLeader>cr
+        <LocalLeader>cR
             Rename the current connection.
+
+    Server Management                          *vlime-mappings-server*
+        <LocalLeader>rr                     *vlime-mappings-server-rr*
+            Run a new Vlime server and connect to it.
+        <LocalLeader>rv
+            View the console output of a server.
+        <LocalLeader>rs
+            Stop a server.
+        <LocalLeader>rR
+            Rename a server.
 
     Sending Stuff To The REPL                    *vlime-mappings-send*
         <LocalLeader>ss                       *vlime-mappings-send-ss*

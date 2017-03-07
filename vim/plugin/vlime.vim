@@ -523,13 +523,13 @@ function! VlimeSetup(...)
     execute 'nnoremap <buffer> <silent> <LocalLeader>cc :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
     nnoremap <buffer> <silent> <LocalLeader>cs :call VlimeSelectCurConnection()<cr>
     nnoremap <buffer> <silent> <LocalLeader>cd :call VlimeCloseCurConnection()<cr>
-    nnoremap <buffer> <silent> <LocalLeader>cr :call VlimeRenameCurConnection()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>cR :call VlimeRenameCurConnection()<cr>
 
     " Server operations
-    nnoremap <buffer> <silent> <LocalLeader>rn :call VlimeNewServer()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>rr :call VlimeNewServer()<cr>
     nnoremap <buffer> <silent> <LocalLeader>rv :call VlimeShowSelectedServer()<cr>
     nnoremap <buffer> <silent> <LocalLeader>rs :call VlimeStopSelectedServer()<cr>
-    nnoremap <buffer> <silent> <LocalLeader>rr :call VlimeRenameSelectedServer()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>rR :call VlimeRenameSelectedServer()<cr>
 
     " Sending stuff to the REPL
     nnoremap <buffer> <silent> <LocalLeader>ss :call VlimeSendCurThingToREPL('thing')<cr>
