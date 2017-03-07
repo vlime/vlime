@@ -10,7 +10,7 @@ to aid you in your glorious Common Lisp hacking quest.
 
 Short demo:
 
-[![asciicast](https://asciinema.org/a/105583.png)](https://asciinema.org/a/105583)
+[![asciicast](https://asciinema.org/a/106146.png)](https://asciinema.org/a/106146)
 
 Why?
 ====
