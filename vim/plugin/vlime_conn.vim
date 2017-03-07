@@ -349,6 +349,7 @@ function! s:NormalizeServerID(id)
 endfunction
 
 function! s:RenameBuffer(new_name)
-    0file
-    execute 'file ' . escape(a:new_name, ' |\''"')
+    " Use silent! to supress the 'Cannot rename swapfile' message on Windows
+    silent! 0file
+    silent! execute 'file ' . escape(a:new_name, ' |\''"')
 endfunction
