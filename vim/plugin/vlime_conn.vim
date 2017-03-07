@@ -110,7 +110,33 @@ if !exists('g:vlime_next_server_id')
     let g:vlime_next_server_id = 1
 endif
 
-let s:vlime_home = fnamemodify(resolve(expand('<sfile>:p')), ':h:h:h')
+let s:cur_src_path = resolve(expand('<sfile>:p'))
+let s:vlime_home = fnamemodify(s:cur_src_path, ':h:h:h')
+let s:path_sep = s:cur_src_path[len(s:vlime_home)]
+
+function! VlimeBuildServerCommandFor_sbcl(cl_cmd, vlime_loader, vlime_eval)
+    return join([a:cl_cmd, '--load', a:vlime_loader, '--eval', a:vlime_eval], ' ')
+endfunction
+
+function! VlimeBuildServerCommandFor_ccl(cl_cmd, vlime_loader, vlime_eval)
+    return join([a:cl_cmd, '--load', a:vlime_loader, '--eval', a:vlime_eval], ' ')
+endfunction
+
+function! VlimeBuildServerCommand()
+    let cl_impl = exists('g:vlime_cl_impl') ? g:vlime_cl_impl : 'sbcl'
+    let cl_cmd = exists('g:vlime_cl_cmd') ? g:vlime_cl_cmd : cl_impl
+
+    try
+        let Builder = function('VlimeBuildServerCommandFor_' . cl_impl)
+    catch /^Vim\%((\a\+)\)\=:E700/  " Unknown function
+        throw 'VlimeBuildServerCommand: implementation ' .
+                    \ string(cl_impl) . ' not supported'
+    endtry
+
+    return Builder(cl_cmd,
+                \ join([s:vlime_home, 'lisp', 'load-vlime.lisp'], s:path_sep),
+                \ '(vlime:main)')
+endfunction
 
 " VlimeNewServer([auto_connect[, name]])
 function! VlimeNewServer(...)
@@ -124,8 +150,7 @@ function! VlimeNewServer(...)
     endif
 
     let server_job = job_start(
-                \ 'sbcl --load ' .
-                    \ s:vlime_home . '/lisp/load-vlime.lisp --eval (vlime:main)',
+                \ VlimeBuildServerCommand(),
                 \ {'in_io': 'pipe',
                     \ 'out_io': 'buffer',
                     \ 'err_io': 'buffer',
