@@ -125,6 +125,9 @@ endfunction
 function! VlimeBuildServerCommand()
     let cl_impl = exists('g:vlime_cl_impl') ? g:vlime_cl_impl : 'sbcl'
     let cl_cmd = exists('g:vlime_cl_cmd') ? g:vlime_cl_cmd : cl_impl
+    let vlime_loader = exists('g:vlime_loader') ?
+                \ g:vlime_loader :
+                \ join([s:vlime_home, 'lisp', 'load-vlime.lisp'], s:path_sep)
 
     try
         let Builder = function('VlimeBuildServerCommandFor_' . cl_impl)
@@ -133,9 +136,7 @@ function! VlimeBuildServerCommand()
                     \ string(cl_impl) . ' not supported'
     endtry
 
-    return Builder(cl_cmd,
-                \ join([s:vlime_home, 'lisp', 'load-vlime.lisp'], s:path_sep),
-                \ '(vlime:main)')
+    return Builder(cl_cmd, vlime_loader, '(vlime:main)')
 endfunction
 
 " VlimeNewServer([auto_connect[, name]])
