@@ -112,10 +112,13 @@ endif
 
 let s:vlime_home = fnamemodify(resolve(expand('<sfile>:p')), ':h:h:h')
 
-" VlimeNewServer([name])
+" VlimeNewServer([auto_connect[, name]])
 function! VlimeNewServer(...)
-    if a:0 > 0
-        let server_name = a:1
+    let auto_connect = vlime#GetNthVarArg(a:000, 0, v:true)
+    let name = vlime#GetNthVarArg(a:000, 1, v:null)
+
+    if type(name) != v:t_none
+        let server_name = name
     else
         let server_name = 'Vlime Server ' . g:vlime_next_server_id
     endif
@@ -148,7 +151,8 @@ function! VlimeNewServer(...)
     let lisp_buf = ch_getbufnr(server_job, 'out')
     call vlime#ui#OpenBuffer(lisp_buf, v:false, 'botright split')
     let server_obj['timer'] = timer_start(500,
-                \ function('s:CheckServerPort', [server_obj, lisp_buf]),
+                \ function('s:CheckServerPort',
+                    \ [server_obj, lisp_buf, auto_connect]),
                 \ {'repeat': -1})
 
     return server_obj
@@ -209,6 +213,7 @@ function! VlimeSelectServer()
     let server_nr = inputlist(server_names)
     if server_nr == 0
         call vlime#ui#ErrMsg('Canceled.')
+        return v:null
     else
         let server = get(g:vlime_servers, server_nr, v:null)
         if type(server) == v:t_none
@@ -238,7 +243,7 @@ function! s:MatchServerCreatedPort()
     endif
 endfunction
 
-function! s:CheckServerPort(server, lisp_buf, timer)
+function! s:CheckServerPort(server, lisp_buf, auto_connect, timer)
     let port = vlime#ui#WithBuffer(a:lisp_buf,
                 \ function('s:MatchServerCreatedPort'))
     if type(port) == v:t_none
@@ -260,7 +265,15 @@ function! s:CheckServerPort(server, lisp_buf, timer)
         endif
         let a:server['port'] = port
         echom 'Vlime server listening on port ' . port
-        call VlimeConnectREPL('127.0.0.1', port)
+
+        if a:auto_connect
+            let auto_conn = VlimeConnectREPL('127.0.0.1', port)
+            if type(auto_conn) != v:t_none
+                let auto_conn.cb_data['server'] = a:server
+                let a:server['connections'] =
+                            \ {auto_conn.cb_data['id']: auto_conn}
+            endif
+        endif
     endif
 endfunction
 
@@ -284,6 +297,12 @@ function! s:CheckServerStopped(server, timer)
         call timer_stop(a:timer)
         call remove(g:vlime_servers, a:server['id'])
         echom a:server['name'] . ' stopped.'
+
+        let conn_dict = get(a:server, 'connections', {})
+        for conn_id in keys(conn_dict)
+            call VlimeCloseConnection(conn_dict[conn_id])
+        endfor
+        let a:server['connections'] = {}
     endif
 endfunction
 

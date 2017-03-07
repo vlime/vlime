@@ -3,8 +3,23 @@ function! VlimeCloseCurConnection()
     if type(conn) == v:t_none
         return
     endif
-    call VlimeCloseConnection(conn)
-    echom conn.cb_data['name'] . ' disconnected.'
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == v:t_none
+        call VlimeCloseConnection(conn)
+        echom conn.cb_data['name'] . ' disconnected.'
+    else
+        let answer = input('Also stop server ' . string(server['name']) . '? (y/n) ')
+        if tolower(answer) == 'y' || tolower(answer) == 'yes'
+            call VlimeStopServer(server)
+        elseif tolower(answer) == 'n' || tolower(answer) == 'no'
+            call VlimeCloseConnection(conn)
+            echom conn.cb_data['name'] . ' disconnected.'
+            call remove(server['connections'], conn.cb_data['id'])
+        else
+            call vlime#ui#ErrMsg('Canceled.')
+        endif
+    endif
 endfunction
 
 function! VlimeRenameCurConnection()
@@ -62,7 +77,7 @@ function! VlimeConnectREPL(host, port, ...)
     catch
         call VlimeCloseConnection(conn)
         call vlime#ui#ErrMsg(v:exception)
-        return
+        return v:null
     endtry
     call s:CleanUpNullBufConnections()
 
@@ -80,6 +95,7 @@ function! VlimeConnectREPL(host, port, ...)
                 \ function('s:OnSwankRequireComplete'),
                 \ function('vlime#contrib#CallInitializers', [conn]),
                 \ function('s:OnCallInitializersComplete'))
+    return conn
 endfunction
 
 function! VlimeSelectCurConnection()
