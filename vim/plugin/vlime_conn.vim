@@ -155,7 +155,7 @@ function! VlimeNewServer(...)
 endfunction
 
 function! VlimeStopServer(server)
-    let server_id = s:NormalizeConnectionID(a:server)
+    let server_id = s:NormalizeServerID(a:server)
     let r_server = g:vlime_servers[server_id]
 
     let timer = get(r_server, 'timer', v:null)
@@ -168,6 +168,55 @@ function! VlimeStopServer(server)
         let r_server['timer'] = timer_start(500,
                     \ function('s:CheckServerStopped', [r_server]),
                     \ {'repeat': -1})
+    endif
+endfunction
+
+function! VlimeRenameServer(server, new_name)
+    let server_id = s:NormalizeServerID(a:server)
+    let r_server = g:vlime_servers[server_id]
+    let old_buf_name = vlime#ui#ServerBufName(r_server['name'])
+    let r_server['name'] = a:new_name
+    let old_buf = bufnr(old_buf_name)
+    call vlime#ui#WithBuffer(old_buf,
+                \ function('s:RenameBuffer',
+                    \ [vlime#ui#ServerBufName(a:new_name)]))
+endfunction
+
+function! VlimeShowServer(server)
+    let server_id = s:NormalizeServerID(a:server)
+    let r_server = g:vlime_servers[server_id]
+    let buf = ch_getbufnr(r_server['job'], 'out')
+    call vlime#ui#OpenBuffer(buf, v:false, 'botright split')
+endfunction
+
+function! VlimeSelectServer()
+    if len(g:vlime_servers) == 0
+        call vlime#ui#ErrMsg('No server started.')
+        return v:null
+    endif
+
+    let server_names = []
+    for k in sort(keys(g:vlime_servers), 'n')
+        let server = g:vlime_servers[k]
+        let port = get(server, 'port', 0)
+        call add(server_names, k . '. ' . server['name'] .
+                    \ ' (' . port . ')')
+    endfor
+
+    echohl Question
+    echom 'Select server:'
+    echohl None
+    let server_nr = inputlist(server_names)
+    if server_nr == 0
+        call vlime#ui#ErrMsg('Canceled.')
+    else
+        let server = get(g:vlime_servers, server_nr, v:null)
+        if type(server) == v:t_none
+            call vlime#ui#ErrMsg('Invalid server ID: ' . server_nr)
+            return v:null
+        else
+            return server
+        endif
     endif
 endfunction
 
@@ -252,4 +301,9 @@ function! s:NormalizeServerID(id)
     else
         return a:id
     endif
+endfunction
+
+function! s:RenameBuffer(new_name)
+    0file
+    execute 'file ' . escape(a:new_name, ' |\''"')
 endfunction

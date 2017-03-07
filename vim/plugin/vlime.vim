@@ -16,6 +16,37 @@ function! VlimeRenameCurConnection()
     call VlimeRenameConnection(conn, new_name)
 endfunction
 
+function! VlimeShowSelectedServer()
+    let server = VlimeSelectServer()
+    if type(server) == v:t_none
+        return
+    endif
+    call VlimeShowServer(server)
+endfunction
+
+function! VlimeStopSelectedServer()
+    let server = VlimeSelectServer()
+    if type(server) == v:t_none
+        return
+    endif
+
+    let answer = input('Stop server ' . string(server['name']) . '? (y/n) ')
+    if tolower(answer) == 'y' || tolower(answer) == 'yes'
+        call VlimeStopServer(server)
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
+endfunction
+
+function! VlimeRenameSelectedServer()
+    let server = VlimeSelectServer()
+    if type(server) == v:t_none
+        return
+    endif
+    let new_name = input('New name: ', server['name'])
+    call VlimeRenameServer(server, new_name)
+endfunction
+
 " VlimeConnectREPL(host, port[, remote_prefix[, name]])
 function! VlimeConnectREPL(host, port, ...)
     let remote_prefix = vlime#GetNthVarArg(a:000, 0, '')
@@ -477,6 +508,12 @@ function! VlimeSetup(...)
     nnoremap <buffer> <silent> <LocalLeader>cs :call VlimeSelectCurConnection()<cr>
     nnoremap <buffer> <silent> <LocalLeader>cd :call VlimeCloseCurConnection()<cr>
     nnoremap <buffer> <silent> <LocalLeader>cr :call VlimeRenameCurConnection()<cr>
+
+    " Server operations
+    nnoremap <buffer> <silent> <LocalLeader>rn :call VlimeNewServer()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>rv :call VlimeShowSelectedServer()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>rs :call VlimeStopSelectedServer()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>rr :call VlimeRenameSelectedServer()<cr>
 
     " Sending stuff to the REPL
     nnoremap <buffer> <silent> <LocalLeader>ss :call VlimeSendCurThingToREPL('thing')<cr>
