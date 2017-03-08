@@ -74,6 +74,26 @@ The Current Package                            *vlime-current-package*
 ----------------------------------------------------------------------
 3.1 Starting Up                                       *vlime-start-up*
 
+If you have sbcl in your $PATH, Vlime can start a server for you:
+
+    1. Set up Quicklisp properly.
+    2. Start editing a Common Lisp source file, and use
+       |vlime-mappings-server-rr| to run a server.
+    3. Wait for the server. Vlime will automatically connect to it
+       when it's ready, and become fully operational.
+
+Note: If it's your first time running the server, Vlime will try to
+      install it's dependencies via Quicklisp.
+
+See |vlime-mappings-server| for more operations on Vlime servers. See
+|vlime-mappings| for all available operations.
+
+When you need to use some other Common Lisp implementation, run an
+instance of sbcl in arbitrary locations, or pass special arguments to
+the server, use the |vlime-config-cl-impl| option.
+
+You may also start the server manually:
+
     1. Set up Quicklisp properly.
     2. Run the server:
 
@@ -82,11 +102,7 @@ The Current Package                            *vlime-current-package*
     3. Start editing a Common Lisp source file, and use
        |vlime-mappings-conn-cc| to create a new
        connection.
-    4. Vlime shoud now be fully functional. See |vlime-mappings| for
-       all available operations.
-
-Note: If it's your first time running the server, Vlime will try to
-      install it's dependencies via Quicklisp.
+    4. Vlime shoud now be fully operational.
 
 ----------------------------------------------------------------------
 3.2 Completions                                    *vlime-completions*
@@ -476,8 +492,9 @@ g:vlime_cl_impl                                 *vlime-config-cl-impl*
 
         :echo VlimeBuildServerCommand()
 
-    This command will be executed to start a Vlime server when the
-    |vlime-mappings-server-rr| command is invoked.
+    The command returned by VlimeBuildServerCommand() will be executed
+    to start a Vlime server when the |vlime-mappings-server-rr|
+    command is invoked.
 
     Vlime has these builder functions predefined:
 
@@ -487,8 +504,8 @@ g:vlime_cl_impl                                 *vlime-config-cl-impl*
         VlimeBuildServerCommandFor_ccl()
 
     If you use other implementations, such as clisp and abcl, or need
-    to pass special arguments to the command, you'll need to define
-    the builder functions.
+    to pass special arguments to the server, you'll need to define the
+    builder functions.
 
 Note: If you use symlinks on Windows systems to point to Vlime, it may
       fail to locate the server entry point automatically. In this

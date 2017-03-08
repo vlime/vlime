@@ -83,11 +83,14 @@ Usage
 3. Install the Vim plugin from Vlime's `vim` directory using your usual way
    (Vundle or something).
 4. Run the server: `sbcl --load <vlime repo>/lisp/start-vlime.lisp`
+5. When the server is up and running, use Vim to start editing a CL source file,
+   and type "\cc" (without the quote marks) in normal mode to connect to the
+   server.
 
 If it's your first time running the server, Vlime will try to install it's
 dependencies via Quicklisp.
 
-When the server is up and running, use Vim to start editing a CL source file.
+You can also let Vim start the server for you. See `:help vlime-start-up`.
 
 See `:help vlime-tutor` for a tutorial on how to use the main features, and
 `:help vlime` for the full documentation.
