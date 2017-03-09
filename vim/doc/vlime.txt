@@ -90,7 +90,7 @@ See |vlime-mappings-server| for more operations on Vlime servers. See
 
 When you need to use some other Common Lisp implementation, run an
 instance of sbcl in arbitrary locations, or pass special arguments to
-the server, use the *g:vlime_cl_impl* option.
+the server, use the |g:vlime_cl_impl| option.
 
 You may also start the server manually:
 
