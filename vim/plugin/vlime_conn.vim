@@ -179,7 +179,7 @@ function! VlimeNewServer(...)
     let g:vlime_next_server_id += 1
 
     let lisp_buf = ch_getbufnr(server_job, 'out')
-    call vlime#ui#OpenBuffer(lisp_buf, v:false, 'botright')
+    call vlime#ui#OpenBufferWithWinSettings(lisp_buf, v:false, 'server')
     let server_obj['timer'] = timer_start(500,
                 \ function('s:CheckServerPort',
                     \ [server_obj, lisp_buf, auto_connect]),

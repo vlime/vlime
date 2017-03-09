@@ -1,3 +1,15 @@
+let g:vlime_default_window_settings = {
+            \ 'sldb': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
+            \ 'repl': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
+            \ 'inspector': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
+            \ 'xref': {'pos': 'botright', 'size': 12, 'vertical': v:false},
+            \ 'notes': {'pos': 'botright', 'size': 12, 'vertical': v:false},
+            \ 'threads': {'pos': 'botright', 'size': 12, 'vertical': v:false},
+            \ 'preview': {'pos': 'topleft', 'size': v:null, 'vertical': v:false},
+            \ 'input': {'pos': 'botright', 'size': 4, 'vertical': v:false},
+            \ 'server': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
+            \ }
+
 function! vlime#ui#New()
     let obj = {
                 \ 'buffer_package_map': {},
@@ -75,9 +87,8 @@ function! vlime#ui#OnDebug(conn, thread, level, condition, restarts, frames, con
 endfunction
 
 function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
-    let dbg_buf = vlime#ui#OpenBuffer(
-                \ vlime#ui#SLDBBufName(a:conn, a:thread),
-                \ v:false, 'botright')
+    let dbg_buf = vlime#ui#OpenBufferWithWinSettings(
+                \ vlime#ui#SLDBBufName(a:conn, a:thread), v:false, 'sldb')
     if dbg_buf > 0
         call setpos('.', [0, 1, 1, 0, 1])
     endif
@@ -98,7 +109,7 @@ endfunction
 function! vlime#ui#OnWriteString(conn, str, str_type) dict
     let repl_buf = vlime#ui#repl#InitREPLBuf(a:conn)
     if len(win_findbuf(repl_buf)) <= 0
-        call vlime#ui#OpenBuffer(repl_buf, v:false, 'botright')
+        call vlime#ui#OpenBufferWithWinSettings(repl_buf, v:false, 'repl')
     endif
     call vlime#ui#repl#AppendOutput(repl_buf, a:str)
 endfunction
@@ -133,7 +144,7 @@ endfunction
 function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     let insp_buf = vlime#ui#inspector#InitInspectorBuf(
                 \ a:conn.ui, a:conn, a:i_thread)
-    call vlime#ui#OpenBuffer(insp_buf, v:false, 'botright')
+    call vlime#ui#OpenBufferWithWinSettings(insp_buf, v:false, 'inspector')
 
     let r_content = vlime#PListToDict(a:i_content)
     let old_title = getline(1)
@@ -157,7 +168,7 @@ function! vlime#ui#OnXRef(conn, xref_list)
         call vlime#ui#ErrMsg('Not implemented.')
     else
         let xref_buf = vlime#ui#xref#InitXRefBuf(a:conn)
-        call vlime#ui#OpenBuffer(xref_buf, v:false, 'botright', v:false, 12)
+        call vlime#ui#OpenBufferWithWinSettings(xref_buf, v:false, 'xref')
         call vlime#ui#xref#FillXRefBuf(a:xref_list)
     endif
 endfunction
@@ -167,7 +178,7 @@ function! vlime#ui#OnCompilerNotes(conn, note_list)
     let buf_opened = len(win_findbuf(notes_buf)) > 0
     if buf_opened || type(a:note_list) != v:t_none
         let old_win_id = win_getid()
-        call vlime#ui#OpenBuffer(notes_buf, v:false, 'botright', v:false, 12)
+        call vlime#ui#OpenBufferWithWinSettings(notes_buf, v:false, 'notes')
         call vlime#ui#compiler_notes#FillCompilerNotesBuf(a:note_list)
         if type(a:note_list) == v:t_none
             " There's no message. Don't stay in the notes window.
@@ -178,7 +189,7 @@ endfunction
 
 function! vlime#ui#OnThreads(conn, thread_list)
     let threads_buf = vlime#ui#threads#InitThreadsBuffer(a:conn)
-    call vlime#ui#OpenBuffer(threads_buf, v:false, 'botright', v:false, 12)
+    call vlime#ui#OpenBufferWithWinSettings(threads_buf, v:false, 'threads')
     call vlime#ui#threads#FillThreadsBuf(a:thread_list)
 endfunction
 
@@ -317,7 +328,7 @@ endfunction
 
 " vlime#ui#OpenBuffer(name, create, show[, vertical[, initial_size]])
 function! vlime#ui#OpenBuffer(name, create, show, ...)
-    let vertical = vlime#GetNthVarArg(a:000, 0)
+    let vertical = vlime#GetNthVarArg(a:000, 0, v:false)
     let initial_size = vlime#GetNthVarArg(a:000, 1)
     let buf = bufnr(a:name, a:create)
     if buf > 0
@@ -351,13 +362,20 @@ function! vlime#ui#OpenBuffer(name, create, show, ...)
     return buf
 endfunction
 
+function! vlime#ui#OpenBufferWithWinSettings(buf_name, buf_create, win_name)
+    let [win_pos, win_size, win_vert] = vlime#ui#GetWindowSettings(a:win_name)
+    return vlime#ui#OpenBuffer(a:buf_name, a:buf_create,
+                \ win_pos, win_vert, win_size)
+endfunction
+
 " vlime#ui#ShowPreview(conn, content, append[, win_size])
 function! vlime#ui#ShowPreview(conn, content, append, ...)
     let win_size = vlime#GetNthVarArg(a:000, 0)
     let old_win_id = win_getid()
     try
+        let [win_pos, _win_size, _win_vert] = vlime#ui#GetWindowSettings('preview')
         let buf = vlime#ui#OpenBuffer(
-                    \ vlime#ui#PreviewBufName(), v:true, 'topleft')
+                    \ vlime#ui#PreviewBufName(), v:true, win_pos)
         if buf > 0
             " We already switched to the preview window
             if type(win_size) != v:t_none
@@ -384,9 +402,8 @@ function! vlime#ui#ShowPreview(conn, content, append, ...)
 endfunction
 
 function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
-    let buf = vlime#ui#OpenBuffer(
-                \ vlime#ui#MiniBufName(a:conn, a:prompt),
-                \ v:true, 'botright', v:false, 4)
+    let buf = vlime#ui#OpenBufferWithWinSettings(
+                \ vlime#ui#MiniBufName(a:conn, a:prompt), v:true, 'input')
     call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
     call setbufvar(buf, '&buflisted', 0)
     set winfixheight
@@ -595,6 +612,26 @@ endfunction
 function! vlime#ui#ServerBufName(server_name)
     return join(['vlime', 'server', a:server_name],
                 \ g:vlime_buf_name_sep)
+endfunction
+
+function! vlime#ui#GetWindowSettings(win_name)
+    let settings = get(g:vlime_default_window_settings, a:win_name, v:null)
+    if type(settings) == v:t_none
+        throw 'vlime#ui#GetWindowSettings: unknown window ' . string(a:win_name)
+    else
+        let settings = copy(settings)
+    endif
+
+    if exists('g:vlime_window_settings')
+        let user_settings = get(g:vlime_window_settings, a:win_name, {})
+        for sk in keys(user_settings)
+            let settings[sk] = user_settings[sk]
+        endfor
+    endif
+
+    return [get(settings, 'pos', 'botright'),
+                \ get(settings, 'size', v:null),
+                \ get(settings, 'vertical', v:false)]
 endfunction
 
 function! s:NormalizePackageName(name)
