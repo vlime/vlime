@@ -423,7 +423,7 @@ use it now to preserve all available debug info:
 
     :let g:vlime_compiler_policy = {'DEBUG': 3}
 
-See |vlime-config-compiler-policy| for a detailed description of this
+See |g:vlime_compiler_policy| for a detailed description of this
 variable.
 
 With the compiler policy set, we compile fibonacci.lisp and call

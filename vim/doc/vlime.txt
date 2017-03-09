@@ -90,7 +90,7 @@ See |vlime-mappings-server| for more operations on Vlime servers. See
 
 When you need to use some other Common Lisp implementation, run an
 instance of sbcl in arbitrary locations, or pass special arguments to
-the server, use the |vlime-config-cl-impl| option.
+the server, use the *g:vlime_cl_impl* option.
 
 You may also start the server manually:
 
@@ -277,7 +277,7 @@ Mappings available in CL source files:         *vlime-mappings-source*
     Server Management                          *vlime-mappings-server*
         <LocalLeader>rr                     *vlime-mappings-server-rr*
             Run a new Vlime server and connect to it. To customize the
-            server, see |vlime-config-cl-impl|.
+            server, see |g:vlime_cl_impl|.
         <LocalLeader>rv
             View the console output of a server.
         <LocalLeader>rs
@@ -469,7 +469,7 @@ Mappings available in the thread list:    *vlime-mappings-thread-list*
 These variables can be set in |vimrc|, to affect the behavior of
 Vlime:
 
-g:vlime_cl_impl                                 *vlime-config-cl-impl*
+g:vlime_cl_impl                                      *g:vlime_cl_impl*
     A |string| to designate the CL implementation to use when starting
     a server via |vlime-mappings-server-rr|. This option has no effect
     when connecting to an existing server via
@@ -519,31 +519,76 @@ Note: If you use symlinks on Windows systems to point to Vlime, it may
                           \ '--eval', a:vlime_eval], ' ')
           endfunction
 
-g:vlime_contribs
-    A |list| of Swank contribs to load when initializing a Vlime
-    connection. Note that the names are case-sensitive. Please use
-    only uppercase. Default: ['SWANK-ASDF', 'SWANK-PACKAGE-FU',
-    'SWANK-PRESENTATIONS', 'SWANK-FANCY-INSPECTOR', 'SWANK-C-P-C',
-    'SWANK-ARGLISTS', 'SWANK-REPL', 'SWANK-FUZZY']
-
-g:vlime_address
+g:vlime_address                                      *g:vlime_address*
     A |list| specifying the address of a Vlime server. This address
     will be used in the |vlime-mappings-conn-cc| command.  Default:
     ['127.0.0.1', 7002]
 
-g:vlime_compiler_policy                 *vlime-config-compiler-policy*
+g:vlime_compiler_policy                      *g:vlime_compiler_policy*
     A |dict| to hold the compiler policy. Setting this variable would
     affect the subsequent compiling operations. For example, a value
     of {'DEBUG': 3, 'SPEED': 0} means no optimization in runtime
     speed, and maximum debug info. Note that the keys are
     case-sensitive. Please use only uppercase. Default: {}
 
-g:vlime_user_contrib_initializers
+g:vlime_window_settings                      *g:vlime_window_settings*
+    A |dict| to specify window positions and sizes. Vlime will consult
+    this variable when creating a new window. The keys should be
+    Vlime window types, and the values should be |dict|s containing
+    "pos", "size", and "vertical" parameters. For example:
+
+        let g:vlime_window_settings = {
+                \ "sldb": {
+                    \ "pos": "botright",
+                    \ "size": 60,
+                    \ "vertical": v:true
+                \ }
+            \ }
+
+    These settings will cause the debugger window to be created
+    on the right, vertically.
+
+    Available window types:
+
+        "sldb"      The debugger window.
+        "repl"      The REPL window.
+        "inspector" The inspector window.
+        "xref"      The cross reference window.
+        "notes"     The compiler notes window.
+        "threads"   The threads window.
+        "preview"   The preview window.
+        "input"     The input buffer window.
+        "server"    The server output window.
+
+    Legal values for the parameters:
+
+        "pos":
+            "aboveleft", "belowright", "topleft", "botright".
+            (See |aboveleft| and the alike to get explanations of
+            these positions)
+        "size":
+            Any positive integer, or v:null to tell Vlime not to
+            resize the window.
+        "vertical":
+            v:true or v:false.
+
+    Vlime will try to use default values when any of these parameters
+    are missing. See the value of g:vlime_default_window_settings for
+    the default values.
+
+g:vlime_contribs                                    *g:vlime_contribs*
+    A |list| of Swank contribs to load when initializing a Vlime
+    connection. Note that the names are case-sensitive. Please use
+    only uppercase. Default: ['SWANK-ASDF', 'SWANK-PACKAGE-FU',
+    'SWANK-PRESENTATIONS', 'SWANK-FANCY-INSPECTOR', 'SWANK-C-P-C',
+    'SWANK-ARGLISTS', 'SWANK-REPL', 'SWANK-FUZZY']
+
+g:vlime_user_contrib_initializers  *g:vlime_user_contrib_initializers*
     A |dict| of user contrib initializers. If your Swank contrib module
     needs special initialization, add an initializer function here.
     See autoload/vlime/contrib.vim for examples. Default: {}
 
-g:vlime_buf_name_sep
+g:vlime_buf_name_sep                            *g:vlime_buf_name_sep*
     A |string| used as the separator between segments of Vlime special
     buffer names. The default works fine on Linux and Windows, but if
     your OS or Vim complained about illegal characters in filenames,
