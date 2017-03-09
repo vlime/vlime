@@ -566,7 +566,9 @@ g:vlime_window_settings                      *g:vlime_window_settings*
         "xref"      The cross reference window.
         "notes"     The compiler notes window.
         "threads"   The threads window.
-        "preview"   The preview window.
+        "preview"   The preview window. Note that the "size" and
+                    "vertical" parameters are ignored for preview
+                    windows. These windows are alway horizontal.
         "input"     The input buffer window.
         "server"    The server output window.
 
