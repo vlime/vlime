@@ -236,7 +236,7 @@ This command will also set up local port forwarding, so that we can
 connect to the server right here on Earth. Then, in Vim, call
 VlimeConnectREPL():
 
-    :call VlimeConnectREPL('127.0.0.1', 7002, 'sftp://watney@mars-hab/')
+    :call VlimeConnectREPL("127.0.0.1", 7002, "sftp://watney@mars-hab/")
 
 The last argument is an SFTP URL to tell Vlime that all filenames
 returned by the server resides in the remote machine, and should be
@@ -255,7 +255,7 @@ Most normal mode and visual mode mappings in Vlime starts with
 uncomfortable reaching out for the backslash key, you may change it by
 adding this line to your |vimrc| file, to use the comma instead:
 
-    let maplocalleader = ','
+    let maplocalleader = ","
 
 All the mappings listed below are defined in normal mode, unless
 specified otherwise.
@@ -473,18 +473,18 @@ g:vlime_cl_impl                                      *g:vlime_cl_impl*
     A |string| to designate the CL implementation to use when starting
     a server via |vlime-mappings-server-rr|. This option has no effect
     when connecting to an existing server via
-    |vlime-mappings-conn-cc|. Default: 'sbcl'
+    |vlime-mappings-conn-cc|. Default: "sbcl"
 
     You can define a function named
-    'VlimeBuildServerCommandFor_<impl>' to build a command line for
+    "VlimeBuildServerCommandFor_<impl>" to build a command line for
     your implementation. For example, add these to your |vimrc|:
 
-        let g:vlime_cl_impl = 'my_sbcl'
+        let g:vlime_cl_impl = "my_sbcl"
         function! VlimeBuildServerCommandFor_my_sbcl(vlime_loader, vlime_eval)
-            return join(['/path/to/my/custom/sbcl',
-                        \ '--load', '/path/to/my/custom/quicklisp/setup.lisp',
-                        \ '--load', a:vlime_loader,
-                        \ '--eval', a:vlime_eval], ' ')
+            return join(["/path/to/my/custom/sbcl",
+                        \ "--load", "/path/to/my/custom/quicklisp/setup.lisp",
+                        \ "--load", a:vlime_loader,
+                        \ "--eval", a:vlime_eval], " ")
         endfunction
 
     Then restart Vim and call VlimeBuildServerCommand() to see whether
@@ -500,7 +500,7 @@ g:vlime_cl_impl                                      *g:vlime_cl_impl*
 
         " For SBCL, the default
         VlimeBuildServerCommandFor_sbcl()
-        " For Clozure CL, set g:vlime_cl_impl to 'ccl'
+        " For Clozure CL, set g:vlime_cl_impl to "ccl"
         VlimeBuildServerCommandFor_ccl()
 
     If you use other implementations, such as clisp and abcl, or need
@@ -510,24 +510,24 @@ g:vlime_cl_impl                                      *g:vlime_cl_impl*
 Note: If you use symlinks on Windows systems to point to Vlime, it may
       fail to locate the server entry point automatically. In this
       case you'll have to define a command builder function and
-      overwrite 'vlime_loader' with the absolute path of
-      'load-vlime.lisp':
+      overwrite "vlime_loader" with the absolute path of
+      "load-vlime.lisp":
 
           function! VlimeBuildServerCommandFor_xxx(vlime_loader, vlime_eval)
-              return join(['sbcl',
-                          \ '--load', 'c:\path\to\vlime\lisp\load-vlime.lisp',
-                          \ '--eval', a:vlime_eval], ' ')
+              return join(["sbcl",
+                          \ "--load", "c:\path\to\vlime\lisp\load-vlime.lisp",
+                          \ "--eval", a:vlime_eval], " ")
           endfunction
 
 g:vlime_address                                      *g:vlime_address*
     A |list| specifying the address of a Vlime server. This address
     will be used in the |vlime-mappings-conn-cc| command.  Default:
-    ['127.0.0.1', 7002]
+    ["127.0.0.1", 7002]
 
 g:vlime_compiler_policy                      *g:vlime_compiler_policy*
     A |dict| to hold the compiler policy. Setting this variable would
     affect the subsequent compiling operations. For example, a value
-    of {'DEBUG': 3, 'SPEED': 0} means no optimization in runtime
+    of {"DEBUG": 3, "SPEED": 0} means no optimization in runtime
     speed, and maximum debug info. Note that the keys are
     case-sensitive. Please use only uppercase. Default: {}
 
@@ -591,9 +591,9 @@ g:vlime_window_settings                      *g:vlime_window_settings*
 g:vlime_contribs                                    *g:vlime_contribs*
     A |list| of Swank contribs to load when initializing a Vlime
     connection. Note that the names are case-sensitive. Please use
-    only uppercase. Default: ['SWANK-ASDF', 'SWANK-PACKAGE-FU',
-    'SWANK-PRESENTATIONS', 'SWANK-FANCY-INSPECTOR', 'SWANK-C-P-C',
-    'SWANK-ARGLISTS', 'SWANK-REPL', 'SWANK-FUZZY']
+    only uppercase. Default: ["SWANK-ASDF", "SWANK-PACKAGE-FU",
+    "SWANK-PRESENTATIONS", "SWANK-FANCY-INSPECTOR", "SWANK-C-P-C",
+    "SWANK-ARGLISTS", "SWANK-REPL", "SWANK-FUZZY"]
 
 g:vlime_user_contrib_initializers  *g:vlime_user_contrib_initializers*
     A |dict| of user contrib initializers. If your Swank contrib module
@@ -604,7 +604,7 @@ g:vlime_buf_name_sep                            *g:vlime_buf_name_sep*
     A |string| used as the separator between segments of Vlime special
     buffer names. The default works fine on Linux and Windows, but if
     your OS or Vim complained about illegal characters in filenames,
-    try changing this variable. Default: ' | '
+    try changing this variable. Default: " | "
 
 ======================================================================
 6. License                                             *vlime-license*
