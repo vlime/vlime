@@ -623,9 +623,12 @@ function! vlime#ui#GetWindowSettings(win_name)
     endif
 
     if exists('g:vlime_window_settings')
-        let user_settings = get(g:vlime_window_settings, a:win_name, {})
-        for sk in keys(user_settings)
-            let settings[sk] = user_settings[sk]
+        let UserSettings = get(g:vlime_window_settings, a:win_name, {})
+        if type(UserSettings) == v:t_func
+            let UserSettings = UserSettings()
+        endif
+        for sk in keys(UserSettings)
+            let settings[sk] = UserSettings[sk]
         endfor
     endif
 
