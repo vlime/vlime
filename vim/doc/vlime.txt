@@ -286,7 +286,7 @@ Mappings available in CL source files:         *vlime-mappings-source*
             server, see |g:vlime_cl_impl|.
         <LocalLeader>rv
             View the console output of a server.
-        <LocalLeader>rs
+        <LocalLeader>rs                     *vlime-mappings-server-rs*
             Stop a server.
         <LocalLeader>rR
             Rename a server.
@@ -525,9 +525,14 @@ Note: If you use symlinks on Windows systems to point to Vlime, it may
                           \ "--eval", a:vlime_eval], " ")
           endfunction
 
+g:vlime_cl_wait_time                            *g:vlime_cl_wait_time*
+    An integer specifying the time Vlime should wait when starting a
+    server via |vlime-mappings-server-rr|, or stopping a server via
+    |vlime-mappings-server-rs|, in seconds. Default: 10
+
 g:vlime_address                                      *g:vlime_address*
     A |list| specifying the address of a Vlime server. This address
-    will be used in the |vlime-mappings-conn-cc| command.  Default:
+    will be used in the |vlime-mappings-conn-cc| command. Default:
     ["127.0.0.1", 7002]
 
 g:vlime_compiler_policy                      *g:vlime_compiler_policy*
