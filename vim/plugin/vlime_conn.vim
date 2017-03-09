@@ -6,6 +6,14 @@ if !exists('g:vlime_next_conn_id')
     let g:vlime_next_conn_id = 1
 endif
 
+if !exists('g:vlime_cl_wait_time')
+    let g:vlime_cl_wait_time = 10 " seconds
+endif
+
+if !exists('g:vlime_cl_wait_interval')
+    let g:vlime_cl_wait_interval = 500 " milliseconds
+endif
+
 " VlimeNewConnection([name])
 function! VlimeNewConnection(...)
     if a:0 > 0
@@ -180,7 +188,7 @@ function! VlimeNewServer(...)
 
     let lisp_buf = ch_getbufnr(server_job, 'out')
     call vlime#ui#OpenBufferWithWinSettings(lisp_buf, v:false, 'server')
-    let server_obj['timer'] = timer_start(500,
+    let server_obj['timer'] = timer_start(g:vlime_cl_wait_interval,
                 \ function('s:CheckServerPort',
                     \ [server_obj, lisp_buf, auto_connect]),
                 \ {'repeat': -1})
@@ -199,7 +207,7 @@ function! VlimeStopServer(server)
     if !job_stop(r_server['job'])
         call vlime#ui#ErrMsg('VlimeStopServer: failed to stop ' . r_server['name'])
     else
-        let r_server['timer'] = timer_start(500,
+        let r_server['timer'] = timer_start(g:vlime_cl_wait_interval,
                     \ function('s:CheckServerStopped', [r_server]),
                     \ {'repeat': -1})
     endif
@@ -277,8 +285,8 @@ function! s:CheckServerPort(server, lisp_buf, auto_connect, timer)
     let port = vlime#ui#WithBuffer(a:lisp_buf,
                 \ function('s:MatchServerCreatedPort'))
     if type(port) == v:t_none
-        let timer_count = get(a:server, 'port_timer_count', 0)
-        if timer_count >= 20
+        let timer_count = get(a:server, 'port_timer_count', 1)
+        if timer_count >= s:CalcServerCheckTimesLimit()
             call timer_stop(a:timer)
             if get(a:server, 'timer', -1) == a:timer
                 call remove(a:server, 'timer')
@@ -309,8 +317,8 @@ endfunction
 
 function! s:CheckServerStopped(server, timer)
     if job_status(a:server['job']) == 'run'
-        let timer_count = get(a:server, 'stop_timer_count', 0)
-        if timer_count >= 20
+        let timer_count = get(a:server, 'stop_timer_count', 1)
+        if timer_count >= s:CalcServerCheckTimesLimit()
             if get(a:server, 'timer', -1) == a:timer
                 call remove(a:server, 'timer')
             endif
@@ -356,4 +364,13 @@ function! s:RenameBuffer(new_name)
     " Use silent! to supress the 'Cannot rename swapfile' message on Windows
     silent! 0file
     silent! execute 'file ' . escape(a:new_name, ' |\''"')
+endfunction
+
+function! s:CalcServerCheckTimesLimit()
+    let wait_time_ms = g:vlime_cl_wait_time * 1000
+    let times_limit = wait_time_ms / g:vlime_cl_wait_interval
+    if wait_time_ms % g:vlime_cl_wait_interval > 0
+        let times_limit += 1
+    endif
+    return times_limit
 endfunction
