@@ -83,7 +83,13 @@ If you have sbcl in your $PATH, Vlime can start a server for you:
        when it's ready, and become fully operational.
 
 Note: If it's your first time running the server, Vlime will try to
-      install it's dependencies via Quicklisp.
+      install it's dependencies via Quicklisp. This may take some
+      time, and Vlime may timeout and show a message:
+
+          VlimeNewServer: failed to wait for Vlime Server 1 ...
+
+      So it's recommended that you start the server manually (see
+      below) for the first run.
 
 See |vlime-mappings-server| for more operations on Vlime servers. See
 |vlime-mappings| for all available operations.

@@ -43,8 +43,9 @@ tutorial. Fascinating, right?
 2. Starting the Server                      *vlime-tutor-start-server*
 
 Vlime works in a client-server fashion. The server is written in
-Common Lisp, and needs to be started separately. To start the server
-on the local machine:
+Common Lisp. You can let Vlime start the server for you (see
+|vlime-start-up|), but let's do it manually for the first time. To
+start the server on the local machine:
 
     sbcl --load <vlime repo>/lisp/start-vlime.lisp
 
