@@ -74,7 +74,7 @@ can use "\cc" to make more connections to the same server (though that
 usually doesn't make any sense), or call VlimeConnectREPL() in Vim to
 connect to another server:
 
-    :call VlimeConnectREPL('127.0.0.1', 9999)
+    :call VlimeConnectREPL("127.0.0.1", 9999)
 
 This will try to make a connection to 127.0.0.1:9999.
 
@@ -421,7 +421,7 @@ aborted:
 There's an option in Vlime to tell the compiler our preference. Let's
 use it now to preserve all available debug info:
 
-    :let g:vlime_compiler_policy = {'DEBUG': 3}
+    :let g:vlime_compiler_policy = {"DEBUG": 3}
 
 See |g:vlime_compiler_policy| for a detailed description of this
 variable.
