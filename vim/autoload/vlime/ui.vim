@@ -77,7 +77,7 @@ endfunction
 function! vlime#ui#OnDebugActivate(conn, thread, level, select) dict
     let dbg_buf = vlime#ui#OpenBuffer(
                 \ vlime#ui#SLDBBufName(a:conn, a:thread),
-                \ v:false, 'botright split')
+                \ v:false, 'botright')
     if dbg_buf > 0
         call setpos('.', [0, 1, 1, 0, 1])
     endif
@@ -98,7 +98,7 @@ endfunction
 function! vlime#ui#OnWriteString(conn, str, str_type) dict
     let repl_buf = vlime#ui#repl#InitREPLBuf(a:conn)
     if len(win_findbuf(repl_buf)) <= 0
-        call vlime#ui#OpenBuffer(repl_buf, v:false, 'botright split')
+        call vlime#ui#OpenBuffer(repl_buf, v:false, 'botright')
     endif
     call vlime#ui#repl#AppendOutput(repl_buf, a:str)
 endfunction
@@ -133,7 +133,7 @@ endfunction
 function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     let insp_buf = vlime#ui#inspector#InitInspectorBuf(
                 \ a:conn.ui, a:conn, a:i_thread)
-    call vlime#ui#OpenBuffer(insp_buf, v:false, 'botright split')
+    call vlime#ui#OpenBuffer(insp_buf, v:false, 'botright')
 
     let r_content = vlime#PListToDict(a:i_content)
     let old_title = getline(1)
@@ -157,7 +157,7 @@ function! vlime#ui#OnXRef(conn, xref_list)
         call vlime#ui#ErrMsg('Not implemented.')
     else
         let xref_buf = vlime#ui#xref#InitXRefBuf(a:conn)
-        call vlime#ui#OpenBuffer(xref_buf, v:false, 'botright split', 12)
+        call vlime#ui#OpenBuffer(xref_buf, v:false, 'botright', v:false, 12)
         call vlime#ui#xref#FillXRefBuf(a:xref_list)
     endif
 endfunction
@@ -167,7 +167,7 @@ function! vlime#ui#OnCompilerNotes(conn, note_list)
     let buf_opened = len(win_findbuf(notes_buf)) > 0
     if buf_opened || type(a:note_list) != v:t_none
         let old_win_id = win_getid()
-        call vlime#ui#OpenBuffer(notes_buf, v:false, 'botright split', 12)
+        call vlime#ui#OpenBuffer(notes_buf, v:false, 'botright', v:false, 12)
         call vlime#ui#compiler_notes#FillCompilerNotesBuf(a:note_list)
         if type(a:note_list) == v:t_none
             " There's no message. Don't stay in the notes window.
@@ -178,7 +178,7 @@ endfunction
 
 function! vlime#ui#OnThreads(conn, thread_list)
     let threads_buf = vlime#ui#threads#InitThreadsBuffer(a:conn)
-    call vlime#ui#OpenBuffer(threads_buf, v:false, 'botright split', 12)
+    call vlime#ui#OpenBuffer(threads_buf, v:false, 'botright', v:false, 12)
     call vlime#ui#threads#FillThreadsBuf(a:thread_list)
 endfunction
 
@@ -315,9 +315,10 @@ function! vlime#ui#WithBuffer(buf, Func)
     endtry
 endfunction
 
-" vlime#ui#OpenBuffer(name, create, show[, initial_size])
+" vlime#ui#OpenBuffer(name, create, show[, vertical[, initial_size]])
 function! vlime#ui#OpenBuffer(name, create, show, ...)
-    let initial_size = vlime#GetNthVarArg(a:000, 0)
+    let vertical = vlime#GetNthVarArg(a:000, 0)
+    let initial_size = vlime#GetNthVarArg(a:000, 1)
     let buf = bufnr(a:name, a:create)
     if buf > 0
         if (type(a:show) == v:t_string && len(a:show) > 0) || a:show
@@ -327,12 +328,20 @@ function! vlime#ui#OpenBuffer(name, create, show, ...)
                 " Use silent! to suppress the 'Illegal file name' message
                 " and E303: Unable to open swap file...
                 if type(a:show) == v:t_string
-                    silent! execute a:show . ' #' . buf
+                    let split_cmd = 'split #' . buf
+                    if vertical
+                        let split_cmd = join(['vertical', split_cmd])
+                    endif
+                    silent! execute join([a:show, split_cmd])
                 else
                     silent! execute 'split #' . buf
                 endif
                 if type(initial_size) != v:t_none
-                    execute 'resize ' . initial_size
+                    let resize_cmd = join(['resize', initial_size])
+                    if vertical
+                        let resize_cmd = join(['vertical', resize_cmd])
+                    endif
+                    execute resize_cmd
                 endif
             else
                 execute win_nr . 'wincmd w'
@@ -348,7 +357,7 @@ function! vlime#ui#ShowPreview(conn, content, append, ...)
     let old_win_id = win_getid()
     try
         let buf = vlime#ui#OpenBuffer(
-                    \ vlime#ui#PreviewBufName(), v:true, 'topleft split')
+                    \ vlime#ui#PreviewBufName(), v:true, 'topleft')
         if buf > 0
             " We already switched to the preview window
             if type(win_size) != v:t_none
@@ -377,7 +386,7 @@ endfunction
 function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
     let buf = vlime#ui#OpenBuffer(
                 \ vlime#ui#MiniBufName(a:conn, a:prompt),
-                \ v:true, 'botright split', 4)
+                \ v:true, 'botright', v:false, 4)
     call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
     call setbufvar(buf, '&buflisted', 0)
     set winfixheight

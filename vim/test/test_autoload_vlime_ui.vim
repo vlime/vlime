@@ -34,7 +34,7 @@ endfunction
 
 function! TestOpenBuffer()
     let buf = vlime#ui#OpenBuffer(
-                \ 'vlime_test_open_buffer', v:true, 'botright split')
+                \ 'vlime_test_open_buffer', v:true, 'botright')
     call assert_equal('vlime_test_open_buffer', expand('%'))
     execute 'bunload! ' . buf
 
@@ -49,8 +49,8 @@ function! TestCurBufferContent()
     let old_buf = bufnr('%')
     try
         execute 'hide buffer ' . buf
-        call append(line('$'), ['line 1', 'line 2'])
-        call assert_equal("line 1\nline 2", vlime#ui#CurBufferContent())
+        call append(0, ['line 1', 'line 2'])
+        call assert_equal("line 1\nline 2\n", vlime#ui#CurBufferContent())
     finally
         execute 'bunload! ' . buf
         execute 'buffer ' . old_buf
@@ -158,7 +158,7 @@ endfunction
 
 function! TestAppendString()
     let buf = vlime#ui#OpenBuffer('vlime_test_append_string',
-                \ v:true, 'botright split')
+                \ v:true, 'botright')
     try
         call vlime#ui#AppendString('line1')
         call vlime#ui#AppendString(" line1 line1\n")

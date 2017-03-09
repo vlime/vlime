@@ -179,7 +179,7 @@ function! VlimeNewServer(...)
     let g:vlime_next_server_id += 1
 
     let lisp_buf = ch_getbufnr(server_job, 'out')
-    call vlime#ui#OpenBuffer(lisp_buf, v:false, 'botright split')
+    call vlime#ui#OpenBuffer(lisp_buf, v:false, 'botright')
     let server_obj['timer'] = timer_start(500,
                 \ function('s:CheckServerPort',
                     \ [server_obj, lisp_buf, auto_connect]),
@@ -220,7 +220,7 @@ function! VlimeShowServer(server)
     let server_id = s:NormalizeServerID(a:server)
     let r_server = g:vlime_servers[server_id]
     let buf = ch_getbufnr(r_server['job'], 'out')
-    call vlime#ui#OpenBuffer(buf, v:false, 'botright split')
+    call vlime#ui#OpenBuffer(buf, v:false, 'botright')
 endfunction
 
 function! VlimeSelectServer()
