@@ -548,6 +548,16 @@ g:vlime_window_settings                      *g:vlime_window_settings*
     These settings will cause the debugger window to be created
     on the right, vertically.
 
+    You can also replace the window parameters dict with a |Funcref|
+    or a |lambda| expression to generate the parameters dynamically:
+
+        let g:vlime_window_settings = {
+                \ "sldb": { -> {"pos": "belowright", "size": winheight(".") / 3}}
+            \ }
+
+    With this setting, the debugger window will be one third of the
+    current window size.
+
     Available window types:
 
         "sldb"      The debugger window.
