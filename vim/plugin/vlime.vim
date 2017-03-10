@@ -285,19 +285,7 @@ function! VlimeCurOperatorArgList()
         return
     endif
 
-    let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
-    if s_line <= 0 || s_col <= 0
-        return
-    endif
-
-    let old_cur = getcurpos()
-    try
-        call setpos('.', [0, s_line, s_col, 0])
-        let op = vlime#ui#CurOperator()
-    finally
-        call setpos('.', old_cur)
-    endtry
-
+    let op = vlime#ui#CurOperator()
     if len(op) > 0
         call conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))
     endif
@@ -468,11 +456,11 @@ function! VlimeCalcCurIndent()
         return lispindent(line_no)
     endif
 
+    let s_op = vlime#ui#CurOperator()
     let old_cur = getcurpos()
     try
         call setpos('.', [0, s_line, s_col, 0])
         let vs_col = virtcol('.')
-        let s_op = vlime#ui#CurOperator()
     finally
         call setpos('.', old_cur)
     endtry

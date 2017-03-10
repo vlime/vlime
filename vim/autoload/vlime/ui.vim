@@ -279,9 +279,19 @@ endfunction
 function! vlime#ui#CurOperator()
     let expr = vlime#ui#CurExpr()
     if len(expr) > 0
-        let matches = matchlist(expr, '^(\_s*\([^[:blank:]\n()]\+\)\_s*\_.*)$')
+        let matches = matchlist(expr, '^(\_s*\(\k\+\)\_s*\_.*)$')
         if len(matches) > 0
             return matches[1]
+        endif
+    else
+        " There may be an incomplete expression
+        let [s_line, s_col] = searchpairpos('(', '', ')', 'bn')
+        if s_line > 0 && s_col > 0
+            let op_line = getline(s_line)[(s_col-1):]
+            let matches = matchlist(op_line, '(\s*\(\k\+\)\s*')
+            if len(matches) > 0
+                return matches[1]
+            endif
         endif
     endif
     return ''
