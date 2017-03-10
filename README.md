@@ -54,7 +54,8 @@ so using 8.0.0312 or a more recent version is strongly recommended.
 [Details](https://groups.google.com/d/topic/vim_dev/Rl0X_R5pjxk/discussion).
 
 Currently Vlime can only detect s-expressions inside parentheses. To make your
-life easier, use [paredit](https://github.com/kovisoft/paredit).
+life easier, use [paredit](https://github.com/kovisoft/paredit) or
+[vim-surround](https://github.com/tpope/vim-surround).
 
 Supported CL Implementations
 ============================
