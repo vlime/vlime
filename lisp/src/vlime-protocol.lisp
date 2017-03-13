@@ -109,7 +109,7 @@
      (let* ((head-list (gethash "head" json))
             (tail-obj (gethash "tail" json))
             (head (json-to-form head-list)))
-       (set-last-cdr head tail-obj)
+       (set-last-cdr head (json-to-form tail-obj))
        head))
     (t
      ; Numbers & strings
