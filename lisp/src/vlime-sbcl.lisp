@@ -5,8 +5,7 @@
         #:aio-sbcl
         #:vlime-protocol
         #:vlime-connection)
-  (:export #:main
-           #:main-threaded))
+  (:export #:main))
 
 (in-package #:vlime-sbcl)
 
