@@ -9,6 +9,5 @@
                #:vom)
   :components ((:module "src"
                 :pathname "src"
-                :components ((:file "vlime-protocol")
-                             (:file "vlime-usocket" :depends-on ("vlime-protocol")))))
+                :components ((:file "vlime-usocket"))))
   :in-order-to ((test-op (test-op #:vlime-test))))

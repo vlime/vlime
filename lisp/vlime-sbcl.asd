@@ -10,9 +10,8 @@
                #:vom)
   :components ((:module "src"
                 :pathname "src"
-                :components ((:file "vlime-protocol")
-                             (:file "vlime-connection")
+                :components ((:file "vlime-connection")
                              (:file "aio-sbcl")
                              (:file "vlime-sbcl"
-                              :depends-on ("vlime-protocol" "vlime-connection" "aio-sbcl")))))
+                              :depends-on ("vlime-connection" "aio-sbcl")))))
   :in-order-to ((test-op (test-op #:vlime-test))))

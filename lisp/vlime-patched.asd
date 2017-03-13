@@ -7,6 +7,5 @@
   :depends-on (#:vlime)
   :components ((:module "src"
                 :pathname "src"
-                :components ((:file "vlime-protocol")
-                             (:file "vlime-patched" :depends-on ("vlime-protocol")))))
+                :components ((:file "vlime-patched"))))
   :in-order-to ((test-op (test-op #:vlime-test))))

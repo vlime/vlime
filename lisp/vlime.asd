@@ -8,4 +8,5 @@
                #:yason)
   :components ((:module "src"
                 :pathname "src"
-                :components ((:file "vlime")))))
+                :components ((:file "vlime")
+                             (:file "vlime-protocol")))))
