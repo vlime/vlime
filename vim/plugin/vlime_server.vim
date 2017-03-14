@@ -57,7 +57,7 @@ function! VlimeNewServer(...)
     call vlime#ui#OpenBufferWithWinSettings(lisp_buf, v:false, 'server')
 
     nnoremap <buffer> <silent> <LocalLeader>c :call VlimeConnectToCurServer()<cr>
-    nnoremap <buffer> <silent> <LocalLeader>s :call VlimeStopServer(b:vlime_server)<cr>
+    nnoremap <buffer> <silent> <LocalLeader>s :call VlimeStopCurServer()<cr>
 
     let server_obj['timer'] = timer_start(g:vlime_cl_wait_interval,
                 \ function('s:CheckServerPort',
@@ -162,6 +162,15 @@ function! VlimeConnectToCurServer()
         let conn_list = get(b:vlime_server, 'connections', {})
         let conn_list[conn.cb_data['id']] = conn
         let b:vlime_server['connections'] = conn_list
+    endif
+endfunction
+
+function! VlimeStopCurServer()
+    let answer = input('Stop server ' . string(b:vlime_server['name']) . '? (y/n) ')
+    if tolower(answer) == 'y' || tolower(answer) == 'yes'
+        call VlimeStopServer(b:vlime_server)
+    else
+        call vlime#ui#ErrMsg('Canceled.')
     endif
 endfunction
 
