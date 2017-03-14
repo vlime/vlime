@@ -166,6 +166,11 @@ function! VlimeConnectToCurServer()
 endfunction
 
 function! VlimeStopCurServer()
+    if type(get(g:vlime_servers, b:vlime_server['id'], v:null)) == v:t_none
+        call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not running.')
+        return
+    endif
+
     let answer = input('Stop server ' . string(b:vlime_server['name']) . '? (y/n) ')
     if tolower(answer) == 'y' || tolower(answer) == 'yes'
         call VlimeStopServer(b:vlime_server)
