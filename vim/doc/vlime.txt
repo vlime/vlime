@@ -78,7 +78,7 @@ If you have sbcl in your $PATH, Vlime can start a server for you:
 
     1. Set up Quicklisp properly.
     2. Start editing a Common Lisp source file, and use
-       |vlime-mappings-server-rr| to run a server.
+       |vlime-mappings-invoke-server-rr| to run a server.
     3. Wait for the server. Vlime will automatically connect to it
        when it's ready, and become fully operational.
 
@@ -88,11 +88,13 @@ Note: If it's your first time running the server, Vlime will try to
 
           VlimeNewServer: failed to wait for Vlime Server 1 ...
 
-      So it's recommended that you start the server manually (see
-      below) for the first run.
+      In this case, you can use |vlime-mappings-server-c| to connect
+      to this server manually when it's ready.
 
-See |vlime-mappings-server| for more operations on Vlime servers. See
-|vlime-mappings| for all available operations.
+See |vlime-mappings-invoke-server| for more operations on Vlime
+servers, and |vlime-mappings-server| for operations available in the
+server output buffer. See |vlime-mappings| for all available Vlime
+operations.
 
 When you need to use some other Common Lisp implementation, run an
 instance of sbcl in arbitrary locations, or pass special arguments to
@@ -280,13 +282,13 @@ Mappings available in CL source files:         *vlime-mappings-source*
         <LocalLeader>cR
             Rename the current connection.
 
-    Server Management                          *vlime-mappings-server*
-        <LocalLeader>rr                     *vlime-mappings-server-rr*
+    Server Management                   *vlime-mappings-invoke-server*
+        <LocalLeader>rr              *vlime-mappings-invoke-server-rr*
             Run a new Vlime server and connect to it. To customize the
             server, see |g:vlime_cl_impl|.
         <LocalLeader>rv
             View the console output of a server.
-        <LocalLeader>rs                     *vlime-mappings-server-rs*
+        <LocalLeader>rs              *vlime-mappings-invoke-server-rs*
             Stop a server.
         <LocalLeader>rR
             Rename a server.
@@ -469,6 +471,13 @@ Mappings available in the thread list:    *vlime-mappings-thread-list*
     r
         Refresh the thread list.
 
+Mappings available in the server output buffer:
+                                               *vlime-mappings-server*
+    <LocalLeader>c                           *vlime-mappings-server-c*
+        Connect to this server.
+    <LocalLeader>s
+        Stop this server.
+
 ======================================================================
 5. Configuration                                        *vlime-config*
 
@@ -477,8 +486,8 @@ Vlime:
 
 g:vlime_cl_impl                                      *g:vlime_cl_impl*
     A |string| to designate the CL implementation to use when starting
-    a server via |vlime-mappings-server-rr|. This option has no effect
-    when connecting to an existing server via
+    a server via |vlime-mappings-invoke-server-rr|. This option has no
+    effect when connecting to an existing server via
     |vlime-mappings-conn-cc|. Default: "sbcl"
 
     You can define a function named
@@ -499,7 +508,7 @@ g:vlime_cl_impl                                      *g:vlime_cl_impl*
         :echo VlimeBuildServerCommand()
 
     The command returned by VlimeBuildServerCommand() will be executed
-    to start a Vlime server when the |vlime-mappings-server-rr|
+    to start a Vlime server when the |vlime-mappings-invoke-server-rr|
     command is invoked.
 
     Vlime has these builder functions predefined:
@@ -527,8 +536,8 @@ Note: If you use symlinks on Windows systems to point to Vlime, it may
 
 g:vlime_cl_wait_time                            *g:vlime_cl_wait_time*
     An integer specifying the time Vlime should wait when starting a
-    server via |vlime-mappings-server-rr|, or stopping a server via
-    |vlime-mappings-server-rs|, in seconds. Default: 10
+    server via |vlime-mappings-invoke-server-rr|, or stopping a server
+    via |vlime-mappings-invoke-server-rs|, in seconds. Default: 10
 
 g:vlime_address                                      *g:vlime_address*
     A |list| specifying the address of a Vlime server. This address

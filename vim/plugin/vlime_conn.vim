@@ -188,10 +188,15 @@ function! VlimeNewServer(...)
 
     let lisp_buf = ch_getbufnr(server_job, 'out')
     call vlime#ui#OpenBufferWithWinSettings(lisp_buf, v:false, 'server')
+
+    nnoremap <buffer> <silent> <LocalLeader>c :call VlimeConnectToCurServer()<cr>
+    nnoremap <buffer> <silent> <LocalLeader>s :call VlimeStopServer(b:vlime_server)<cr>
+
     let server_obj['timer'] = timer_start(g:vlime_cl_wait_interval,
                 \ function('s:CheckServerPort',
                     \ [server_obj, lisp_buf, auto_connect]),
                 \ {'repeat': -1})
+    call setbufvar(lisp_buf, 'vlime_server', server_obj)
 
     return server_obj
 endfunction
@@ -260,6 +265,36 @@ function! VlimeSelectServer()
         else
             return server
         endif
+    endif
+endfunction
+
+function! VlimeConnectToCurServer()
+    let port = v:null
+    if job_status(b:vlime_server['job']) == 'run'
+        let port = get(b:vlime_server, 'port', v:null)
+        if type(port) == v:t_none
+            " the server is not ready yet, search for the port again
+            let port = s:MatchServerCreatedPort()
+            if type(port) == v:t_none
+                call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not ready.')
+            else
+                let b:vlime_server['port'] = port
+            endif
+        endif
+    else
+        call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not running.')
+    endif
+
+    if type(port) == v:t_none
+        return
+    endif
+
+    let conn = VlimeConnectREPL('127.0.0.1', port)
+    if type(conn) != v:t_none
+        let conn.cb_data['server'] = b:vlime_server
+        let conn_list = get(b:vlime_server, 'connections', {})
+        let conn_list[conn.cb_data['id']] = conn
+        let b:vlime_server['connections'] = conn_list
     endif
 endfunction
 
