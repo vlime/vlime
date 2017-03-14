@@ -329,10 +329,10 @@ function! vlime#ui#WithBuffer(buf, Func)
     let old_buf = bufnr('%')
     let cur_buf = bufnr(a:buf)
     try
-        execute 'hide buffer ' . cur_buf
+        execute 'noautocmd hide buffer ' . cur_buf
         return a:Func()
     finally
-        execute 'buffer ' . old_buf
+        execute 'noautocmd buffer ' . old_buf
     endtry
 endfunction
 
