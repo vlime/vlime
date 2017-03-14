@@ -327,12 +327,14 @@ endfunction
 
 function! vlime#ui#WithBuffer(buf, Func)
     let old_buf = bufnr('%')
+    let old_pos = getcurpos()
     let cur_buf = bufnr(a:buf)
     try
         execute 'noautocmd hide buffer ' . cur_buf
         return a:Func()
     finally
         execute 'noautocmd buffer ' . old_buf
+        call setpos('.', old_pos)
     endtry
 endfunction
 
