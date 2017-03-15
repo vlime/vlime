@@ -65,9 +65,9 @@
                                   :if-does-not-exist :create)
                    (with-standard-io-syntax
                      (write port :stream pf)))))
-             (start-vlime-server ()
+             (start-vlime-server (backend)
                (multiple-value-bind (server local-name)
-                                    (start-server :usocket #(0 0 0 0) port #(127 0 0 1) swank-port)
+                                    (start-server backend #(0 0 0 0) port #(127 0 0 1) swank-port)
                  (declare (ignore server))
                  (announce-vlime-port (nth 1 local-name)))))
       (ecase backend
@@ -75,12 +75,12 @@
           (try-to-load :vlime-usocket)
           (dyn-call "SWANK" "SETUP-SERVER"
                     0 #'announce-swank-port swank-comm-style t nil)
-          (start-vlime-server))
+          (start-vlime-server :usocket))
         (:vlime-sbcl
           (try-to-load :vlime-sbcl)
           (dyn-call "SWANK" "SETUP-SERVER"
                     0 #'announce-swank-port swank-comm-style t nil)
-          (start-vlime-server))
+          (start-vlime-server :sbcl))
         (:vlime-patched
           (try-to-load :vlime-patched)
           (dyn-call "VLIME-PATCHED" "PATCH-SWANK")
