@@ -399,8 +399,7 @@ function! vlime#ui#ShowPreview(conn, content, append, ...)
                 set winfixwidth
             endif
 
-            if !getbufvar(buf, 'vlime_buffer_initialized', v:false)
-                call setbufvar(buf, 'vlime_buffer_initialized', v:true)
+            if !vlime#ui#VlimeBufferInitialized(buf)
                 call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
             endif
             if a:append
