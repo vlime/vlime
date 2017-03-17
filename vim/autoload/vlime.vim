@@ -7,6 +7,7 @@ function! vlime#New(...)
                 \ 'cb_data': cb_data,
                 \ 'channel': v:null,
                 \ 'remote_prefix': '',
+                \ 'ping_tag': 1,
                 \ 'ui': ui,
                 \ 'Connect': function('vlime#Connect'),
                 \ 'IsConnected': function('vlime#IsConnected'),
@@ -22,6 +23,7 @@ function! vlime#New(...)
                 \ 'WithPackage': function('vlime#WithPackage'),
                 \ 'WithThread': function('vlime#WithThread'),
                 \ 'EmacsRex': function('vlime#EmacsRex'),
+                \ 'Ping': function('vlime#Ping'),
                 \ 'Pong': function('vlime#Pong'),
                 \ 'ConnectionInfo': function('vlime#ConnectionInfo'),
                 \ 'SwankRequire': function('vlime#SwankRequire'),
@@ -221,6 +223,22 @@ function! vlime#EmacsRex(cmd) dict
         let pkg = pkg_info[0]
     endif
     return s:EmacsRex(a:cmd, pkg, self.GetCurrentThread())
+endfunction
+
+function! vlime#Ping() dict
+    let cur_tag = self.ping_tag
+    let self.ping_tag = (self.ping_tag >= 65536) ? 1 : (self.ping_tag + 1)
+
+    let result = self.Call(self.EmacsRex([s:SYM('SWANK', 'PING'), cur_tag]))
+    if type(result) == v:t_string && len(result) == 0
+        " Error or timeout
+        throw 'vlime#Ping: failed'
+    endif
+
+    call s:CheckReturnStatus(result, 'vlime#Ping')
+    if result[1][1] != cur_tag
+        throw 'vlime#Ping: bad tag'
+    endif
 endfunction
 
 function! vlime#Pong(thread, ttag) dict
