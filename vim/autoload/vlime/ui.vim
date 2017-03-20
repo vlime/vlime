@@ -325,19 +325,74 @@ function! vlime#ui#CurBufferContent()
     return join(filter(lines, "match(v:val, '^\s*;.*$') < 0"), "\n")
 endfunction
 
-function! vlime#ui#WithBuffer(buf, Func)
-    let old_buf = bufnr('%')
-    let old_pos = getcurpos()
-    let old_lazyredraw = &lazyredraw
-    let cur_buf = bufnr(a:buf)
+function! vlime#ui#GetCurWindowLayout()
+    let old_win = win_getid()
+    let layout = []
+    let old_ei = &eventignore
+    let &eventignore = 'all'
     try
-        set lazyredraw
-        execute 'silent noautocmd hide buffer ' . cur_buf
-        return a:Func()
+        windo call add(layout,
+                    \ {'id': win_getid(),
+                        \ 'height': winheight(0),
+                        \ 'width': winwidth(0)})
+        return layout
     finally
-        execute 'silent noautocmd buffer ' . old_buf
-        call setpos('.', old_pos)
+        call win_gotoid(old_win)
+        let &eventignore = old_ei
+    endtry
+endfunction
+
+function! vlime#ui#RestoreWindowLayout(layout)
+    let old_win = win_getid()
+    let old_ei = &eventignore
+    let &eventignore = 'all'
+    try
+        for ws in a:layout
+            call win_gotoid(ws['id'])
+            execute 'resize ' . ws['height']
+            execute 'vertical resize ' . ws['width']
+        endfor
+    finally
+        call win_gotoid(old_win)
+        let &eventignore = old_ei
+    endtry
+endfunction
+
+function! vlime#ui#WithBuffer(buf, Func)
+    let buf_win = bufwinid(a:buf)
+    let buf_visible = (buf_win >= 0) ? v:true : v:false
+
+    let old_win = win_getid()
+
+    let old_lazyredraw = &lazyredraw
+    let &lazyredraw = 1
+
+    let old_ei = &eventignore
+    let &eventignore = 'all'
+
+    try
+
+        if buf_visible
+            call win_gotoid(buf_win)
+            return a:Func()
+        else
+            let old_layout = vlime#ui#GetCurWindowLayout()
+            try
+                silent call vlime#ui#OpenBuffer(a:buf, v:false, v:true)
+                let tmp_win_nr = winnr()
+                try
+                    return a:Func()
+                finally
+                    execute tmp_win_nr . 'wincmd c'
+                endtry
+            finally
+                call vlime#ui#RestoreWindowLayout(old_layout)
+            endtry
+        endif
+    finally
+        call win_gotoid(old_win)
         let &lazyredraw = old_lazyredraw
+        let &eventignore = old_ei
     endtry
 endfunction
 
@@ -351,13 +406,13 @@ function! vlime#ui#OpenBuffer(name, create, show, ...)
             " Found it. Try to put it in a window
             let win_nr = bufwinnr(buf)
             if win_nr < 0
-                " Use silent! to suppress the 'Illegal file name' message
-                " and E303: Unable to open swap file...
                 if type(a:show) == v:t_string
                     let split_cmd = 'split #' . buf
                     if vertical
                         let split_cmd = join(['vertical', split_cmd])
                     endif
+                    " Use silent! to suppress the 'Illegal file name' message
+                    " and E303: Unable to open swap file...
                     silent! execute join([a:show, split_cmd])
                 else
                     silent! execute 'split #' . buf
