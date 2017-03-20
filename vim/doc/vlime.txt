@@ -265,6 +265,40 @@ adding this line to your |vimrc| file, to use the comma instead:
 
     let maplocalleader = ","
 
+                                                *vlime-mappings-remap*
+You can also remap a single function using |FileType| |autocmd|s.
+Vlime will automatically skip the Vlime functions mapped in your
+|vimrc|. For example:
+
+    augroup LocalVlimeKeys
+        autocmd!
+        autocmd FileType lisp nnoremap <silent> <buffer> <LocalLeader>S
+            \ :call VlimeSendCurThingToREPL("thing")<cr>
+    augroup end
+
+This will change the mapping for |vlime-mappings-send-ss| from
+"<LocalLeader>ss" to "<LocalLeader>S". Vlime uses these filetypes to
+distiguish different buffers:
+
+    lisp            Normal Lisp source file.
+    vlime_sldb      The debugger buffer.
+    vlime_repl      The REPL buffer.
+    vlime_inspector The inspector buffer.
+    vlime_xref      The cross reference buffer.
+    vlime_notes     The compiler notes buffer.
+    vlime_threads   The threads buffer.
+    vlime_server    The server output buffer.
+
+You can remap any Vlime key mapping in these buffers. See
+plugin/vlime.vim and autoload/vlime/ui/*.vim for the default mappings.
+
+Note: Vlime tries to be nice when mapping the default keys. If a key
+      sequence was already mapped, Vlime would NOT overwrite the
+      existing mapping. You'll have to resolve the conflict either by
+      remapping the Vlime function or by disabling the existing
+      mapping.
+
+                                                 *vlime-mappings-list*
 All the mappings listed below are defined in normal mode, unless
 specified otherwise.
 

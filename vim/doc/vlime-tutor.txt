@@ -275,6 +275,11 @@ noticed a few things when typing:
        use CTRL-n or CTRL-p to select a candidate. See
        |vlime-completions|.
 
+Note: If you have other completion plugins installed, the <Tab> key
+      may be mapped to the other plugins, and may not work as
+      expected. You can fall back to CTRL-x CTRL-o, or remap the
+      <Tab> key as described in |vlime-mappings-remap|.
+
 These are the most frequently used features when editing the source
 code.
 
