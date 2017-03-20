@@ -62,10 +62,15 @@ function! VlimeRenameSelectedServer()
     call VlimeRenameServer(server, new_name)
 endfunction
 
-" VlimeConnectREPL(host, port[, remote_prefix[, name]])
-function! VlimeConnectREPL(host, port, ...)
-    let remote_prefix = vlime#GetNthVarArg(a:000, 0, '')
-    let name = vlime#GetNthVarArg(a:000, 1, v:null)
+" VlimeConnectREPL([host[, port[, remote_prefix[, name]]]])
+function! VlimeConnectREPL(...)
+    let [def_host, def_port] = exists('g:vlime_address') ?
+                \ g:vlime_address : ['127.0.0.1', 7002]
+
+    let host = vlime#GetNthVarArg(a:000, 0, def_host)
+    let port = vlime#GetNthVarArg(a:000, 1, def_port)
+    let remote_prefix = vlime#GetNthVarArg(a:000, 2, '')
+    let name = vlime#GetNthVarArg(a:000, 3, v:null)
 
     if type(name) == v:t_none
         let conn = VlimeNewConnection()
@@ -73,7 +78,7 @@ function! VlimeConnectREPL(host, port, ...)
         let conn = VlimeNewConnection(name)
     endif
     try
-        call conn.Connect(a:host, a:port, remote_prefix)
+        call conn.Connect(host, port, remote_prefix)
     catch
         call VlimeCloseConnection(conn)
         call vlime#ui#ErrMsg(v:exception)
@@ -497,9 +502,6 @@ function! VlimeSetup(...)
     endif
     let b:vlime_setup = v:true
 
-    let [host, port] = exists('g:vlime_address') ?
-                \ g:vlime_address : ['127.0.0.1', 7002]
-
     setlocal omnifunc=VlimeCompleteFunc
     setlocal indentexpr=VlimeCalcCurIndent()
 
@@ -508,7 +510,7 @@ function! VlimeSetup(...)
     inoremap <buffer> <silent> <tab> <c-r>=VlimeKey("tab")<cr>
 
     " Connection operations
-    execute 'nnoremap <buffer> <silent> <LocalLeader>cc :call VlimeConnectREPL(' . string(host) . ', ' . port . ')<cr>'
+    nnoremap <buffer> <silent> <LocalLeader>cc :call VlimeConnectREPL()<cr>
     nnoremap <buffer> <silent> <LocalLeader>cs :call VlimeSelectCurConnection()<cr>
     nnoremap <buffer> <silent> <LocalLeader>cd :call VlimeCloseCurConnection()<cr>
     nnoremap <buffer> <silent> <LocalLeader>cR :call VlimeRenameCurConnection()<cr>
