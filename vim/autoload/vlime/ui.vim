@@ -706,6 +706,14 @@ function! vlime#ui#GetWindowSettings(win_name)
                 \ get(settings, 'vertical', v:false)]
 endfunction
 
+" vlime#ui#EnsureKeyMapped(mode, key, cmd[, flags])
+function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
+    let flags = vlime#GetNthVarArg(a:000, 0, '<buffer> <silent>')
+    if len(maparg(a:key, a:mode)) <= 0 && !hasmapto(a:cmd)
+        execute a:mode . join(['noremap', flags, a:key, a:cmd])
+    endif
+endfunction
+
 function! s:NormalizePackageName(name)
     let pattern1 = '^\(\(#\?:\)\|''\)\(.\+\)'
     let pattern2 = '"\(.\+\)"'
