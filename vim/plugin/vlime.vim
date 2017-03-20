@@ -505,9 +505,9 @@ function! VlimeSetup(...)
     setlocal omnifunc=VlimeCompleteFunc
     setlocal indentexpr=VlimeCalcCurIndent()
 
-    inoremap <buffer> <silent> <space> <space><c-r>=VlimeKey('space')<cr>
-    inoremap <buffer> <silent> <cr> <cr><c-r>=VlimeKey("cr")<cr>
-    inoremap <buffer> <silent> <tab> <c-r>=VlimeKey("tab")<cr>
+    call vlime#ui#EnsureKeyMapped('i', '<space>', '<space><c-r>=VlimeKey("space")<cr>')
+    call vlime#ui#EnsureKeyMapped('i', '<cr>', '<cr><c-r>=VlimeKey("cr")<cr>')
+    call vlime#ui#EnsureKeyMapped('i', '<tab>', '<c-r>=VlimeKey("tab")<cr>')
 
     " Connection operations
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>cc', ':call VlimeConnectREPL()<cr>')
