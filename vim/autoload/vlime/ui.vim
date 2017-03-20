@@ -709,8 +709,18 @@ endfunction
 " vlime#ui#EnsureKeyMapped(mode, key, cmd[, flags])
 function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
     let flags = vlime#GetNthVarArg(a:000, 0, '<buffer> <silent>')
-    if len(maparg(a:key, a:mode)) <= 0 && !hasmapto(a:cmd)
-        execute a:mode . join(['noremap', flags, a:key, a:cmd])
+    if type(a:key) != v:t_list
+        let key_list = [a:key]
+    else
+        let key_list = a:key
+    endif
+
+    if !hasmapto(a:cmd)
+        for kk in key_list
+            if len(maparg(kk, a:mode)) <= 0
+                execute a:mode . join(['noremap', flags, kk, a:cmd])
+            endif
+        endfor
     endif
 endfunction
 

@@ -2,6 +2,7 @@ function! vlime#ui#inspector#InitInspectorBuf(ui, conn, thread)
     let buf = bufnr(vlime#ui#InspectorBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+        call setbufvar(buf, '&filetype', 'vlime_inspector')
         call vlime#ui#WithBuffer(buf, function('s:InitInspectorBuf'))
     endif
     if type(a:thread) != v:t_none
@@ -235,11 +236,10 @@ function! s:CoordSorter(direction, c1, c2)
 endfunction
 
 function! s:InitInspectorBuf()
-    nnoremap <buffer> <silent> <cr> :call vlime#ui#inspector#InspectorSelect()<cr>
-    nnoremap <buffer> <silent> <space> :call vlime#ui#inspector#InspectorSelect()<cr>
-    nnoremap <buffer> <silent> <tab> :call vlime#ui#inspector#NextField(v:true)<cr>
-    nnoremap <buffer> <silent> <c-n> :call vlime#ui#inspector#NextField(v:true)<cr>
-    nnoremap <buffer> <silent> <c-p> :call vlime#ui#inspector#NextField(v:false)<cr>
-    nnoremap <buffer> <silent> p :call vlime#ui#inspector#InspectorPop()<cr>
-    nnoremap <buffer> <silent> R :call b:vlime_conn.InspectorReinspect({c, r -> c.ui.OnInspect(c, r, v:null, v:null)})<cr>
+    call vlime#ui#EnsureKeyMapped('n', ['<cr>', '<space>'], ':call vlime#ui#inspector#InspectorSelect()<cr>')
+    call vlime#ui#EnsureKeyMapped('n', ['<c-n>', '<tab>'], ':call vlime#ui#inspector#NextField(v:true)<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<c-p>', ':call vlime#ui#inspector#NextField(v:false)<cr>')
+    call vlime#ui#EnsureKeyMapped('n', 'p', ':call vlime#ui#inspector#InspectorPop()<cr>')
+    call vlime#ui#EnsureKeyMapped('n', 'R',
+                \ ':call b:vlime_conn.InspectorReinspect({c, r -> c.ui.OnInspect(c, r, v:null, v:null)})<cr>')
 endfunction

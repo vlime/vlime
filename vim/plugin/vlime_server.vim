@@ -54,10 +54,11 @@ function! VlimeNewServer(...)
     let g:vlime_next_server_id += 1
 
     let lisp_buf = ch_getbufnr(server_job, 'out')
+    call setbufvar(lisp_buf, '&filetype', 'vlime_server')
     call vlime#ui#OpenBufferWithWinSettings(lisp_buf, v:false, 'server')
 
-    nnoremap <buffer> <silent> <LocalLeader>c :call VlimeConnectToCurServer()<cr>
-    nnoremap <buffer> <silent> <LocalLeader>s :call VlimeStopCurServer()<cr>
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>c', ':call VlimeConnectToCurServer()<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>s', ':call VlimeStopCurServer()<cr>')
 
     let server_obj['timer'] = timer_start(g:vlime_cl_wait_interval,
                 \ function('s:CheckServerPort',

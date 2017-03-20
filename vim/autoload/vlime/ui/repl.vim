@@ -2,6 +2,7 @@ function! vlime#ui#repl#InitREPLBuf(conn)
     let repl_buf = bufnr(vlime#ui#REPLBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(repl_buf)
         call vlime#ui#SetVlimeBufferOpts(repl_buf, a:conn)
+        call setbufvar(repl_buf, '&filetype', 'vlime_repl')
         call vlime#ui#WithBuffer(repl_buf, function('s:InitREPLBuf'))
     endif
     return repl_buf
@@ -57,7 +58,9 @@ endfunction
 function! vlime#ui#repl#ClearREPLBuffer()
     setlocal modifiable
     1,$delete _
-    unlet b:vlime_repl_coords
+    if exists('b:vlime_repl_coords')
+        unlet b:vlime_repl_coords
+    endif
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable
 endfunction
@@ -90,13 +93,12 @@ function! s:InitREPLBuf()
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable
 
-    nnoremap <buffer> <silent> <c-c>
-                \ :call b:vlime_conn.Interrupt(
-                    \ {'name': 'REPL-THREAD', 'package': 'KEYWORD'})<cr>
-    nnoremap <buffer> <silent> <LocalLeader>I
-                \ :call vlime#ui#repl#InspectCurREPLPresentation()<cr>
-    nnoremap <buffer> <silent> <LocalLeader>y
-                \ :call vlime#ui#repl#YankCurREPLPresentation()<cr>
-    nnoremap <buffer> <silent> <LocalLeader>C
-                \ :call vlime#ui#repl#ClearREPLBuffer()<cr>
+    call vlime#ui#EnsureKeyMapped('n', '<c-c>',
+                \ ':call b:vlime_conn.Interrupt({"name": "REPL-THREAD", "package": "KEYWORD"})<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>I',
+                \ ':call vlime#ui#repl#InspectCurREPLPresentation()<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>y',
+                \ ':call vlime#ui#repl#YankCurREPLPresentation()<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>C',
+                \ ':call vlime#ui#repl#ClearREPLBuffer()<cr>')
 endfunction
