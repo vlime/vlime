@@ -450,8 +450,8 @@ function! vlime#ui#ShowPreview(conn, content, append, ...)
             " We already switched to the preview window
             if type(win_size) != v:t_none
                 execute 'resize ' . win_size
-                set winfixheight
-                set winfixwidth
+                setlocal winfixheight
+                setlocal winfixwidth
             endif
 
             if !vlime#ui#VlimeBufferInitialized(buf)
@@ -475,8 +475,8 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
                 \ vlime#ui#MiniBufName(a:conn, a:prompt), v:true, 'input')
     call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
     call setbufvar(buf, '&buflisted', 0)
-    set winfixheight
-    set winfixwidth
+    setlocal winfixheight
+    setlocal winfixwidth
 
     call vlime#ui#AppendString('; ' . a:prompt . "\n")
     if type(a:init_val) != v:t_none
