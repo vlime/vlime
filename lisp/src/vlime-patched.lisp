@@ -23,33 +23,37 @@
           ; It may not be necessary for other implementations.
           return (coerce buf '(vector (unsigned-byte 8)))))
 
-(defun patch-swank ()
-  (defun swank/rpc:read-message (stream package)
-    (let* ((bin-line (vlime-patched::read-binary-line stream))
-           (line (swank/backend:utf8-to-string bin-line))
-           (json (yason:parse line)))
-      ; We dump and read the form again,
-      ; to get the extra behaviors of READ-FORM.
-      ; Some implementations won't work without this.
-      (let ((form
-              (swank/rpc::read-form
-                (swank/rpc::prin1-to-string-for-emacs
-                  (json-to-form json) package)
-                package)))
-        (if (client-emacs-rex-p form)
-          (seq-client-to-swank form)
-          (remove-client-seq form)))))
+(defun read-message (stream package)
+  (let* ((bin-line (read-binary-line stream))
+         (line (swank/backend:utf8-to-string bin-line))
+         (json (yason:parse line)))
+    ; We dump and read the form again,
+    ; to get the extra behaviors of READ-FORM.
+    ; Some implementations won't work without this.
+    (let ((form
+            (swank/rpc::read-form
+              (swank/rpc::prin1-to-string-for-emacs
+                (json-to-form json) package)
+              package)))
+      (if (client-emacs-rex-p form)
+        (seq-client-to-swank form)
+        (remove-client-seq form)))))
 
-  (defun swank/rpc:write-message (message package stream)
-    (let* ((*package* package)
-           (json (form-to-json message)))
-      (if (eql (car message) :return)
-        (setf json (seq-swank-to-client json))
-        (setf json (list 0 json)))
-      (let* ((encoded (with-output-to-string (json-out)
-                        (yason:encode json json-out)))
-             (full-line (concatenate
-                          'string encoded (format nil "~c~c" #\return #\linefeed)))
-             (bin-line (swank/backend:string-to-utf8 full-line)))
-        (write-sequence bin-line stream)
-        (finish-output stream)))))
+(defun write-message (message package stream)
+  (let* ((*package* package)
+         (json (form-to-json message)))
+    (if (eql (car message) :return)
+      (setf json (seq-swank-to-client json))
+      (setf json (list 0 json)))
+    (let* ((encoded (with-output-to-string (json-out)
+                      (yason:encode json json-out)))
+           (full-line (concatenate
+                        'string encoded (format nil "~c~c" #\return #\linefeed)))
+           (bin-line (swank/backend:string-to-utf8 full-line)))
+      (write-sequence bin-line stream)
+      (finish-output stream))))
+
+(defun patch-swank ()
+  (setf (symbol-function 'swank/rpc:read-message) (symbol-function 'read-message)
+        (symbol-function 'swank/rpc:write-message) (symbol-function 'write-message))
+  (values))
