@@ -284,16 +284,17 @@ function! VlimeSwankRequire(contribs)
     call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete'))
 endfunction
 
-function! VlimeCurOperatorArgList()
+function! VlimeShowOperatorArgList(op)
+    if len(a:op) <= 0
+        return
+    endif
+
     let conn = VlimeGetConnection(v:true)
     if type(conn) == v:t_none
         return
     endif
 
-    let op = vlime#ui#CurOperator()
-    if len(op) > 0
-        call conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))
-    endif
+    call conn.OperatorArgList(a:op, function('s:OnOperatorArgListComplete', [a:op]))
 endfunction
 
 function! VlimeDescribeCurSymbol(sym_type)
@@ -370,7 +371,7 @@ function! VlimeDocumentationSymbol(sym_type)
         if type(conn) == v:t_none
             return
         endif
-        call conn.DocumentationSymbol(sym, function('s:OnDocumentationSymbolComplete'))
+        call conn.DocumentationSymbol(sym, function('s:ShowAsyncResult'))
     endif
 endfunction
 
@@ -425,9 +426,15 @@ endfunction
 
 function! VlimeKey(key)
     if tolower(a:key) == 'space'
-        call VlimeCurOperatorArgList()
+        let op = vlime#ui#CurOperator()
+        if s:NeedToShowArgList(op)
+            call VlimeShowOperatorArgList(op)
+        endif
     elseif tolower(a:key) == 'cr'
-        call VlimeCurOperatorArgList()
+        let op = vlime#ui#CurOperator()
+        if s:NeedToShowArgList(op)
+            call VlimeShowOperatorArgList(op)
+        endif
     elseif tolower(a:key) == 'tab'
         let line = getline('.')
         let spaces = vlime#ui#CalcLeadingSpaces(line, v:true)
@@ -552,7 +559,7 @@ function! VlimeSetup(...)
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>ds', ':call VlimeAproposList()<cr>')
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>ddo', ':call VlimeDocumentationSymbol("operator")<cr>')
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>dda', ':call VlimeDocumentationSymbol("atom")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>dr', ':call VlimeCurOperatorArgList()<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>dr', ':call VlimeShowOperatorArgList(vlime#ui#CurOperator())<cr>')
 
     " Inspection
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>II', ':call VlimeInspectCurThing("thing")<cr>')
@@ -648,6 +655,7 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
         return
     endif
     call vlime#ui#ShowPreview(a:conn, a:result, v:false, 2)
+    let s:last_imode_arglist_op = a:sym
 endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)
@@ -678,10 +686,6 @@ function! s:OnAproposListComplete(conn, result)
         endfor
         call vlime#ui#ShowPreview(a:conn, content, v:false, 12)
     endif
-endfunction
-
-function! s:OnDocumentationSymbolComplete(conn, result)
-    call vlime#ui#ShowPreview(a:conn, a:result, v:false, 12)
 endfunction
 
 function! s:OnSLDBBreakComplete(conn, result)
@@ -722,4 +726,17 @@ function! s:CleanUpNullBufConnections()
     finally
         execute 'hide buffer ' . old_buf
     endtry
+endfunction
+
+if !exists('s:last_imode_arglist_op')
+    let s:last_imode_arglist_op = ''
+endif
+
+function! s:NeedToShowArgList(op)
+    if len(a:op) > 0
+        let preview_visible = (bufwinnr(vlime#ui#PreviewBufName()) >= 0)
+        return (!preview_visible || a:op != s:last_imode_arglist_op)
+    else
+        return !!v:false
+    endif
 endfunction
