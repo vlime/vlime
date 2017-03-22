@@ -66,9 +66,12 @@ function! vlime#ui#sldb#ShowFrameDetails()
     if nth < 0
         let nth = 0
     endif
+    let frame = b:vlime_sldb_frames[nth]
+    let restartable = s:FrameRestartable(frame)
+
     call vlime#ChainCallbacks(
                 \ function(b:vlime_conn.FrameLocalsAndCatchTags, [nth]),
-                \ function('s:ShowFrameLocalsCB', [nth]),
+                \ function('s:ShowFrameLocalsCB', [nth, restartable]),
                 \ function(b:vlime_conn.FrameSourceLocation, [nth]),
                 \ function('s:ShowFrameSourceLocationCB', [nth, v:true]))
 endfunction
@@ -83,8 +86,13 @@ endfunction
 
 function! vlime#ui#sldb#RestartCurFrame()
     let nth = s:MatchFrame()
-    if nth >= 0
-        call b:vlime_conn.RestartFrame(nth)
+    if nth >= 0 && nth < len(b:vlime_sldb_frames)
+        let frame = b:vlime_sldb_frames[nth]
+        if s:FrameRestartable(frame)
+            call b:vlime_conn.RestartFrame(nth)
+        else
+            call vlime#ui#ErrMsg('Frame ' . nth . ' is not restartable.')
+        endif
     endif
 endfunction
 
@@ -238,8 +246,11 @@ function! s:MatchFrame()
     return (len(matches) > 0) ? (matches[1] + 0) : -1
 endfunction
 
-function! s:ShowFrameLocalsCB(frame, conn, result)
-    let content = 'Frame: ' . a:frame . "\n"
+function! s:ShowFrameLocalsCB(frame, restartable, conn, result)
+    let content = 'Frame: ' . a:frame
+    let restartable_str = a:restartable ? ' (Restartable)' : ' (Not restartable)'
+    let content .= (restartable_str . "\n")
+
     let locals = a:result[0]
     if type(locals) != v:t_none
         let content .= "\nLocals:\n"
@@ -319,4 +330,12 @@ function! s:InitSLDBBuf()
     call vlime#ui#EnsureKeyMapped('n', 'e', ':call vlime#ui#sldb#EvalStringInCurFrame()<cr>')
     call vlime#ui#EnsureKeyMapped('n', 'D', ':call vlime#ui#sldb#DisassembleCurFrame()<cr>')
     call vlime#ui#EnsureKeyMapped('n', 'R', ':call vlime#ui#sldb#ReturnFromCurFrame()<cr>')
+endfunction
+
+function! s:FrameRestartable(frame)
+    if len(a:frame) > 2
+        let flags = vlime#PListToDict(a:frame[2])
+        return get(flags, 'RESTARTABLE', v:false)
+    endif
+    return v:false
 endfunction
