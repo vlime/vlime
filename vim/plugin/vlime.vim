@@ -654,7 +654,7 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
     if type(a:result) == v:t_none
         return
     endif
-    call vlime#ui#ShowPreview(a:conn, a:result, v:false, 2)
+    call vlime#ui#ShowArgList(a:conn, a:result)
     let s:last_imode_arglist_op = a:sym
 endfunction
 
@@ -670,7 +670,7 @@ endfunction
 
 function! s:OnAproposListComplete(conn, result)
     if type(a:result) == v:t_none
-        call vlime#ui#ShowPreview(a:conn, 'No result found.', v:false, 12)
+        call vlime#ui#ShowPreview(a:conn, 'No result found.', v:false)
     else
         let content = ''
         for item in a:result
@@ -684,7 +684,7 @@ function! s:OnAproposListComplete(conn, result)
             endif
             let content .= "\n"
         endfor
-        call vlime#ui#ShowPreview(a:conn, content, v:false, 12)
+        call vlime#ui#ShowPreview(a:conn, content, v:false)
     endif
 endfunction
 
@@ -715,7 +715,7 @@ function! s:OnListThreadsComplete(conn, result)
 endfunction
 
 function! s:ShowAsyncResult(conn, result)
-    call vlime#ui#ShowPreview(a:conn, a:result, v:false, 12)
+    call vlime#ui#ShowPreview(a:conn, a:result, v:false)
 endfunction
 
 function! s:CleanUpNullBufConnections()
@@ -734,8 +734,27 @@ endif
 
 function! s:NeedToShowArgList(op)
     if len(a:op) > 0
-        let preview_visible = (bufwinnr(vlime#ui#PreviewBufName()) >= 0)
-        return (!preview_visible || a:op != s:last_imode_arglist_op)
+        let arglist_buf = bufnr(vlime#ui#ArgListBufName())
+        let arglist_win_nr = bufwinnr(arglist_buf)
+        let arglist_visible = (arglist_win_nr >= 0)
+        if !arglist_visible || a:op != s:last_imode_arglist_op
+            return !!v:true
+        else
+            let conn = VlimeGetConnection(v:true)
+            if type(conn) == v:t_none
+                " The current buffer doesn't have an active connection.
+                " Close the arglist window explicitly, to avoid confusion.
+                execute arglist_win_nr . 'wincmd c'
+                return !!v:false
+            else
+                " If the current connection is different with the connection
+                " used in arglist_buf, the arglist needs a refresh.
+                let arglist_conn = getbufvar(
+                            \ arglist_buf, 'vlime_conn',
+                            \ {'cb_data': {'id': -1}})
+                return conn.cb_data['id'] != arglist_conn.cb_data['id']
+            endif
+        endif
     else
         return !!v:false
     endif

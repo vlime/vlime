@@ -5,7 +5,8 @@ let g:vlime_default_window_settings = {
             \ 'xref': {'pos': 'botright', 'size': 12, 'vertical': v:false},
             \ 'notes': {'pos': 'botright', 'size': 12, 'vertical': v:false},
             \ 'threads': {'pos': 'botright', 'size': 12, 'vertical': v:false},
-            \ 'preview': {'pos': 'topleft', 'size': v:null, 'vertical': v:false},
+            \ 'preview': {'pos': 'aboveleft', 'size': 12, 'vertical': v:false},
+            \ 'arglist': {'pos': 'topleft', 'size': 2, 'vertical': v:false},
             \ 'input': {'pos': 'botright', 'size': 4, 'vertical': v:false},
             \ 'server': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
             \ }
@@ -438,24 +439,22 @@ function! vlime#ui#OpenBufferWithWinSettings(buf_name, buf_create, win_name)
                 \ win_pos, win_vert, win_size)
 endfunction
 
-" vlime#ui#ShowPreview(conn, content, append[, win_size])
-function! vlime#ui#ShowPreview(conn, content, append, ...)
+function! vlime#ui#ShowTransientWindow(
+            \ conn, content, append, buf_name, win_name)
     let win_size = vlime#GetNthVarArg(a:000, 0)
     let old_win_id = win_getid()
     try
-        let [win_pos, _win_size, _win_vert] = vlime#ui#GetWindowSettings('preview')
-        let buf = vlime#ui#OpenBuffer(
-                    \ vlime#ui#PreviewBufName(), v:true, win_pos)
+        let buf = vlime#ui#OpenBufferWithWinSettings(
+                    \ a:buf_name, v:true, a:win_name)
         if buf > 0
-            " We already switched to the preview window
-            if type(win_size) != v:t_none
-                execute 'resize ' . win_size
-                setlocal winfixheight
-                setlocal winfixwidth
-            endif
+            " We already switched to the transient window
+            setlocal winfixheight
+            setlocal winfixwidth
 
             if !vlime#ui#VlimeBufferInitialized(buf)
                 call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+            else
+                call setbufvar(buf, 'vlime_conn', a:conn)
             endif
             if a:append
                 call vlime#ui#AppendString(a:content)
@@ -463,11 +462,22 @@ function! vlime#ui#ShowPreview(conn, content, append, ...)
                 call vlime#ui#ReplaceContent(a:content)
             endif
         endif
+        return buf
     finally
         call win_gotoid(old_win_id)
     endtry
+endfunction
 
-    return buf
+function! vlime#ui#ShowPreview(conn, content, append)
+    return vlime#ui#ShowTransientWindow(
+                \ a:conn, a:content, a:append,
+                \ vlime#ui#PreviewBufName(), 'preview')
+endfunction
+
+function! vlime#ui#ShowArgList(conn, content)
+    return vlime#ui#ShowTransientWindow(
+                \ a:conn, a:content, v:false,
+                \ vlime#ui#ArgListBufName(), 'arglist')
 endfunction
 
 function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
@@ -651,6 +661,10 @@ endfunction
 
 function! vlime#ui#PreviewBufName()
     return join(['vlime', 'preview'], g:vlime_buf_name_sep)
+endfunction
+
+function! vlime#ui#ArgListBufName()
+    return join(['vlime', 'arglist'], g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#InspectorBufName(conn)

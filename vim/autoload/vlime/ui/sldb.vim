@@ -167,7 +167,7 @@ function! vlime#ui#sldb#DisassembleCurFrame()
                 \ function(b:vlime_conn.SLDBDisassemble,
                     \ [nth,
                         \ {c, r ->
-                            \ vlime#ui#ShowPreview(c, r, v:false, 12)}]))
+                            \ vlime#ui#ShowPreview(c, r, v:false)}]))
 endfunction
 
 function! vlime#ui#sldb#ReturnFromCurFrame()
@@ -265,7 +265,7 @@ function! s:ShowFrameLocalsCB(frame, conn, result)
             let content .= '  ' . ct . "\n"
         endfor
     endif
-    call vlime#ui#ShowPreview(a:conn, content, v:false, 12)
+    call vlime#ui#ShowPreview(a:conn, content, v:false)
 endfunction
 
 function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
@@ -292,7 +292,7 @@ function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
     if a:append
         call vlime#ui#ShowPreview(a:conn, content, v:true)
     else
-        call vlime#ui#ShowPreview(a:conn, content, v:false, 12)
+        call vlime#ui#ShowPreview(a:conn, content, v:false)
     endif
 endfunction
 
