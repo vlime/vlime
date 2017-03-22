@@ -484,7 +484,7 @@ more details, move the cursor to frame 2 and press "d" (without the
 quote marks). A preview buffer will show all local variable names and
 their values, plus other useful info:
 
-    Frame: 2
+    Frame: 2 (Restartable)
 
     Locals:
       A:   ((((# . 8) . 13) . 21) . 34)
