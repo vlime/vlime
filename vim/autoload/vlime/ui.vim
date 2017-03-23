@@ -439,9 +439,11 @@ function! vlime#ui#OpenBufferWithWinSettings(buf_name, buf_create, win_name)
                 \ win_pos, win_vert, win_size)
 endfunction
 
+" vlime#ui#ShowTransientWindow(
+"       conn, content, append, buf_name, win_name[, file_type])
 function! vlime#ui#ShowTransientWindow(
-            \ conn, content, append, buf_name, win_name)
-    let win_size = vlime#GetNthVarArg(a:000, 0)
+            \ conn, content, append, buf_name, win_name, ...)
+    let file_type = vlime#GetNthVarArg(a:000, 0, v:null)
     let old_win_id = win_getid()
     try
         let buf = vlime#ui#OpenBufferWithWinSettings(
@@ -453,6 +455,9 @@ function! vlime#ui#ShowTransientWindow(
 
             if !vlime#ui#VlimeBufferInitialized(buf)
                 call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
+                if type(file_type) != v:t_none
+                    call setbufvar(buf, '&filetype', file_type)
+                endif
             else
                 call setbufvar(buf, 'vlime_conn', a:conn)
             endif
@@ -471,13 +476,13 @@ endfunction
 function! vlime#ui#ShowPreview(conn, content, append)
     return vlime#ui#ShowTransientWindow(
                 \ a:conn, a:content, a:append,
-                \ vlime#ui#PreviewBufName(), 'preview')
+                \ vlime#ui#PreviewBufName(), 'preview', 'vlime_preview')
 endfunction
 
 function! vlime#ui#ShowArgList(conn, content)
     return vlime#ui#ShowTransientWindow(
                 \ a:conn, a:content, v:false,
-                \ vlime#ui#ArgListBufName(), 'arglist')
+                \ vlime#ui#ArgListBufName(), 'arglist', 'vlime_arglist')
 endfunction
 
 function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
