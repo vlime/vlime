@@ -177,6 +177,10 @@ Common Lisp implementation Vlime server is running on supports these.
 For more available operations in the debugger buffer, see
 |vlime-mappings-debugger|.
 
+Note: Some debugger features are not supported by some Common Lisp
+      implementations. These unsupported operations will most likely
+      result in an error message.
+
 ----------------------------------------------------------------------
 3.6 Inspector                                        *vlime-inspector*
 
