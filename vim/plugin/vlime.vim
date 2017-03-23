@@ -401,6 +401,46 @@ function! VlimeListThreads()
     call conn.ListThreads(function('s:OnListThreadsComplete'))
 endfunction
 
+function! VlimeUndefineCurFunction()
+    let sym = vlime#ui#CurAtom()
+    if len(sym) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    call conn.UndefineFunction(sym, function('s:OnUndefineFunctionComplete'))
+endfunction
+
+function! VlimeUninternCurSymbol()
+    let sym = vlime#ui#CurAtom()
+    if len(sym) <= 0
+        return
+    endif
+
+    let conn = VlimeGetConnection()
+    if type(conn) == v:t_none
+        return
+    endif
+
+    let matched = matchlist(sym, '\(\(\k\+\)\?:\)\?\(\k\+\)')
+    if len(matched) > 0
+        let sym_name = matched[3]
+        let sym_pkg = matched[2]
+        if matched[1] == ':'
+            let sym_pkg = 'KEYWORD'
+        elseif matched[1] == ''
+            " Use the current package
+            let sym_pkg = v:null
+        endif
+        call conn.UninternSymbol(sym_name, sym_pkg,
+                    \ function('s:OnUninternSymbolComplete'))
+    endif
+endfunction
+
 function! VlimeCompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
@@ -570,6 +610,10 @@ function! VlimeSetup(...)
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>Ia', ':call VlimeInspectCurThing("atom")<cr>')
     call vlime#ui#EnsureKeyMapped('v', '<LocalLeader>I', ':call VlimeInspectCurThing("selection")<cr>')
 
+    " Undefining things
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>uf', ':call VlimeUndefineCurFunction()<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>us', ':call VlimeUninternCurSymbol()<cr>')
+
     " Other stuff
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>i', ':call VlimeInteractionMode()<cr>')
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>l', ':call VlimeLoadCurFile()<cr>')
@@ -712,6 +756,14 @@ function! s:OnListThreadsComplete(conn, result)
     if type(a:conn.ui) != v:t_none
         call a:conn.ui.OnThreads(a:conn, a:result)
     endif
+endfunction
+
+function! s:OnUndefineFunctionComplete(conn, result)
+    echom 'Undefined function ' . a:result
+endfunction
+
+function! s:OnUninternSymbolComplete(conn, result)
+    echom a:result
 endfunction
 
 function! s:ShowAsyncResult(conn, result)

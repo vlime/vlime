@@ -73,6 +73,8 @@ function! vlime#New(...)
                 \ 'ListThreads': function('vlime#ListThreads'),
                 \ 'KillNthThread': function('vlime#KillNthThread'),
                 \ 'DebugNthThread': function('vlime#DebugNthThread'),
+                \ 'UndefineFunction': function('vlime#UndefineFunction'),
+                \ 'UninternSymbol': function('vlime#UninternSymbol'),
                 \ 'OnServerEvent': function('vlime#OnServerEvent'),
                 \ 'server_event_handlers': {
                     \ 'PING': function('vlime#OnPing'),
@@ -537,6 +539,32 @@ function! vlime#DebugNthThread(nth, ...) dict
                     \ [s:SYM('SWANK', 'DEBUG-NTH-THREAD'), a:nth]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#DebugNthThread']))
+endfunction
+
+" vlime#UndefineFunction(func_name[, callback])
+function! vlime#UndefineFunction(func_name, ...) dict
+    let Callback = s:GetNthVarArg(a:000, 0)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'UNDEFINE-FUNCTION'), a:func_name]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#UndefineFunction']))
+endfunction
+
+"vlime#UninternSymbol(sym_name[, package[, callback]])
+function! vlime#UninternSymbol(sym_name, ...) dict
+    let pkg = vlime#GetNthVarArg(a:000, 0, v:null)
+    let Callback = vlime#GetNthVarArg(a:000, 1, v:null)
+    if type(pkg) == v:t_none
+        let pkg_info = self.GetCurrentPackage()
+        if type(pkg_info) == v:t_list
+            let pkg = pkg_info[0]
+        endif
+    endif
+
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'UNINTERN-SYMBOL'), a:sym_name, pkg]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#UninternSymbol']))
 endfunction
 
 " vlime#SetPackage(package[, callback])
