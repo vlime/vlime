@@ -292,6 +292,8 @@ distiguish different buffers:
     vlime_notes     The compiler notes buffer.
     vlime_threads   The threads buffer.
     vlime_server    The server output buffer.
+    vlime_preview   The preview buffer.
+    vlime_arglist   The arglist buffer.
 
 You can remap any Vlime key mapping in these buffers. See
 plugin/vlime.vim and autoload/vlime/ui/*.vim for the default mappings.
