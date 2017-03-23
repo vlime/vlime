@@ -393,6 +393,12 @@ Mappings available in CL source files:         *vlime-mappings-source*
         <LocalLeader>dr
             Show the arglist for the s-expression under the cursor.
 
+    Undefining Things
+        <LocalLeader>uf
+            Undefine the function under the cursor.
+        <LocalLeader>us
+            Unintern the symbol under the cursor.
+
     Inspection                       *vlime-mappings-invoke-inspector*
         <LocalLeader>II           *vlime-mappings-invoke-inspector-II*
             If there's an s-expression under the cursor, evaluate it,
