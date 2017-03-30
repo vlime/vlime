@@ -461,11 +461,14 @@ function! vlime#ui#ShowTransientWindow(
             else
                 call setbufvar(buf, 'vlime_conn', a:conn)
             endif
+
+            setlocal modifiable
             if a:append
                 call vlime#ui#AppendString(a:content)
             else
                 call vlime#ui#ReplaceContent(a:content)
             endif
+            setlocal nomodifiable
         endif
         return buf
     finally
