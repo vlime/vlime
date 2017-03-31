@@ -576,7 +576,7 @@ Note: If you use symlinks on Windows systems to point to Vlime, it may
 
           function! VlimeBuildServerCommandFor_xxx(vlime_loader, vlime_eval)
               return join(["sbcl",
-                          \ "--load", "c:\path\to\vlime\lisp\load-vlime.lisp",
+                          \ "--load", "c:\\path\\to\\vlime\\lisp\\load-vlime.lisp",
                           \ "--eval", a:vlime_eval], " ")
           endfunction
 
