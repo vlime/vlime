@@ -426,7 +426,7 @@ function! VlimeUninternCurSymbol()
         return
     endif
 
-    let matched = matchlist(sym, '\(\(\k\+\)\?:\)\?\(\k\+\)')
+    let matched = matchlist(sym, '\(\([^:]\+\)\?::\?\)\?\(\k\+\)')
     if len(matched) > 0
         let sym_name = matched[3]
         let sym_pkg = matched[2]
