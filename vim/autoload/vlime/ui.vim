@@ -555,6 +555,59 @@ function! vlime#ui#IndentCurLine(indent)
     call setpos('.', [0, line('.'), spaces + 1, 0, a:indent + 1])
 endfunction
 
+" vlime#ui#CurArgPosForIndent([pos])
+function! vlime#ui#CurArgPosForIndent(...)
+    let s_pos = vlime#GetNthVarArg(a:000, 0, v:null)
+    let arg_pos = -1
+
+    if type(s_pos) == v:t_none
+        let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
+    else
+        let [s_line, s_col] = s_pos
+    endif
+    if s_line <= 0 || s_col <= 0
+        return arg_pos
+    endif
+
+    let cur_pos = getcurpos()
+    let paren_count = 0
+    let delimiter = v:false
+
+    for ln in range(s_line, cur_pos[1])
+        let line = getline(ln)
+        let idx = (ln == s_line) ? (s_col - 1) : 0
+        let end_idx = (ln == cur_pos[1]) ? cur_pos[2] : len(line)
+
+        while idx < end_idx
+            let ch = line[idx]
+            if ch == ' ' || ch == "\<tab>"
+                let delimiter = v:true
+            else
+                if delimiter
+                    let delimiter = v:false
+                    if paren_count == 1
+                        let arg_pos += 1
+                    endif
+                endif
+
+                if ch == '('
+                    let delimiter = v:true
+                    let paren_count += 1
+                elseif ch == ')'
+                    let delimiter = v:true
+                    let paren_count -= 1
+                endif
+            endif
+
+            let idx += 1
+        endwhile
+
+        let delimiter = v:true
+    endfor
+
+    return arg_pos
+endfunction
+
 function! vlime#ui#Pad(prefix, sep, max_len)
     return a:prefix . a:sep . repeat(' ', a:max_len + 1 - len(a:prefix))
 endfunction

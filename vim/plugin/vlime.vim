@@ -534,7 +534,11 @@ function! VlimeCalcCurIndent()
 
     let indent_info = get(conn.cb_data, 'indent_info', {})
     if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
-        return vs_col + 1
+        if vlime#ui#CurArgPosForIndent([s_line, s_col]) >= (indent_info[op][0] + 1)
+            return vs_col + 1
+        else
+            return lispindent(line_no)
+        endif
     else
         return lispindent(line_no)
     endif

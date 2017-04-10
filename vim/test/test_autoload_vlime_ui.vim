@@ -217,6 +217,50 @@ function! TestSurroundingOperator()
     endtry
 endfunction
 
+function! TestCurArgPosForIndent()
+    call NewDummyBuffer()
+    try
+        call append(line('$'), '(aa bb cc dd)')
+        call setpos('.', [0, line('$'), 1, 0])
+        call assert_equal(-1, vlime#ui#CurArgPosForIndent())
+
+        call setpos('.', [0, line('$'), 2, 0])
+        call assert_equal(0, vlime#ui#CurArgPosForIndent())
+
+        call setpos('.', [0, line('$'), 5, 0])
+        call assert_equal(1, vlime#ui#CurArgPosForIndent())
+
+        call setpos('.', [0, line('$'), 8, 0])
+        call assert_equal(2, vlime#ui#CurArgPosForIndent())
+
+        call setpos('.', [0, line('$'), 13, 0])
+        call assert_equal(3, vlime#ui#CurArgPosForIndent())
+
+        call append(line('$'), '(aa bb cc dd )')
+        call setpos('.', [0, line('$'), 14, 0])
+        call assert_equal(4, vlime#ui#CurArgPosForIndent())
+
+        call append(line('$'), ['(aa bb', 'cc dd)'])
+        call setpos('.', [0, line('$'), 1, 0])
+        call assert_equal(2, vlime#ui#CurArgPosForIndent())
+
+        call append(line('$'), '(aa bb (cc dd) ee)')
+        call setpos('.', [0, line('$'), 8, 0])
+        call assert_equal(2, vlime#ui#CurArgPosForIndent())
+
+        call setpos('.', [0, line('$'), 9, 0])
+        call assert_equal(0, vlime#ui#CurArgPosForIndent())
+
+        call setpos('.', [0, line('$'), 12, 0])
+        call assert_equal(1, vlime#ui#CurArgPosForIndent())
+
+        call setpos('.', [0, line('$'), 16, 0])
+        call assert_equal(3, vlime#ui#CurArgPosForIndent())
+    finally
+        call CleanupDummyBuffer()
+    endtry
+endfunction
+
 function! TestAppendString()
     call NewDummyBuffer()
     try
@@ -285,5 +329,6 @@ call TestCurAtom()
 call TestCurExpr()
 call TestCurOperator()
 call TestSurroundingOperator()
+call TestCurArgPosForIndent()
 call TestAppendString()
 call TestMatchCoord()
