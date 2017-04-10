@@ -466,12 +466,12 @@ endfunction
 
 function! VlimeKey(key)
     if tolower(a:key) == 'space'
-        let op = vlime#ui#CurOperator()
+        let op = vlime#ui#SurroundingOperator()
         if s:NeedToShowArgList(op)
             call VlimeShowOperatorArgList(op)
         endif
     elseif tolower(a:key) == 'cr'
-        let op = vlime#ui#CurOperator()
+        let op = vlime#ui#SurroundingOperator()
         if s:NeedToShowArgList(op)
             call VlimeShowOperatorArgList(op)
         endif
@@ -508,7 +508,7 @@ function! VlimeCalcCurIndent()
         return lispindent(line_no)
     endif
 
-    let s_op = vlime#ui#CurOperator()
+    let s_op = vlime#ui#SurroundingOperator()
     let old_cur = getcurpos()
     try
         call setpos('.', [0, s_line, s_col, 0])

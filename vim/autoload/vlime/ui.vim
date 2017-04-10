@@ -286,13 +286,25 @@ function! vlime#ui#CurOperator()
         endif
     else
         " There may be an incomplete expression
-        let [s_line, s_col] = searchpairpos('(', '', ')', 'bn')
+        let [s_line, s_col] = searchpairpos('(', '', ')', 'cbnW')
         if s_line > 0 && s_col > 0
             let op_line = getline(s_line)[(s_col-1):]
             let matches = matchlist(op_line, '(\s*\(\k\+\)\s*')
             if len(matches) > 0
                 return matches[1]
             endif
+        endif
+    endif
+    return ''
+endfunction
+
+function! vlime#ui#SurroundingOperator()
+    let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
+    if s_line > 0 && s_col > 0
+        let op_line = getline(s_line)[(s_col-1):]
+        let matches = matchlist(op_line, '(\s*\(\k\+\)\s*')
+        if len(matches) > 0
+            return matches[1]
         endif
     endif
     return ''
