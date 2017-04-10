@@ -142,6 +142,81 @@ function! TestCurExpr()
     endtry
 endfunction
 
+function! TestCurOperator()
+    call NewDummyBuffer()
+    try
+        call append(line('$'), ' (cons 1 2) ')
+        call setpos('.', [0, line('$'), 1, 0])
+        call assert_equal('', vlime#ui#CurOperator())
+
+        call setpos('.', [0, line('$'), 2, 0])
+        call assert_equal('cons', vlime#ui#CurOperator())
+
+        call setpos('.', [0, line('$'), 3, 0])
+        call assert_equal('cons', vlime#ui#CurOperator())
+
+        call setpos('.', [0, line('$'), 11, 0])
+        call assert_equal('cons', vlime#ui#CurOperator())
+
+        call setpos('.', [0, line('$'), 12, 0])
+        call assert_equal('', vlime#ui#CurOperator())
+
+        call append(line('$'), '(cons (list 1 2) 3)')
+        call setpos('.', [0, line('$'), 6, 0])
+        call assert_equal('cons', vlime#ui#CurOperator())
+
+        call append(line('$'), '(cons (list 1 2) 3)')
+        call setpos('.', [0, line('$'), 7, 0])
+        call assert_equal('list', vlime#ui#CurOperator())
+
+        call append(line('$'), '(cons (list 1 2) 3)')
+        call setpos('.', [0, line('$'), 16, 0])
+        call assert_equal('list', vlime#ui#CurOperator())
+
+        call append(line('$'), '(cons (list 1 2) 3)')
+        call setpos('.', [0, line('$'), 17, 0])
+        call assert_equal('cons', vlime#ui#CurOperator())
+
+        call append(line('$'), '(cons (list 1 2')
+        call setpos('.', [0, line('$'), 1, 0])
+        call assert_equal('cons', vlime#ui#CurOperator())
+
+        call setpos('.', [0, line('$'), 6, 0])
+        call assert_equal('cons', vlime#ui#CurOperator())
+
+        call setpos('.', [0, line('$'), 7, 0])
+        call assert_equal('list', vlime#ui#CurOperator())
+
+        call setpos('.', [0, line('$'), 15, 0])
+        call assert_equal('list', vlime#ui#CurOperator())
+    finally
+        call CleanupDummyBuffer()
+    endtry
+endfunction
+
+function! TestSurroundingOperator()
+    call NewDummyBuffer()
+    try
+        call append(line('$'), '(cons (list 1 2) 3)')
+        call setpos('.', [0, line('$'), 6, 0])
+        call assert_equal('cons', vlime#ui#SurroundingOperator())
+
+        call setpos('.', [0, line('$'), 7, 0])
+        call assert_equal('cons', vlime#ui#SurroundingOperator())
+
+        call setpos('.', [0, line('$'), 8, 0])
+        call assert_equal('list', vlime#ui#SurroundingOperator())
+
+        call setpos('.', [0, line('$'), 16, 0])
+        call assert_equal('list', vlime#ui#SurroundingOperator())
+
+        call setpos('.', [0, line('$'), 17, 0])
+        call assert_equal('cons', vlime#ui#SurroundingOperator())
+    finally
+        call CleanupDummyBuffer()
+    endtry
+endfunction
+
 function! TestAppendString()
     call NewDummyBuffer()
     try
@@ -208,5 +283,7 @@ call TestCurBufferContent()
 call TestCurChar()
 call TestCurAtom()
 call TestCurExpr()
+call TestCurOperator()
+call TestSurroundingOperator()
 call TestAppendString()
 call TestMatchCoord()
