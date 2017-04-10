@@ -1,21 +1,36 @@
+function! NewDummyBuffer()
+    noswapfile tabedit vlime_test_dummy_buffer
+    setlocal buftype=nofile
+    setlocal bufhidden=hide
+    setlocal nobuflisted
+endfunction
+
+function! CleanupDummyBuffer()
+    bunload!
+endfunction
+
+
 function! TestCurrentPackage()
-    let ui = vlime#ui#New()
-    call assert_equal(['COMMON-LISP-USER', 'CL-USER'], ui.GetCurrentPackage())
-    " XXX: Concat the in-package expression at runtime, to avoid being detected
-    " by GetCurrentPackage()
-    execute 'normal! Go(' . 'in-package :dummy-package-1)'
+    call NewDummyBuffer()
     try
+        let ui = vlime#ui#New()
+        call assert_equal(['COMMON-LISP-USER', 'CL-USER'], ui.GetCurrentPackage())
+
+        call append(line('$'), '(in-package :dummy-package-1)')
+        call setpos('.', [0, line('$'), 1, 0])
         call assert_equal(['DUMMY-PACKAGE-1', 'DUMMY-PACKAGE-1'], ui.GetCurrentPackage())
+
         call ui.SetCurrentPackage(['DUMMY-PACKAGE-2', 'DUMMY-PACKAGE-2'])
         call assert_equal(['DUMMY-PACKAGE-2', 'DUMMY-PACKAGE-2'], ui.GetCurrentPackage())
     finally
-        normal! Gdd
+        call CleanupDummyBuffer()
     endtry
 endfunction
 
 function! TestCurrentThread()
     let ui = vlime#ui#New()
     call assert_equal(v:true, ui.GetCurrentThread())
+
     call ui.SetCurrentThread(1)
     call assert_equal(1, ui.GetCurrentThread())
 endfunction
@@ -45,120 +60,90 @@ function! TestOpenBuffer()
 endfunction
 
 function! TestCurBufferContent()
-    let buf = bufnr('vlime_test_cur_buffer_content', v:true)
-    let old_buf = bufnr('%')
+    call NewDummyBuffer()
     try
-        execute 'hide buffer ' . buf
         call append(0, ['line 1', 'line 2'])
         call assert_equal("line 1\nline 2\n", vlime#ui#CurBufferContent())
     finally
-        execute 'bunload! ' . buf
-        execute 'buffer ' . old_buf
+        call CleanupDummyBuffer()
     endtry
 endfunction
 
 function! TestCurChar()
-    normal! Goa
+    call NewDummyBuffer()
     try
+        call append(line('$'), 'a')
+        call setpos('.', [0, line('$'), 1, 0])
         call assert_equal('a', vlime#ui#CurChar())
-    finally
-        normal! Gdd
-    endtry
 
-    normal! Go字
-    try
+        call append(line('$'), '字')
+        call setpos('.', [0, line('$'), 1, 0])
         call assert_equal('字', vlime#ui#CurChar())
     finally
-        normal! Gdd
+        call CleanupDummyBuffer()
     endtry
 endfunction
 
 function! TestCurAtom()
-    normal! Godummy-atom-name
+    call NewDummyBuffer()
     try
-        normal! ^
+        call append(line('$'), 'dummy-atom-name')
+        call setpos('.', [0, line('$'), 1, 0])
         call assert_equal('dummy-atom-name', vlime#ui#CurAtom())
-    finally
-        normal! Gdd
-    endtry
 
-    normal! Godummy/atom/name another-name
-    try
-        normal! ^
+        call append(line('$'), 'dummy/atom/name another-name')
+        call setpos('.', [0, line('$'), 1, 0])
         call assert_equal('dummy/atom/name', vlime#ui#CurAtom())
-    finally
-        normal! Gdd
-    endtry
 
-    normal! Go*dummy-atom-name* another-name
-    try
-        normal! ^
+        call append(line('$'), '*dummy-atom-name* another-name')
+        call setpos('.', [0, line('$'), 1, 0])
         call assert_equal('*dummy-atom-name*', vlime#ui#CurAtom())
-    finally
-        normal! Gdd
-    endtry
 
-    normal! Go+dummy-atom-name+ another-name
-    try
-        normal! ^
+        call append(line('$'), '+dummy-atom-name+ another-name')
+        call setpos('.', [0, line('$'), 1, 0])
         call assert_equal('+dummy-atom-name+', vlime#ui#CurAtom())
-    finally
-        normal! Gdd
-    endtry
 
-    normal! Goyet-another-name dummy-package:dummy-atom-name another-name
-    try
-        normal! ^17l
+        call append(line('$'), 'yet-another-name dummy-package:dummy-atom-name another-name')
+        call setpos('.', [0, line('$'), 18, 0])
         call assert_equal('dummy-package:dummy-atom-name', vlime#ui#CurAtom())
     finally
-        normal! Gdd
+        call CleanupDummyBuffer()
     endtry
 endfunction
 
 function! TestCurExpr()
-    normal! Go(cons 1 2)
+    call NewDummyBuffer()
     try
+        call append(line('$'), '(cons 1 2)')
+        call setpos('.', [0, line('$'), 1, 0])
         let cur_line = line('.')
         call assert_equal(['(cons 1 2)', [cur_line, 1], [cur_line, 10]],
                     \ vlime#ui#CurExpr(v:true))
-    finally
-        normal! Gdd
-    endtry
 
-    normal! Go(cons (cons 1 2) 3)
-    try
-        normal! ^
+        call append(line('$'), '(cons (cons 1 2) 3)')
+        call setpos('.', [0, line('$'), 1, 0])
         let cur_line = line('.')
         call assert_equal(['(cons (cons 1 2) 3)', [cur_line, 1], [cur_line, 19]],
                     \ vlime#ui#CurExpr(v:true))
-    finally
-        normal! Gdd
-    endtry
 
-    normal! Go(cons (cons 1 2) 3)
-    try
-        normal! ^6l
+        call append(line('$'), '(cons (cons 1 2) 3)')
+        call setpos('.', [0, line('$'), 7, 0])
         let cur_line = line('.')
         call assert_equal(['(cons 1 2)', [cur_line, 7], [cur_line, 16]],
                     \ vlime#ui#CurExpr(v:true))
-    finally
-        normal! Gdd
-    endtry
 
-    call append(line('$'), ['(cons', '1 2)'])
-    try
-        normal! G
+        call append(line('$'), ['(cons', '1 2)'])
+        call setpos('.', [0, line('$'), 1, 0])
         let cur_line = line('.')
         call assert_equal(["(cons\n1 2)", [cur_line - 1, 1], [cur_line, 4]],
                     \ vlime#ui#CurExpr(v:true))
     finally
-        normal! Gdddd
+        call CleanupDummyBuffer()
     endtry
 endfunction
 
 function! TestAppendString()
-    let buf = vlime#ui#OpenBuffer('vlime_test_append_string',
-                \ v:true, 'botright')
+    call NewDummyBuffer()
     try
         call vlime#ui#AppendString('line1')
         call vlime#ui#AppendString(" line1 line1\n")
@@ -173,7 +158,7 @@ function! TestAppendString()
         call vlime#ui#ReplaceContent("some other\ntext")
         call assert_equal("some other\ntext", vlime#ui#CurBufferContent())
     finally
-        execute 'bunload! ' . buf
+        call CleanupDummyBuffer()
     endtry
 endfunction
 
