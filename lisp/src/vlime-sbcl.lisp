@@ -4,8 +4,7 @@
   (:use #:cl
         #:aio-sbcl
         #:vlime-protocol
-        #:vlime-connection)
-  (:export #:main))
+        #:vlime-connection))
 
 (in-package #:vlime-sbcl)
 

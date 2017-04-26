@@ -3,8 +3,7 @@
 (defpackage #:vlime-usocket
   (:use #:cl
         #:usocket
-        #:vlime-protocol)
-  (:export #:main))
+        #:vlime-protocol))
 
 (in-package #:vlime-usocket)
 
