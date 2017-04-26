@@ -27,6 +27,24 @@ function! TestCurrentPackage()
     endtry
 endfunction
 
+function! TestCurInPackage()
+    call NewDummyBuffer()
+    try
+        call append(line('$'), '(in-package :dummy-package-1)')
+        call assert_equal('DUMMY-PACKAGE-1', vlime#ui#CurInPackage())
+
+        normal! ggVG_d
+        call append(line('$'), '(in-package :dummy-package-1')
+        call assert_equal('', vlime#ui#CurInPackage())
+
+        normal! ggVG_d
+        call append(line('$'), '(in-package :dummy-package-1 ()')
+        call assert_equal('', vlime#ui#CurInPackage())
+    finally
+        call CleanupDummyBuffer()
+    endtry
+endfunction
+
 function! TestCurrentThread()
     let ui = vlime#ui#New()
     call assert_equal(v:true, ui.GetCurrentThread())
@@ -320,6 +338,7 @@ endfunction
 
 let v:errors = []
 call TestCurrentPackage()
+call TestCurInPackage()
 call TestCurrentThread()
 call TestWithBuffer()
 call TestOpenBuffer()
