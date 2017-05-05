@@ -14,7 +14,7 @@ function! vlime#compat#neovim#ch_open(host, port, callback)
         let chan_obj['chan_callback'] = a:callback
     endif
 
-    let job_id = jobstart(['ncat', a:host, string(a:port)], chan_obj)
+    let job_id = jobstart(VlimeBuildConnectorCommand(a:host, a:port), chan_obj)
     let chan_obj['job_id'] = job_id
     return chan_obj
 endfunction

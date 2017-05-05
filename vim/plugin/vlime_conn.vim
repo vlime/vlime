@@ -36,6 +36,24 @@ function! VlimeRenameConnection(conn, new_name)
     let r_conn.cb_data['name'] = a:new_name
 endfunction
 
+function! VlimeBuildConnectorCommandFor_ncat(host, port)
+    return ['ncat', a:host, string(a:port)]
+endfunction
+
+function! VlimeBuildConnectorCommand(host, port)
+    let connector_name = exists('g:vlime_neovim_connector') ?
+                \ g:vlime_neovim_connector : 'ncat'
+
+    try
+        let Builder = function('VlimeBuildConnectorCommandFor_' . connector_name)
+    catch /^Vim\%((\a\+)\)\=:E700/  " Unknown function
+        throw 'VlimeBuildConnectorCommand: connector ' .
+                    \ string(connector_name) . ' not supported'
+    endtry
+
+    return Builder(a:host, a:port)
+endfunction
+
 function! VlimeSelectConnection(quiet)
     if len(g:vlime_connections) == 0
         if !a:quiet
