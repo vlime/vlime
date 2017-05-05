@@ -28,7 +28,7 @@ function! TestConnectFailed()
         call conn.Connect('127.0.0.1', 65535)
         call assert_false(v:true, 'Connect call did not fail')
     catch
-        call assert_exception('not an open channel')
+        call assert_exception('failed to open channel')
     endtry
 endfunction
 
