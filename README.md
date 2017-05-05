@@ -1,8 +1,8 @@
 Intro
 =====
 
-Vlime is a Common Lisp dev environment for Vim, similar to SLIME for Emacs and
-SLIMV for Vim.
+Vlime is a Common Lisp dev environment for Vim (and Neovim), similar to SLIME
+for Emacs and SLIMV for Vim.
 
 It provides REPL integration, as well as omni-completions, cross reference
 utilities, a nice inspector, debugger support, and many other great facilities
@@ -30,20 +30,20 @@ The server is basically a wrapped Swank server. The extra wrapper code
 translates the messages from JSON to Swank commands, and vise versa.
 
 The client handles user input, emits JSON messages, and communicates with the
-server via Vim channels.
+server via Vim channels, or Neovim Jobs.
 
 Current State
 =============
 
-Vlime is currently in a pre-alpha state. One should expect changes in APIs and
-key bindings etc.
+Vlime is currently in beta state. Please beware of bugs, and file an issue if
+you find anything weird/unexpected (see the Contributing section below).
 
 Dependencies
 ============
 
 Must-have:
 
-* Vim 8.0+ and +channel
+* Vim 8.0+ with +channel, or Neovim 0.2.0+ with ncat
 * ASDF
 * Quicklisp
 * An Internet connection to install other dependencies from Quicklisp
@@ -52,6 +52,12 @@ Note that there was a bug in the channel implementation of Vim, which may
 cause large messages to be dropped incorrectly. This was fixed in 8.0.0312,
 so using 8.0.0312 or a more recent version is strongly recommended.
 [Details](https://groups.google.com/d/topic/vim_dev/Rl0X_R5pjxk/discussion).
+
+When running inside Neovim, Vlime relies on the [ncat](https://nmap.org/ncat/)
+command to make connections to the server. You'll need to have that command
+available in your `$PATH`. This is because Neovim doesn't support making
+non-messagepack socket connections
+[yet](https://github.com/neovim/neovim/pull/6594#issuecomment-298851709).
 
 Currently Vlime can only detect s-expressions inside parentheses. To make your
 life easier, use [paredit](https://github.com/kovisoft/paredit) or
@@ -108,5 +114,5 @@ The source repo for Vlime is hosted on GitHub:
 
     https://github.com/l04m33/vlime
 
-Please send pull requests, and feel free to contact me at l04m33(at)gmail.com
-if you have any suggestions for improving Vlime.
+Issues and pull requests are welcome. Please feel free to contact me at
+l04m33(at)gmail.com if you have any suggestions for improving Vlime.
