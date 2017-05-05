@@ -1,3 +1,7 @@
+function! vlime#compat#neovim#ch_type()
+    return v:t_dict
+endfunction
+
 function! vlime#compat#neovim#ch_open(host, port, callback)
     let chan_obj = {
                 \ 'hostname': a:host,

@@ -1,3 +1,7 @@
+function! vlime#compat#vim#ch_type()
+    return v:t_channel
+endfunction
+
 function! vlime#compat#vim#ch_open(host, port, callback)
     let opts = {'mode': 'json'}
     if type(a:callback) != type(v:null)

@@ -1,6 +1,6 @@
 if !exists('s:ch_impl')
     let s:ch_impl = {}
-    let s:ch_impl_functions = ['ch_open', 'ch_status', 'ch_info', 'ch_close', 'ch_evalexpr', 'ch_sendexpr']
+    let s:ch_impl_functions = ['ch_type', 'ch_open', 'ch_status', 'ch_info', 'ch_close', 'ch_evalexpr', 'ch_sendexpr']
 
     if has('nvim')
         let s:ch_impl_name = 'neovim'
@@ -13,6 +13,10 @@ if !exists('s:ch_impl')
     endfor
 endif
 
+
+function! vlime#compat#ch_type()
+    return s:ch_impl.ch_type()
+endfunction
 
 " vlime#compat#ch_open(host, port[, callback])
 function! vlime#compat#ch_open(host, port, ...)
