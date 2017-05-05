@@ -57,11 +57,40 @@ function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback)
 endfunction
 
 function! s:ChanInputCB(job_id, data, source) dict
-    echom '==========================='
-    echom 'job_id: ' . string(a:job_id)
-    echom 'data: ' . string(a:data)
-    echom 'source: ' . string(a:source)
-    echom 'self: ' . string(self)
+    let obj_list = []
+    let buffered = get(self, 'recv_buffer', '')
+    for frag in a:data
+        let buffered .= frag
+        try
+            " XXX: what about E488: Trailing characters?
+            let json_obj = json_decode(buffered)
+            call add(obj_list, json_obj)
+            let buffered = ''
+        catch /^Vim\%((\a\+)\)\=:E474/  " Invalid argument
+        endtry
+    endfor
+
+    let self['recv_buffer'] = buffered
+
+    for json_obj in obj_list
+        if json_obj[0] == 0
+            let CB = get(self, 'chan_callback', v:null)
+        else
+            try
+                let CB = remove(self.msg_callbacks, json_obj[0])
+            catch /^Vim\%((\a\+)\)\=:E716/  " Key not present in Dictionary
+                let CB = v:null
+            endtry
+        endif
+
+        if type(CB) != type(v:null)
+            try
+                call CB(self, json_obj[1])
+            catch /.*/
+                call vlime#ui#ErrMsg('vlime: callback failed: ' . v:exception)
+            endtry
+        endif
+    endfor
 endfunction
 
 function! s:IncMsgID(chan)

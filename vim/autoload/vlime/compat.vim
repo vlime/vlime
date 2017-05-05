@@ -16,8 +16,8 @@ endif
 
 " vlime#compat#ch_open(host, port[, callback])
 function! vlime#compat#ch_open(host, port, ...)
-    let callback = vlime#GetNthVarArg(a:000, 0, v:null)
-    return s:ch_impl.ch_open(a:host, a:port, callback)
+    let Callback = vlime#GetNthVarArg(a:000, 0, v:null)
+    return s:ch_impl.ch_open(a:host, a:port, Callback)
 endfunction
 
 function! vlime#compat#ch_status(chan)
@@ -38,6 +38,6 @@ endfunction
 
 " vlime#compat#ch_sendexpr(chan, expr[, callback])
 function! vlime#compat#ch_sendexpr(chan, expr, ...)
-    let callback = vlime#GetNthVarArg(a:000, 0, v:null)
-    return s:ch_impl.ch_sendexpr(a:chan, a:expr, callback)
+    let Callback = vlime#GetNthVarArg(a:000, 0, v:null)
+    return s:ch_impl.ch_sendexpr(a:chan, a:expr, Callback)
 endfunction
