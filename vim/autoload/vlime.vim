@@ -121,7 +121,7 @@ function! vlime#Close() dict
     if type(self.channel) == vlime#compat#ch_type()
         try
             call vlime#compat#ch_close(self.channel)
-        catch /^Vim\%((\a\+)\)\=:E906/  " Not an open channel
+        catch /^vlime#compat#.*not an open channel.*/
         endtry
         let self.channel = v:null
     endif
