@@ -40,3 +40,32 @@ function! vlime#compat#vim#ch_sendexpr(chan, expr, callback)
         return ch_sendexpr(a:chan, a:expr, {'callback': a:callback})
     endif
 endfunction
+
+
+function! vlime#compat#vim#job_start(cmd, buf_name)
+    let opts = {
+                \ 'in_io': 'pipe',
+                \ 'out_io': 'buffer',
+                \ 'err_io': 'buffer',
+                \ 'out_name': a:buf_name,
+                \ 'err_name': a:buf_name,
+                \ 'in_mode': 'nl',
+                \ 'out_mode': 'nl',
+                \ 'err_mode': 'nl',
+                \ 'out_modifiable': 0,
+                \ 'err_modifiable': 0,
+                \ }
+    return job_start(a:cmd, opts)
+endfunction
+
+function! vlime#compat#vim#job_stop(job)
+    return job_stop(a:job)
+endfunction
+
+function! vlime#compat#vim#job_status(job)
+    return (job_status(a:job) == 'run') ? 'run' : 'dead'
+endfunction
+
+function! vlime#compat#vim#job_getbufnr(job)
+    return ch_getbufnr(a:job, 'out')
+endfunction

@@ -60,6 +60,49 @@ function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback)
     endif
 endfunction
 
+
+function! vlime#compat#neovim#job_start(cmd, buf_name)
+    let buf = bufnr(a:buf_name, v:true)
+    call setbufvar(buf, '&buftype', 'nofile')
+    call setbufvar(buf, '&bufhidden', 'hide')
+    call setbufvar(buf, '&swapfile', 0)
+    call setbufvar(buf, '&buflisted', 1)
+    call setbufvar(buf, '&modifiable', 0)
+
+    let job_obj = {
+                \ 'on_stdout': function('s:JobInputCB'),
+                \ 'on_stderr': function('s:JobInputCB'),
+                \ 'out_name': a:buf_name,
+                \ 'err_name': a:buf_name,
+                \ 'out_buf': buf,
+                \ 'err_buf': buf,
+                \ }
+
+    let job_id = jobstart(a:cmd, job_obj)
+    let job_obj['job_id'] = job_id
+    return job_obj
+endfunction
+
+function! vlime#compat#neovim#job_stop(job)
+    call jobstop(a:job.job_id)
+    return !!v:true
+endfunction
+
+function! vlime#compat#neovim#job_status(job)
+    try
+        let job_pid = jobpid(a:job.job_id)
+    catch /^Vim\%((\a\+)\)\=:E900/  " Invalid job id
+        let job_pid = 0
+    endtry
+
+    return (job_pid > 0) ? 'run' : 'dead'
+endfunction
+
+function! vlime#compat#neovim#job_getbufnr(job)
+    return get(a:job, 'out_buf', 0)
+endfunction
+
+
 function! s:ChanInputCB(job_id, data, source) dict
     let obj_list = []
     let buffered = get(self, 'recv_buffer', '')
@@ -103,4 +146,22 @@ function! s:IncMsgID(chan)
     else
         let a:chan.next_msg_id += 1
     endif
+endfunction
+
+function! s:JobInputCB(job_id, data, source) dict
+    let buf = (a:source == 'stdout') ? self.out_buf : self.err_buf
+    call vlime#ui#WithBuffer(buf, function('s:AppendToJobBuffer', [a:data]))
+endfunction
+
+function! s:AppendToJobBuffer(data)
+    call setbufvar('%', '&modifiable', 1)
+    try
+        for line in a:data
+            if len(line) > 0
+                call append(line('$'), line)
+            endif
+        endfor
+    finally
+        call setbufvar('%', '&modifiable', 0)
+    endtry
 endfunction
