@@ -54,9 +54,9 @@ so using 8.0.0312 or a more recent version is strongly recommended.
 [Details](https://groups.google.com/d/topic/vim_dev/Rl0X_R5pjxk/discussion).
 
 When running inside Neovim, Vlime relies on the [ncat](https://nmap.org/ncat/)
-command to make connections to the server. You'll need to have that command
-available in your `$PATH`. This is because Neovim doesn't support making
-non-messagepack socket connections
+command (or other netcat clones) to make connections to the server. You'll need
+to have that command available in your `$PATH`. This is because Neovim doesn't
+support making non-messagepack socket connections
 [yet](https://github.com/neovim/neovim/pull/6594#issuecomment-298851709).
 
 Currently Vlime can only detect s-expressions inside parentheses. To make your
