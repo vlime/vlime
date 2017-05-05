@@ -29,19 +29,10 @@ function! VlimeNewServer(...)
         let server_name = 'Vlime Server ' . g:vlime_next_server_id
     endif
 
-    let server_job = job_start(
+    let server_job = vlime#compat#job_start(
                 \ VlimeBuildServerCommand(),
-                \ {'in_io': 'pipe',
-                    \ 'out_io': 'buffer',
-                    \ 'err_io': 'buffer',
-                    \ 'out_name': vlime#ui#ServerBufName(server_name),
-                    \ 'err_name': vlime#ui#ServerBufName(server_name),
-                    \ 'in_mode': 'nl',
-                    \ 'out_mode': 'nl',
-                    \ 'err_mode': 'nl',
-                    \ 'out_modifiable': 0,
-                    \ 'err_modifiable': 0})
-    if job_status(server_job) != 'run'
+                \ vlime#ui#ServerBufName(server_name))
+    if vlime#compat#job_status(server_job) != 'run'
         throw 'VlimeNewServer: failed to start server job'
     endif
 
@@ -53,7 +44,7 @@ function! VlimeNewServer(...)
     let g:vlime_servers[g:vlime_next_server_id] = server_obj
     let g:vlime_next_server_id += 1
 
-    let lisp_buf = ch_getbufnr(server_job, 'out')
+    let lisp_buf = vlime#compat#job_getbufnr(server_job)
     call setbufvar(lisp_buf, '&filetype', 'vlime_server')
     call vlime#ui#OpenBufferWithWinSettings(lisp_buf, v:false, 'server')
 
@@ -77,7 +68,7 @@ function! VlimeStopServer(server)
     if type(timer) != type(v:null)
         call timer_stop(timer)
     endif
-    if !job_stop(r_server['job'])
+    if !vlime#compat#job_stop(r_server['job'])
         call vlime#ui#ErrMsg('VlimeStopServer: failed to stop ' . r_server['name'])
     else
         let r_server['timer'] = timer_start(g:vlime_cl_wait_interval,
@@ -100,7 +91,7 @@ endfunction
 function! VlimeShowServer(server)
     let server_id = s:NormalizeServerID(a:server)
     let r_server = g:vlime_servers[server_id]
-    let buf = ch_getbufnr(r_server['job'], 'out')
+    let buf = vlime#compat#job_getbufnr(r_server['job'])
     call vlime#ui#OpenBuffer(buf, v:false, 'botright')
 endfunction
 
@@ -138,7 +129,7 @@ endfunction
 
 function! VlimeConnectToCurServer()
     let port = v:null
-    if job_status(b:vlime_server['job']) == 'run'
+    if vlime#compat#job_status(b:vlime_server['job']) == 'run'
         let port = get(b:vlime_server, 'port', v:null)
         if type(port) == type(v:null)
             " the server is not ready yet, search for the port again
@@ -255,7 +246,7 @@ function! s:CheckServerPort(server, lisp_buf, auto_connect, timer)
 endfunction
 
 function! s:CheckServerStopped(server, timer)
-    if job_status(a:server['job']) == 'run'
+    if vlime#compat#job_status(a:server['job']) == 'run'
         let timer_count = get(a:server, 'stop_timer_count', 1)
         if timer_count >= s:CalcServerCheckTimesLimit()
             if get(a:server, 'timer', -1) == a:timer
