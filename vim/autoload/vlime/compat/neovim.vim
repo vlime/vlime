@@ -67,6 +67,9 @@ function! vlime#compat#neovim#job_start(cmd, buf_name)
     call setbufvar(buf, '&bufhidden', 'hide')
     call setbufvar(buf, '&swapfile', 0)
     call setbufvar(buf, '&buflisted', 1)
+
+    call vlime#ui#WithBuffer(buf, { -> append(0, 'Reading from channel output...')})
+
     call setbufvar(buf, '&modifiable', 0)
 
     let job_obj = {
