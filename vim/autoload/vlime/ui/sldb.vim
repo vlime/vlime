@@ -252,7 +252,7 @@ function! s:ShowFrameLocalsCB(frame, restartable, conn, result)
     let content .= (restartable_str . "\n")
 
     let locals = a:result[0]
-    if type(locals) != v:t_none
+    if type(locals) != type(v:null)
         let content .= "\nLocals:\n"
         let rlocals = []
         let max_name_len = 0
@@ -270,7 +270,7 @@ function! s:ShowFrameLocalsCB(frame, restartable, conn, result)
         endfor
     endif
     let catch_tags = a:result[1]
-    if type(catch_tags) != v:t_none
+    if type(catch_tags) != type(v:null)
         let content .= "\nCatch tags:\n"
         for ct in catch_tags
             let content .= '  ' . ct . "\n"
@@ -294,7 +294,7 @@ function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
     let content .= '  File: ' . a:result[1][1] . "\n"
     let content .= '  Position: ' . a:result[2][1] . "\n"
 
-    if type(a:result[3]) != v:t_none
+    if type(a:result[3]) != type(v:null)
         let snippet_lines = split(a:result[3][1], "\n")
         let snippet = join(map(snippet_lines, '"    " . v:val'), "\n")
         let content .= "  Snippet:\n" . snippet . "\n"

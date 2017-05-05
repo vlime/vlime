@@ -11,7 +11,7 @@ endfunction
 function! vlime#ui#xref#FillXRefBuf(xref_list)
     setlocal modifiable
 
-    if type(a:xref_list) == v:t_none
+    if type(a:xref_list) == type(v:null)
         call vlime#ui#ReplaceContent('No xref found.')
         let b:vlime_xref_coords = []
         let b:vlime_xref_list = []
@@ -60,7 +60,7 @@ function! vlime#ui#xref#OpenCurXref()
         endif
     endfor
 
-    if type(xref_coord) == v:t_none
+    if type(xref_coord) == type(v:null)
         return
     endif
 
@@ -68,7 +68,7 @@ function! vlime#ui#xref#OpenCurXref()
     let path = s:FindXRefLocationProp('FILE', xref_loc)
     let pos = s:FindXRefLocationProp('POSITION', xref_loc)
 
-    if type(path) != v:t_none
+    if type(path) != type(v:null)
         call vlime#ui#JumpToOrOpenFile(path, pos)
     elseif xref_loc[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(xref_loc[1])
@@ -78,7 +78,7 @@ function! vlime#ui#xref#OpenCurXref()
 endfunction
 
 function! s:FindXRefLocationProp(key, prop_list)
-    if type(a:prop_list) != v:t_none
+    if type(a:prop_list) != type(v:null)
         for p in a:prop_list
             if type(p) == v:t_list && p[0]['name'] == a:key
                 return p[1]

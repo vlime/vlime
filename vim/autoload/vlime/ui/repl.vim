@@ -31,7 +31,7 @@ endfunction
 function! vlime#ui#repl#InspectCurREPLPresentation()
     let p_coord = s:FindCurCoord(
                 \ getcurpos(), getbufvar('%', 'vlime_repl_coords', {}))
-    if type(p_coord) == v:t_none
+    if type(p_coord) == type(v:null)
         return
     endif
 
@@ -45,7 +45,7 @@ endfunction
 function! vlime#ui#repl#YankCurREPLPresentation()
     let p_coord = s:FindCurCoord(
                 \ getcurpos(), getbufvar('%', 'vlime_repl_coords', {}))
-    if type(p_coord) == v:t_none
+    if type(p_coord) == type(v:null)
         return
     endif
 

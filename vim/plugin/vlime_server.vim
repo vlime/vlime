@@ -23,7 +23,7 @@ function! VlimeNewServer(...)
     let auto_connect = vlime#GetNthVarArg(a:000, 0, v:true)
     let name = vlime#GetNthVarArg(a:000, 1, v:null)
 
-    if type(name) != v:t_none
+    if type(name) != type(v:null)
         let server_name = name
     else
         let server_name = 'Vlime Server ' . g:vlime_next_server_id
@@ -74,7 +74,7 @@ function! VlimeStopServer(server)
     let r_server = g:vlime_servers[server_id]
 
     let timer = get(r_server, 'timer', v:null)
-    if type(timer) != v:t_none
+    if type(timer) != type(v:null)
         call timer_stop(timer)
     endif
     if !job_stop(r_server['job'])
@@ -127,7 +127,7 @@ function! VlimeSelectServer()
         return v:null
     else
         let server = get(g:vlime_servers, server_nr, v:null)
-        if type(server) == v:t_none
+        if type(server) == type(v:null)
             call vlime#ui#ErrMsg('Invalid server ID: ' . server_nr)
             return v:null
         else
@@ -140,10 +140,10 @@ function! VlimeConnectToCurServer()
     let port = v:null
     if job_status(b:vlime_server['job']) == 'run'
         let port = get(b:vlime_server, 'port', v:null)
-        if type(port) == v:t_none
+        if type(port) == type(v:null)
             " the server is not ready yet, search for the port again
             let port = s:MatchServerCreatedPort()
-            if type(port) == v:t_none
+            if type(port) == type(v:null)
                 call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not ready.')
             else
                 let b:vlime_server['port'] = port
@@ -153,12 +153,12 @@ function! VlimeConnectToCurServer()
         call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not running.')
     endif
 
-    if type(port) == v:t_none
+    if type(port) == type(v:null)
         return
     endif
 
     let conn = VlimeConnectREPL('127.0.0.1', port)
-    if type(conn) != v:t_none
+    if type(conn) != type(v:null)
         let conn.cb_data['server'] = b:vlime_server
         let conn_list = get(b:vlime_server, 'connections', {})
         let conn_list[conn.cb_data['id']] = conn
@@ -167,7 +167,7 @@ function! VlimeConnectToCurServer()
 endfunction
 
 function! VlimeStopCurServer()
-    if type(get(g:vlime_servers, b:vlime_server['id'], v:null)) == v:t_none
+    if type(get(g:vlime_servers, b:vlime_server['id'], v:null)) == type(v:null)
         call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not running.')
         return
     endif
@@ -223,7 +223,7 @@ endfunction
 function! s:CheckServerPort(server, lisp_buf, auto_connect, timer)
     let port = vlime#ui#WithBuffer(a:lisp_buf,
                 \ function('s:MatchServerCreatedPort'))
-    if type(port) == v:t_none
+    if type(port) == type(v:null)
         let timer_count = get(a:server, 'port_timer_count', 1)
         if timer_count >= s:CalcServerCheckTimesLimit()
             call timer_stop(a:timer)
@@ -245,7 +245,7 @@ function! s:CheckServerPort(server, lisp_buf, auto_connect, timer)
 
         if a:auto_connect
             let auto_conn = VlimeConnectREPL('127.0.0.1', port)
-            if type(auto_conn) != v:t_none
+            if type(auto_conn) != type(v:null)
                 let auto_conn.cb_data['server'] = a:server
                 let a:server['connections'] =
                             \ {auto_conn.cb_data['id']: auto_conn}

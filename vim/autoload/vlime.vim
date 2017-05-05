@@ -97,11 +97,11 @@ endfunction
 
 " vlime#Connect(host, port[, remote_prefix])
 function! vlime#Connect(host, port, ...) dict
-    let self.channel = ch_open(
-                \ a:host . ':' . string(a:port),
-                \ {'mode': 'json',
-                \  'callback': {chan, msg -> self.OnServerEvent(chan, msg)}})
-    if ch_status(self.channel) != 'open'
+    let self.channel = vlime#compat#ch_open(a:host, a:port,
+                \ {chan, msg -> self.OnServerEvent(chan, msg)})
+    " XXX: There should be a better way to wait for ncat
+    sleep 500m
+    if vlime#compat#ch_status(self.channel) != 'open'
         call self.Close()
         throw 'vlime#Connect: failed to open channel'
     endif
@@ -113,14 +113,14 @@ function! vlime#Connect(host, port, ...) dict
 endfunction
 
 function! vlime#IsConnected() dict
-    return type(self.channel) == v:t_channel &&
-                \ ch_status(self.channel) == 'open'
+    return type(self.channel) == vlime#compat#ch_type() &&
+                \ vlime#compat#ch_status(self.channel) == 'open'
 endfunction
 
 function! vlime#Close() dict
-    if type(self.channel) == v:t_channel
+    if type(self.channel) == vlime#compat#ch_type()
         try
-            call ch_close(self.channel)
+            call vlime#compat#ch_close(self.channel)
         catch /^Vim\%((\a\+)\)\=:E906/  " Not an open channel
         endtry
         let self.channel = v:null
@@ -129,22 +129,16 @@ function! vlime#Close() dict
 endfunction
 
 function! vlime#Call(msg) dict
-    return ch_evalexpr(self.channel, a:msg)
+    return vlime#compat#ch_evalexpr(self.channel, a:msg)
 endfunction
 
 " vlime#Send(msg[, callback])
 function! vlime#Send(msg, ...) dict
-    let options = {}
-    if a:0 == 1
-        let options['callback'] = a:1
-    elseif a:0 != 0
-        throw 'vlime#Send: wrong # of arguments'
-    endif
-
-    if len(options) > 0
-        call ch_sendexpr(self.channel, a:msg, options)
+    let Callback = vlime#GetNthVarArg(a:000, 0, v:null)
+    if type(Callback) != type(v:null)
+        call vlime#compat#ch_sendexpr(self.channel, a:msg, Callback)
     else
-        call ch_sendexpr(self.channel, a:msg)
+        call vlime#compat#ch_sendexpr(self.channel, a:msg)
     endif
 endfunction
 
@@ -170,7 +164,7 @@ function! vlime#FixLocalPath(path) dict
 endfunction
 
 function! vlime#GetCurrentPackage() dict
-    if type(self.ui) != v:t_none
+    if type(self.ui) != type(v:null)
         return self.ui.GetCurrentPackage()
     else
         return v:null
@@ -178,13 +172,13 @@ function! vlime#GetCurrentPackage() dict
 endfunction
 
 function! vlime#SetCurrentPackage(package) dict
-    if type(self.ui) != v:t_none
+    if type(self.ui) != type(v:null)
         call self.ui.SetCurrentPackage(a:package)
     endif
 endfunction
 
 function! vlime#GetCurrentThread() dict
-    if type(self.ui) != v:t_none
+    if type(self.ui) != type(v:null)
         return self.ui.GetCurrentThread()
     else
         return v:true
@@ -192,7 +186,7 @@ function! vlime#GetCurrentThread() dict
 endfunction
 
 function! vlime#SetCurrentThread(thread) dict
-    if type(self.ui) != v:t_none
+    if type(self.ui) != type(v:null)
         call self.ui.SetCurrentThread(a:thread)
     endif
 endfunction
@@ -554,7 +548,7 @@ endfunction
 function! vlime#UninternSymbol(sym_name, ...) dict
     let pkg = vlime#GetNthVarArg(a:000, 0, v:null)
     let Callback = vlime#GetNthVarArg(a:000, 1, v:null)
-    if type(pkg) == v:t_none
+    if type(pkg) == type(v:null)
         let pkg_info = self.GetCurrentPackage()
         if type(pkg_info) == v:t_list
             let pkg = pkg_info[0]
@@ -591,7 +585,7 @@ endfunction
 function! vlime#OperatorArgList(operator, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     let cur_package = self.GetCurrentPackage()
-    if type(cur_package) != v:t_none
+    if type(cur_package) != type(v:null)
         let cur_package = cur_package[0]
     endif
     call self.Send(self.EmacsRex(
@@ -603,7 +597,7 @@ endfunction
 function! vlime#SimpleCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     let cur_package = self.GetCurrentPackage()
-    if type(cur_package) != v:t_none
+    if type(cur_package) != type(v:null)
         let cur_package = cur_package[0]
     endif
     call self.Send(self.EmacsRex(
@@ -615,7 +609,7 @@ endfunction
 function! vlime#FuzzyCompletions(symbol, ...) dict
     let Callback = s:GetNthVarArg(a:000, 0)
     let cur_package = self.GetCurrentPackage()
-    if type(cur_package) != v:t_none
+    if type(cur_package) != type(v:null)
         let cur_package = cur_package[0]
     endif
     call self.Send(self.EmacsRex(
@@ -684,7 +678,7 @@ function! vlime#CompileFileForEmacs(filename, ...) dict
     let Callback = s:GetNthVarArg(a:000, 2)
     let fixed_filename = self.FixLocalPath(a:filename)
     let cmd = [s:SYM('SWANK', 'COMPILE-FILE-FOR-EMACS'), fixed_filename, load]
-    if type(policy) != v:t_none
+    if type(policy) != type(v:null)
         let cmd += [s:KW('POLICY'), policy]
     endif
     call self.Send(self.EmacsRex(cmd),
@@ -752,28 +746,28 @@ function! vlime#OnNewPackage(conn, msg)
 endfunction
 
 function! vlime#OnDebug(conn, msg)
-    if type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != type(v:null)
         let [_msg_type, thread, level, condition, restarts, frames, conts] = a:msg
         call a:conn.ui.OnDebug(a:conn, thread, level, condition, restarts, frames, conts)
     endif
 endfunction
 
 function! vlime#OnDebugActivate(conn, msg)
-    if type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != type(v:null)
         let [_msg_type, thread, level, select] = a:msg
         call a:conn.ui.OnDebugActivate(a:conn, thread, level, select)
     endif
 endfunction
 
 function! vlime#OnDebugReturn(conn, msg)
-    if type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != type(v:null)
         let [_msg_type, thread, level, stepping] = a:msg
         call a:conn.ui.OnDebugReturn(a:conn, thread, level, stepping)
     endif
 endfunction
 
 function! vlime#OnWriteString(conn, msg)
-    if type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != type(v:null)
         let str = a:msg[1]
         let str_type = (len(a:msg) >= 3) ? a:msg[2] : v:null
         call a:conn.ui.OnWriteString(a:conn, str, str_type)
@@ -781,14 +775,14 @@ function! vlime#OnWriteString(conn, msg)
 endfunction
 
 function! vlime#OnReadString(conn, msg)
-    if type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != type(v:null)
         let [_msg_type, thread, ttag] = a:msg
         call a:conn.ui.OnReadString(a:conn, thread, ttag)
     endif
 endfunction
 
 function! vlime#OnReadFromMiniBuffer(conn, msg)
-    if type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != type(v:null)
         let [_msg_type, thread, ttag, prompt, init_val] = a:msg
         call a:conn.ui.OnReadFromMiniBuffer(
                     \ a:conn, thread, ttag, prompt, init_val)
@@ -796,21 +790,21 @@ function! vlime#OnReadFromMiniBuffer(conn, msg)
 endfunction
 
 function! vlime#OnIndentationUpdate(conn, msg)
-    if type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != type(v:null)
         let [_msg_type, indent_info] = a:msg
         call a:conn.ui.OnIndentationUpdate(a:conn, indent_info)
     endif
 endfunction
 
 function! vlime#OnInvalidRPC(conn, msg)
-    if type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != type(v:null)
         let [_msg_type, id, err_msg] = a:msg
         call a:conn.ui.OnInvalidRPC(a:conn, id, err_msg)
     endif
 endfunction
 
 function! vlime#OnInspect(conn, msg)
-    if type(a:conn.ui) != v:t_none
+    if type(a:conn.ui) != type(v:null)
         let [_msg_type, i_content, i_thread, i_tag] = a:msg
         call a:conn.ui.OnInspect(a:conn, i_content, i_thread, i_tag)
     endif
@@ -864,7 +858,7 @@ function! s:GetNthVarArg(args, n, ...)
 endfunction
 
 function! vlime#PListToDict(plist)
-    if type(a:plist) == v:t_none
+    if type(a:plist) == type(v:null)
         return {}
     endif
 

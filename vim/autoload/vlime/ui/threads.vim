@@ -11,7 +11,7 @@ endfunction
 function! vlime#ui#threads#FillThreadsBuf(thread_list)
     setlocal modifiable
 
-    if type(a:thread_list) == v:t_none
+    if type(a:thread_list) == type(v:null)
         call vlime#ui#ReplaceContent('The thread list is empty.')
         let b:vlime_thread_coords = []
         return
@@ -61,7 +61,7 @@ endfunction
 function! vlime#ui#threads#InterruptCurThread()
     let coord = s:FindCurCoord(
                 \ getcurpos(), getbufvar('%', 'vlime_thread_coords', []))
-    if type(coord) == v:t_none
+    if type(coord) == type(v:null)
         return
     endif
     call b:vlime_conn.Interrupt(coord['id'])
@@ -70,7 +70,7 @@ endfunction
 function! vlime#ui#threads#KillCurThread()
     let coord = s:FindCurCoord(
                 \ getcurpos(), getbufvar('%', 'vlime_thread_coords', []))
-    if type(coord) == v:t_none
+    if type(coord) == type(v:null)
         return
     endif
     let answer = input('Kill thread ' . string(coord['name']) . '? (y/n) ')
@@ -85,7 +85,7 @@ endfunction
 function! vlime#ui#threads#DebugCurThread()
     let coord = s:FindCurCoord(
                 \ getcurpos(), getbufvar('%', 'vlime_thread_coords', []))
-    if type(coord) == v:t_none
+    if type(coord) == type(v:null)
         return
     endif
     call b:vlime_conn.DebugNthThread(coord['nth'])
@@ -102,7 +102,7 @@ function! vlime#ui#threads#Refresh(...)
         let cur_pos = v:null
     endif
 
-    if type(conn) == v:t_none
+    if type(conn) == type(v:null)
         let conn = b:vlime_conn
     endif
 
@@ -111,7 +111,7 @@ endfunction
 
 function! s:OnListThreadsComplete(cur_pos, conn, result)
     call a:conn.ui.OnThreads(a:conn, a:result)
-    if type(a:cur_pos) != v:t_none
+    if type(a:cur_pos) != type(v:null)
         call setpos('.', a:cur_pos)
     endif
 endfunction

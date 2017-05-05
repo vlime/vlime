@@ -67,7 +67,7 @@ function! s:OnPresentationEnd(conn, msg)
 
     let coords = getbufvar(repl_buf, 'vlime_repl_coords', {})
     let c = get(coords, a:msg[1], v:null)
-    if type(c) == v:t_none
+    if type(c) == type(v:null)
         return
     endif
 

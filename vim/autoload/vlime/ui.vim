@@ -162,7 +162,7 @@ function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
 endfunction
 
 function! vlime#ui#OnXRef(conn, xref_list)
-    if type(a:xref_list) == v:t_none
+    if type(a:xref_list) == type(v:null)
         call vlime#ui#ErrMsg('No xref found.')
     elseif type(a:xref_list) == v:t_dict &&
                 \ a:xref_list['name'] == 'NOT-IMPLEMENTED'
@@ -177,11 +177,11 @@ endfunction
 function! vlime#ui#OnCompilerNotes(conn, note_list)
     let notes_buf = vlime#ui#compiler_notes#InitCompilerNotesBuffer(a:conn)
     let buf_opened = len(win_findbuf(notes_buf)) > 0
-    if buf_opened || type(a:note_list) != v:t_none
+    if buf_opened || type(a:note_list) != type(v:null)
         let old_win_id = win_getid()
         call vlime#ui#OpenBufferWithWinSettings(notes_buf, v:false, 'notes')
         call vlime#ui#compiler_notes#FillCompilerNotesBuf(a:note_list)
-        if type(a:note_list) == v:t_none
+        if type(a:note_list) == type(v:null)
             " There's no message. Don't stay in the notes window.
             call win_gotoid(old_win_id)
         endif
@@ -435,7 +435,7 @@ function! vlime#ui#OpenBuffer(name, create, show, ...)
                 else
                     silent! execute 'split #' . buf
                 endif
-                if type(initial_size) != v:t_none
+                if type(initial_size) != type(v:null)
                     let resize_cmd = join(['resize', initial_size])
                     if vertical
                         let resize_cmd = join(['vertical', resize_cmd])
@@ -472,7 +472,7 @@ function! vlime#ui#ShowTransientWindow(
 
             if !vlime#ui#VlimeBufferInitialized(buf)
                 call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
-                if type(file_type) != v:t_none
+                if type(file_type) != type(v:null)
                     call setbufvar(buf, '&filetype', file_type)
                 endif
             else
@@ -514,7 +514,7 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
     setlocal winfixwidth
 
     call vlime#ui#AppendString('; ' . a:prompt . "\n")
-    if type(a:init_val) != v:t_none
+    if type(a:init_val) != type(v:null)
         call vlime#ui#AppendString(a:init_val)
     endif
 
@@ -565,7 +565,7 @@ function! vlime#ui#CurArgPosForIndent(...)
     let s_pos = vlime#GetNthVarArg(a:000, 0, v:null)
     let arg_pos = -1
 
-    if type(s_pos) == v:t_none
+    if type(s_pos) == type(v:null)
         let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
     else
         let [s_line, s_col] = s_pos
@@ -632,13 +632,13 @@ function! vlime#ui#SetVlimeBufferOpts(buf, conn)
 endfunction
 
 function! vlime#ui#VlimeBufferInitialized(buf)
-    return type(getbufvar(a:buf, 'vlime_conn', v:null)) != v:t_none
+    return type(getbufvar(a:buf, 'vlime_conn', v:null)) != type(v:null)
 endfunction
 
 function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
     let c_begin = get(a:coord, 'begin', v:null)
     let c_end = get(a:coord, 'end', v:null)
-    if type(c_begin) == v:t_none || type(c_end) == v:t_none
+    if type(c_begin) == type(v:null) || type(c_end) == type(v:null)
         return v:false
     endif
 
@@ -689,7 +689,7 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos)
         endif
     endif
 
-    if type(a:byte_pos) != v:t_none
+    if type(a:byte_pos) != type(v:null)
         let src_line = byte2line(a:byte_pos)
         call setpos('.', [0, src_line, 1, 0, 1])
         let cur_pos = line2byte('.') + col('.') - 1
@@ -777,7 +777,7 @@ endfunction
 
 function! vlime#ui#GetWindowSettings(win_name)
     let settings = get(g:vlime_default_window_settings, a:win_name, v:null)
-    if type(settings) == v:t_none
+    if type(settings) == type(v:null)
         throw 'vlime#ui#GetWindowSettings: unknown window ' . string(a:win_name)
     else
         let settings = copy(settings)

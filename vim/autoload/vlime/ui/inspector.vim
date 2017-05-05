@@ -5,7 +5,7 @@ function! vlime#ui#inspector#InitInspectorBuf(ui, conn, thread)
         call setbufvar(buf, '&filetype', 'vlime_inspector')
         call vlime#ui#WithBuffer(buf, function('s:InitInspectorBuf'))
     endif
-    if type(a:thread) != v:t_none
+    if type(a:thread) != type(v:null)
         call a:ui.SetCurrentThread(a:thread, buf)
     endif
     return buf
@@ -62,7 +62,7 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
         autocmd!
         execute 'autocmd BufWinLeave <buffer> call vlime#ui#inspector#ResetInspectorBuffer('
                     \ . bufnr('%') . ')'
-        if type(a:thread) != v:t_none && type(a:itag) != v:t_none
+        if type(a:thread) != type(v:null) && type(a:itag) != type(v:null)
             execute 'autocmd BufWinLeave <buffer> call b:vlime_conn.Return('
                         \ . a:thread . ', ' . a:itag . ', v:null)'
         endif
@@ -113,7 +113,7 @@ function! vlime#ui#inspector#InspectorSelect()
         endif
     endfor
 
-    if type(coord) == v:t_none
+    if type(coord) == type(v:null)
         return
     endif
 
@@ -180,7 +180,7 @@ function! vlime#ui#inspector#NextField(forward)
         endif
     endfor
 
-    if type(next_coord) == v:t_none
+    if type(next_coord) == type(v:null)
         let next_coord = sorted_coords[0]
     endif
 
@@ -194,7 +194,7 @@ function! vlime#ui#inspector#InspectorPop()
 endfunction
 
 function! s:OnInspectorPopComplete(conn, result)
-    if type(a:result) == v:t_none
+    if type(a:result) == type(v:null)
         call vlime#ui#ErrMsg('The inspector stack is empty.')
     else
         call a:conn.ui.OnInspect(a:conn, a:result, v:null, v:null)
@@ -202,7 +202,7 @@ function! s:OnInspectorPopComplete(conn, result)
 endfunction
 
 function! s:InspectorFetchAllCB(acc, conn, result)
-    if type(a:result[0]) != v:t_none
+    if type(a:result[0]) != type(v:null)
         let a:acc['CONTENT'][0] += a:result[0]
     endif
     if a:result[1] > a:result[3]

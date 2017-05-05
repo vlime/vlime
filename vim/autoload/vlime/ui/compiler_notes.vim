@@ -11,7 +11,7 @@ endfunction
 function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
     setlocal modifiable
 
-    if type(a:note_list) == v:t_none
+    if type(a:note_list) == type(v:null)
         call vlime#ui#ReplaceContent('No message from the compiler.')
         let b:vlime_compiler_note_coords = []
         let b:vlime_compiler_note_list = []
@@ -59,7 +59,7 @@ function! vlime#ui#compiler_notes#OpenCurNote()
         endif
     endfor
 
-    if type(note_coord) == v:t_none
+    if type(note_coord) == type(v:null)
         return
     endif
 
@@ -68,10 +68,10 @@ function! vlime#ui#compiler_notes#OpenCurNote()
     let note_file = s:FindNoteLocationProp('FILE', note_loc)
     let note_buffer = s:FindNoteLocationProp('BUFFER', note_loc)
 
-    if type(note_file) != v:t_none
+    if type(note_file) != type(v:null)
         let note_pos = s:FindNoteLocationProp('POSITION', note_loc)
         call vlime#ui#JumpToOrOpenFile(note_file[0], note_pos[0])
-    elseif type(note_buffer) != v:t_none
+    elseif type(note_buffer) != type(v:null)
         let note_offset = s:FindNoteLocationProp('OFFSET', note_loc)
         let note_offset = note_offset[0] + note_offset[1]
         call vlime#ui#JumpToOrOpenFile(note_buffer[0], note_offset)
@@ -81,7 +81,7 @@ function! vlime#ui#compiler_notes#OpenCurNote()
 endfunction
 
 function! s:FindNoteLocationProp(key, loc)
-    if type(a:loc) != v:t_none
+    if type(a:loc) != type(v:null)
         for p in a:loc[1:]
             if type(p) == v:t_list && p[0]['name'] == a:key
                 return p[1:]
