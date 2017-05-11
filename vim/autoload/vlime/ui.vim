@@ -505,6 +505,47 @@ function! vlime#ui#ShowArgList(conn, content)
                 \ vlime#ui#ArgListBufName(), 'arglist', 'vlime_arglist')
 endfunction
 
+function! vlime#ui#GetWindowList(conn, win_name)
+    if a:win_name == 'preview' || a:win_name == 'arglist' ||
+                \ a:win_name == 'server'
+        " These buffers don't have a connection name suffix in their names
+        let pattern = join(['vlime', a:win_name], g:vlime_buf_name_sep)
+    elseif len(a:win_name) > 0
+        if type(a:conn) == type(v:null)
+            let pattern = join(['vlime', a:win_name], g:vlime_buf_name_sep)
+        else
+            let pattern = join(['vlime', a:win_name, a:conn.cb_data.name],
+                        \ g:vlime_buf_name_sep)
+        endif
+    else
+        " Match ALL Vlime windows
+        let pattern = 'vlime' . g:vlime_buf_name_sep
+    endif
+
+    let winid_list = []
+    let old_win_id = win_getid()
+    try
+        windo let bufname_prefix = bufname('%')[0:len(pattern)-1] |
+                    \ if bufname_prefix == pattern |
+                        \ call add(winid_list, [win_getid(), bufname('%')]) |
+                    \ endif
+    finally
+        call win_gotoid(old_win_id)
+    endtry
+
+    return winid_list
+endfunction
+
+function! vlime#ui#CloseWindow(conn, win_name)
+    let winid_list = vlime#ui#GetWindowList(a:conn, a:win_name)
+    for [winid, bufname] in winid_list
+        let winnr = win_id2win(winid)
+        if winnr > 0
+            execute winnr . 'wincmd c'
+        endif
+    endfor
+endfunction
+
 function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
     let buf = vlime#ui#OpenBufferWithWinSettings(
                 \ vlime#ui#MiniBufName(a:conn, a:prompt), v:true, 'input')

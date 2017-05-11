@@ -441,6 +441,43 @@ function! VlimeUninternCurSymbol()
     endif
 endfunction
 
+" VlimeCloseWindow([win_name])
+function! VlimeCloseWindow(...)
+    let win_name = vlime#GetNthVarArg(a:000, 0, v:null)
+    if type(win_name) == type(v:null)
+        let win_list = vlime#ui#GetWindowList(v:null, '')
+        if len(win_list) <= 0
+            call vlime#ui#ErrMsg('Cannot find any Vlime window.')
+            return
+        endif
+
+        let win_choices = []
+        let idx = 1
+        for [winid, bufname] in win_list
+            call add(win_choices, idx . '. ' . bufname . ' (' . winid . ')')
+            let idx += 1
+        endfor
+
+        echohl Question
+        echom 'Which window to close?'
+        echohl None
+        let idx = inputlist(win_choices)
+        if idx <= 0
+            call vlime#ui#ErrMsg('Canceled.')
+        else
+            let idx -= 1
+            if idx >= len(win_list)
+                call vlime#ui#ErrMsg('Invalid window number: ' . idx)
+            else
+                let winnr = win_id2win(win_list[idx][0])
+                execute winnr . 'wincmd c'
+            endif
+        endif
+    else
+        call vlime#ui#CloseWindow(v:null, win_name)
+    endif
+endfunction
+
 function! VlimeCompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
@@ -617,6 +654,13 @@ function! VlimeSetup(...)
     " Undefining things
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>uf', ':call VlimeUndefineCurFunction()<cr>')
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>us', ':call VlimeUninternCurSymbol()<cr>')
+
+    " Closing windows
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wp', ':call VlimeCloseWindow("preview")<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wr', ':call VlimeCloseWindow("arglist")<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wR', ':call VlimeCloseWindow("repl")<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wA', ':call VlimeCloseWindow("")<cr>')
+    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wl', ':call VlimeCloseWindow()<cr>')
 
     " Other stuff
     call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>i', ':call VlimeInteractionMode()<cr>')

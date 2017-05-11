@@ -418,6 +418,19 @@ Mappings available in CL source files:         *vlime-mappings-source*
             (In visual mode) Evaluate and inspect the current
             selection.
 
+    Closing Windows                      *vlime-mappings-close-window*
+        <LocalLeader>wp
+            Close all visible preview windows.
+        <LocalLeader>wr
+            Close all visible arglist windows.
+        <LocalLeader>wR
+            Close all visible REPL windows.
+        <LocalLeader>wA
+            Close all Vlime windows.
+        <LocalLeader>wl
+            Show a list of visible Vlime windows, and choose which to
+            close.
+
     Other Stuff                                  *vlime-mappings-misc*
         <LocalLeader>i                         *vlime-mappings-misc-i*
             Interaction Mode. See |vlime-interaction-mode|.
