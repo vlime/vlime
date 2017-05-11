@@ -839,9 +839,10 @@ function! vlime#ui#GetWindowSettings(win_name)
                 \ get(settings, 'vertical', v:false)]
 endfunction
 
-" vlime#ui#EnsureKeyMapped(mode, key, cmd[, flags])
+" vlime#ui#EnsureKeyMapped(mode, key, cmd[, log[, flags]])
 function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
-    let flags = vlime#GetNthVarArg(a:000, 0, '<buffer> <silent>')
+    let log = vlime#GetNthVarArg(a:000, 0, v:null)
+    let flags = vlime#GetNthVarArg(a:000, 1, '<buffer> <silent>')
     if type(a:key) != v:t_list
         let key_list = [a:key]
     else
@@ -852,9 +853,32 @@ function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
         for kk in key_list
             if len(maparg(kk, a:mode)) <= 0
                 execute a:mode . join(['noremap', flags, kk, a:cmd])
+            else
+                call s:LogSkippedKey(log, a:mode, kk, a:cmd,
+                            \ 'Key already mapped.')
             endif
         endfor
+    else
+        for kk in key_list
+            call s:LogSkippedKey(log, a:mode, kk, a:cmd,
+                        \ 'Command already mapped.')
+        endfor
     endif
+endfunction
+
+function! s:LogSkippedKey(log, mode, key, cmd, reason)
+    if type(a:log) == type(v:null)
+        return
+    endif
+    let buf_type = a:log
+
+    if !exists('g:vlime_skipped_mappings')
+        let g:vlime_skipped_mappings = {}
+    endif
+
+    let buf_skipped_keys = get(g:vlime_skipped_mappings, buf_type, {})
+    let buf_skipped_keys[join([a:mode, a:key], ' ')] = [a:cmd, a:reason]
+    let g:vlime_skipped_mappings[buf_type] = buf_skipped_keys
 endfunction
 
 function! s:NormalizePackageName(name)

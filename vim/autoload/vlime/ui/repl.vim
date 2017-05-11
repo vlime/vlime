@@ -93,12 +93,7 @@ function! s:InitREPLBuf()
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable
 
-    call vlime#ui#EnsureKeyMapped('n', '<c-c>',
-                \ ':call b:vlime_conn.Interrupt({"name": "REPL-THREAD", "package": "KEYWORD"})<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>I',
-                \ ':call vlime#ui#repl#InspectCurREPLPresentation()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>y',
-                \ ':call vlime#ui#repl#YankCurREPLPresentation()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>C',
-                \ ':call vlime#ui#repl#ClearREPLBuffer()<cr>')
+    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('repl')
+        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'repl')
+    endfor
 endfunction

@@ -92,5 +92,7 @@ function! s:FindNoteLocationProp(key, loc)
 endfunction
 
 function! s:InitCompilerNotesBuffer()
-    call vlime#ui#EnsureKeyMapped('n', '<cr>', ':call vlime#ui#compiler_notes#OpenCurNote()<cr>')
+    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('notes')
+        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'notes')
+    endfor
 endfunction

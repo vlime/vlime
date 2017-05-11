@@ -593,82 +593,9 @@ function! VlimeSetup(...)
     setlocal omnifunc=VlimeCompleteFunc
     setlocal indentexpr=VlimeCalcCurIndent()
 
-    call vlime#ui#EnsureKeyMapped('i', '<space>', '<space><c-r>=VlimeKey("space")<cr>')
-    call vlime#ui#EnsureKeyMapped('i', '<cr>', '<cr><c-r>=VlimeKey("cr")<cr>')
-    call vlime#ui#EnsureKeyMapped('i', '<tab>', '<c-r>=VlimeKey("tab")<cr>')
-
-    " Connection operations
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>cc', ':call VlimeConnectREPL()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>cs', ':call VlimeSelectCurConnection()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>cd', ':call VlimeCloseCurConnection()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>cR', ':call VlimeRenameCurConnection()<cr>')
-
-    " Server operations
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>rr', ':call VlimeNewServer()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>rv', ':call VlimeShowSelectedServer()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>rs', ':call VlimeStopSelectedServer()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>rR', ':call VlimeRenameSelectedServer()<cr>')
-
-    " Sending stuff to the REPL
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>ss', ':call VlimeSendCurThingToREPL("thing")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>se', ':call VlimeSendCurThingToREPL("expr")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>sa', ':call VlimeSendCurThingToREPL("atom")<cr>')
-    call vlime#ui#EnsureKeyMapped('v', '<LocalLeader>s', ':<c-u>call VlimeSendCurThingToREPL("selection")<cr>')
-
-    " Expanding macros
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>m1', ':call VlimeExpandCurMacro(v:false)<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>ma', ':call VlimeExpandCurMacro(v:true)<cr>')
-
-    " Compilation operations
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>oe', ':call VlimeCompileCurThing("expr")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>of', ':call VlimeCompileCurFile()<cr>')
-    call vlime#ui#EnsureKeyMapped('v', '<LocalLeader>o', ':<c-u>call VlimeCompileCurThing("selection")<cr>')
-
-    " Cross references (XRef)
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>xc', ':call VlimeXRefCurSymbol("atom", "CALLS")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>xC', ':call VlimeXRefCurSymbol("atom", "CALLS-WHO")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>xr', ':call VlimeXRefCurSymbol("atom", "REFERENCES")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>xb', ':call VlimeXRefCurSymbol("atom", "BINDS")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>xs', ':call VlimeXRefCurSymbol("atom", "SETS")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>xe', ':call VlimeXRefCurSymbol("atom", "MACROEXPANDS")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>xm', ':call VlimeXRefCurSymbol("atom", "SPECIALIZES")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>xd', ':call VlimeFindCurDefinition("atom")<cr>')
-
-    " Describing things
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>do', ':call VlimeDescribeCurSymbol("operator")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>da', ':call VlimeDescribeCurSymbol("atom")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>ds', ':call VlimeAproposList()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>ddo', ':call VlimeDocumentationSymbol("operator")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>dda', ':call VlimeDocumentationSymbol("atom")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>dr', ':call VlimeShowOperatorArgList(vlime#ui#CurOperator())<cr>')
-
-    " Inspection
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>II', ':call VlimeInspectCurThing("thing")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>Ii', ':call VlimeInspectCurThing("thing")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>IE', ':call VlimeInspectCurThing("expr")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>Ie', ':call VlimeInspectCurThing("expr")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>IA', ':call VlimeInspectCurThing("atom")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>Ia', ':call VlimeInspectCurThing("atom")<cr>')
-    call vlime#ui#EnsureKeyMapped('v', '<LocalLeader>I', ':call VlimeInspectCurThing("selection")<cr>')
-
-    " Undefining things
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>uf', ':call VlimeUndefineCurFunction()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>us', ':call VlimeUninternCurSymbol()<cr>')
-
-    " Closing windows
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wp', ':call VlimeCloseWindow("preview")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wr', ':call VlimeCloseWindow("arglist")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wR', ':call VlimeCloseWindow("repl")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wA', ':call VlimeCloseWindow("")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>wl', ':call VlimeCloseWindow()<cr>')
-
-    " Other stuff
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>i', ':call VlimeInteractionMode()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>l', ':call VlimeLoadCurFile()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>a', ':call VlimeDisassembleCurForm()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>p', ':call VlimeSetCurPackage()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>b', ':call VlimeSetBreakpoint()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<LocalLeader>t', ':call VlimeListThreads()<cr>')
+    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('lisp')
+        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'lisp')
+    endfor
 endfunction
 
 function! VlimeInteractionMode()

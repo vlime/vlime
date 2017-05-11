@@ -236,10 +236,7 @@ function! s:CoordSorter(direction, c1, c2)
 endfunction
 
 function! s:InitInspectorBuf()
-    call vlime#ui#EnsureKeyMapped('n', ['<cr>', '<space>'], ':call vlime#ui#inspector#InspectorSelect()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', ['<c-n>', '<tab>'], ':call vlime#ui#inspector#NextField(v:true)<cr>')
-    call vlime#ui#EnsureKeyMapped('n', '<c-p>', ':call vlime#ui#inspector#NextField(v:false)<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'p', ':call vlime#ui#inspector#InspectorPop()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'R',
-                \ ':call b:vlime_conn.InspectorReinspect({c, r -> c.ui.OnInspect(c, r, v:null, v:null)})<cr>')
+    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('inspector')
+        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'inspector')
+    endfor
 endfunction

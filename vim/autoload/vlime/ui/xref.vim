@@ -89,5 +89,7 @@ function! s:FindXRefLocationProp(key, prop_list)
 endfunction
 
 function! s:InitXRefBuf()
-    call vlime#ui#EnsureKeyMapped('n', '<cr>', ':call vlime#ui#xref#OpenCurXref()<cr>')
+    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('xref')
+        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'xref')
+    endfor
 endfunction

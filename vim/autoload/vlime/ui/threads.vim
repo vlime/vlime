@@ -165,8 +165,7 @@ function! s:CalcAllFieldWidths(thread_list)
 endfunction
 
 function! s:InitThreadsBuf()
-    call vlime#ui#EnsureKeyMapped('n', '<c-c>', ':call vlime#ui#threads#InterruptCurThread()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'K', ':call vlime#ui#threads#KillCurThread()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'D', ':call vlime#ui#threads#DebugCurThread()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'r', ':call vlime#ui#threads#Refresh()<cr>')
+    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('threads')
+        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'threads')
+    endfor
 endfunction

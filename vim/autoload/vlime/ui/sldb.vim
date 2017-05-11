@@ -316,20 +316,9 @@ function! s:OpenFrameSourceCB(conn, result)
 endfunction
 
 function! s:InitSLDBBuf()
-    call vlime#ui#EnsureKeyMapped('n', '<cr>', ':call vlime#ui#sldb#ChooseCurRestart()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'd', ':call vlime#ui#sldb#ShowFrameDetails()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'S', ':call vlime#ui#sldb#OpenFrameSource()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'r', ':call vlime#ui#sldb#RestartCurFrame()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 's', ':call vlime#ui#sldb#StepCurOrLastFrame("step")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'x', ':call vlime#ui#sldb#StepCurOrLastFrame("next")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'o', ':call vlime#ui#sldb#StepCurOrLastFrame("out")<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'c', ':call b:vlime_conn.SLDBContinue()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'a', ':call b:vlime_conn.SLDBAbort()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'C', ':call vlime#ui#sldb#InspectCurCondition()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'i', ':call vlime#ui#sldb#InspectInCurFrame()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'e', ':call vlime#ui#sldb#EvalStringInCurFrame()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'D', ':call vlime#ui#sldb#DisassembleCurFrame()<cr>')
-    call vlime#ui#EnsureKeyMapped('n', 'R', ':call vlime#ui#sldb#ReturnFromCurFrame()<cr>')
+    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('sldb')
+        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'sldb')
+    endfor
 endfunction
 
 function! s:FrameRestartable(frame)
