@@ -1,5 +1,6 @@
 * master
-    * Functions and mappings for listing and closing Vlime windows.
+    * Functions and mappings for listing and closing Vlime windows (see
+      `:help vlime-mappings-close-window`).
     * Support cusomizing the `ncat` command, and using other `netcat` clones.
 
 * v0.2.0
