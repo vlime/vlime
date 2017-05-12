@@ -336,6 +336,32 @@ function! TestMatchCoord()
     call assert_false(vlime#ui#MatchCoord(coord, 2, 7))
 endfunction
 
+function! TestEnsureKeyMapped()
+    call NewDummyBuffer()
+    try
+        silent! nunmap <space>
+        call vlime#ui#EnsureKeyMapped('n', '<space>', ':smile<cr>', 'test_ensurekeymapped')
+        call assert_equal(':smile<CR>', maparg('<space>', 'n'))
+
+        let g:vlime_skipped_mappings = {}
+        call vlime#ui#EnsureKeyMapped('n', '<space>', ':smile<cr>', 'test_ensurekeymapped')
+        call assert_equal({
+                    \ 'test_ensurekeymapped': {
+                        \ 'n <space>': [':smile<cr>', 'Command already mapped.']
+                    \ }}, g:vlime_skipped_mappings)
+
+        let g:vlime_skipped_mappings = {}
+        call vlime#ui#EnsureKeyMapped('n', '<space>', ':help<cr>', 'test_ensurekeymapped')
+        call assert_equal({
+                    \ 'test_ensurekeymapped': {
+                        \ 'n <space>': [':help<cr>', 'Key already mapped.']
+                    \ }}, g:vlime_skipped_mappings)
+    finally
+        unlet g:vlime_skipped_mappings
+        call CleanupDummyBuffer()
+    endtry
+endfunction
+
 let v:errors = []
 call TestCurrentPackage()
 call TestCurInPackage()
@@ -351,3 +377,4 @@ call TestSurroundingOperator()
 call TestCurArgPosForIndent()
 call TestAppendString()
 call TestMatchCoord()
+call TestEnsureKeyMapped()
