@@ -849,7 +849,7 @@ function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
         let key_list = a:key
     endif
 
-    if !hasmapto(a:cmd)
+    if !hasmapto(a:cmd, a:mode)
         for kk in key_list
             if len(maparg(kk, a:mode)) <= 0
                 execute a:mode . join(['noremap', flags, kk, a:cmd])
