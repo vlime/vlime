@@ -298,11 +298,14 @@ distiguish different buffers:
 You can remap any Vlime key mapping in these buffers. See the source
 code (autoload/vlime/ui/mapping.vim) for all default mappings.
 
+                                           *vlime-overriding-mappings*
 Note: Vlime tries to be nice when mapping the default keys. If a key
       sequence was already mapped, Vlime would NOT overwrite the
       existing mapping. You'll have to resolve the conflict either by
       remapping the Vlime function or by disabling the existing
-      mapping.
+      mapping. If you don't want this behavior, use
+      |g:vlime_force_default_keys| to force Vlime to always override
+      existing mappings.
 
                                             *g:vlime_skipped_mappings*
       When Vlime detects any conflicting default mappings, it will log
@@ -576,6 +579,10 @@ Mappings available in the server output buffer:
 
 These variables can be set in |vimrc|, to affect the behavior of
 Vlime:
+
+g:vlime_force_default_keys                *g:vlime_force_default_keys*
+    A boolean flag to tell Vlime to always use the default key
+    mappings. See |vlime-overriding-mappings|. Default: v:false
 
 g:vlime_cl_impl                                      *g:vlime_cl_impl*
     A |string| to designate the CL implementation to use when starting
