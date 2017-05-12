@@ -58,7 +58,7 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
 
     let b:vlime_inspector_coords = coords
 
-    augroup InspectorLeaveAu
+    augroup VlimeInspectorLeaveAu
         autocmd!
         execute 'autocmd BufWinLeave <buffer> call vlime#ui#inspector#ResetInspectorBuffer('
                     \ . bufnr('%') . ')'
@@ -98,8 +98,12 @@ function! vlime#ui#inspector#FillInspectorBufContent(content, coords)
 endfunction
 
 function! vlime#ui#inspector#ResetInspectorBuffer(bufnr)
-    call setbufvar(a:bufnr, 'vlime_conn', v:null)
     call setbufvar(a:bufnr, 'vlime_inspector_coords', [])
+    " This function is called in an autocmd in this particular augroup we are
+    " clearing, but it seemed okay to do so.
+    augroup VlimeInspectorLeaveAu
+        autocmd!
+    augroup end
     execute 'bunload! ' . a:bufnr
 endfunction
 
