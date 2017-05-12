@@ -240,7 +240,5 @@ function! s:CoordSorter(direction, c1, c2)
 endfunction
 
 function! s:InitInspectorBuf()
-    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('inspector')
-        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'inspector')
-    endfor
+    call vlime#ui#MapBufferKeys('inspector')
 endfunction

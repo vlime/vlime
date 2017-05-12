@@ -92,7 +92,5 @@ function! s:FindNoteLocationProp(key, loc)
 endfunction
 
 function! s:InitCompilerNotesBuffer()
-    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('notes')
-        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'notes')
-    endfor
+    call vlime#ui#MapBufferKeys('notes')
 endfunction

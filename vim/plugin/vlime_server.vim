@@ -48,9 +48,7 @@ function! VlimeNewServer(...)
     call setbufvar(lisp_buf, '&filetype', 'vlime_server')
     call vlime#ui#OpenBufferWithWinSettings(lisp_buf, v:false, 'server')
 
-    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('server')
-        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'server')
-    endfor
+    call vlime#ui#MapBufferKeys('server')
 
     let server_obj['timer'] = timer_start(g:vlime_cl_wait_interval,
                 \ function('s:CheckServerPort',

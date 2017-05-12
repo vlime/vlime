@@ -165,7 +165,5 @@ function! s:CalcAllFieldWidths(thread_list)
 endfunction
 
 function! s:InitThreadsBuf()
-    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('threads')
-        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'threads')
-    endfor
+    call vlime#ui#MapBufferKeys('threads')
 endfunction

@@ -93,7 +93,5 @@ function! s:InitREPLBuf()
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable
 
-    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('repl')
-        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'repl')
-    endfor
+    call vlime#ui#MapBufferKeys('repl')
 endfunction

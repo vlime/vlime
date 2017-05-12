@@ -339,23 +339,34 @@ endfunction
 function! TestEnsureKeyMapped()
     call NewDummyBuffer()
     try
-        silent! nunmap <space>
-        call vlime#ui#EnsureKeyMapped('n', '<space>', ':smile<cr>', 'test_ensurekeymapped')
+        silent! unmap <space>
+        silent! unmap <buffer> <space>
+        call vlime#ui#EnsureKeyMapped('n', '<space>', ':smile<cr>', v:false, 'test_ensurekeymapped')
         call assert_equal(':smile<CR>', maparg('<space>', 'n'))
 
         let g:vlime_skipped_mappings = {}
-        call vlime#ui#EnsureKeyMapped('n', '<space>', ':smile<cr>', 'test_ensurekeymapped')
+        call vlime#ui#EnsureKeyMapped('n', '<space>', ':smile<cr>', v:false, 'test_ensurekeymapped')
         call assert_equal({
                     \ 'test_ensurekeymapped': {
                         \ 'n <space>': [':smile<cr>', 'Command already mapped.']
                     \ }}, g:vlime_skipped_mappings)
 
         let g:vlime_skipped_mappings = {}
-        call vlime#ui#EnsureKeyMapped('n', '<space>', ':help<cr>', 'test_ensurekeymapped')
+        call vlime#ui#EnsureKeyMapped('n', '<space>', ':help<cr>', v:false, 'test_ensurekeymapped')
         call assert_equal({
                     \ 'test_ensurekeymapped': {
                         \ 'n <space>': [':help<cr>', 'Key already mapped.']
                     \ }}, g:vlime_skipped_mappings)
+
+        let g:vlime_skipped_mappings = {}
+        call vlime#ui#EnsureKeyMapped('n', '<space>', ':smile<cr>', v:true, 'test_ensurekeymapped')
+        call assert_equal(':smile<CR>', maparg('<space>', 'n'))
+        call assert_equal({}, g:vlime_skipped_mappings)
+
+        let g:vlime_skipped_mappings = {}
+        call vlime#ui#EnsureKeyMapped('n', '<space>', ':help<cr>', v:true, 'test_ensurekeymapped')
+        call assert_equal(':help<CR>', maparg('<space>', 'n'))
+        call assert_equal({}, g:vlime_skipped_mappings)
     finally
         unlet g:vlime_skipped_mappings
         call CleanupDummyBuffer()

@@ -316,9 +316,7 @@ function! s:OpenFrameSourceCB(conn, result)
 endfunction
 
 function! s:InitSLDBBuf()
-    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('sldb')
-        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'sldb')
-    endfor
+    call vlime#ui#MapBufferKeys('sldb')
 endfunction
 
 function! s:FrameRestartable(frame)

@@ -593,9 +593,7 @@ function! VlimeSetup(...)
     setlocal omnifunc=VlimeCompleteFunc
     setlocal indentexpr=VlimeCalcCurIndent()
 
-    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings('lisp')
-        call vlime#ui#EnsureKeyMapped(mode, key, cmd, 'lisp')
-    endfor
+    call vlime#ui#MapBufferKeys('lisp')
 endfunction
 
 function! VlimeInteractionMode()

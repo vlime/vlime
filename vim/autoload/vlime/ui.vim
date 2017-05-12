@@ -839,31 +839,45 @@ function! vlime#ui#GetWindowSettings(win_name)
                 \ get(settings, 'vertical', v:false)]
 endfunction
 
-" vlime#ui#EnsureKeyMapped(mode, key, cmd[, log[, flags]])
+" vlime#ui#EnsureKeyMapped(mode, key, cmd[, force[, log[, flags]]])
 function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
-    let log = vlime#GetNthVarArg(a:000, 0, v:null)
-    let flags = vlime#GetNthVarArg(a:000, 1, '<buffer> <silent>')
+    let force = vlime#GetNthVarArg(a:000, 0, v:false)
+    let log = vlime#GetNthVarArg(a:000, 1, v:null)
+    let flags = vlime#GetNthVarArg(a:000, 2, '<buffer> <silent>')
     if type(a:key) != v:t_list
         let key_list = [a:key]
     else
         let key_list = a:key
     endif
 
-    if !hasmapto(a:cmd, a:mode)
+    if force
         for kk in key_list
-            if len(maparg(kk, a:mode)) <= 0
-                execute a:mode . join(['noremap', flags, kk, a:cmd])
-            else
-                call s:LogSkippedKey(log, a:mode, kk, a:cmd,
-                            \ 'Key already mapped.')
-            endif
+            execute a:mode . join(['noremap', flags, kk, a:cmd])
         endfor
     else
-        for kk in key_list
-            call s:LogSkippedKey(log, a:mode, kk, a:cmd,
-                        \ 'Command already mapped.')
-        endfor
+        if !hasmapto(a:cmd, a:mode)
+            for kk in key_list
+                if len(maparg(kk, a:mode)) <= 0
+                    execute a:mode . join(['noremap', flags, kk, a:cmd])
+                else
+                    call s:LogSkippedKey(log, a:mode, kk, a:cmd,
+                                \ 'Key already mapped.')
+                endif
+            endfor
+        else
+            for kk in key_list
+                call s:LogSkippedKey(log, a:mode, kk, a:cmd,
+                            \ 'Command already mapped.')
+            endfor
+        endif
     endif
+endfunction
+
+function! vlime#ui#MapBufferKeys(buf_type)
+    let force = exists('g:vlime_force_default_keys') ? g:vlime_force_default_keys : v:false
+    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings(a:buf_type)
+        call vlime#ui#EnsureKeyMapped(mode, key, cmd, force, a:buf_type)
+    endfor
 endfunction
 
 function! s:LogSkippedKey(log, mode, key, cmd, reason)
