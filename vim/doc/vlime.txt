@@ -295,14 +295,48 @@ distiguish different buffers:
     vlime_preview   The preview buffer.
     vlime_arglist   The arglist buffer.
 
-You can remap any Vlime key mapping in these buffers. See
-plugin/vlime.vim and autoload/vlime/ui/*.vim for the default mappings.
+You can remap any Vlime key mapping in these buffers. See the source
+code (autoload/vlime/ui/mapping.vim) for all default mappings.
 
 Note: Vlime tries to be nice when mapping the default keys. If a key
       sequence was already mapped, Vlime would NOT overwrite the
       existing mapping. You'll have to resolve the conflict either by
       remapping the Vlime function or by disabling the existing
       mapping.
+
+                                            *g:vlime_skipped_mappings*
+      When Vlime detects any conflicting default mappings, it will log
+      them in the global variable g:vlime_skipped_mappings, which is a
+      |dict|, in the following format:
+
+        {
+            "<buffer type>": {
+                "<mode> <key>": ["<command>", "<reason>"],
+                ...
+            },
+            ...
+        }
+
+      The <buffer type> designates which buffer should these mappings
+      be applied to. The <mode> is a single character designating the
+      Vim mode, as described in |map-listing|. <Key> and <command> are
+      things to be mapped. And <reason> describes why this mapping was
+      skipped. There are currently two possible reasons:
+
+        "Key already mapped":
+            The key combination specified in <key> was already mapped.
+            This may imply a key conflict.
+
+        "Command already mapped":
+            The command specified in <command> was already mapped to.
+            This usually means you have remapped <command> to other
+            keys. Reports with this reason can be safely ignored.
+
+      If you are using the default Vlime mappings, and some of them
+      don't work properly, you should inspect
+      g:vlime_skipped_mappings, and resolve key conflicts, if any.
+      Use the method described in |vlime-mappings-remap| to remap keys
+      or forcibly override existing mappings.
 
                                                  *vlime-mappings-list*
 All the mappings listed below are defined in normal mode, unless
