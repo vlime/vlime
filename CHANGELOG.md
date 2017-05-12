@@ -1,8 +1,6 @@
 * master
-    * Log conflicts when mapping the default keys (see
-      `help g:vlime_skipped_mappings`).
-    * Functions and mappings for listing and closing Vlime windows (see
-      `:help vlime-mappings-close-window`).
+    * Better ways to handle conflicting key mappings. `:help vlime-overriding-mappings`
+    * Functions and mappings for listing and closing Vlime windows. `:help vlime-mappings-close-window`
     * Support cusomizing the `ncat` command, and using other `netcat` clones.
 
 * v0.2.0
