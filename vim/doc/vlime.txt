@@ -519,7 +519,16 @@ Mappings available in the debugger:          *vlime-mappings-debugger*
         Show the details (local variables and source location etc.)
         of the frame under the cursor.
     S
-        Jump to the source code for the frame under the cursor.
+        Jump to the source code for the frame under the cursor. If the
+        source file is already opened in a window, simply move the
+        cursor to that window. Otherwise, this command opens the
+        source file in the current window by default. A count can be
+        prepended to specify which window to use. For example, "2S"
+        would open the source file in the second visible window.
+    T
+        Open the source code for the frame under the cursor in a new
+        tab. If the source file is already opened, move the cursor to
+        the window containing the file in question instead.
     r
         Restart the frame under the cursor.
     s
@@ -566,6 +575,24 @@ Mappings available in the inspector:        *vlime-mappings-inspector*
         Return to the previous inspected object.
     R
         Refresh the inspector.
+
+Mappings available in the xref window:           *vlime-mappings-xref*
+
+    <CR>
+        Jump to the selected source location. If the source file is
+        already opened, simply move the cursor to the window
+        containing that file. Otherwise, open the source file in the
+        window where the xref command was initiated. A count can be
+        prepended to specify which window to use. For example, "2<CR>"
+        would use the second visible window.
+    t
+        Open the selected source location in a new tab.
+    s
+        Open the selected source location in a horizontal split
+        window. A count can be prepended to specify which window to
+        split.
+    S
+        Like "s", but open the source file in a vertical split window.
 
 Mappings available in the thread list:    *vlime-mappings-thread-list*
 
