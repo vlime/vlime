@@ -160,6 +160,57 @@ function! TestCurExpr()
     endtry
 endfunction
 
+function! TestCurTopExpr()
+    call NewDummyBuffer()
+    try
+        call append(line('$'), '(cons 1 2)')
+        call setpos('.', [0, line('$'), 1, 0])
+        let cur_line = line('.')
+        call assert_equal(['(cons 1 2)', [cur_line, 1], [cur_line, 10]],
+                    \ vlime#ui#CurTopExpr(v:true))
+
+        call setpos('.', [0, line('$'), 2, 0])
+        call assert_equal(['(cons 1 2)', [cur_line, 1], [cur_line, 10]],
+                    \ vlime#ui#CurTopExpr(v:true))
+
+        call setpos('.', [0, line('$'), 10, 0])
+        call assert_equal(['(cons 1 2)', [cur_line, 1], [cur_line, 10]],
+                    \ vlime#ui#CurTopExpr(v:true))
+
+        call append(line('$'), ' (cons 1 2) ')
+        call setpos('.', [0, line('$'), 12, 0])
+        let cur_line = line('.')
+        call assert_equal(['', [0, 0], [0, 0]],
+                    \ vlime#ui#CurTopExpr(v:true))
+
+        call setpos('.', [0, line('$'), 1, 0])
+        call assert_equal(['', [0, 0], [0, 0]],
+                    \ vlime#ui#CurTopExpr(v:true))
+
+        call append(line('$'), '(list (cons 1 2) 3)')
+        call setpos('.', [0, line('$'), 7, 0])
+        let cur_line = line('.')
+        call assert_equal(['(list (cons 1 2) 3)', [cur_line, 1], [cur_line, 19]],
+                    \ vlime#ui#CurTopExpr(v:true))
+
+        call setpos('.', [0, line('$'), 8, 0])
+        call assert_equal(['(list (cons 1 2) 3)', [cur_line, 1], [cur_line, 19]],
+                    \ vlime#ui#CurTopExpr(v:true))
+
+        call setpos('.', [0, line('$'), 16, 0])
+        call assert_equal(['(list (cons 1 2) 3)', [cur_line, 1], [cur_line, 19]],
+                    \ vlime#ui#CurTopExpr(v:true))
+
+        call append(line('$'), '(cons (list (cons 1 2) 3) 4)')
+        call setpos('.', [0, line('$'), 18, 0])
+        let cur_line = line('.')
+        call assert_equal(['(cons (list (cons 1 2) 3) 4)', [cur_line, 1], [cur_line, 28]],
+                    \ vlime#ui#CurTopExpr(v:true))
+    finally
+        call CleanupDummyBuffer()
+    endtry
+endfunction
+
 function! TestCurOperator()
     call NewDummyBuffer()
     try
@@ -383,6 +434,7 @@ call TestCurBufferContent()
 call TestCurChar()
 call TestCurAtom()
 call TestCurExpr()
+call TestCurTopExpr()
 call TestCurOperator()
 call TestSurroundingOperator()
 call TestCurArgPosForIndent()

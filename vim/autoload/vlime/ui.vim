@@ -226,38 +226,79 @@ function! vlime#ui#CurExpr(...)
     let return_pos = vlime#GetNthVarArg(a:000, 0, v:false)
 
     let cur_char = vlime#ui#CurChar()
-    let [s_line, s_col] = vlime#ui#CurExprPos(cur_char)
-    let [e_line, e_col] = vlime#ui#CurExprEndPos(cur_char)
-    let lines = getline(s_line, e_line)
-    if len(lines) == 1
-        let lines[0] = strpart(lines[0], s_col - 1, e_col - s_col + 1)
-    elseif len(lines) > 1
-        let lines[0] = strpart(lines[0], s_col - 1)
-        let lines[-1] = strpart(lines[-1], 0, e_col)
-    endif
-
-    let expr = join(lines, "\n")
-    return return_pos ? [expr, [s_line, s_col], [e_line, e_col]] : expr
+    let from_pos = vlime#ui#CurExprPos(cur_char, 'begin')
+    let to_pos = vlime#ui#CurExprPos(cur_char, 'end')
+    let expr = vlime#ui#GetText(from_pos, to_pos)
+    return return_pos ? [expr, from_pos, to_pos] : expr
 endfunction
 
-function! vlime#ui#CurExprPos(cur_char)
+let s:cur_expr_pos_search_flags = {
+            \ 'begin': ['cbnW', 'bnW', 'bnW'],
+            \ 'end':   ['nW', 'cnW', 'nW'],
+            \ }
+
+" vlime#ui#CurExprPos(cur_char[, side])
+function! vlime#ui#CurExprPos(cur_char, ...)
+    let side = vlime#GetNthVarArg(a:000, 0, 'begin')
     if a:cur_char == '('
-        return searchpairpos('(', '', ')', 'cbnW')
+        return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][0])
     elseif a:cur_char == ')'
-        return searchpairpos('(', '', ')', 'bnW')
+        return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][1])
     else
-        return searchpairpos('(', '', ')', 'bnW')
+        return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][2])
     endif
 endfunction
 
-function! vlime#ui#CurExprEndPos(cur_char)
-    if a:cur_char == '('
-        return searchpairpos('(', '', ')', 'nW')
-    elseif a:cur_char == ')'
-        return searchpairpos('(', '', ')', 'cnW')
+" vlime#ui#CurTopExpr([return_pos])
+function! vlime#ui#CurTopExpr(...)
+    let return_pos = vlime#GetNthVarArg(a:000, 0, v:false)
+
+    let [s_line, s_col] = vlime#ui#CurTopExprPos('begin')
+    if s_line > 0 && s_col > 0
+        let old_cur_pos = getcurpos()
+        try
+            call setpos('.', [0, s_line, s_col, 0])
+            return vlime#ui#CurExpr(return_pos)
+        finally
+            call setpos('.', old_cur_pos)
+        endtry
     else
-        return searchpairpos('(', '', ')', 'nW')
+        return return_pos ? ['', [0, 0], [0, 0]] : ''
     endif
+endfunction
+
+" vlime#ui#CurTopExprPos([side])
+function! vlime#ui#CurTopExprPos(...)
+    let side = vlime#GetNthVarArg(a:000, 0, 'begin')
+
+    if side == 'begin'
+        let search_flags = 'bW'
+    elseif side == 'end'
+        let search_flags = 'W'
+    endif
+
+    let last_pos = [0, 0]
+
+    let old_cur_pos = getcurpos()
+    try
+        let cur_pos = searchpairpos('(', '', ')', search_flags)
+        while cur_pos[0] > 0 && cur_pos[1] > 0
+            let last_pos = cur_pos
+            let cur_pos = searchpairpos('(', '', ')', search_flags)
+        endwhile
+        if last_pos[0] > 0 && last_pos[1] > 0
+            return last_pos
+        else
+            let cur_char = vlime#ui#CurChar()
+            if cur_char == '(' || cur_char == ')'
+                return searchpairpos('(', '', ')', search_flags . 'c')
+            else
+                return [0, 0]
+            endif
+        endif
+    finally
+        call setpos('.', old_cur_pos)
+    endtry
 endfunction
 
 function! vlime#ui#CurInPackage()
@@ -341,6 +382,21 @@ function! vlime#ui#CurBufferContent()
     let line_nr = 1
     let lines = getline(1, '$')
     return join(filter(lines, "match(v:val, '^\s*;.*$') < 0"), "\n")
+endfunction
+
+function! vlime#ui#GetText(from_pos, to_pos)
+    let [s_line, s_col] = a:from_pos
+    let [e_line, e_col] = a:to_pos
+
+    let lines = getline(s_line, e_line)
+    if len(lines) == 1
+        let lines[0] = strpart(lines[0], s_col - 1, e_col - s_col + 1)
+    elseif len(lines) > 1
+        let lines[0] = strpart(lines[0], s_col - 1)
+        let lines[-1] = strpart(lines[-1], 0, e_col)
+    endif
+
+    return join(lines, "\n")
 endfunction
 
 function! vlime#ui#GetCurWindowLayout()

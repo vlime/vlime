@@ -21,6 +21,7 @@ if !exists('g:vlime_default_mappings')
                     \
                     \ ['n', '<LocalLeader>ss', ':call VlimeSendCurThingToREPL("thing")<cr>'],
                     \ ['n', '<LocalLeader>se', ':call VlimeSendCurThingToREPL("expr")<cr>'],
+                    \ ['n', '<LocalLeader>st', ':call VlimeSendCurThingToREPL("top_expr")<cr>'],
                     \ ['n', '<LocalLeader>sa', ':call VlimeSendCurThingToREPL("atom")<cr>'],
                     \ ['v', '<LocalLeader>s', ':<c-u>call VlimeSendCurThingToREPL("selection")<cr>'],
                     \
@@ -28,6 +29,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>ma', ':call VlimeExpandCurMacro(v:true)<cr>'],
                     \
                     \ ['n', '<LocalLeader>oe', ':call VlimeCompileCurThing("expr")<cr>'],
+                    \ ['n', '<LocalLeader>ot', ':call VlimeCompileCurThing("top_expr")<cr>'],
                     \ ['n', '<LocalLeader>of', ':call VlimeCompileCurFile()<cr>'],
                     \ ['v', '<LocalLeader>o', ':<c-u>call VlimeCompileCurThing("selection")<cr>'],
                     \
@@ -49,6 +51,7 @@ if !exists('g:vlime_default_mappings')
                     \
                     \ ['n', ['<LocalLeader>II', '<LocalLeader>Ii'], ':call VlimeInspectCurThing("thing")<cr>'],
                     \ ['n', ['<LocalLeader>IE', '<LocalLeader>Ie'], ':call VlimeInspectCurThing("expr")<cr>'],
+                    \ ['n', ['<LocalLeader>IT', '<LocalLeader>It'], ':call VlimeInspectCurThing("top_expr")<cr>'],
                     \ ['n', ['<LocalLeader>IA', '<LocalLeader>Ia'], ':call VlimeInspectCurThing("atom")<cr>'],
                     \ ['v', '<LocalLeader>I', ':call VlimeInspectCurThing("selection")<cr>'],
                     \

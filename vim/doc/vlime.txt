@@ -376,6 +376,9 @@ Mappings available in CL source files:         *vlime-mappings-source*
             the REPL, else send the atom under the cursor, if any.
         <LocalLeader>se
             Send the s-expression under the cursor to the REPL.
+        <LocalLeader>st
+            Send the top-level s-expression under the cursor to the
+            REPL.
         <LocalLeader>sa
             Send the atom under the cursor to the REPL.
         <LocalLeader>s
@@ -390,6 +393,8 @@ Mappings available in CL source files:         *vlime-mappings-source*
     Compiling                                 *vlime-mappings-compile*
         <LocalLeader>oe
             Compile the form under the cursor.
+        <LocalLeader>ot
+            Compile the top-level form under the cursor.
         <LocalLeader>of
             Compile the current file.
         <LocalLeader>o
@@ -447,6 +452,11 @@ Mappings available in CL source files:         *vlime-mappings-source*
             Evaluate and inspect the s-expression under the cursor.
         <LocalLeader>Ie
             Same as <LocalLeader>IE
+        <LocalLeader>IT
+            Evaluate and inspect the top-level s-expression under the
+            cursor.
+        <LocalLeader>It
+            Same as <LocalLeader>It
         <LocalLeader>IA
             Evaluate and inspect the atom under the cursor.
         <LocalLeader>Ia

@@ -119,6 +119,8 @@ function! VlimeSendCurThingToREPL(thing)
         endif
     elseif a:thing == 'expr'
         let str = vlime#ui#CurExpr()
+    elseif a:thing == 'top_expr'
+        let str = vlime#ui#CurTopExpr()
     elseif a:thing == 'atom'
         let str = vlime#ui#CurAtom()
     elseif a:thing == 'selection'
@@ -142,6 +144,8 @@ endfunction
 function! VlimeCompileCurThing(thing)
     if a:thing == 'expr'
         let [str, s_pos, e_pos] = vlime#ui#CurExpr(v:true)
+    elseif a:thing == 'top_expr'
+        let [str, s_pos, e_pos] = vlime#ui#CurTopExpr(v:true)
     elseif a:thing == 'selection'
         let [str, s_pos, e_pos] = vlime#ui#CurSelection(v:true)
     endif
@@ -177,6 +181,8 @@ function! VlimeInspectCurThing(thing)
         endif
     elseif a:thing == 'expr'
         let str = vlime#ui#CurExpr()
+    elseif a:thing == 'top_expr'
+        let str = vlime#ui#CurTopExpr()
     elseif a:thing == 'atom'
         let str = vlime#ui#CurAtom()
     elseif a:thing == 'selection'
