@@ -158,19 +158,20 @@ function! VlimeCompileCurThing(thing)
         return
     endif
 
-    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     let [str_line, str_col] = s_pos
+    let cur_buf = bufnr('%')
+    let cur_byte = line2byte(str_line) + str_col - 1
+    let cur_file = expand('%:p')
+
+    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     if exists('g:vlime_compiler_policy')
         let policy = g:vlime_compiler_policy
     else
         let policy = v:null
     endif
     call conn.CompileStringForEmacs(
-                \ str, bufnr('%'),
-                \ line2byte(str_line) + str_col - 1,
-                \ expand('%:p'),
-                \ policy,
-                \ function('s:OnCompilationComplete'))
+                \ str, cur_buf, cur_byte, cur_file,
+                \ policy, function('s:OnCompilationComplete'))
 endfunction
 
 function! VlimeInspectCurThing(thing)
