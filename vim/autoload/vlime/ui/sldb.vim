@@ -76,12 +76,15 @@ function! vlime#ui#sldb#ShowFrameDetails()
                 \ function('s:ShowFrameSourceLocationCB', [nth, v:true]))
 endfunction
 
-function! vlime#ui#sldb#OpenFrameSource()
+" vlime#ui#sldb#OpenFrameSource([edit_cmd])
+function! vlime#ui#sldb#OpenFrameSource(...)
+    let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
     let nth = s:MatchFrame()
     if nth < 0
         let nth = 0
     endif
-    call b:vlime_conn.FrameSourceLocation(nth, function('s:OpenFrameSourceCB'))
+    call b:vlime_conn.FrameSourceLocation(nth,
+                \ function('s:OpenFrameSourceCB', [edit_cmd, v:count]))
 endfunction
 
 function! vlime#ui#sldb#RestartCurFrame()
@@ -307,12 +310,18 @@ function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
     endif
 endfunction
 
-function! s:OpenFrameSourceCB(conn, result)
+function! s:OpenFrameSourceCB(edit_cmd, win_nr, conn, result)
     if a:result[0]['name'] != 'LOCATION'
         call vlime#ui#ErrMsg(a:result[1])
         return
     endif
-    call vlime#ui#JumpToOrOpenFile(a:result[1][1], a:result[2][1])
+    if a:win_nr > 0 && win_getid(a:win_nr) > 0
+        call win_gotoid(win_getid(a:win_nr))
+    elseif a:win_nr > 0
+        call vlime#ui#ErrMsg('Invalid window number: ' . a:win_nr)
+        return
+    endif
+    call vlime#ui#JumpToOrOpenFile(a:result[1][1], a:result[2][1], a:edit_cmd)
 endfunction
 
 function! s:InitSLDBBuf()

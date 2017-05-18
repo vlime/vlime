@@ -76,7 +76,8 @@ if !exists('g:vlime_default_mappings')
                 \ 'sldb': [
                     \ ['n', '<cr>', ':call vlime#ui#sldb#ChooseCurRestart()<cr>'],
                     \ ['n', 'd', ':call vlime#ui#sldb#ShowFrameDetails()<cr>'],
-                    \ ['n', 'S', ':call vlime#ui#sldb#OpenFrameSource()<cr>'],
+                    \ ['n', 'S', ':<c-u>call vlime#ui#sldb#OpenFrameSource()<cr>'],
+                    \ ['n', 'T', ':call vlime#ui#sldb#OpenFrameSource("tabedit")<cr>'],
                     \ ['n', 'r', ':call vlime#ui#sldb#RestartCurFrame()<cr>'],
                     \ ['n', 's', ':call vlime#ui#sldb#StepCurOrLastFrame("step")<cr>'],
                     \ ['n', 'x', ':call vlime#ui#sldb#StepCurOrLastFrame("next")<cr>'],
@@ -106,7 +107,10 @@ if !exists('g:vlime_default_mappings')
                 \ ],
                 \
                 \ 'xref': [
-                    \ ['n', '<cr>', ':call vlime#ui#xref#OpenCurXref()<cr>'],
+                    \ ['n', '<cr>', ':<c-u>call vlime#ui#xref#OpenCurXref()<cr>'],
+                    \ ['n', 't', ':call vlime#ui#xref#OpenCurXref(v:true, "tabedit")<cr>'],
+                    \ ['n', 's', ':<c-u>call vlime#ui#xref#OpenCurXref(v:true, "split")<cr>'],
+                    \ ['n', 'S', ':<c-u>call vlime#ui#xref#OpenCurXref(v:true, "vsplit")<cr>'],
                 \ ],
                 \
                 \ 'notes': [

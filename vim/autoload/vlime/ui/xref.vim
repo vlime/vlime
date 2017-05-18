@@ -1,10 +1,11 @@
-function! vlime#ui#xref#InitXRefBuf(conn)
+function! vlime#ui#xref#InitXRefBuf(conn, orig_win)
     let buf = bufnr(vlime#ui#XRefBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
         call setbufvar(buf, '&filetype', 'vlime_xref')
         call vlime#ui#WithBuffer(buf, function('s:InitXRefBuf'))
     endif
+    call setbufvar(buf, 'vlime_xref_orig_win', a:orig_win)
     return buf
 endfunction
 
@@ -50,7 +51,13 @@ function! vlime#ui#xref#FillXRefBuf(xref_list)
     let b:vlime_xref_list = xlist
 endfunction
 
-function! vlime#ui#xref#OpenCurXref()
+" vlime#ui#xref#OpenCurXref([close_xref[, edit_cmd]])
+function! vlime#ui#xref#OpenCurXref(...)
+    let close_xref = vlime#GetNthVarArg(a:000, 0, v:true)
+    let edit_cmd = vlime#GetNthVarArg(a:000, 1, 'hide edit')
+
+    let orig_win = getbufvar('%', 'vlime_xref_orig_win', v:null)
+
     let cur_pos = getcurpos()
     let xref_coord = v:null
     for c in b:vlime_xref_coords
@@ -69,7 +76,29 @@ function! vlime#ui#xref#OpenCurXref()
     let pos = s:FindXRefLocationProp('POSITION', xref_loc)
 
     if type(path) != type(v:null)
-        call vlime#ui#JumpToOrOpenFile(path, pos)
+        let xref_win_id = win_getid()
+
+        if v:count > 0
+            let win_to_go = win_getid(v:count)
+            if win_to_go <= 0
+                call vlime#ui#ErrMsg('Invalid window number: ' . v:count)
+                return
+            endif
+        elseif type(orig_win) != type(v:null) && win_id2win(orig_win) > 0
+            let win_to_go = orig_win
+        else
+            let win_to_go = 0
+        endif
+
+        if win_to_go > 0
+            call win_gotoid(win_to_go)
+        endif
+
+        if close_xref && win_getid() != xref_win_id
+            execute win_id2win(xref_win_id) . 'wincmd c'
+        endif
+
+        call vlime#ui#JumpToOrOpenFile(path, pos, edit_cmd)
     elseif xref_loc[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(xref_loc[1])
     else

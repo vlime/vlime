@@ -329,7 +329,8 @@ function! VlimeXRefCurSymbol(sym_type, ref_type)
         if type(conn) == type(v:null)
             return
         endif
-        call conn.XRef(a:ref_type, sym, function('s:OnXRefComplete'))
+        call conn.XRef(a:ref_type, sym,
+                    \ function('s:OnXRefComplete', [win_getid()]))
     endif
 endfunction
 
@@ -344,7 +345,8 @@ function! VlimeFindCurDefinition(sym_type)
         if type(conn) == type(v:null)
             return
         endif
-        call conn.FindDefinitionsForEmacs(sym, function('s:OnXRefComplete'))
+        call conn.FindDefinitionsForEmacs(sym,
+                    \ function('s:OnXRefComplete', [win_getid()]))
     endif
 endfunction
 
@@ -685,9 +687,9 @@ function! s:OnLoadFileComplete(fname, conn, result)
     echom 'Loaded: ' . a:fname
 endfunction
 
-function! s:OnXRefComplete(conn, result)
+function! s:OnXRefComplete(orig_win, conn, result)
     if type(a:conn.ui) != type(v:null)
-        call a:conn.ui.OnXRef(a:conn, a:result)
+        call a:conn.ui.OnXRef(a:conn, a:result, a:orig_win)
     endif
 endfunction
 

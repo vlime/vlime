@@ -161,14 +161,14 @@ function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     redraw
 endfunction
 
-function! vlime#ui#OnXRef(conn, xref_list)
+function! vlime#ui#OnXRef(conn, xref_list, orig_win)
     if type(a:xref_list) == type(v:null)
         call vlime#ui#ErrMsg('No xref found.')
     elseif type(a:xref_list) == v:t_dict &&
                 \ a:xref_list['name'] == 'NOT-IMPLEMENTED'
         call vlime#ui#ErrMsg('Not implemented.')
     else
-        let xref_buf = vlime#ui#xref#InitXRefBuf(a:conn)
+        let xref_buf = vlime#ui#xref#InitXRefBuf(a:conn, a:orig_win)
         call vlime#ui#OpenBufferWithWinSettings(xref_buf, v:false, 'xref')
         call vlime#ui#xref#FillXRefBuf(a:xref_list)
     endif
@@ -756,7 +756,10 @@ function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
     return v:false
 endfunction
 
-function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos)
+" vlime#ui#JumpToOrOpenFile(file_path, byte_pos[, edit_cmd])
+function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
+    let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
+
     let file_buf = bufnr(a:file_path)
     let buf_exists = v:true
     if file_buf > 0
@@ -779,7 +782,7 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos)
         if type(a:file_path) == v:t_number
             call vlime#ui#ErrMsg('Buffer ' . a:file_path . ' does not exist.')
         elseif a:file_path[0:6] == 'sftp://' || filereadable(a:file_path)
-            execute 'tabedit ' . escape(a:file_path, ' \')
+            execute join([edit_cmd, escape(a:file_path, ' \')])
         else
             call vlime#ui#ErrMsg('Not readable: ' . a:file_path)
             return
