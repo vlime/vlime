@@ -470,6 +470,8 @@ Mappings available in CL source files:         *vlime-mappings-source*
             Close all visible preview windows.
         <LocalLeader>wr
             Close all visible arglist windows.
+        <LocalLeader>wn
+            Close all visible compiler notes windows.
         <LocalLeader>wR
             Close all visible REPL windows.
         <LocalLeader>wA

@@ -60,6 +60,7 @@ if !exists('g:vlime_default_mappings')
                     \
                     \ ['n', '<LocalLeader>wp', ':call VlimeCloseWindow("preview")<cr>'],
                     \ ['n', '<LocalLeader>wr', ':call VlimeCloseWindow("arglist")<cr>'],
+                    \ ['n', '<LocalLeader>wn', ':call VlimeCloseWindow("notes")<cr>'],
                     \ ['n', '<LocalLeader>wR', ':call VlimeCloseWindow("repl")<cr>'],
                     \ ['n', '<LocalLeader>wA', ':call VlimeCloseWindow("")<cr>'],
                     \ ['n', '<LocalLeader>wl', ':call VlimeCloseWindow()<cr>'],
