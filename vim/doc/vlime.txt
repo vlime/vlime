@@ -211,7 +211,8 @@ entry inside the xref buffer will take you directly to the reference
 location.
 
 For more xref types and key mappings, see
-|vlime-mappings-invoke-xref|.
+|vlime-mappings-invoke-xref|. For all available key mappings in the
+xref buffer, see |vlime-mappings-xref|.
 
 ----------------------------------------------------------------------
 3.8 Compiler Messages                             *vlime-compiler-msg*
@@ -221,6 +222,9 @@ When issuing compilation commands specified in
 emitted by the compiler would pop up in a dedicated buffer. Just
 select a message by pressing <CR>, and Vlime will take you to the
 referenced source location.
+
+For all available key mappings in the compiler message buffer, see
+|vlime-mappings-compiler-notes|.
 
 ----------------------------------------------------------------------
 3.9 Managing Threads                               *vlime-thread-list*
@@ -526,9 +530,9 @@ Mappings available in the debugger:          *vlime-mappings-debugger*
         prepended to specify which window to use. For example, "2S"
         would open the source file in the second visible window.
     T
-        Open the source code for the frame under the cursor in a new
-        tab. If the source file is already opened, move the cursor to
-        the window containing the file in question instead.
+        Like "S", but open the source file in a new tab, if it's not
+        yet opened in any window. To always create a new tab, prepend
+        an arbitrary count, such as "1T".
     r
         Restart the frame under the cursor.
     s
@@ -576,7 +580,9 @@ Mappings available in the inspector:        *vlime-mappings-inspector*
     R
         Refresh the inspector.
 
-Mappings available in the xref window:           *vlime-mappings-xref*
+Mappings available in the xref window and the compiler notes window
+                                                 *vlime-mappings-xref*
+                                       *vlime-mappings-compiler-notes*
 
     <CR>
         Jump to the selected source location. If the source file is
@@ -584,15 +590,17 @@ Mappings available in the xref window:           *vlime-mappings-xref*
         containing that file. Otherwise, open the source file in the
         window where the xref command was initiated. A count can be
         prepended to specify which window to use. For example, "2<CR>"
-        would use the second visible window.
+        would show the source file in the second visible window.
     t
-        Open the selected source location in a new tab.
+        Like <CR>, but open the source file in a new tab, if it's not
+        yet opened in any window. To always create a new tab, prepend
+        an arbitrary count, such as "1t".
     s
         Open the selected source location in a horizontal split
         window. A count can be prepended to specify which window to
         split.
     S
-        Like "s", but open the source file in a vertical split window.
+        Like "s", but open a vertical split window.
 
 Mappings available in the thread list:    *vlime-mappings-thread-list*
 
