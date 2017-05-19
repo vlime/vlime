@@ -71,11 +71,21 @@ function! vlime#ui#xref#OpenCurXref(...)
         return
     endif
 
-    let xref_loc = b:vlime_xref_list[xref_coord['id']][1]
-    let path = s:FindXRefLocationProp('FILE', xref_loc)
-    let pos = s:FindXRefLocationProp('POSITION', xref_loc)
+    let raw_xref_loc = b:vlime_xref_list[xref_coord['id']][1]
+    let xref_loc = vlime#ParseSourceLocation(raw_xref_loc)
+    try
+        let valid_loc = vlime#GetValidSourceLocation(xref_loc)
+    catch
+        let valid_loc = []
+    endtry
 
-    if type(path) != type(v:null)
+    if len(valid_loc) > 0
+        if type(valid_loc[0]) == v:t_string && valid_loc[0][0:6] != 'sftp://'
+                    \ && !filereadable(valid_loc[0])
+            call vlime#ui#ErrMsg('Not readable: ' . valid_loc[0])
+            return
+        endif
+
         let xref_win_id = win_getid()
 
         if v:count > 0
@@ -98,9 +108,9 @@ function! vlime#ui#xref#OpenCurXref(...)
             execute win_id2win(xref_win_id) . 'wincmd c'
         endif
 
-        call vlime#ui#JumpToOrOpenFile(path, pos, edit_cmd)
-    elseif xref_loc[0]['name'] == 'ERROR'
-        call vlime#ui#ErrMsg(xref_loc[1])
+        call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1], edit_cmd)
+    elseif raw_xref_loc[0]['name'] == 'ERROR'
+        call vlime#ui#ErrMsg(raw_xref_loc[1])
     else
         call vlime#ui#ErrMsg('No source available.')
     endif

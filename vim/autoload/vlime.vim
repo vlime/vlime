@@ -147,7 +147,11 @@ function! vlime#FixRemotePath(path) dict
         return self['remote_prefix'] . a:path
     elseif type(a:path) == v:t_list && type(a:path[0]) == v:t_dict
                 \ && a:path[0]['name'] == 'LOCATION'
-        let a:path[1][1] = self['remote_prefix'] . a:path[1][1]
+        if a:path[1][0]['name'] == 'FILE'
+            let a:path[1][1] = self['remote_prefix'] . a:path[1][1]
+        elseif a:path[1][0]['name'] == 'BUFFER-AND-FILE'
+            let a:path[1][2] = self['remote_prefix'] . a:path[1][2]
+        endif
         return a:path
     else
         throw 'vlime#FixRemotePath: unknown path: ' . string(a:path)
@@ -893,6 +897,57 @@ function! vlime#ChainCallbacks(...)
 
     let FirstFunc = cbs[0]
     call FirstFunc(function('s:ChainCallbackCB', [cbs[1:]]))
+endfunction
+
+function! vlime#ParseSourceLocation(loc)
+    if type(a:loc[0]) != v:t_dict || a:loc[0]['name'] != 'LOCATION'
+        throw 'vlime#ParseSourceLocation: invalid location: ' . string(a:loc)
+    endif
+
+    let loc_obj = {}
+
+    for p in a:loc[1:]
+        if type(p) != v:t_list
+            continue
+        endif
+
+        if len(p) == 1
+            let loc_obj[p[0]['name']] = v:null
+        elseif len(p) == 2
+            let loc_obj[p[0]['name']] = p[1]
+        elseif len(p) > 2
+            let loc_obj[p[0]['name']] = p[1:]
+        endif
+    endfor
+
+    return loc_obj
+endfunction
+
+function! vlime#GetValidSourceLocation(loc)
+    let loc_file = get(a:loc, 'FILE', v:null)
+    let loc_buffer = get(a:loc, 'BUFFER', v:null)
+    let loc_buf_and_file = get(a:loc, 'BUFFER-AND-FILE', v:null)
+
+    if type(loc_file) != type(v:null)
+        let loc_pos = get(a:loc, 'POSITION', v:null)
+        let valid_loc = [loc_file, loc_pos]
+    elseif type(loc_buffer) != type(v:null)
+        let loc_offset = get(a:loc, 'OFFSET', v:null)
+        if type(loc_offset) != type(v:null)
+            let loc_offset = loc_offset[0] + loc_offset[1]
+        endif
+        let valid_loc = [loc_buffer, loc_offset]
+    elseif type(loc_buf_and_file) != type(v:null)
+        let loc_offset = get(a:loc, 'OFFSET', v:null)
+        if type(loc_offset) != type(v:null)
+            let loc_offset = loc_offset[0] + loc_offset[1]
+        endif
+        let valid_loc = [loc_buf_and_file[0], loc_offset]
+    else
+        let valid_loc = []
+    endif
+
+    return valid_loc
 endfunction
 
 function! s:SearchPList(plist, name)

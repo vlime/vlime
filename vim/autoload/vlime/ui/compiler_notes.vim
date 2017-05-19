@@ -63,18 +63,11 @@ function! vlime#ui#compiler_notes#OpenCurNote()
         return
     endif
 
-    let note_loc = b:vlime_compiler_note_list[note_coord['id']]['LOCATION']
-
-    let note_file = s:FindNoteLocationProp('FILE', note_loc)
-    let note_buffer = s:FindNoteLocationProp('BUFFER', note_loc)
-
-    if type(note_file) != type(v:null)
-        let note_pos = s:FindNoteLocationProp('POSITION', note_loc)
-        call vlime#ui#JumpToOrOpenFile(note_file[0], note_pos[0])
-    elseif type(note_buffer) != type(v:null)
-        let note_offset = s:FindNoteLocationProp('OFFSET', note_loc)
-        let note_offset = note_offset[0] + note_offset[1]
-        call vlime#ui#JumpToOrOpenFile(note_buffer[0], note_offset)
+    let note_loc = vlime#ParseSourceLocation(
+                \ b:vlime_compiler_note_list[note_coord['id']]['LOCATION'])
+    let valid_loc = vlime#GetValidSourceLocation(note_loc)
+    if len(valid_loc) > 0
+        call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1])
     else
         call vlime#ui#ErrMsg('No source available.')
     endif
