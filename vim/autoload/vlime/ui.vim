@@ -784,8 +784,9 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
     endif
 
     if !buf_exists
+        " Actually the buffer may exist, but it's not shown in any window
         if type(a:file_path) == v:t_number
-            if force_open && bufnr(a:file_path) > 0
+            if bufnr(a:file_path) > 0
                 try
                     execute join([edit_cmd, '#' . a:file_path])
                 catch /^Vim\%((\a\+)\)\=:E37/  " No write since last change
