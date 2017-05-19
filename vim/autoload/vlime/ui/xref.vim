@@ -70,8 +70,8 @@ function! vlime#ui#xref#OpenCurXref(...)
     endif
 
     let raw_xref_loc = b:vlime_xref_list[xref_coord['id']][1]
-    let xref_loc = vlime#ParseSourceLocation(raw_xref_loc)
     try
+        let xref_loc = vlime#ParseSourceLocation(raw_xref_loc)
         let valid_loc = vlime#GetValidSourceLocation(xref_loc)
     catch
         let valid_loc = []
