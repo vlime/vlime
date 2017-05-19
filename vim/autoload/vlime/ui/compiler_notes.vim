@@ -1,10 +1,11 @@
-function! vlime#ui#compiler_notes#InitCompilerNotesBuffer(conn)
+function! vlime#ui#compiler_notes#InitCompilerNotesBuffer(conn, orig_win)
     let buf = bufnr(vlime#ui#CompilerNotesBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
         call setbufvar(buf, '&filetype', 'vlime_notes')
         call vlime#ui#WithBuffer(buf, function('s:InitCompilerNotesBuffer'))
     endif
+    call setbufvar(buf, 'vlime_notes_orig_win', a:orig_win)
     return buf
 endfunction
 
@@ -49,7 +50,10 @@ function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
     let b:vlime_compiler_note_list = nlist
 endfunction
 
-function! vlime#ui#compiler_notes#OpenCurNote()
+" vlime#ui#compiler_notes#OpenCurNote([edit_cmd])
+function! vlime#ui#compiler_notes#OpenCurNote(...)
+    let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
+
     let cur_pos = getcurpos()
     let note_coord = v:null
     for c in b:vlime_compiler_note_coords
@@ -67,7 +71,14 @@ function! vlime#ui#compiler_notes#OpenCurNote()
                 \ b:vlime_compiler_note_list[note_coord['id']]['LOCATION'])
     let valid_loc = vlime#GetValidSourceLocation(note_loc)
     if len(valid_loc) > 0
-        call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1])
+        let orig_win = getbufvar('%', 'vlime_notes_orig_win', v:null)
+        let [win_to_go, count_specified] = vlime#ui#ChooseWindowWithCount(orig_win)
+        if win_to_go > 0
+            call win_gotoid(win_to_go)
+        elseif count_specified
+            return
+        endif
+        call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1], edit_cmd, count_specified)
     else
         call vlime#ui#ErrMsg('No source available.')
     endif

@@ -162,16 +162,17 @@ function! VlimeCompileCurThing(thing)
     let cur_buf = bufnr('%')
     let cur_byte = line2byte(str_line) + str_col - 1
     let cur_file = expand('%:p')
-
-    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    let cur_win = win_getid()
     if exists('g:vlime_compiler_policy')
         let policy = g:vlime_compiler_policy
     else
         let policy = v:null
     endif
+
+    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call conn.CompileStringForEmacs(
                 \ str, cur_buf, cur_byte, cur_file,
-                \ policy, function('s:OnCompilationComplete'))
+                \ policy, function('s:OnCompilationComplete', [cur_win]))
 endfunction
 
 function! VlimeInspectCurThing(thing)
@@ -214,14 +215,16 @@ function! VlimeCompileCurFile()
         return
     endif
 
+    let cur_win = win_getid()
     if exists('g:vlime_compiler_policy')
         let policy = g:vlime_compiler_policy
     else
         let policy = v:null
     endif
+
     call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call conn.CompileFileForEmacs(fname, v:true, policy,
-                \ function('s:OnCompilationComplete'))
+                \ function('s:OnCompilationComplete', [cur_win]))
 endfunction
 
 function! VlimeExpandCurMacro(expand_all)
@@ -718,7 +721,7 @@ function! s:OnSLDBBreakComplete(conn, result)
     echom 'Breakpoint set.'
 endfunction
 
-function! s:OnCompilationComplete(conn, result)
+function! s:OnCompilationComplete(orig_win, conn, result)
     let [_msg_type, notes, successp, duration, loadp, faslfile] = a:result
     if successp
         echom 'Compilation finished in ' . string(duration) . ' second(s)'
@@ -730,7 +733,7 @@ function! s:OnCompilationComplete(conn, result)
     endif
 
     if type(a:conn.ui) != type(v:null)
-        call a:conn.ui.OnCompilerNotes(a:conn, notes)
+        call a:conn.ui.OnCompilerNotes(a:conn, notes, a:orig_win)
     endif
 endfunction
 

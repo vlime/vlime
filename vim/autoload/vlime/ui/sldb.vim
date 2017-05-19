@@ -315,13 +315,17 @@ function! s:OpenFrameSourceCB(edit_cmd, win_nr, conn, result)
         call vlime#ui#ErrMsg(a:result[1])
         return
     endif
+
+    let force_open = v:false
     if a:win_nr > 0 && win_getid(a:win_nr) > 0
+        " The user specified a valid window to use explicitly, set the forced flag
+        let force_open = v:true
         call win_gotoid(win_getid(a:win_nr))
     elseif a:win_nr > 0
         call vlime#ui#ErrMsg('Invalid window number: ' . a:win_nr)
         return
     endif
-    call vlime#ui#JumpToOrOpenFile(a:result[1][1], a:result[2][1], a:edit_cmd)
+    call vlime#ui#JumpToOrOpenFile(a:result[1][1], a:result[2][1], a:edit_cmd, force_open)
 endfunction
 
 function! s:InitSLDBBuf()

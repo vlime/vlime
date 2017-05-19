@@ -56,8 +56,6 @@ function! vlime#ui#xref#OpenCurXref(...)
     let close_xref = vlime#GetNthVarArg(a:000, 0, v:true)
     let edit_cmd = vlime#GetNthVarArg(a:000, 1, 'hide edit')
 
-    let orig_win = getbufvar('%', 'vlime_xref_orig_win', v:null)
-
     let cur_pos = getcurpos()
     let xref_coord = v:null
     for c in b:vlime_xref_coords
@@ -88,27 +86,19 @@ function! vlime#ui#xref#OpenCurXref(...)
 
         let xref_win_id = win_getid()
 
-        if v:count > 0
-            let win_to_go = win_getid(v:count)
-            if win_to_go <= 0
-                call vlime#ui#ErrMsg('Invalid window number: ' . v:count)
-                return
-            endif
-        elseif type(orig_win) != type(v:null) && win_id2win(orig_win) > 0
-            let win_to_go = orig_win
-        else
-            let win_to_go = 0
-        endif
-
+        let orig_win = getbufvar('%', 'vlime_xref_orig_win', v:null)
+        let [win_to_go, count_specified] = vlime#ui#ChooseWindowWithCount(orig_win)
         if win_to_go > 0
             call win_gotoid(win_to_go)
+        elseif count_specified
+            return
         endif
 
         if close_xref && win_getid() != xref_win_id
             execute win_id2win(xref_win_id) . 'wincmd c'
         endif
 
-        call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1], edit_cmd)
+        call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1], edit_cmd, count_specified)
     elseif raw_xref_loc[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(raw_xref_loc[1])
     else

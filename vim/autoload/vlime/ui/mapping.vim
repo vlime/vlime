@@ -108,13 +108,16 @@ if !exists('g:vlime_default_mappings')
                 \
                 \ 'xref': [
                     \ ['n', '<cr>', ':<c-u>call vlime#ui#xref#OpenCurXref()<cr>'],
-                    \ ['n', 't', ':call vlime#ui#xref#OpenCurXref(v:true, "tabedit")<cr>'],
+                    \ ['n', 't', ':<c-u>call vlime#ui#xref#OpenCurXref(v:true, "tabedit")<cr>'],
                     \ ['n', 's', ':<c-u>call vlime#ui#xref#OpenCurXref(v:true, "split")<cr>'],
                     \ ['n', 'S', ':<c-u>call vlime#ui#xref#OpenCurXref(v:true, "vsplit")<cr>'],
                 \ ],
                 \
                 \ 'notes': [
-                    \ ['n', '<cr>', ':call vlime#ui#compiler_notes#OpenCurNote()<cr>'],
+                    \ ['n', '<cr>', ':<c-u>call vlime#ui#compiler_notes#OpenCurNote()<cr>'],
+                    \ ['n', 't', ':<c-u>call vlime#ui#compiler_notes#OpenCurNote("tabedit")<cr>'],
+                    \ ['n', 's', ':<c-u>call vlime#ui#compiler_notes#OpenCurNote("split")<cr>'],
+                    \ ['n', 'S', ':<c-u>call vlime#ui#compiler_notes#OpenCurNote("vsplit")<cr>'],
                 \ ],
                 \
                 \ 'threads': [

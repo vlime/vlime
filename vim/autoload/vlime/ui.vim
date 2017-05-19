@@ -174,8 +174,8 @@ function! vlime#ui#OnXRef(conn, xref_list, orig_win)
     endif
 endfunction
 
-function! vlime#ui#OnCompilerNotes(conn, note_list)
-    let notes_buf = vlime#ui#compiler_notes#InitCompilerNotesBuffer(a:conn)
+function! vlime#ui#OnCompilerNotes(conn, note_list, orig_win)
+    let notes_buf = vlime#ui#compiler_notes#InitCompilerNotesBuffer(a:conn, a:orig_win)
     let buf_opened = len(win_findbuf(notes_buf)) > 0
     if buf_opened || type(a:note_list) != type(v:null)
         let old_win_id = win_getid()
@@ -756,31 +756,48 @@ function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
     return v:false
 endfunction
 
-" vlime#ui#JumpToOrOpenFile(file_path, byte_pos[, edit_cmd])
+" vlime#ui#JumpToOrOpenFile(file_path, byte_pos[, edit_cmd[, force_open]])
 function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
     let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
+    let force_open = vlime#GetNthVarArg(a:000, 1, v:false)
 
-    let file_buf = bufnr(a:file_path)
-    let buf_exists = v:true
-    if file_buf > 0
-        let buf_win = bufwinnr(file_buf)
-        if buf_win > 0
-            execute buf_win . 'wincmd w'
-        else
-            let win_list = win_findbuf(file_buf)
-            if len(win_list) > 0
-                call win_gotoid(win_list[0])
-            else
-                let buf_exists = v:false
-            endif
-        endif
-    else
+    if force_open
         let buf_exists = v:false
+    else
+        let file_buf = bufnr(a:file_path)
+        let buf_exists = v:true
+        if file_buf > 0
+            let buf_win = bufwinnr(file_buf)
+            if buf_win > 0
+                execute buf_win . 'wincmd w'
+            else
+                let win_list = win_findbuf(file_buf)
+                if len(win_list) > 0
+                    call win_gotoid(win_list[0])
+                else
+                    let buf_exists = v:false
+                endif
+            endif
+        else
+            let buf_exists = v:false
+        endif
     endif
 
     if !buf_exists
         if type(a:file_path) == v:t_number
-            call vlime#ui#ErrMsg('Buffer ' . a:file_path . ' does not exist.')
+            if force_open && bufnr(a:file_path) > 0
+                try
+                    execute join([edit_cmd, '#' . a:file_path])
+                catch /^Vim\%((\a\+)\)\=:E37/  " No write since last change
+                    " Vim will raise E37 when editing the same buffer with
+                    " unsaved changes. Double-check it IS the same buffer.
+                    if bufnr('%') != a:file_path
+                        throw v:exception
+                    endif
+                endtry
+            else
+                call vlime#ui#ErrMsg('Buffer ' . a:file_path . ' does not exist.')
+            endif
         elseif a:file_path[0:6] == 'sftp://' || filereadable(a:file_path)
             execute join([edit_cmd, escape(a:file_path, ' \')])
         else
@@ -937,6 +954,23 @@ function! vlime#ui#MapBufferKeys(buf_type)
     for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings(a:buf_type)
         call vlime#ui#EnsureKeyMapped(mode, key, cmd, force, a:buf_type)
     endfor
+endfunction
+
+function! vlime#ui#ChooseWindowWithCount(default_win)
+    let count_specified = v:false
+    if v:count > 0
+        let count_specified = v:true
+        let win_to_go = win_getid(v:count)
+        if win_to_go <= 0
+            call vlime#ui#ErrMsg('Invalid window number: ' . v:count)
+        endif
+    elseif type(a:default_win) != type(v:null) && win_id2win(a:default_win) > 0
+        let win_to_go = a:default_win
+    else
+        let win_to_go = 0
+    endif
+
+    return [win_to_go, count_specified]
 endfunction
 
 function! s:LogSkippedKey(log, mode, key, cmd, reason)
