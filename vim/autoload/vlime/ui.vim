@@ -761,6 +761,11 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
     let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
     let force_open = vlime#GetNthVarArg(a:000, 1, v:false)
 
+    " We are using setpos() to jump around the target file, and it doesn't
+    " save the locations to the jumplist. We need to save the current location
+    " explicitly with m' before running edit_cmd or jumping around in an
+    " already-opened file (see :help jumplist).
+
     if force_open
         let buf_exists = v:false
     else
@@ -783,11 +788,14 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
         endif
     endif
 
-    if !buf_exists
+    if buf_exists
+        normal! m'
+    else
         " Actually the buffer may exist, but it's not shown in any window
         if type(a:file_path) == v:t_number
             if bufnr(a:file_path) > 0
                 try
+                    normal! m'
                     execute join([edit_cmd, '#' . a:file_path])
                 catch /^Vim\%((\a\+)\)\=:E37/  " No write since last change
                     " Vim will raise E37 when editing the same buffer with
@@ -800,6 +808,7 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
                 call vlime#ui#ErrMsg('Buffer ' . a:file_path . ' does not exist.')
             endif
         elseif a:file_path[0:6] == 'sftp://' || filereadable(a:file_path)
+            normal! m'
             execute join([edit_cmd, escape(a:file_path, ' \')])
         else
             call vlime#ui#ErrMsg('Not readable: ' . a:file_path)
