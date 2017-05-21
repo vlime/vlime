@@ -89,6 +89,10 @@ Usage
 2. Clone this repo.
 3. Install the Vim plugin from Vlime's `vim` directory using your usual way
    (Vundle or something).
+   for example, install current plugin by dein:
+   ```vim
+   call dein#add('l04m33/vlime', {'on_ft' : 'lisp', 'rtp': 'vim'})
+   ```
 4. Run the server: `sbcl --load <vlime repo>/lisp/start-vlime.lisp`
 5. When the server is up and running, use Vim to start editing a CL source file,
    and type "\cc" (without the quote marks) in normal mode to connect to the
