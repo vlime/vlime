@@ -43,9 +43,9 @@ Dependencies
 
 Must-have:
 
-* Vim 8.0+ with +channel, or Neovim 0.2.0+ with ncat
+* Vim 8.0+ with +channel feature, or Neovim 0.2.0+ and [ncat command](https://nmap.org/book/install.html)
 * ASDF
-* Quicklisp
+* [Quicklisp](https://www.quicklisp.org/beta/#installation)
 * An Internet connection to install other dependencies from Quicklisp
 
 Note that there was a bug in the channel implementation of Vim, which may
