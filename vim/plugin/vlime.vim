@@ -320,7 +320,7 @@ function! VlimeDescribeSymbol(...)
         call vlime#ui#InputFromMiniBuffer(
                     \ conn, 'Describe symbol:',
                     \ v:null,
-                    \ 'call VlimeDescribeSymbolInputComplete(vlime#ui#CurBufferContent()) \| bunload!')
+                    \ { -> VlimeDescribeSymbolInputComplete(vlime#ui#CurBufferContent())})
     else
         call VlimeDescribeSymbolInputComplete(sym, v:true)
     endif
@@ -376,7 +376,7 @@ function! VlimeAproposList()
     call vlime#ui#InputFromMiniBuffer(
                 \ conn, 'Apropos search:',
                 \ v:null,
-                \ 'call VlimeAproposListInputComplete() \| bunload!')
+                \ function('VlimeAproposListInputComplete'))
 endfunction
 
 function! VlimeAproposListInputComplete()
@@ -403,7 +403,7 @@ function! VlimeDocumentationSymbol(...)
         call vlime#ui#InputFromMiniBuffer(
                     \ conn, 'Documentation for symbol:',
                     \ v:null,
-                    \ 'call VlimeDocumentationSymbolInputComplete(vlime#ui#CurBufferContent()) \| bunload!')
+                    \ { -> VlimeDocumentationSymbolInputComplete(vlime#ui#CurBufferContent())})
     else
         call VlimeDocumentationSymbolInputComplete(sym, v:true)
     endif
@@ -428,7 +428,7 @@ function! VlimeSetBreakpoint()
     call vlime#ui#InputFromMiniBuffer(
                 \ conn, 'Set breakpoint at function:',
                 \ v:null,
-                \ 'call VlimeSetBreakpointInputComplete() \| bunload!')
+                \ function('VlimeSetBreakpointInputComplete'))
 endfunction
 
 function! VlimeSetBreakpointInputComplete()

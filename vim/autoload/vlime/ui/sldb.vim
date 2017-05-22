@@ -129,8 +129,8 @@ function! vlime#ui#sldb#InspectInCurFrame()
     call vlime#ui#InputFromMiniBuffer(
                 \ b:vlime_conn, 'Inspect in frame (evaluated):',
                 \ v:null,
-                \ 'call vlime#ui#sldb#InspectInCurFrameInputComplete('
-                    \ . nth . ', ' . thread . ') \| bunload!')
+                \ function('vlime#ui#sldb#InspectInCurFrameInputComplete',
+                    \ [nth, thread]))
 endfunction
 
 function! vlime#ui#sldb#InspectInCurFrameInputComplete(frame, thread)
@@ -155,11 +155,8 @@ function! vlime#ui#sldb#EvalStringInCurFrame()
     call vlime#ui#InputFromMiniBuffer(
                 \ b:vlime_conn, 'Eval in frame:',
                 \ v:null,
-                \ 'call vlime#ui#sldb#EvalStringInCurFrameInputComplete('
-                    \ . nth . ', '
-                    \ . thread
-                    \ . ', "' . escape(b:vlime_conn.GetCurrentPackage()[0], '"')
-                    \ . '") \| bunload!')
+                \ function('vlime#ui#sldb#EvalStringInCurFrameInputComplete',
+                    \ [nth, thread, b:vlime_conn.GetCurrentPackage()[0]]))
 endfunction
 
 function! vlime#ui#sldb#EvalStringInCurFrameInputComplete(frame, thread, package)
@@ -199,8 +196,8 @@ function! vlime#ui#sldb#ReturnFromCurFrame()
     call vlime#ui#InputFromMiniBuffer(
                 \ b:vlime_conn, 'Return from frame (evaluated):',
                 \ v:null,
-                \ 'call vlime#ui#sldb#ReturnFromCurFrameInputComplete('
-                    \ . nth . ', ' . thread . ') \| bunload!')
+                \ function('vlime#ui#sldb#ReturnFromCurFrameInputComplete',
+                    \ [nth, thread]))
 endfunction
 
 function! vlime#ui#sldb#ReturnFromCurFrameInputComplete(frame, thread)

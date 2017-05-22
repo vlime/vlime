@@ -118,15 +118,13 @@ endfunction
 function! vlime#ui#OnReadString(conn, thread, ttag) dict
     call vlime#ui#InputFromMiniBuffer(
                 \ a:conn, 'Input string:', v:null,
-                \ 'call vlime#ui#ReadStringInputComplete('
-                    \ . a:thread . ', ' . a:ttag . ') \| bunload!')
+                \ function('vlime#ui#ReadStringInputComplete', [a:thread, a:ttag]))
 endfunction
 
 function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val) dict
     call vlime#ui#InputFromMiniBuffer(
                 \ a:conn, a:prompt, a:init_val,
-                \ 'call vlime#ui#ReturnMiniBufferContent('
-                    \ . a:thread . ', ' . a:ttag . ') \| bunload!')
+                \ function('vlime#ui#ReturnMiniBufferContent', [a:thread, a:ttag]))
 endfunction
 
 function! vlime#ui#OnIndentationUpdate(conn, indent_info) dict
@@ -602,7 +600,7 @@ function! vlime#ui#CloseWindow(conn, win_name)
     endfor
 endfunction
 
-function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
+function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_cb)
     let buf = vlime#ui#OpenBufferWithWinSettings(
                 \ vlime#ui#MiniBufName(a:conn, a:prompt), v:true, 'input')
     call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
@@ -621,7 +619,19 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
         execute 'autocmd BufWinLeave <buffer> bunload! ' . buf
     augroup end
 
-    execute 'nnoremap <buffer> <silent> <cr> :' . a:complete_command . '<cr>'
+    call setbufvar('%', 'vlime_input_complete_cb', a:complete_cb)
+    nnoremap <buffer> <silent> <cr> :call vlime#ui#InputFromMiniBufferComplete()<cr>
+endfunction
+
+function! vlime#ui#InputFromMiniBufferComplete()
+    " Should always be called in the input buffer
+    let Callback = getbufvar('%', 'vlime_input_complete_cb', v:null)
+    if type(Callback) == type(v:null)
+        return
+    endif
+
+    call Callback()
+    bunload!
 endfunction
 
 function! vlime#ui#AppendString(str)
