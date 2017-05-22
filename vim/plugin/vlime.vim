@@ -314,26 +314,13 @@ function! VlimeDescribeSymbol(...)
         return
     endif
 
-    let sym = vlime#GetNthVarArg(a:000, 0, v:null)
-
-    if type(sym) == type(v:null)
-        call vlime#ui#InputFromMiniBuffer(
-                    \ conn, 'Describe symbol:',
-                    \ v:null,
-                    \ { -> VlimeDescribeSymbolInputComplete(vlime#ui#CurBufferContent())})
-    else
-        call VlimeDescribeSymbolInputComplete(sym, v:true)
-    endif
-endfunction
-
-" VlimeDescribeSymbolInputComplete(sym[, direct_call])
-function! VlimeDescribeSymbolInputComplete(sym, ...)
-    let direct_call = vlime#GetNthVarArg(a:000, 0, v:false)
-    if len(a:sym) > 0
-        call b:vlime_conn.DescribeSymbol(a:sym, function('s:ShowAsyncResult'))
-    elseif !direct_call
-        call vlime#ui#ErrMsg('Canceled.')
-    endif
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ { sym ->
+                    \ b:vlime_conn.DescribeSymbol(sym, function('s:ShowAsyncResult'))},
+                \ 'Describe symbol: ',
+                \ v:null,
+                \ conn)
 endfunction
 
 function! VlimeXRefCurSymbol(sym_type, ref_type)
@@ -368,26 +355,22 @@ function! VlimeFindCurDefinition(sym_type)
     endif
 endfunction
 
-function! VlimeAproposList()
+" VlimeAproposList([pattern])
+function! VlimeAproposList(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
         return
     endif
-    call vlime#ui#InputFromMiniBuffer(
-                \ conn, 'Apropos search:',
-                \ v:null,
-                \ function('VlimeAproposListInputComplete'))
-endfunction
 
-function! VlimeAproposListInputComplete()
-    let content = vlime#ui#CurBufferContent()
-    if len(content) > 0
-        call b:vlime_conn.AproposListForEmacs(
-                    \ content, v:false, v:false, v:null,
-                    \ function('s:OnAproposListComplete'))
-    else
-        call vlime#ui#ErrMsg('Canceled.')
-    endif
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ { pattern ->
+                    \ b:vlime_conn.AproposListForEmacs(
+                        \ pattern, v:false, v:false, v:null,
+                        \ function('s:OnAproposListComplete'))},
+                \ 'Apropos search: ',
+                \ v:null,
+                \ conn)
 endfunction
 
 " VlimeDocumentationSymbol([symbol])
@@ -397,47 +380,29 @@ function! VlimeDocumentationSymbol(...)
         return
     endif
 
-    let sym = vlime#GetNthVarArg(a:000, 0, v:null)
-
-    if type(sym) == type(v:null)
-        call vlime#ui#InputFromMiniBuffer(
-                    \ conn, 'Documentation for symbol:',
-                    \ v:null,
-                    \ { -> VlimeDocumentationSymbolInputComplete(vlime#ui#CurBufferContent())})
-    else
-        call VlimeDocumentationSymbolInputComplete(sym, v:true)
-    endif
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ { sym ->
+                    \ b:vlime_conn.DocumentationSymbol(sym, function('s:ShowAsyncResult'))},
+                \ 'Documentation for symbol: ',
+                \ v:null,
+                \ conn)
 endfunction
 
-" VlimeDocumentationSymbolInputComplete(sym[, direct_call])
-function! VlimeDocumentationSymbolInputComplete(sym, ...)
-    let direct_call = vlime#GetNthVarArg(a:000, 0, v:false)
-    if len(a:sym) > 0
-        call b:vlime_conn.DocumentationSymbol(a:sym, function('s:ShowAsyncResult'))
-    elseif !direct_call
-        call vlime#ui#ErrMsg('Canceled.')
-    endif
-endfunction
-
-function! VlimeSetBreakpoint()
+" VlimeSetBreakpoint([sym])
+function! VlimeSetBreakpoint(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
         return
     endif
 
-    call vlime#ui#InputFromMiniBuffer(
-                \ conn, 'Set breakpoint at function:',
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ { sym ->
+                    \ b:vlime_conn.SLDBBreak(sym, function('s:OnSLDBBreakComplete'))},
+                \ 'Set breakpoint at function: ',
                 \ v:null,
-                \ function('VlimeSetBreakpointInputComplete'))
-endfunction
-
-function! VlimeSetBreakpointInputComplete()
-    let content = vlime#ui#CurBufferContent()
-    if len(content) > 0
-        call b:vlime_conn.SLDBBreak(content, function('s:OnSLDBBreakComplete'))
-    else
-        call vlime#ui#ErrMsg('Canceled.')
-    endif
+                \ conn)
 endfunction
 
 function! VlimeListThreads()

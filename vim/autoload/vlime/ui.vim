@@ -610,7 +610,7 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_cb)
     setlocal winfixwidth
 
     call vlime#ui#AppendString('; ' . a:prompt . "\n")
-    if type(a:init_val) != type(v:null)
+    if type(a:init_val) != type(v:null) && len(a:init_val) > 0
         call vlime#ui#AppendString(a:init_val)
     endif
 
@@ -621,6 +621,24 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_cb)
 
     call setbufvar('%', 'vlime_input_complete_cb', a:complete_cb)
     nnoremap <buffer> <silent> <cr> :call vlime#ui#InputFromMiniBufferComplete()<cr>
+endfunction
+
+" vlime#ui#MaybeInput(str, str_cb, prompt[, default[, conn]])
+function! vlime#ui#MaybeInput(str, str_cb, prompt, ...)
+    if type(a:str) == type(v:null)
+        let default = vlime#GetNthVarArg(a:000, 0, '')
+        let conn = vlime#GetNthVarArg(a:000, 1, v:null)
+        if type(conn) == type(v:null)
+            call s:CheckInputCanceled(input(a:prompt, default), a:str_cb)
+        else
+            call vlime#ui#InputFromMiniBuffer(
+                        \ conn, a:prompt,
+                        \ default,
+                        \ { -> s:CheckInputCanceled(vlime#ui#CurBufferContent(), a:str_cb)})
+        endif
+    else
+        call a:str_cb(a:str)
+    endif
 endfunction
 
 function! vlime#ui#InputFromMiniBufferComplete()
@@ -1025,3 +1043,10 @@ function! s:NormalizePackageName(name)
     return toupper(r_name)
 endfunction
 
+function! s:CheckInputCanceled(str_val, cb)
+    if len(a:str_val) > 0
+        call a:cb(a:str_val)
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
+endfunction
