@@ -307,18 +307,32 @@ function! VlimeShowOperatorArgList(op)
     call conn.OperatorArgList(a:op, function('s:OnOperatorArgListComplete', [a:op]))
 endfunction
 
-function! VlimeDescribeCurSymbol(sym_type)
-    if a:sym_type == 'operator'
-        let sym = vlime#ui#CurOperator()
-    elseif a:sym_type == 'atom'
-        let sym = vlime#ui#CurAtom()
+" VlimeDescribeSymbol([symbol])
+function! VlimeDescribeSymbol(...)
+    let conn = VlimeGetConnection()
+    if type(conn) == type(v:null)
+        return
     endif
-    if len(sym) > 0
-        let conn = VlimeGetConnection()
-        if type(conn) == type(v:null)
-            return
-        endif
-        call conn.DescribeSymbol(sym, function('s:ShowAsyncResult'))
+
+    let sym = vlime#GetNthVarArg(a:000, 0, v:null)
+
+    if type(sym) == type(v:null)
+        call vlime#ui#InputFromMiniBuffer(
+                    \ conn, 'Describe symbol:',
+                    \ v:null,
+                    \ 'call VlimeDescribeSymbolInputComplete(vlime#ui#CurBufferContent()) \| bunload!')
+    else
+        call VlimeDescribeSymbolInputComplete(sym, v:true)
+    endif
+endfunction
+
+" VlimeDescribeSymbolInputComplete(sym[, direct_call])
+function! VlimeDescribeSymbolInputComplete(sym, ...)
+    let direct_call = vlime#GetNthVarArg(a:000, 0, v:false)
+    if len(a:sym) > 0
+        call b:vlime_conn.DescribeSymbol(a:sym, function('s:ShowAsyncResult'))
+    elseif !direct_call
+        call vlime#ui#ErrMsg('Canceled.')
     endif
 endfunction
 
@@ -376,18 +390,32 @@ function! VlimeAproposListInputComplete()
     endif
 endfunction
 
-function! VlimeDocumentationSymbol(sym_type)
-    if a:sym_type == 'operator'
-        let sym = vlime#ui#CurOperator()
-    elseif a:sym_type == 'atom'
-        let sym = vlime#ui#CurAtom()
+" VlimeDocumentationSymbol([symbol])
+function! VlimeDocumentationSymbol(...)
+    let conn = VlimeGetConnection()
+    if type(conn) == type(v:null)
+        return
     endif
-    if len(sym) > 0
-        let conn = VlimeGetConnection()
-        if type(conn) == type(v:null)
-            return
-        endif
-        call conn.DocumentationSymbol(sym, function('s:ShowAsyncResult'))
+
+    let sym = vlime#GetNthVarArg(a:000, 0, v:null)
+
+    if type(sym) == type(v:null)
+        call vlime#ui#InputFromMiniBuffer(
+                    \ conn, 'Documentation for symbol:',
+                    \ v:null,
+                    \ 'call VlimeDocumentationSymbolInputComplete(vlime#ui#CurBufferContent()) \| bunload!')
+    else
+        call VlimeDocumentationSymbolInputComplete(sym, v:true)
+    endif
+endfunction
+
+" VlimeDocumentationSymbolInputComplete(sym[, direct_call])
+function! VlimeDocumentationSymbolInputComplete(sym, ...)
+    let direct_call = vlime#GetNthVarArg(a:000, 0, v:false)
+    if len(a:sym) > 0
+        call b:vlime_conn.DocumentationSymbol(a:sym, function('s:ShowAsyncResult'))
+    elseif !direct_call
+        call vlime#ui#ErrMsg('Canceled.')
     endif
 endfunction
 

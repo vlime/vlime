@@ -42,11 +42,13 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>xm', ':call VlimeXRefCurSymbol("atom", "SPECIALIZES")<cr>'],
                     \ ['n', '<LocalLeader>xd', ':call VlimeFindCurDefinition("atom")<cr>'],
                     \
-                    \ ['n', '<LocalLeader>do', ':call VlimeDescribeCurSymbol("operator")<cr>'],
-                    \ ['n', '<LocalLeader>da', ':call VlimeDescribeCurSymbol("atom")<cr>'],
+                    \ ['n', '<LocalLeader>do', ':call VlimeDescribeSymbol(vlime#ui#CurOperator())<cr>'],
+                    \ ['n', '<LocalLeader>da', ':call VlimeDescribeSymbol(vlime#ui#CurAtom())<cr>'],
+                    \ ['n', '<LocalLeader>di', ':call VlimeDescribeSymbol()<cr>'],
                     \ ['n', '<LocalLeader>ds', ':call VlimeAproposList()<cr>'],
-                    \ ['n', '<LocalLeader>ddo', ':call VlimeDocumentationSymbol("operator")<cr>'],
-                    \ ['n', '<LocalLeader>dda', ':call VlimeDocumentationSymbol("atom")<cr>'],
+                    \ ['n', '<LocalLeader>ddo', ':call VlimeDocumentationSymbol(vlime#ui#CurOperator())<cr>'],
+                    \ ['n', '<LocalLeader>dda', ':call VlimeDocumentationSymbol(vlime#ui#CurAtom())<cr>'],
+                    \ ['n', '<LocalLeader>ddi', ':call VlimeDocumentationSymbol()<cr>'],
                     \ ['n', '<LocalLeader>dr', ':call VlimeShowOperatorArgList(vlime#ui#CurOperator())<cr>'],
                     \
                     \ ['n', ['<LocalLeader>II', '<LocalLeader>Ii'], ':call VlimeInspectCurThing("thing")<cr>'],
