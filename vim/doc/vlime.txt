@@ -298,6 +298,7 @@ distiguish different buffers:
     vlime_server    The server output buffer.
     vlime_preview   The preview buffer.
     vlime_arglist   The arglist buffer.
+    vlime_input     The input buffer.
 
 You can remap any Vlime key mapping in these buffers. See the source
 code (autoload/vlime/ui/mapping.vim) for all default mappings.

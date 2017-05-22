@@ -607,6 +607,7 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_command)
                 \ vlime#ui#MiniBufName(a:conn, a:prompt), v:true, 'input')
     call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
     call setbufvar(buf, '&buflisted', 0)
+    call setbufvar(buf, '&filetype', 'vlime_input')
     setlocal winfixheight
     setlocal winfixwidth
 
