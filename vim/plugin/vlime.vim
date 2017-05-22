@@ -212,22 +212,23 @@ function! VlimeCompileCurFile()
                 \ function('s:OnCompilationComplete', [cur_win]))
 endfunction
 
-function! VlimeExpandCurMacro(expand_all)
-    let expr = vlime#ui#CurExpr()
-    if len(expr) <= 0
-        return
-    endif
-
+" VlimeExpandMacro([expr[, expand_all]])
+function! VlimeExpandMacro(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
         return
     endif
 
-    if a:expand_all
-        call conn.SwankMacroExpandAll(expr, function('s:ShowAsyncResult'))
+    let expr = vlime#GetNthVarArg(a:000, 0, v:null)
+    let expand_all = vlime#GetNthVarArg(a:000, 1, v:false)
+
+    if expand_all
+        let CB = { e -> conn.SwankMacroExpandAll(e, function('s:ShowAsyncResult'))}
     else
-        call conn.SwankMacroExpandOne(expr, function('s:ShowAsyncResult'))
+        let CB = { e -> conn.SwankMacroExpandOne(e, function('s:ShowAsyncResult'))}
     endif
+
+    call vlime#ui#MaybeInput(expr, CB, 'Expand macro: ', v:null, conn)
 endfunction
 
 function! VlimeDisassembleCurForm()

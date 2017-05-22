@@ -25,8 +25,8 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>sa', ':call VlimeSendToREPL(vlime#ui#CurAtom())<cr>'],
                     \ ['v', '<LocalLeader>s', ':<c-u>call VlimeSendToREPL(vlime#ui#CurSelection())<cr>'],
                     \
-                    \ ['n', '<LocalLeader>m1', ':call VlimeExpandCurMacro(v:false)<cr>'],
-                    \ ['n', '<LocalLeader>ma', ':call VlimeExpandCurMacro(v:true)<cr>'],
+                    \ ['n', '<LocalLeader>m1', ':call VlimeExpandMacro(vlime#ui#CurExpr(), v:false)<cr>'],
+                    \ ['n', '<LocalLeader>ma', ':call VlimeExpandMacro(vlime#ui#CurExpr(), v:true)<cr>'],
                     \
                     \ ['n', '<LocalLeader>oe', ':call VlimeCompileCurThing("expr")<cr>'],
                     \ ['n', '<LocalLeader>ot', ':call VlimeCompileCurThing("top_expr")<cr>'],
