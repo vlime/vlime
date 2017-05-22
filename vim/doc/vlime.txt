@@ -281,7 +281,7 @@ Vlime will automatically skip the Vlime functions mapped in your
     augroup LocalVlimeKeys
         autocmd!
         autocmd FileType lisp nnoremap <silent> <buffer> <LocalLeader>S
-            \ :call VlimeSendCurThingToREPL("thing")<cr>
+            \ :call VlimeSendToREPL(vlime#ui#CurExprOrAtom())<cr>
     augroup end
 
 This will change the mapping for |vlime-mappings-send-ss| from
