@@ -135,10 +135,14 @@ endfunction
 
 function! vlime#ui#sldb#InspectInCurFrameInputComplete(frame, thread)
     let content = vlime#ui#CurBufferContent()
-    call b:vlime_conn.WithThread(a:thread,
-                \ function(b:vlime_conn.InspectInFrame,
-                    \ [content, a:frame,
-                        \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)}]))
+    if len(content) > 0
+        call b:vlime_conn.WithThread(a:thread,
+                    \ function(b:vlime_conn.InspectInFrame,
+                        \ [content, a:frame,
+                            \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)}]))
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
 endfunction
 
 function! vlime#ui#sldb#EvalStringInCurFrame()
@@ -160,11 +164,15 @@ endfunction
 
 function! vlime#ui#sldb#EvalStringInCurFrameInputComplete(frame, thread, package)
     let content = vlime#ui#CurBufferContent()
-    call b:vlime_conn.WithThread(a:thread,
-                \ function(b:vlime_conn.EvalStringInFrame,
-                    \ [content, a:frame, a:package,
-                        \ {c, r -> c.ui.OnWriteString(c, r . "\n",
-                            \ {'name': 'FRAME-EVAL-RESULT', 'package': 'KEYWORD'})}]))
+    if len(content) > 0
+        call b:vlime_conn.WithThread(a:thread,
+                    \ function(b:vlime_conn.EvalStringInFrame,
+                        \ [content, a:frame, a:package,
+                            \ {c, r -> c.ui.OnWriteString(c, r . "\n",
+                                \ {'name': 'FRAME-EVAL-RESULT', 'package': 'KEYWORD'})}]))
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
 endfunction
 
 function! vlime#ui#sldb#DisassembleCurFrame()
@@ -197,9 +205,13 @@ endfunction
 
 function! vlime#ui#sldb#ReturnFromCurFrameInputComplete(frame, thread)
     let content = vlime#ui#CurBufferContent()
-    call b:vlime_conn.WithThread(a:thread,
-                \ function(b:vlime_conn.SLDBReturnFromFrame,
-                    \ [a:frame, content]))
+    if len(content) > 0
+        call b:vlime_conn.WithThread(a:thread,
+                    \ function(b:vlime_conn.SLDBReturnFromFrame,
+                        \ [a:frame, content]))
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
 endfunction
 
 function! s:FindMaxRestartNameLen(restarts)

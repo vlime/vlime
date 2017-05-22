@@ -367,9 +367,13 @@ endfunction
 
 function! VlimeAproposListInputComplete()
     let content = vlime#ui#CurBufferContent()
-    call b:vlime_conn.AproposListForEmacs(
-                \ content, v:false, v:false, v:null,
-                \ function('s:OnAproposListComplete'))
+    if len(content) > 0
+        call b:vlime_conn.AproposListForEmacs(
+                    \ content, v:false, v:false, v:null,
+                    \ function('s:OnAproposListComplete'))
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
 endfunction
 
 function! VlimeDocumentationSymbol(sym_type)
@@ -401,7 +405,11 @@ endfunction
 
 function! VlimeSetBreakpointInputComplete()
     let content = vlime#ui#CurBufferContent()
-    call b:vlime_conn.SLDBBreak(content, function('s:OnSLDBBreakComplete'))
+    if len(content) > 0
+        call b:vlime_conn.SLDBBreak(content, function('s:OnSLDBBreakComplete'))
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
 endfunction
 
 function! VlimeListThreads()
