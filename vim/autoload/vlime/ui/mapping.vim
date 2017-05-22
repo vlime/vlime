@@ -19,11 +19,11 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>rs', ':call VlimeStopSelectedServer()<cr>'],
                     \ ['n', '<LocalLeader>rR', ':call VlimeRenameSelectedServer()<cr>'],
                     \
-                    \ ['n', '<LocalLeader>ss', ':call VlimeSendCurThingToREPL("thing")<cr>'],
-                    \ ['n', '<LocalLeader>se', ':call VlimeSendCurThingToREPL("expr")<cr>'],
-                    \ ['n', '<LocalLeader>st', ':call VlimeSendCurThingToREPL("top_expr")<cr>'],
-                    \ ['n', '<LocalLeader>sa', ':call VlimeSendCurThingToREPL("atom")<cr>'],
-                    \ ['v', '<LocalLeader>s', ':<c-u>call VlimeSendCurThingToREPL("selection")<cr>'],
+                    \ ['n', '<LocalLeader>ss', ':call VlimeSendToREPL(vlime#ui#CurExprOrAtom())<cr>'],
+                    \ ['n', '<LocalLeader>se', ':call VlimeSendToREPL(vlime#ui#CurExpr())<cr>'],
+                    \ ['n', '<LocalLeader>st', ':call VlimeSendToREPL(vlime#ui#CurTopExpr())<cr>'],
+                    \ ['n', '<LocalLeader>sa', ':call VlimeSendToREPL(vlime#ui#CurAtom())<cr>'],
+                    \ ['v', '<LocalLeader>s', ':<c-u>call VlimeSendToREPL(vlime#ui#CurSelection())<cr>'],
                     \
                     \ ['n', '<LocalLeader>m1', ':call VlimeExpandCurMacro(v:false)<cr>'],
                     \ ['n', '<LocalLeader>ma', ':call VlimeExpandCurMacro(v:true)<cr>'],

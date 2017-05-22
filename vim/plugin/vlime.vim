@@ -111,34 +111,19 @@ function! VlimeSelectCurConnection()
     endif
 endfunction
 
-function! VlimeSendCurThingToREPL(thing)
-    if a:thing == 'thing'
-        let str = vlime#ui#CurExpr()
-        if len(str) <= 0
-            let str = vlime#ui#CurAtom()
-        endif
-    elseif a:thing == 'expr'
-        let str = vlime#ui#CurExpr()
-    elseif a:thing == 'top_expr'
-        let str = vlime#ui#CurTopExpr()
-    elseif a:thing == 'atom'
-        let str = vlime#ui#CurAtom()
-    elseif a:thing == 'selection'
-        let str = vlime#ui#CurSelection()
-    endif
-
-    if len(str) <= 0
-        return
-    endif
-
+" VlimeSendToREPL([content])
+function! VlimeSendToREPL(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
         return
     endif
 
-    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
-                \ function(conn.ListenerEval, [str]))
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ function('s:SendToREPLInputComplete', [conn]),
+                \ 'Send to REPL: ',
+                \ v:null,
+                \ conn)
 endfunction
 
 function! VlimeCompileCurThing(thing)
@@ -617,8 +602,8 @@ function! VlimeInteractionMode()
         echom 'Interaction mode disabled.'
     else
         let b:vlime_interaction_mode = v:true
-        nnoremap <buffer> <silent> <cr> :call VlimeSendCurThingToREPL('thing')<cr>
-        vnoremap <buffer> <silent> <cr> :<c-u>call VlimeSendCurThingToREPL('selection')<cr>
+        nnoremap <buffer> <silent> <cr> :call VlimeSendToREPL(vlime#ui#CurExprOrAtom())<cr>
+        vnoremap <buffer> <silent> <cr> :<c-u>call VlimeSendToREPL(vlime#ui#CurSelection())<cr>
         echom 'Interaction mode enabled.'
     endif
 endfunction
@@ -754,6 +739,12 @@ endfunction
 
 function! s:ShowAsyncResult(conn, result)
     call vlime#ui#ShowPreview(a:conn, a:result, v:false)
+endfunction
+
+function! s:SendToREPLInputComplete(conn, content)
+    call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    call a:conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                \ function(a:conn.ListenerEval, [a:content]))
 endfunction
 
 function! s:CleanUpNullBufConnections()

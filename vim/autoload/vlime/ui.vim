@@ -209,6 +209,14 @@ function! vlime#ui#CurChar()
     return matchstr(getline('.'), '\%' . col('.') . 'c.')
 endfunction
 
+function! vlime#ui#CurExprOrAtom()
+    let str = vlime#ui#CurExpr()
+    if len(str) <= 0
+        let str = vlime#ui#CurAtom()
+    endif
+    return str
+endfunction
+
 function! vlime#ui#CurAtom()
     let old_kw = &iskeyword
     try
@@ -643,13 +651,14 @@ endfunction
 
 function! vlime#ui#InputFromMiniBufferComplete()
     " Should always be called in the input buffer
-    let Callback = getbufvar('%', 'vlime_input_complete_cb', v:null)
+    let input_buf = bufnr('%')
+    let Callback = getbufvar(input_buf, 'vlime_input_complete_cb', v:null)
     if type(Callback) == type(v:null)
         return
     endif
 
     call Callback()
-    bunload!
+    execute 'bunload! ' . input_buf
 endfunction
 
 function! vlime#ui#AppendString(str)
