@@ -305,7 +305,7 @@ function! VlimeDescribeSymbol(...)
     call vlime#ui#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { sym ->
-                    \ b:vlime_conn.DescribeSymbol(sym, function('s:ShowAsyncResult'))},
+                    \ conn.DescribeSymbol(sym, function('s:ShowAsyncResult'))},
                 \ 'Describe symbol: ',
                 \ v:null,
                 \ conn)
@@ -357,7 +357,7 @@ function! VlimeAproposList(...)
     call vlime#ui#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { pattern ->
-                    \ b:vlime_conn.AproposListForEmacs(
+                    \ conn.AproposListForEmacs(
                         \ pattern, v:false, v:false, v:null,
                         \ function('s:OnAproposListComplete'))},
                 \ 'Apropos search: ',
@@ -375,7 +375,7 @@ function! VlimeDocumentationSymbol(...)
     call vlime#ui#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { sym ->
-                    \ b:vlime_conn.DocumentationSymbol(sym, function('s:ShowAsyncResult'))},
+                    \ conn.DocumentationSymbol(sym, function('s:ShowAsyncResult'))},
                 \ 'Documentation for symbol: ',
                 \ v:null,
                 \ conn)
@@ -391,7 +391,7 @@ function! VlimeSetBreakpoint(...)
     call vlime#ui#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { sym ->
-                    \ b:vlime_conn.SLDBBreak(sym, function('s:OnSLDBBreakComplete'))},
+                    \ conn.SLDBBreak(sym, function('s:OnSLDBBreakComplete'))},
                 \ 'Set breakpoint at function: ',
                 \ v:null,
                 \ conn)
