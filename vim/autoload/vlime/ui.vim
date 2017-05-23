@@ -645,10 +645,24 @@ function! vlime#ui#MaybeInput(str, str_cb, prompt, ...)
             endif
             call s:CheckInputValidity(content, a:str_cb, v:true)
         else
+            let cur_package = conn.GetCurrentPackage()
+            let cur_buf = bufnr('%')
+            " Oh yeah we LOVE callbacks. You don't go to the hell. The hell
+            " comes to you.
             call vlime#ui#InputFromMiniBuffer(
                         \ conn, a:prompt,
                         \ default,
-                        \ { -> s:CheckInputValidity(vlime#ui#CurBufferContent(), a:str_cb, v:true)})
+                        \ { ->
+                            \ s:CheckInputValidity(vlime#ui#CurBufferContent(),
+                                \ { str -> vlime#ui#WithBuffer(cur_buf, function(a:str_cb, [str]))},
+                                \ v:true)})
+            if bufnr('%') != cur_buf
+                " We set the current package, so that the input buffer has the
+                " same context as the the buffer where we initiated the input
+                " operation, and completions etc. in the input buffer can work
+                " as expected.
+                call conn.SetCurrentPackage(cur_package)
+            endif
         endif
     else
         call s:CheckInputValidity(a:str, a:str_cb, v:false)
