@@ -212,16 +212,21 @@ function! VlimeDisassembleCurForm()
     call conn.DisassembleForm(expr, function('s:ShowAsyncResult'))
 endfunction
 
-function! VlimeLoadCurFile()
-    let fname = expand('%:p')
-    if len(fname) > 0
-        let conn = VlimeGetConnection()
-        if type(conn) == type(v:null)
-            return
-        endif
-
-        call conn.LoadFile(fname, function('s:OnLoadFileComplete', [fname]))
+" VlimeLoadFile([file_name])
+function! VlimeLoadFile(...)
+    let conn = VlimeGetConnection()
+    if type(conn) == type(v:null)
+        return
     endif
+
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ { fname ->
+                    \ conn.LoadFile(fname, function('s:OnLoadFileComplete', [fname]))},
+                \ 'Load file: ',
+                \ '',
+                \ v:null,
+                \ 'file')
 endfunction
 
 function! VlimeSetCurPackage()
