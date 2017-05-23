@@ -374,44 +374,35 @@ function! VlimeListThreads()
     call conn.ListThreads(function('s:OnListThreadsComplete'))
 endfunction
 
-function! VlimeUndefineCurFunction()
-    let sym = vlime#ui#CurAtom()
-    if len(sym) <= 0
-        return
-    endif
-
+" VlimeUndefineFunction([sym])
+function! VlimeUndefineFunction(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
         return
     endif
 
-    call conn.UndefineFunction(sym, function('s:OnUndefineFunctionComplete'))
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ { sym ->
+                    \ conn.UndefineFunction(sym, function('s:OnUndefineFunctionComplete'))},
+                \ 'Undefine function: ',
+                \ v:null,
+                \ conn)
 endfunction
 
-function! VlimeUninternCurSymbol()
-    let sym = vlime#ui#CurAtom()
-    if len(sym) <= 0
-        return
-    endif
-
+" VlimeUninternSymbol([sym])
+function! VlimeUninternSymbol(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
         return
     endif
 
-    let matched = matchlist(sym, '\(\([^:]\+\)\?::\?\)\?\(\k\+\)')
-    if len(matched) > 0
-        let sym_name = matched[3]
-        let sym_pkg = matched[2]
-        if matched[1] == ':'
-            let sym_pkg = 'KEYWORD'
-        elseif matched[1] == ''
-            " Use the current package
-            let sym_pkg = v:null
-        endif
-        call conn.UninternSymbol(sym_name, sym_pkg,
-                    \ function('s:OnUninternSymbolComplete'))
-    endif
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ function('s:UninternSymbolInputComplete', [conn]),
+                \ 'Unintern symbol: ',
+                \ v:null,
+                \ conn)
 endfunction
 
 " VlimeCloseWindow([win_name])
@@ -763,6 +754,22 @@ function! s:CompileFileInputComplete(conn, win, policy, file_name)
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call a:conn.CompileFileForEmacs(a:file_name, v:true, policy,
                 \ function('s:OnCompilationComplete', [a:win]))
+endfunction
+
+function! s:UninternSymbolInputComplete(conn, sym)
+    let matched = matchlist(a:sym, '\(\([^:]\+\)\?::\?\)\?\(\k\+\)')
+    if len(matched) > 0
+        let sym_name = matched[3]
+        let sym_pkg = matched[2]
+        if matched[1] == ':'
+            let sym_pkg = 'KEYWORD'
+        elseif matched[1] == ''
+            " Use the current package
+            let sym_pkg = v:null
+        endif
+        call a:conn.UninternSymbol(sym_name, sym_pkg,
+                    \ function('s:OnUninternSymbolComplete'))
+    endif
 endfunction
 
 function! s:CleanUpNullBufConnections()
