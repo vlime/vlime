@@ -850,6 +850,7 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
                 endtry
             else
                 call vlime#ui#ErrMsg('Buffer ' . a:file_path . ' does not exist.')
+                return
             endif
         elseif a:file_path[0:6] == 'sftp://' || filereadable(a:file_path)
             normal! m'
