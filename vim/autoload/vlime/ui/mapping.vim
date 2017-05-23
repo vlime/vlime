@@ -23,6 +23,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>se', ':call VlimeSendToREPL(vlime#ui#CurExpr())<cr>'],
                     \ ['n', '<LocalLeader>st', ':call VlimeSendToREPL(vlime#ui#CurTopExpr())<cr>'],
                     \ ['n', '<LocalLeader>sa', ':call VlimeSendToREPL(vlime#ui#CurAtom())<cr>'],
+                    \ ['n', '<LocalLeader>si', ':call VlimeSendToREPL()<cr>'],
                     \ ['v', '<LocalLeader>s', ':<c-u>call VlimeSendToREPL(vlime#ui#CurSelection())<cr>'],
                     \
                     \ ['n', '<LocalLeader>m1', ':call VlimeExpandMacro(vlime#ui#CurExpr(), v:false)<cr>'],
