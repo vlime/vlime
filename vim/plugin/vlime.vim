@@ -143,6 +143,23 @@ function! VlimeCompile(...)
                 \ conn)
 endfunction
 
+" VlimeInspect([content])
+function! VlimeInspect(...)
+    let conn = VlimeGetConnection()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ { str ->
+                    \ conn.InitInspector(str,
+                        \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})},
+                \ 'Inspect: ',
+                \ v:null,
+                \ conn)
+endfunction
+
 function! VlimeInspectCurThing(thing)
     if a:thing == 'thing'
         let str = vlime#ui#CurExpr()

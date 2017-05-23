@@ -51,11 +51,11 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>ddi', ':call VlimeDocumentationSymbol()<cr>'],
                     \ ['n', '<LocalLeader>dr', ':call VlimeShowOperatorArgList(vlime#ui#CurOperator())<cr>'],
                     \
-                    \ ['n', ['<LocalLeader>II', '<LocalLeader>Ii'], ':call VlimeInspectCurThing("thing")<cr>'],
-                    \ ['n', ['<LocalLeader>IE', '<LocalLeader>Ie'], ':call VlimeInspectCurThing("expr")<cr>'],
-                    \ ['n', ['<LocalLeader>IT', '<LocalLeader>It'], ':call VlimeInspectCurThing("top_expr")<cr>'],
-                    \ ['n', ['<LocalLeader>IA', '<LocalLeader>Ia'], ':call VlimeInspectCurThing("atom")<cr>'],
-                    \ ['v', '<LocalLeader>I', ':call VlimeInspectCurThing("selection")<cr>'],
+                    \ ['n', ['<LocalLeader>II', '<LocalLeader>Ii'], ':call VlimeInspect(vlime#ui#CurExprOrAtom())<cr>'],
+                    \ ['n', ['<LocalLeader>IE', '<LocalLeader>Ie'], ':call VlimeInspect(vlime#ui#CurExpr())<cr>'],
+                    \ ['n', ['<LocalLeader>IT', '<LocalLeader>It'], ':call VlimeInspect(vlime#ui#CurTopExpr())<cr>'],
+                    \ ['n', ['<LocalLeader>IA', '<LocalLeader>Ia'], ':call VlimeInspect(vlime#ui#CurAtom())<cr>'],
+                    \ ['v', '<LocalLeader>I', ':<c-u>call VlimeInspect(vlime#ui#CurSelection())<cr>'],
                     \
                     \ ['n', '<LocalLeader>uf', ':call VlimeUndefineCurFunction()<cr>'],
                     \ ['n', '<LocalLeader>us', ':call VlimeUninternCurSymbol()<cr>'],
