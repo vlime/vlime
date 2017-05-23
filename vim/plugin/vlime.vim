@@ -160,35 +160,6 @@ function! VlimeInspect(...)
                 \ conn)
 endfunction
 
-function! VlimeInspectCurThing(thing)
-    if a:thing == 'thing'
-        let str = vlime#ui#CurExpr()
-        if len(str) <= 0
-            let str = vlime#ui#CurAtom()
-        endif
-    elseif a:thing == 'expr'
-        let str = vlime#ui#CurExpr()
-    elseif a:thing == 'top_expr'
-        let str = vlime#ui#CurTopExpr()
-    elseif a:thing == 'atom'
-        let str = vlime#ui#CurAtom()
-    elseif a:thing == 'selection'
-        let str = vlime#ui#CurSelection()
-    endif
-
-    if len(str) <= 0
-        return
-    endif
-
-    let conn = VlimeGetConnection()
-    if type(conn) == type(v:null)
-        return
-    endif
-
-    call conn.InitInspector(str,
-                \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
-endfunction
-
 " VlimeCompileFile([file_name[, policy[, win]]])
 function! VlimeCompileFile(...)
     let conn = VlimeGetConnection()
