@@ -191,29 +191,6 @@ function! VlimeCompileFile(...)
                 \ 'file')
 endfunction
 
-function! VlimeCompileCurFile()
-    let fname = expand('%:p')
-    if len(fname) <= 0
-        return
-    endif
-
-    let conn = VlimeGetConnection()
-    if type(conn) == type(v:null)
-        return
-    endif
-
-    let cur_win = win_getid()
-    if exists('g:vlime_compiler_policy')
-        let policy = g:vlime_compiler_policy
-    else
-        let policy = v:null
-    endif
-
-    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call conn.CompileFileForEmacs(fname, v:true, policy,
-                \ function('s:OnCompilationComplete', [cur_win]))
-endfunction
-
 " VlimeExpandMacro([expr[, expand_all]])
 function! VlimeExpandMacro(...)
     let conn = VlimeGetConnection()
@@ -282,17 +259,20 @@ function! VlimeSwankRequire(contribs)
     call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete'))
 endfunction
 
-function! VlimeShowOperatorArgList(op)
-    if len(a:op) <= 0
-        return
-    endif
-
+" VlimeShowOperatorArgList([op])
+function! VlimeShowOperatorArgList(...)
     let conn = VlimeGetConnection(v:true)
     if type(conn) == type(v:null)
         return
     endif
 
-    call conn.OperatorArgList(a:op, function('s:OnOperatorArgListComplete', [a:op]))
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ { op ->
+                    \ conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))},
+                \ 'Arglist for operator: ',
+                \ v:null,
+                \ conn)
 endfunction
 
 " VlimeDescribeSymbol([symbol])
