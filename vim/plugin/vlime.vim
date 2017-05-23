@@ -198,18 +198,20 @@ function! VlimeExpandMacro(...)
     call vlime#ui#MaybeInput(expr, CB, 'Expand macro: ', v:null, conn)
 endfunction
 
-function! VlimeDisassembleCurForm()
-    let expr = vlime#ui#CurExpr()
-    if len(expr) <= 0
-        return
-    endif
-
+" VlimeDisassembleForm([content])
+function! VlimeDisassembleForm(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
         return
     endif
 
-    call conn.DisassembleForm(expr, function('s:ShowAsyncResult'))
+    call vlime#ui#MaybeInput(
+                \ vlime#GetNthVarArg(a:000, 0, v:null),
+                \ { expr ->
+                    \ conn.DisassembleForm(expr, function('s:ShowAsyncResult'))},
+                \ 'Disassemble: ',
+                \ v:null,
+                \ conn)
 endfunction
 
 " VlimeLoadFile([file_name])
