@@ -28,10 +28,10 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>m1', ':call VlimeExpandMacro(vlime#ui#CurExpr(), v:false)<cr>'],
                     \ ['n', '<LocalLeader>ma', ':call VlimeExpandMacro(vlime#ui#CurExpr(), v:true)<cr>'],
                     \
-                    \ ['n', '<LocalLeader>oe', ':call VlimeCompileCurThing("expr")<cr>'],
-                    \ ['n', '<LocalLeader>ot', ':call VlimeCompileCurThing("top_expr")<cr>'],
-                    \ ['n', '<LocalLeader>of', ':call VlimeCompileCurFile()<cr>'],
-                    \ ['v', '<LocalLeader>o', ':<c-u>call VlimeCompileCurThing("selection")<cr>'],
+                    \ ['n', '<LocalLeader>oe', ':call VlimeCompile(vlime#ui#CurExpr(v:true), bufnr("%"))<cr>'],
+                    \ ['n', '<LocalLeader>ot', ':call VlimeCompile(vlime#ui#CurTopExpr(v:true), bufnr("%"))<cr>'],
+                    \ ['n', '<LocalLeader>of', ':call VlimeCompileFile(expand("%:p"), v:null, win_getid())<cr>'],
+                    \ ['v', '<LocalLeader>o', ':<c-u>call VlimeCompile(vlime#ui#CurSelection(v:true), bufnr("%"))<cr>'],
                     \
                     \ ['n', '<LocalLeader>xc', ':call VlimeXRefCurSymbol("atom", "CALLS")<cr>'],
                     \ ['n', '<LocalLeader>xC', ':call VlimeXRefCurSymbol("atom", "CALLS-WHO")<cr>'],

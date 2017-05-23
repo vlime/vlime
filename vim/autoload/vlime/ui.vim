@@ -631,13 +631,19 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_cb)
     nnoremap <buffer> <silent> <cr> :call vlime#ui#InputFromMiniBufferComplete()<cr>
 endfunction
 
-" vlime#ui#MaybeInput(str, str_cb, prompt[, default[, conn]])
+" vlime#ui#MaybeInput(str, str_cb, prompt[, default[, conn[, completion_type]]])
 function! vlime#ui#MaybeInput(str, str_cb, prompt, ...)
     if type(a:str) == type(v:null)
         let default = vlime#GetNthVarArg(a:000, 0, '')
         let conn = vlime#GetNthVarArg(a:000, 1, v:null)
         if type(conn) == type(v:null)
-            call s:CheckInputCanceled(input(a:prompt, default), a:str_cb)
+            let comp_type = vlime#GetNthVarArg(a:000, 2, v:null)
+            if type(comp_type) == type(v:null)
+                let content = input(a:prompt, default)
+            else
+                let content = input(a:prompt, default, comp_type)
+            endif
+            call s:CheckInputCanceled(content, a:str_cb)
         else
             call vlime#ui#InputFromMiniBuffer(
                         \ conn, a:prompt,

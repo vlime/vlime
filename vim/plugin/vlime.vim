@@ -126,38 +126,21 @@ function! VlimeSendToREPL(...)
                 \ conn)
 endfunction
 
-function! VlimeCompileCurThing(thing)
-    if a:thing == 'expr'
-        let [str, s_pos, e_pos] = vlime#ui#CurExpr(v:true)
-    elseif a:thing == 'top_expr'
-        let [str, s_pos, e_pos] = vlime#ui#CurTopExpr(v:true)
-    elseif a:thing == 'selection'
-        let [str, s_pos, e_pos] = vlime#ui#CurSelection(v:true)
-    endif
-    if len(str) <= 0
-        return
-    endif
-
+" VlimeCompile([content, [buf]])
+function! VlimeCompile(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
         return
     endif
 
-    let [str_line, str_col] = s_pos
-    let cur_buf = bufnr('%')
-    let cur_byte = line2byte(str_line) + str_col - 1
-    let cur_file = expand('%:p')
-    let cur_win = win_getid()
-    if exists('g:vlime_compiler_policy')
-        let policy = g:vlime_compiler_policy
-    else
-        let policy = v:null
-    endif
-
-    call conn.ui.OnWriteString(conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call conn.CompileStringForEmacs(
-                \ str, cur_buf, cur_byte, cur_file,
-                \ policy, function('s:OnCompilationComplete', [cur_win]))
+    let content = vlime#GetNthVarArg(a:000, 0, v:null)
+    let buf = vlime#GetNthVarArg(a:000, 1, -1)
+    call vlime#ui#MaybeInput(
+                \ content,
+                \ function('s:CompileInputComplete', [conn, buf]),
+                \ 'Compile: ',
+                \ v:null,
+                \ conn)
 endfunction
 
 function! VlimeInspectCurThing(thing)
@@ -187,6 +170,25 @@ function! VlimeInspectCurThing(thing)
 
     call conn.InitInspector(str,
                 \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
+endfunction
+
+" VlimeCompileFile([file_name[, policy[, win]]])
+function! VlimeCompileFile(...)
+    let conn = VlimeGetConnection()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let file_name = vlime#GetNthVarArg(a:000, 0, v:null)
+    let policy = vlime#GetNthVarArg(a:000, 1, v:null)
+    let win = vlime#GetNthVarArg(a:000, 2, 0)
+    call vlime#ui#MaybeInput(
+                \ file_name,
+                \ function('s:CompileFileInputComplete', [conn, win, policy]),
+                \ 'Compile file: ',
+                \ '',
+                \ v:null,
+                \ 'file')
 endfunction
 
 function! VlimeCompileCurFile()
@@ -748,6 +750,51 @@ function! s:SendToREPLInputComplete(conn, content)
                 \ function(a:conn.ListenerEval, [a:content]))
 endfunction
 
+function! s:CompileInputComplete(conn, buf, content)
+    if type(a:content) == v:t_list
+        let str = a:content[0]
+        let [str_line, str_col] = a:content[1]
+    elseif type(a:content) == v:t_string
+        let str = a:content
+        let str_line = 0
+        let str_col = 0
+    endif
+
+    if a:buf > 0
+        let cinfo = vlime#ui#WithBuffer(a:buf,
+                    \ function('s:GetInfoForCompiling', [str_line, str_col, {}]))
+    else
+        let cinfo = {'byte': 0, 'file': '', 'win': 0}
+    endif
+
+    if exists('g:vlime_compiler_policy')
+        let policy = g:vlime_compiler_policy
+    else
+        let policy = v:null
+    endif
+
+    echom string(cinfo)
+
+    call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    call a:conn.CompileStringForEmacs(
+                \ str, a:buf, cinfo['byte'], cinfo['file'],
+                \ policy, function('s:OnCompilationComplete', [cinfo['win']]))
+endfunction
+
+function! s:CompileFileInputComplete(conn, win, policy, file_name)
+    if type(a:policy) != type(v:null)
+        let policy = a:policy
+    elseif exists('g:vlime_compiler_policy')
+        let policy = g:vlime_compiler_policy
+    else
+        let policy = v:null
+    endif
+
+    call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    call a:conn.CompileFileForEmacs(a:file_name, v:true, policy,
+                \ function('s:OnCompilationComplete', [a:win]))
+endfunction
+
 function! s:CleanUpNullBufConnections()
     let old_buf = bufnr('%')
     try
@@ -788,4 +835,11 @@ function! s:NeedToShowArgList(op)
     else
         return !!v:false
     endif
+endfunction
+
+function! s:GetInfoForCompiling(line, col, ret)
+    let a:ret['byte'] = line2byte(a:line) + a:col - 1
+    let a:ret['file'] = expand('%:p')
+    let a:ret['win'] = win_getid()
+    return a:ret
 endfunction
