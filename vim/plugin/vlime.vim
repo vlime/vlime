@@ -773,8 +773,6 @@ function! s:CompileInputComplete(conn, buf, content)
         let policy = v:null
     endif
 
-    echom string(cinfo)
-
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call a:conn.CompileStringForEmacs(
                 \ str, a:buf, cinfo['byte'], cinfo['file'],
