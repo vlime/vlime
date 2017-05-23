@@ -643,15 +643,15 @@ function! vlime#ui#MaybeInput(str, str_cb, prompt, ...)
             else
                 let content = input(a:prompt, default, comp_type)
             endif
-            call s:CheckInputCanceled(content, a:str_cb)
+            call s:CheckInputValidity(content, a:str_cb, v:true)
         else
             call vlime#ui#InputFromMiniBuffer(
                         \ conn, a:prompt,
                         \ default,
-                        \ { -> s:CheckInputCanceled(vlime#ui#CurBufferContent(), a:str_cb)})
+                        \ { -> s:CheckInputValidity(vlime#ui#CurBufferContent(), a:str_cb, v:true)})
         endif
     else
-        call a:str_cb(a:str)
+        call s:CheckInputValidity(a:str, a:str_cb, v:false)
     endif
 endfunction
 
@@ -1059,10 +1059,10 @@ function! s:NormalizePackageName(name)
     return toupper(r_name)
 endfunction
 
-function! s:CheckInputCanceled(str_val, cb)
+function! s:CheckInputValidity(str_val, cb, cancellable)
     if len(a:str_val) > 0
         call a:cb(a:str_val)
-    else
+    elseif a:cancellable
         call vlime#ui#ErrMsg('Canceled.')
     endif
 endfunction
