@@ -311,36 +311,40 @@ function! VlimeDescribeSymbol(...)
                 \ conn)
 endfunction
 
-function! VlimeXRefCurSymbol(sym_type, ref_type)
-    if a:sym_type == 'operator'
-        let sym = vlime#ui#CurOperator()
-    elseif a:sym_type == 'atom'
-        let sym = vlime#ui#CurAtom()
+" VlimeXRefSymbol(ref_type[, sym[, win]])
+function! VlimeXRefSymbol(ref_type, ...)
+    let conn = VlimeGetConnection()
+    if type(conn) == type(v:null)
+        return
     endif
-    if len(sym) > 0
-        let conn = VlimeGetConnection()
-        if type(conn) == type(v:null)
-            return
-        endif
-        call conn.XRef(a:ref_type, sym,
-                    \ function('s:OnXRefComplete', [win_getid()]))
-    endif
+
+    let sym = vlime#GetNthVarArg(a:000, 0, v:null)
+    let win = vlime#GetNthVarArg(a:000, 1, 0)
+    call vlime#ui#MaybeInput(
+                \ sym,
+                \ { s ->
+                    \ conn.XRef(a:ref_type, s, function('s:OnXRefComplete', [win]))},
+                \ 'XRef symbol: ',
+                \ v:null,
+                \ conn)
 endfunction
 
-function! VlimeFindCurDefinition(sym_type)
-    if a:sym_type == 'operator'
-        let sym = vlime#ui#CurOperator()
-    elseif a:sym_type == 'atom'
-        let sym = vlime#ui#CurAtom()
+" VlimeFindDefinition([sym[, win]])
+function! VlimeFindDefinition(...)
+    let conn = VlimeGetConnection()
+    if type(conn) == type(v:null)
+        return
     endif
-    if len(sym) > 0
-        let conn = VlimeGetConnection()
-        if type(conn) == type(v:null)
-            return
-        endif
-        call conn.FindDefinitionsForEmacs(sym,
-                    \ function('s:OnXRefComplete', [win_getid()]))
-    endif
+
+    let sym = vlime#GetNthVarArg(a:000, 0, v:null)
+    let win = vlime#GetNthVarArg(a:000, 1, 0)
+    call vlime#ui#MaybeInput(
+                \ sym,
+                \ { s ->
+                    \ conn.FindDefinitionsForEmacs(s, function('s:OnXRefComplete', [win]))},
+                \ 'Definition of symbol: ',
+                \ v:null,
+                \ conn)
 endfunction
 
 " VlimeAproposList([pattern])
