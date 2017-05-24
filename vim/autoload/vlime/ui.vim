@@ -110,7 +110,9 @@ endfunction
 function! vlime#ui#OnWriteString(conn, str, str_type) dict
     let repl_buf = vlime#ui#repl#InitREPLBuf(a:conn)
     if len(win_findbuf(repl_buf)) <= 0
-        call vlime#ui#OpenBufferWithWinSettings(repl_buf, v:false, 'repl')
+        call vlime#ui#KeepCurWindow(
+                    \ function('vlime#ui#OpenBufferWithWinSettings',
+                        \ [repl_buf, v:false, 'repl']))
     endif
     call vlime#ui#repl#AppendOutput(repl_buf, a:str)
 endfunction
@@ -435,6 +437,15 @@ function! vlime#ui#RestoreWindowLayout(layout)
     finally
         call win_gotoid(old_win)
         let &eventignore = old_ei
+    endtry
+endfunction
+
+function! vlime#ui#KeepCurWindow(Func)
+    let cur_win_id = win_getid()
+    try
+        return a:Func()
+    finally
+        call win_gotoid(cur_win_id)
     endtry
 endfunction
 
