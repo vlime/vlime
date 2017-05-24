@@ -67,9 +67,14 @@ function! vlime#ui#compiler_notes#OpenCurNote(...)
         return
     endif
 
-    let note_loc = vlime#ParseSourceLocation(
-                \ b:vlime_compiler_note_list[note_coord['id']]['LOCATION'])
-    let valid_loc = vlime#GetValidSourceLocation(note_loc)
+    let raw_note_loc = b:vlime_compiler_note_list[note_coord['id']]['LOCATION']
+    try
+        let note_loc = vlime#ParseSourceLocation(raw_note_loc)
+        let valid_loc = vlime#GetValidSourceLocation(note_loc)
+    catch
+        let valid_loc = []
+    endtry
+
     if len(valid_loc) > 0 && type(valid_loc[1]) != type(v:null)
         let orig_win = getbufvar('%', 'vlime_notes_orig_win', v:null)
         let [win_to_go, count_specified] = vlime#ui#ChooseWindowWithCount(orig_win)
@@ -79,6 +84,8 @@ function! vlime#ui#compiler_notes#OpenCurNote(...)
             return
         endif
         call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1], edit_cmd, count_specified)
+    elseif raw_note_loc[0]['name'] == 'ERROR'
+        call vlime#ui#ErrMsg(raw_note_loc[1])
     else
         call vlime#ui#ErrMsg('No source available.')
     endif
