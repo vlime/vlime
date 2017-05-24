@@ -77,7 +77,7 @@ function! vlime#ui#xref#OpenCurXref(...)
         let valid_loc = []
     endtry
 
-    if len(valid_loc) > 0
+    if len(valid_loc) > 0 && type(valid_loc[1]) != type(v:null)
         if type(valid_loc[0]) == v:t_string && valid_loc[0][0:6] != 'sftp://'
                     \ && !filereadable(valid_loc[0])
             call vlime#ui#ErrMsg('Not readable: ' . valid_loc[0])

@@ -126,7 +126,7 @@ function! VlimeSendToREPL(...)
                 \ conn)
 endfunction
 
-" VlimeCompile([content[, buf]])
+" VlimeCompile([content])
 function! VlimeCompile(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
@@ -134,10 +134,9 @@ function! VlimeCompile(...)
     endif
 
     let content = vlime#GetNthVarArg(a:000, 0, v:null)
-    let buf = vlime#GetNthVarArg(a:000, 1, -1)
     call vlime#ui#MaybeInput(
                 \ content,
-                \ function('s:CompileInputComplete', [conn, buf]),
+                \ function('s:CompileInputComplete', [conn]),
                 \ 'Compile: ',
                 \ v:null,
                 \ conn)
@@ -722,7 +721,7 @@ function! s:SendToREPLInputComplete(conn, content)
                 \ function(a:conn.ListenerEval, [a:content]))
 endfunction
 
-function! s:CompileInputComplete(conn, buf, content)
+function! s:CompileInputComplete(conn, content)
     if type(a:content) == v:t_list
         let str = a:content[0]
         let [str_line, str_col] = a:content[1]
@@ -732,12 +731,8 @@ function! s:CompileInputComplete(conn, buf, content)
         let str_col = 0
     endif
 
-    if a:buf > 0
-        let cinfo = vlime#ui#WithBuffer(a:buf,
-                    \ function('s:GetInfoForCompiling', [str_line, str_col, {}]))
-    else
-        let cinfo = {'byte': 0, 'file': '', 'win': 0}
-    endif
+    let buf = bufnr('%')
+    let cinfo = s:GetInfoForCompiling(str_line, str_col)
 
     if exists('g:vlime_compiler_policy')
         let policy = g:vlime_compiler_policy
@@ -747,7 +742,7 @@ function! s:CompileInputComplete(conn, buf, content)
 
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call a:conn.CompileStringForEmacs(
-                \ str, a:buf, cinfo['byte'], cinfo['file'],
+                \ str, buf, cinfo['byte'], cinfo['file'],
                 \ policy, function('s:OnCompilationComplete', [cinfo['win']]))
 endfunction
 
@@ -823,9 +818,11 @@ function! s:NeedToShowArgList(op)
     endif
 endfunction
 
-function! s:GetInfoForCompiling(line, col, ret)
-    let a:ret['byte'] = line2byte(a:line) + a:col - 1
-    let a:ret['file'] = expand('%:p')
-    let a:ret['win'] = win_getid()
-    return a:ret
+function! s:GetInfoForCompiling(line, col)
+    let ret = {
+                \ 'byte': line2byte(a:line) + a:col - 1,
+                \ 'file': expand('%:p'),
+                \ 'win': win_getid(),
+                \ }
+    return ret
 endfunction

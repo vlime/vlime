@@ -70,7 +70,7 @@ function! vlime#ui#compiler_notes#OpenCurNote(...)
     let note_loc = vlime#ParseSourceLocation(
                 \ b:vlime_compiler_note_list[note_coord['id']]['LOCATION'])
     let valid_loc = vlime#GetValidSourceLocation(note_loc)
-    if len(valid_loc) > 0
+    if len(valid_loc) > 0 && type(valid_loc[1]) != type(v:null)
         let orig_win = getbufvar('%', 'vlime_notes_orig_win', v:null)
         let [win_to_go, count_specified] = vlime#ui#ChooseWindowWithCount(orig_win)
         if win_to_go > 0

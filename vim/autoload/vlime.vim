@@ -934,13 +934,21 @@ function! vlime#GetValidSourceLocation(loc)
     elseif type(loc_buffer) != type(v:null)
         let loc_offset = get(a:loc, 'OFFSET', v:null)
         if type(loc_offset) != type(v:null)
-            let loc_offset = loc_offset[0] + loc_offset[1]
+            if loc_offset[0] < 0 || loc_offset[1] < 0
+                let loc_offset = v:null
+            else
+                let loc_offset = loc_offset[0] + loc_offset[1]
+            endif
         endif
         let valid_loc = [loc_buffer, loc_offset]
     elseif type(loc_buf_and_file) != type(v:null)
         let loc_offset = get(a:loc, 'OFFSET', v:null)
         if type(loc_offset) != type(v:null)
-            let loc_offset = loc_offset[0] + loc_offset[1]
+            if loc_offset[0] < 0 || loc_offset[1] < 0
+                let loc_offset = v:null
+            else
+                let loc_offset = loc_offset[0] + loc_offset[1]
+            endif
         endif
         let valid_loc = [loc_buf_and_file[0], loc_offset]
     else
