@@ -57,10 +57,12 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', ['<LocalLeader>IE', '<LocalLeader>Ie'], ':call VlimeInspect(vlime#ui#CurExpr())<cr>'],
                     \ ['n', ['<LocalLeader>IT', '<LocalLeader>It'], ':call VlimeInspect(vlime#ui#CurTopExpr())<cr>'],
                     \ ['n', ['<LocalLeader>IA', '<LocalLeader>Ia'], ':call VlimeInspect(vlime#ui#CurAtom())<cr>'],
+                    \ ['n', ['<LocalLeader>IN', '<LocalLeader>In'], ':call VlimeInspect()<cr>'],
                     \ ['v', '<LocalLeader>I', ':<c-u>call VlimeInspect(vlime#ui#CurSelection())<cr>'],
                     \
                     \ ['n', '<LocalLeader>uf', ':call VlimeUndefineFunction(vlime#ui#CurAtom())<cr>'],
                     \ ['n', '<LocalLeader>us', ':call VlimeUninternSymbol(vlime#ui#CurAtom())<cr>'],
+                    \ ['n', '<LocalLeader>ui', ':<c-u>call VlimeUndefineUninternWrapper()<cr>'],
                     \
                     \ ['n', '<LocalLeader>wp', ':call VlimeCloseWindow("preview")<cr>'],
                     \ ['n', '<LocalLeader>wr', ':call VlimeCloseWindow("arglist")<cr>'],

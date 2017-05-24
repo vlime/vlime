@@ -454,6 +454,33 @@ function! VlimeUninternSymbol(...)
                 \ conn)
 endfunction
 
+function! VlimeUndefineUninternWrapper()
+    let conn = VlimeGetConnection()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    if v:count > 0
+        let answer = v:count
+    else
+        let options = ['1. Undefine a function', '2. Unintern a symbol']
+        echohl Question
+        echom 'What to do?'
+        echohl None
+        let answer = inputlist(options)
+    endif
+
+    if answer <= 0
+        call vlime#ui#ErrMsg('Canceled.')
+    elseif answer == 1
+        call VlimeUndefineFunction()
+    elseif answer == 2
+        call VlimeUninternSymbol()
+    else
+        call vlime#ui#ErrMsg('Invalid action: ' . answer)
+    endif
+endfunction
+
 " VlimeCloseWindow([win_name])
 function! VlimeCloseWindow(...)
     let win_name = vlime#GetNthVarArg(a:000, 0, v:null)
