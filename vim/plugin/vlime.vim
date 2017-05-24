@@ -134,9 +134,10 @@ function! VlimeCompile(...)
     endif
 
     let content = vlime#GetNthVarArg(a:000, 0, v:null)
+    let win = win_getid()
     call vlime#ui#MaybeInput(
                 \ content,
-                \ function('s:CompileInputComplete', [conn]),
+                \ function('s:CompileInputComplete', [conn, win]),
                 \ 'Compile: ',
                 \ v:null,
                 \ conn)
@@ -168,9 +169,10 @@ function! VlimeCompileFile(...)
 
     let file_name = vlime#GetNthVarArg(a:000, 0, v:null)
     let policy = vlime#GetNthVarArg(a:000, 1, v:null)
+    let win = win_getid()
     call vlime#ui#MaybeInput(
                 \ file_name,
-                \ function('s:CompileFileInputComplete', [conn, policy]),
+                \ function('s:CompileFileInputComplete', [conn, win, policy]),
                 \ 'Compile file: ',
                 \ '',
                 \ v:null,
@@ -286,7 +288,7 @@ function! VlimeDescribeSymbol(...)
                 \ conn)
 endfunction
 
-" VlimeXRefSymbol(ref_type[, sym[, win]])
+" VlimeXRefSymbol(ref_type[, sym])
 function! VlimeXRefSymbol(ref_type, ...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
@@ -294,7 +296,7 @@ function! VlimeXRefSymbol(ref_type, ...)
     endif
 
     let sym = vlime#GetNthVarArg(a:000, 0, v:null)
-    let win = vlime#GetNthVarArg(a:000, 1, 0)
+    let win = win_getid()
     call vlime#ui#MaybeInput(
                 \ sym,
                 \ { s ->
@@ -304,7 +306,7 @@ function! VlimeXRefSymbol(ref_type, ...)
                 \ conn)
 endfunction
 
-" VlimeFindDefinition([sym[, win]])
+" VlimeFindDefinition([sym])
 function! VlimeFindDefinition(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
@@ -312,7 +314,7 @@ function! VlimeFindDefinition(...)
     endif
 
     let sym = vlime#GetNthVarArg(a:000, 0, v:null)
-    let win = vlime#GetNthVarArg(a:000, 1, 0)
+    let win = win_getid()
     call vlime#ui#MaybeInput(
                 \ sym,
                 \ { s ->
@@ -720,7 +722,7 @@ function! s:SendToREPLInputComplete(conn, content)
                 \ function(a:conn.ListenerEval, [a:content]))
 endfunction
 
-function! s:CompileInputComplete(conn, content)
+function! s:CompileInputComplete(conn, win, content)
     if type(a:content) == v:t_list
         let str = a:content[0]
         let [str_line, str_col] = a:content[1]
@@ -743,10 +745,10 @@ function! s:CompileInputComplete(conn, content)
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call a:conn.CompileStringForEmacs(
                 \ str, buf, cur_byte, cur_file,
-                \ policy, function('s:OnCompilationComplete', [win_getid()]))
+                \ policy, function('s:OnCompilationComplete', [a:win]))
 endfunction
 
-function! s:CompileFileInputComplete(conn, policy, file_name)
+function! s:CompileFileInputComplete(conn, win, policy, file_name)
     if type(a:policy) != type(v:null)
         let policy = a:policy
     elseif exists('g:vlime_compiler_policy')
@@ -757,7 +759,7 @@ function! s:CompileFileInputComplete(conn, policy, file_name)
 
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call a:conn.CompileFileForEmacs(a:file_name, v:true, policy,
-                \ function('s:OnCompilationComplete', [win_getid()]))
+                \ function('s:OnCompilationComplete', [a:win]))
 endfunction
 
 function! s:UninternSymbolInputComplete(conn, sym)
