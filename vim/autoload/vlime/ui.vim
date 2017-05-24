@@ -462,7 +462,6 @@ function! vlime#ui#WithBuffer(buf, Func)
     let &eventignore = 'all'
 
     try
-
         if buf_visible
             call win_gotoid(buf_win)
             return a:Func()
@@ -470,11 +469,11 @@ function! vlime#ui#WithBuffer(buf, Func)
             let old_layout = vlime#ui#GetCurWindowLayout()
             try
                 silent call vlime#ui#OpenBuffer(a:buf, v:false, v:true)
-                let tmp_win_nr = winnr()
+                let tmp_win_id = win_getid()
                 try
                     return a:Func()
                 finally
-                    execute tmp_win_nr . 'wincmd c'
+                    execute win_id2win(tmp_win_id) . 'wincmd c'
                 endtry
             finally
                 call vlime#ui#RestoreWindowLayout(old_layout)
