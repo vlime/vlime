@@ -159,7 +159,7 @@ function! VlimeInspect(...)
                 \ conn)
 endfunction
 
-" VlimeCompileFile([file_name[, policy[, win]]])
+" VlimeCompileFile([file_name[, policy]])
 function! VlimeCompileFile(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
@@ -168,10 +168,9 @@ function! VlimeCompileFile(...)
 
     let file_name = vlime#GetNthVarArg(a:000, 0, v:null)
     let policy = vlime#GetNthVarArg(a:000, 1, v:null)
-    let win = vlime#GetNthVarArg(a:000, 2, 0)
     call vlime#ui#MaybeInput(
                 \ file_name,
-                \ function('s:CompileFileInputComplete', [conn, win, policy]),
+                \ function('s:CompileFileInputComplete', [conn, policy]),
                 \ 'Compile file: ',
                 \ '',
                 \ v:null,
@@ -732,7 +731,8 @@ function! s:CompileInputComplete(conn, content)
     endif
 
     let buf = bufnr('%')
-    let cinfo = s:GetInfoForCompiling(str_line, str_col)
+    let cur_byte = line2byte(str_line) + str_col - 1
+    let cur_file = expand('%:p')
 
     if exists('g:vlime_compiler_policy')
         let policy = g:vlime_compiler_policy
@@ -742,11 +742,11 @@ function! s:CompileInputComplete(conn, content)
 
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call a:conn.CompileStringForEmacs(
-                \ str, buf, cinfo['byte'], cinfo['file'],
-                \ policy, function('s:OnCompilationComplete', [cinfo['win']]))
+                \ str, buf, cur_byte, cur_file,
+                \ policy, function('s:OnCompilationComplete', [win_getid()]))
 endfunction
 
-function! s:CompileFileInputComplete(conn, win, policy, file_name)
+function! s:CompileFileInputComplete(conn, policy, file_name)
     if type(a:policy) != type(v:null)
         let policy = a:policy
     elseif exists('g:vlime_compiler_policy')
@@ -757,7 +757,7 @@ function! s:CompileFileInputComplete(conn, win, policy, file_name)
 
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call a:conn.CompileFileForEmacs(a:file_name, v:true, policy,
-                \ function('s:OnCompilationComplete', [a:win]))
+                \ function('s:OnCompilationComplete', [win_getid()]))
 endfunction
 
 function! s:UninternSymbolInputComplete(conn, sym)
@@ -816,13 +816,4 @@ function! s:NeedToShowArgList(op)
     else
         return !!v:false
     endif
-endfunction
-
-function! s:GetInfoForCompiling(line, col)
-    let ret = {
-                \ 'byte': line2byte(a:line) + a:col - 1,
-                \ 'file': expand('%:p'),
-                \ 'win': win_getid(),
-                \ }
-    return ret
 endfunction
