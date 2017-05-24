@@ -567,15 +567,15 @@ endfunction
 
 " vlime#SetPackage(package[, callback])
 function! vlime#SetPackage(package, ...) dict
-    function! s:SetPackageCB(conn, Callback, chan, msg) abort
+    function! s:SetPackageCB(conn, buf, Callback, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#SetPackage')
-        call a:conn.SetCurrentPackage(a:msg[1][1])
+        call vlime#ui#WithBuffer(a:buf, function(a:conn.SetCurrentPackage, [a:msg[1][1]]))
         call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
     endfunction
 
     let Callback = s:GetNthVarArg(a:000, 0)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SET-PACKAGE'), a:package]),
-                \ function('s:SetPackageCB', [self, Callback]))
+                \ function('s:SetPackageCB', [self, bufnr('%'), Callback]))
 endfunction
 
 " vlime#DescribeSymbol(symbol[, callback])
