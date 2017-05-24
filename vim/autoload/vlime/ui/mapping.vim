@@ -42,6 +42,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>xe', ':call VlimeXRefSymbol("MACROEXPANDS", vlime#ui#CurAtom())<cr>'],
                     \ ['n', '<LocalLeader>xm', ':call VlimeXRefSymbol("SPECIALIZES", vlime#ui#CurAtom())<cr>'],
                     \ ['n', '<LocalLeader>xd', ':call VlimeFindDefinition(vlime#ui#CurAtom())<cr>'],
+                    \ ['n', '<LocalLeader>xi', ':<c-u>call VlimeXRefSymbolWrapper()<cr>'],
                     \
                     \ ['n', '<LocalLeader>do', ':call VlimeDescribeSymbol(vlime#ui#CurOperator())<cr>'],
                     \ ['n', '<LocalLeader>da', ':call VlimeDescribeSymbol(vlime#ui#CurAtom())<cr>'],

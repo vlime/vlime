@@ -306,6 +306,46 @@ function! VlimeXRefSymbol(ref_type, ...)
                 \ conn)
 endfunction
 
+function! VlimeXRefSymbolWrapper()
+    let conn = VlimeGetConnection()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let ref_types = ['calls', 'calls-who', 'references', 'binds', 'sets', 'macroexpands', 'specializes', 'definition']
+
+    if v:count > 0
+        let answer = v:count
+    else
+        let options = []
+        let i = 0
+        while i < len(ref_types)
+            call add(options, string(i + 1) . '. ' . ref_types[i])
+            let i += 1
+        endwhile
+
+        echohl Question
+        echom 'What kind of xref?'
+        echohl None
+        let answer = inputlist(options)
+    endif
+
+    if answer <= 0
+        call vlime#ui#ErrMsg('Canceled.')
+        return
+    elseif answer > len(ref_types)
+        call vlime#ui#ErrMsg('Invalid xref type: ' . answer)
+        return
+    endif
+
+    let rtype = ref_types[answer - 1]
+    if rtype == 'definition'
+        call VlimeFindDefinition()
+    else
+        call VlimeXRefSymbol(toupper(rtype))
+    endif
+endfunction
+
 " VlimeFindDefinition([sym])
 function! VlimeFindDefinition(...)
     let conn = VlimeGetConnection()
