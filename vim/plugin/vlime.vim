@@ -126,7 +126,7 @@ function! VlimeSendToREPL(...)
                 \ conn)
 endfunction
 
-" VlimeCompile([content, [buf]])
+" VlimeCompile([content[, buf]])
 function! VlimeCompile(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
@@ -231,19 +231,21 @@ function! VlimeLoadFile(...)
                 \ 'file')
 endfunction
 
-function! VlimeSetCurPackage()
+" VlimeSetPackage([pkg])
+function! VlimeSetPackage(...)
     let conn = VlimeGetConnection()
     if type(conn) == type(v:null)
         return
     endif
 
-    let pkg = conn.GetCurrentPackage()
-    let pkg = input('Set package: ', pkg[0])
-    if len(pkg) <= 0
-        call vlime#ui#ErrMsg('Canceled.')
-        return
-    endif
-    call conn.SetPackage(pkg)
+    let pkg = vlime#GetNthVarArg(a:000, 0, v:null)
+    let cur_pkg = conn.GetCurrentPackage()
+    call vlime#ui#MaybeInput(
+                \ pkg,
+                \ { p -> conn.SetPackage(p)},
+                \ 'Set package: ',
+                \ cur_pkg[0],
+                \ conn)
 endfunction
 
 function! VlimeSwankRequire(contribs)

@@ -71,7 +71,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>i', ':call VlimeInteractionMode()<cr>'],
                     \ ['n', '<LocalLeader>l', ':call VlimeLoadFile(expand("%:p"))<cr>'],
                     \ ['n', '<LocalLeader>a', ':call VlimeDisassembleForm(vlime#ui#CurExpr())<cr>'],
-                    \ ['n', '<LocalLeader>p', ':call VlimeSetCurPackage()<cr>'],
+                    \ ['n', '<LocalLeader>p', ':call VlimeSetPackage()<cr>'],
                     \ ['n', '<LocalLeader>b', ':call VlimeSetBreakpoint()<cr>'],
                     \ ['n', '<LocalLeader>t', ':call VlimeListThreads()<cr>'],
                 \ ],
