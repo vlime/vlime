@@ -425,14 +425,19 @@ function! vlime#ui#GetCurWindowLayout()
 endfunction
 
 function! vlime#ui#RestoreWindowLayout(layout)
+    if len(a:layout) != winnr('$')
+        return
+    endif
+
     let old_win = win_getid()
     let old_ei = &eventignore
     let &eventignore = 'all'
     try
         for ws in a:layout
-            call win_gotoid(ws['id'])
-            execute 'resize ' . ws['height']
-            execute 'vertical resize ' . ws['width']
+            if win_gotoid(ws['id'])
+                execute 'resize ' . ws['height']
+                execute 'vertical resize ' . ws['width']
+            endif
         endfor
     finally
         call win_gotoid(old_win)
@@ -449,7 +454,10 @@ function! vlime#ui#KeepCurWindow(Func)
     endtry
 endfunction
 
-function! vlime#ui#WithBuffer(buf, Func)
+" vlime#ui#WithBuffer(buf, Func[, ev_ignore])
+function! vlime#ui#WithBuffer(buf, Func, ...)
+    let ev_ignore = vlime#GetNthVarArg(a:000, 0, 'all')
+
     let buf_win = bufwinid(a:buf)
     let buf_visible = (buf_win >= 0) ? v:true : v:false
 
@@ -459,7 +467,7 @@ function! vlime#ui#WithBuffer(buf, Func)
     let &lazyredraw = 1
 
     let old_ei = &eventignore
-    let &eventignore = 'all'
+    let &eventignore = ev_ignore
 
     try
         if buf_visible
