@@ -18,6 +18,19 @@ CONTENTS                                              *vlime-contents*
         3.10 Remote Servers ................ |vlime-remote-server|
         3.11 Input Buffers .................. |vlime-input-buffer|
     4. Mappings ................................. |vlime-mappings|
+        4.1 Remap Keys .................... |vlime-mappings-remap|
+        4.2 Key Conflicts ................... |vlime-key-conflict|
+        4.3 List of Key Mappings ........... |vlime-mappings-list|
+            4.3.1 CL Source File Mappings  |vlime-mappings-source|
+            4.3.2 REPL Buffer Mappings ..... |vlime-mappings-repl|
+            4.3.3 Debugger Mappings .... |vlime-mappings-debugger|
+            4.3.4 Inspector Mappings .. |vlime-mappings-inspector|
+            4.3.5 XRef List & Compiler Notes Mappings ..........
+                  .......................... |vlime-mappings-xref|
+            4.3.6 Thread List Mappings .........................
+                  ................... |vlime-mappings-thread-list|
+            4.3.7 Server Output Buffer Mappings ................
+                  ........................ |vlime-mappings-server|
     5. Configuration .............................. |vlime-config|
     6. License ................................... |vlime-license|
     7. Bugs ......................................... |vlime-bugs|
@@ -298,7 +311,9 @@ adding this line to your |vimrc| file, to use the comma instead:
 
     let maplocalleader = ","
 
-                                                *vlime-mappings-remap*
+----------------------------------------------------------------------
+4.1 Remap Keys                                  *vlime-mappings-remap*
+
 You can also remap a single function using |FileType| |autocmd|s.
 Vlime will automatically skip the Vlime functions mapped in your
 |vimrc|. For example:
@@ -330,54 +345,60 @@ Vlime uses these filetypes to distiguish different buffers:
 You can remap any Vlime key mapping in these buffers. See the source
 code (autoload/vlime/ui/mapping.vim) for all default mappings.
 
-                                           *vlime-overriding-mappings*
-Note: Vlime tries to be nice when mapping the default keys. If a key
-      sequence was already mapped, Vlime would NOT overwrite the
-      existing mapping. You'll have to resolve the conflict either by
-      remapping the Vlime function or by disabling the existing
-      mapping. If you don't want this behavior, use
-      |g:vlime_force_default_keys| to force Vlime to always override
-      existing mappings.
+----------------------------------------------------------------------
+4.2 Key Conflicts                                 *vlime-key-conflict*
+
+Vlime tries to be nice when mapping the default keys. If a key
+sequence was already mapped, Vlime would NOT overwrite the existing
+mapping. You'll have to resolve the conflict either by remapping the
+Vlime function or by disabling the existing mapping. If you don't want
+this behavior, use |g:vlime_force_default_keys| to force Vlime to
+always override existing mappings.
 
                                             *g:vlime_skipped_mappings*
-      When Vlime detects any conflicting default mappings, it will log
-      them in the global variable g:vlime_skipped_mappings, which is a
-      |dict|, in the following format:
+When Vlime detects any conflicting default mappings, it will log them
+in the global variable g:vlime_skipped_mappings, which is a |dict|, in
+the following format:
 
-        {
-            "<buffer type>": {
-                "<mode> <key>": ["<command>", "<reason>"],
-                ...
-            },
-            ...
-        }
+  {
+      "<buffer type>": {
+          "<mode> <key>": ["<command>", "<reason>"],
+          ...
+      },
+      ...
+  }
 
-      The <buffer type> designates which buffer should these mappings
-      be applied to. The <mode> is a single character designating the
-      Vim mode, as described in |map-listing|. <Key> and <command> are
-      things to be mapped. And <reason> describes why this mapping was
-      skipped. There are currently two possible reasons:
+The <buffer type> designates which buffer should these mappings be
+applied to. The <mode> is a single character designating the Vim mode,
+as described in |map-listing|. <Key> and <command> are things to be
+mapped. And <reason> describes why this mapping was skipped. There are
+currently two possible reasons:
 
-        "Key already mapped":
-            The key combination specified in <key> was already mapped.
-            This may imply a key conflict.
+    "Key already mapped":
+        The key combination specified in <key> was already mapped.
+        This may imply a key conflict.
 
-        "Command already mapped":
-            The command specified in <command> was already mapped to.
-            This usually means you have remapped <command> to other
-            keys. Reports with this reason can be safely ignored.
+    "Command already mapped":
+        The command specified in <command> was already mapped to. This
+        usually means you have remapped <command> to other keys.
+        Reports with this reason can be safely ignored.
 
-      If you are using the default Vlime mappings, and some of them
-      don't work properly, you should inspect
-      g:vlime_skipped_mappings, and resolve key conflicts, if any.
-      Use the method described in |vlime-mappings-remap| to remap keys
-      or forcibly override existing mappings.
+If you are using the default Vlime mappings, and some of them don't
+work properly, you should inspect g:vlime_skipped_mappings, and
+resolve key conflicts, if any. Use the method described in
+|vlime-mappings-remap| to remap keys or forcibly override existing
+mappings.
 
-                                                 *vlime-mappings-list*
+----------------------------------------------------------------------
+4.3 List of Key Mappings                         *vlime-mappings-list*
+
 All the mappings listed below are defined in normal mode, unless
 specified otherwise.
 
-Mappings available in CL source files:         *vlime-mappings-source*
+......................................................................
+4.3.1 CL Source File Mappings                  *vlime-mappings-source*
+
+Key mappings avaialble in lisp source files:
 
     Connection Management                        *vlime-mappings-conn*
         <LocalLeader>cc                       *vlime-mappings-conn-cc*
@@ -555,7 +576,10 @@ Mappings available in CL source files:         *vlime-mappings-source*
             Show a list of the running threads. See
             |vlime-thread-list|.
 
-Mappings available in the REPL buffer:           *vlime-mappings-repl*
+......................................................................
+4.3.2 REPL Buffer Mappings                       *vlime-mappings-repl*
+
+Key mappings avaialble in the REPL buffer:
 
     CTRL-c
         Interrupt the REPL thread.
@@ -569,7 +593,10 @@ Mappings available in the REPL buffer:           *vlime-mappings-repl*
     <LocalLeader>C
         Clear the REPL buffer.
 
-Mappings available in the debugger:          *vlime-mappings-debugger*
+......................................................................
+4.3.3 Debugger Mappings                      *vlime-mappings-debugger*
+
+Key mappings avaialble in the debugger:
 
     <CR>
         Choose a restart.
@@ -617,7 +644,10 @@ Mappings available in the debugger:          *vlime-mappings-debugger*
         expression that would generate the result. See
         |vlime-input-buffer|.
 
-Mappings available in the inspector:        *vlime-mappings-inspector*
+......................................................................
+4.3.4 Inspector Mappings                    *vlime-mappings-inspector*
+
+Key mappings avaialble in the inspector:
 
     <CR>
         Activate the interactable field/button under the cursor.
@@ -634,9 +664,13 @@ Mappings available in the inspector:        *vlime-mappings-inspector*
     R
         Refresh the inspector.
 
-Mappings available in the xref window and the compiler notes window
+......................................................................
+4.3.5 XRef List & Compiler Notes Mappings
                                                  *vlime-mappings-xref*
                                        *vlime-mappings-compiler-notes*
+
+Key mappings avaialble in the cross reference list and the compiler
+notes window:
 
     <CR>
         Jump to the selected source location. If the source file is
@@ -656,7 +690,10 @@ Mappings available in the xref window and the compiler notes window
     S
         Like "s", but open a vertical split window.
 
-Mappings available in the thread list:    *vlime-mappings-thread-list*
+......................................................................
+4.3.6 Thread List Mappings                *vlime-mappings-thread-list*
+
+Key mappings avaialble in the thread list:
 
     CTRL-c
         Interrupt the thread under the cursor. The debugger will be
@@ -668,8 +705,11 @@ Mappings available in the thread list:    *vlime-mappings-thread-list*
     r
         Refresh the thread list.
 
-Mappings available in the server output buffer:
-                                               *vlime-mappings-server*
+......................................................................
+4.3.7 Server Output Buffer Mappings            *vlime-mappings-server*
+
+Key mappings avaialble in the server output buffer:
+
     <LocalLeader>c                           *vlime-mappings-server-c*
         Connect to this server.
     <LocalLeader>s
@@ -683,7 +723,7 @@ Vlime:
 
 g:vlime_force_default_keys                *g:vlime_force_default_keys*
     A boolean flag to tell Vlime to always use the default key
-    mappings. See |vlime-overriding-mappings|. Default: v:false
+    mappings. See |vlime-key-conflict|. Default: v:false
 
 g:vlime_cl_impl                                      *g:vlime_cl_impl*
     A |string| to designate the CL implementation to use when starting
