@@ -16,6 +16,7 @@ CONTENTS                                              *vlime-contents*
         3.8 Compiler Messages ............... |vlime-compiler-msg|
         3.9 Managing Threads ................. |vlime-thread-list|
         3.10 Remote Servers ................ |vlime-remote-server|
+        3.11 Input Buffers .................. |vlime-input-buffer|
     4. Mappings ................................. |vlime-mappings|
     5. Configuration .............................. |vlime-config|
     6. License ................................... |vlime-license|
@@ -147,13 +148,12 @@ Note: It's a design decision to make the REPL buffer read-only, since
       emulating a command line in Vim buffers is often complicated and
       buggy.
 
-                                                  *vlime-input-buffer*
-When the REPL needs user input, e.g. (read) or (read-line) is
-being evaluated, a dedicated buffer for string input would pop up at
-the bottom. Write the input inside this buffer, and hit <CR> in normal
+When the REPL needs user input, e.g. (read) or (read-line) is being
+evaluated, a dedicated buffer for string input would pop up at the
+bottom. Write the input inside this buffer, and hit <CR> in normal
 mode, then the REPL would receive your text. The input buffer is a
-generic mechanism for the commands that need user input, for example
-|vlime-mappings-debugger-i|.
+generic mechanism for the commands that need user input. See
+|vlime-input-buffer|.
 
                                               *vlime-interaction-mode*
 There's an interaction mode to make sending things to the REPL easier.
@@ -263,6 +263,31 @@ Note: When connecting to a remote server, relative file paths may
       the directory that your paths are relative to. Vlime always
       tries to use absolute paths.
 
+----------------------------------------------------------------------
+3.11 Input Buffer                                 *vlime-input-buffer*
+
+When Vlime needs user input, a dedicated input buffer would pop up.
+One can use it as a normal Vim buffer, to compose any text snippet in
+it, and then press <CR> in normal mode to submit the snippet to Vlime.
+
+If the operation that brought up the input buffer can be cancelled,
+submitting an empty snippet would usually cancel that operation.
+
+The input buffer can be customized using |FileType| |autocmd|s. For
+example, omni-completion and auto indent are not enabled in the input
+buffer by default, but you can enable them by adding these autocmds in
+your |vimrc|:
+
+    augroup CustomVlimeInputBuffer
+        autocmd!
+        autocmd FileType vlime_input inoremap <silent> <buffer> <tab> <c-r>=VlimeKey("tab")<cr>
+        autocmd FileType vlime_input setlocal omnifunc=VlimeCompleteFunc
+        autocmd FileType vlime_input setlocal indentexpr=VlimeCalcCurIndent()
+    augroup end
+
+"Vlime_input" is the filetype set by Vlime to identify input buffers.
+See |vlime-buffer-types| for a full list of available filetypes.
+
 ======================================================================
 4. Mappings                                           *vlime-mappings*
 
@@ -285,8 +310,10 @@ Vlime will automatically skip the Vlime functions mapped in your
     augroup end
 
 This will change the mapping for |vlime-mappings-send-ss| from
-"<LocalLeader>ss" to "<LocalLeader>S". Vlime uses these filetypes to
-distiguish different buffers:
+"<LocalLeader>ss" to "<LocalLeader>S".
+
+                                                  *vlime-buffer-types*
+Vlime uses these filetypes to distiguish different buffers:
 
     lisp            Normal Lisp source file.
     vlime_sldb      The debugger buffer.
@@ -386,6 +413,9 @@ Mappings available in CL source files:         *vlime-mappings-source*
             REPL.
         <LocalLeader>sa
             Send the atom under the cursor to the REPL.
+        <LocalLeader>si
+            Open an input buffer and compose a snippet to send to the
+            REPL. See |vlime-input-buffer|.
         <LocalLeader>s
             (In visual mode) Send the current selection to the REPL.
 
@@ -422,6 +452,11 @@ Mappings available in CL source files:         *vlime-mappings-source*
             Show specialized methods for the class under the cursor.
         <LocalLeader>xd
             Show the definition for the name under the cursor.
+        <LocalLeader>xi
+            Interactively prompt for the symbol to search. A menu will
+            pop up, to let you choose from xref types. You can prepend
+            a count to skip this menu, e.g. "8<LocalLeader>xi" would
+            look for definitions. See |vlime-input-buffer|.
 
     Describing Things                        *vlime-mappings-describe*
         <LocalLeader>do
@@ -429,6 +464,9 @@ Mappings available in CL source files:         *vlime-mappings-source*
             cursor.
         <LocalLeader>da
             Describe the atom under the cursor.
+        <LocalLeader>di
+            Prompt for the symbol to describe. See
+            |vlime-input-buffer|.
         <LocalLeader>ds
             Apropos search. An input buffer would pop up, prompting
             for the search pattern. See |vlime-input-buffer|.
@@ -437,6 +475,9 @@ Mappings available in CL source files:         *vlime-mappings-source*
             s-expression under the cursor.
         <LocalLeader>dda
             Show the documentation for the atom under the cursor.
+        <LocalLeader>ddi
+            Show the documentation for the symbol entered in an input
+            buffer. See |vlime-input-buffer|.
         <LocalLeader>dr
             Show the arglist for the s-expression under the cursor.
 
@@ -445,6 +486,12 @@ Mappings available in CL source files:         *vlime-mappings-source*
             Undefine the function under the cursor.
         <LocalLeader>us
             Unintern the symbol under the cursor.
+        <LocalLeader>ui
+            Interactively prompt for the function/symbol to
+            undefine/unintern. A menu will pop up, to let you choose
+            what to do. You can prepend a count to skip this menu,
+            e.g. "2<LocalLeader>ui" would unintern a symbol. See
+            |vlime-input-buffer|.
 
     Inspection                       *vlime-mappings-invoke-inspector*
         <LocalLeader>II           *vlime-mappings-invoke-inspector-II*
@@ -466,6 +513,11 @@ Mappings available in CL source files:         *vlime-mappings-source*
             Evaluate and inspect the atom under the cursor.
         <LocalLeader>Ia
             Same as <LocalLeader>IA
+        <LocalLeader>IN
+            Prompt for the expression to inspect. See
+            |vlime-input-buffer|.
+        <LocalLeader>In
+            Same as <LocalLeader>IN
         <LocalLeader>I
             (In visual mode) Evaluate and inspect the current
             selection.
@@ -493,7 +545,8 @@ Mappings available in CL source files:         *vlime-mappings-source*
         <LocalLeader>a
             Disassemble the form under the cursor.
         <LocalLeader>p                         *vlime-mappings-misc-p*
-            Specify the package for the current buffer.
+            Specify the package for the current buffer. An input
+            buffer would pop up for this. See |vlime-input-buffer|.
         <LocalLeader>b
             Set a breakpoint at entry to a function. An input buffer
             would pop up, prompting for the function name. See

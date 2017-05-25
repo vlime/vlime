@@ -1,4 +1,5 @@
 * master
+    * Provide one-off input mode for top-level APIs.
     * When jumping to source locations (e.g. xref), use existing windows by default. `:help vlime-mappings-xref`
     * Functions and mappings for feeding top-level forms to the server.
     * Better ways to handle conflicting key mappings. `:help vlime-overriding-mappings`
