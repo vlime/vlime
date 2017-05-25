@@ -385,11 +385,16 @@ function! vlime#ui#CurSelection(...)
     endif
 endfunction
 
-function! vlime#ui#CurBufferContent()
-    let last_line_nr = line('$')
-    let line_nr = 1
+" vlime#ui#CurBufferContent([raw])
+function! vlime#ui#CurBufferContent(...)
+    let raw = vlime#GetNthVarArg(a:000, 0, v:false)
+
     let lines = getline(1, '$')
-    return join(filter(lines, "match(v:val, '^\s*;.*$') < 0"), "\n")
+    if !raw
+        let lines = filter(lines, "match(v:val, '^\s*;.*$') < 0")
+    endif
+
+    return join(lines, "\n")
 endfunction
 
 function! vlime#ui#GetText(from_pos, to_pos)
@@ -626,6 +631,87 @@ function! vlime#ui#CloseWindow(conn, win_name)
     endfor
 endfunction
 
+function! vlime#ui#SaveInputBufferHistory(text)
+    if exists('g:vlime_input_buffer_history_limit')
+        if g:vlime_input_buffer_history_limit <= 0
+            return
+        endif
+        let max_items = g:vlime_input_buffer_history_limit
+    else
+        let max_items = 200
+    endif
+
+    let history = get(g:, 'vlime_input_buffer_history', [])
+
+    if len(history) > 0 && history[-1] == a:text
+        return
+    endif
+
+    let prev_idx = index(history, a:text)
+    while prev_idx >= 0
+        call remove(history, prev_idx)
+        let prev_idx = index(history, a:text)
+    endwhile
+
+    call add(history, a:text)
+    if len(history) > max_items
+        let delta = len(history) - max_items
+        let history = history[delta:-1]
+    endif
+
+    let g:vlime_input_buffer_history = history
+endfunction
+
+" vlime#ui#GetInputBufferHistory([direction[, idx]])
+function! vlime#ui#GetInputBufferHistory(...)
+    let history = get(g:, 'vlime_input_buffer_history', [])
+
+    let direction = vlime#GetNthVarArg(a:000, 0, 'backward')
+    let idx = vlime#GetNthVarArg(a:000, 1, len(history))
+
+    if direction == 'backward'
+        if idx <= 0
+            return [0, '']
+        elseif idx > len(history)
+            let idx = len(history)
+        endif
+        return (len(history) > 0) ? [idx - 1, history[idx - 1]] : [0, '']
+    elseif direction == 'forward'
+        if idx >= len(history) - 1
+            return [len(history), '']
+        elseif idx < -1
+            let idx = -1
+        endif
+        return (len(history) > 0) ? [idx + 1, history[idx + 1]] : [0, '']
+    endif
+endfunction
+
+" vlime#ui#InputBufferNextHistoryItem([direction])
+function! vlime#ui#InputBufferNextHistoryItem(...)
+    let direction = vlime#GetNthVarArg(a:000, 0, 'backward')
+
+    if exists('b:vlime_input_buffer_history_idx')
+        let [next_idx, text] = vlime#ui#GetInputBufferHistory(
+                    \ direction, b:vlime_input_buffer_history_idx)
+    else
+        let b:vlime_input_buffer_orig_text = vlime#ui#CurBufferContent(v:true)
+        let [next_idx, text] = vlime#ui#GetInputBufferHistory(direction)
+    endif
+
+    let b:vlime_input_buffer_history_idx = next_idx
+    let cur_pos = getcurpos()
+    if len(text) > 0
+        1,$delete _
+        call vlime#ui#AppendString(text)
+    elseif next_idx > 0 && exists('b:vlime_input_buffer_orig_text')
+        unlet b:vlime_input_buffer_history_idx
+        1,$delete _
+        call vlime#ui#AppendString(b:vlime_input_buffer_orig_text)
+        unlet b:vlime_input_buffer_orig_text
+    endif
+    call setpos('.', cur_pos)
+endfunction
+
 function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_cb)
     let buf = vlime#ui#OpenBufferWithWinSettings(
                 \ vlime#ui#MiniBufName(a:conn, a:prompt), v:true, 'input')
@@ -647,6 +733,7 @@ function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_cb)
 
     call setbufvar('%', 'vlime_input_complete_cb', a:complete_cb)
     nnoremap <buffer> <silent> <cr> :call vlime#ui#InputFromMiniBufferComplete()<cr>
+    call vlime#ui#MapBufferKeys('input')
 endfunction
 
 " vlime#ui#MaybeInput(str, str_cb, prompt[, default[, conn[, completion_type]]])
@@ -695,8 +782,11 @@ function! vlime#ui#InputFromMiniBufferComplete()
         return
     endif
 
+    if len(vlime#ui#CurBufferContent()) > 0
+        call vlime#ui#SaveInputBufferHistory(vlime#ui#CurBufferContent(v:true))
+    endif
     call Callback()
-    execute 'bunload! ' . input_buf
+    execute 'bdelete! ' . input_buf
 endfunction
 
 function! vlime#ui#AppendString(str)

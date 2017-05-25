@@ -137,6 +137,11 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>c', ':call VlimeConnectToCurServer()<cr>'],
                     \ ['n', '<LocalLeader>s', ':call VlimeStopCurServer()<cr>'],
                 \ ],
+                \
+                \ 'input': [
+                    \ ['n', '<c-p>', ':call vlime#ui#InputBufferNextHistoryItem("backward")<cr>'],
+                    \ ['n', '<c-n>', ':call vlime#ui#InputBufferNextHistoryItem("forward")<cr>'],
+                \ ],
             \ }
 endif
 
