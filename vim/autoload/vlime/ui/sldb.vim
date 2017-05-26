@@ -126,7 +126,7 @@ function! vlime#ui#sldb#InspectInCurFrame()
     endif
 
     let thread = b:vlime_conn.GetCurrentThread()
-    call vlime#ui#InputFromMiniBuffer(
+    call vlime#ui#input#FromBuffer(
                 \ b:vlime_conn, 'Inspect in frame (evaluated):',
                 \ v:null,
                 \ function('vlime#ui#sldb#InspectInCurFrameInputComplete',
@@ -152,7 +152,7 @@ function! vlime#ui#sldb#EvalStringInCurFrame()
     endif
 
     let thread = b:vlime_conn.GetCurrentThread()
-    call vlime#ui#InputFromMiniBuffer(
+    call vlime#ui#input#FromBuffer(
                 \ b:vlime_conn, 'Eval in frame:',
                 \ v:null,
                 \ function('vlime#ui#sldb#EvalStringInCurFrameInputComplete',
@@ -193,7 +193,7 @@ function! vlime#ui#sldb#ReturnFromCurFrame()
     endif
 
     let thread = b:vlime_conn.GetCurrentThread()
-    call vlime#ui#InputFromMiniBuffer(
+    call vlime#ui#input#FromBuffer(
                 \ b:vlime_conn, 'Return from frame (evaluated):',
                 \ v:null,
                 \ function('vlime#ui#sldb#ReturnFromCurFrameInputComplete',

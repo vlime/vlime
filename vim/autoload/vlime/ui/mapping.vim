@@ -139,8 +139,8 @@ if !exists('g:vlime_default_mappings')
                 \ ],
                 \
                 \ 'input': [
-                    \ ['n', '<c-p>', ':call vlime#ui#InputBufferNextHistoryItem("backward")<cr>'],
-                    \ ['n', '<c-n>', ':call vlime#ui#InputBufferNextHistoryItem("forward")<cr>'],
+                    \ ['n', '<c-p>', ':call vlime#ui#input#NextHistoryItem("backward")<cr>'],
+                    \ ['n', '<c-n>', ':call vlime#ui#input#NextHistoryItem("forward")<cr>'],
                 \ ],
             \ }
 endif

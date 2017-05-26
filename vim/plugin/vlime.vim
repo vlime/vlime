@@ -118,7 +118,7 @@ function! VlimeSendToREPL(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ function('s:SendToREPLInputComplete', [conn]),
                 \ 'Send to REPL: ',
@@ -135,7 +135,7 @@ function! VlimeCompile(...)
 
     let content = vlime#GetNthVarArg(a:000, 0, v:null)
     let win = win_getid()
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ content,
                 \ function('s:CompileInputComplete', [conn, win]),
                 \ 'Compile: ',
@@ -150,7 +150,7 @@ function! VlimeInspect(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { str ->
                     \ conn.InitInspector(str,
@@ -170,7 +170,7 @@ function! VlimeCompileFile(...)
     let file_name = vlime#GetNthVarArg(a:000, 0, v:null)
     let policy = vlime#GetNthVarArg(a:000, 1, v:null)
     let win = win_getid()
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ file_name,
                 \ function('s:CompileFileInputComplete', [conn, win, policy]),
                 \ 'Compile file: ',
@@ -195,7 +195,7 @@ function! VlimeExpandMacro(...)
         let CB = { e -> conn.SwankMacroExpandOne(e, function('s:ShowAsyncResult'))}
     endif
 
-    call vlime#ui#MaybeInput(expr, CB, 'Expand macro: ', v:null, conn)
+    call vlime#ui#input#MaybeInput(expr, CB, 'Expand macro: ', v:null, conn)
 endfunction
 
 " VlimeDisassembleForm([content])
@@ -205,7 +205,7 @@ function! VlimeDisassembleForm(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { expr ->
                     \ conn.DisassembleForm(expr, function('s:ShowAsyncResult'))},
@@ -221,7 +221,7 @@ function! VlimeLoadFile(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { fname ->
                     \ conn.LoadFile(fname, function('s:OnLoadFileComplete', [fname]))},
@@ -240,7 +240,7 @@ function! VlimeSetPackage(...)
 
     let pkg = vlime#GetNthVarArg(a:000, 0, v:null)
     let cur_pkg = conn.GetCurrentPackage()
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ pkg,
                 \ { p -> conn.SetPackage(p)},
                 \ 'Set package: ',
@@ -263,7 +263,7 @@ function! VlimeShowOperatorArgList(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { op ->
                     \ conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))},
@@ -279,7 +279,7 @@ function! VlimeDescribeSymbol(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { sym ->
                     \ conn.DescribeSymbol(sym, function('s:ShowAsyncResult'))},
@@ -297,7 +297,7 @@ function! VlimeXRefSymbol(ref_type, ...)
 
     let sym = vlime#GetNthVarArg(a:000, 0, v:null)
     let win = win_getid()
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ sym,
                 \ { s ->
                     \ conn.XRef(a:ref_type, s, function('s:OnXRefComplete', [win]))},
@@ -355,7 +355,7 @@ function! VlimeFindDefinition(...)
 
     let sym = vlime#GetNthVarArg(a:000, 0, v:null)
     let win = win_getid()
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ sym,
                 \ { s ->
                     \ conn.FindDefinitionsForEmacs(s, function('s:OnXRefComplete', [win]))},
@@ -371,7 +371,7 @@ function! VlimeAproposList(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { pattern ->
                     \ conn.AproposListForEmacs(
@@ -389,7 +389,7 @@ function! VlimeDocumentationSymbol(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { sym ->
                     \ conn.DocumentationSymbol(sym, function('s:ShowAsyncResult'))},
@@ -405,7 +405,7 @@ function! VlimeSetBreakpoint(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { sym ->
                     \ conn.SLDBBreak(sym, function('s:OnSLDBBreakComplete'))},
@@ -430,7 +430,7 @@ function! VlimeUndefineFunction(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ { sym ->
                     \ conn.UndefineFunction(sym, function('s:OnUndefineFunctionComplete'))},
@@ -446,7 +446,7 @@ function! VlimeUninternSymbol(...)
         return
     endif
 
-    call vlime#ui#MaybeInput(
+    call vlime#ui#input#MaybeInput(
                 \ vlime#GetNthVarArg(a:000, 0, v:null),
                 \ function('s:UninternSymbolInputComplete', [conn]),
                 \ 'Unintern symbol: ',

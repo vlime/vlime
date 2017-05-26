@@ -118,13 +118,13 @@ function! vlime#ui#OnWriteString(conn, str, str_type) dict
 endfunction
 
 function! vlime#ui#OnReadString(conn, thread, ttag) dict
-    call vlime#ui#InputFromMiniBuffer(
+    call vlime#ui#input#FromBuffer(
                 \ a:conn, 'Input string:', v:null,
                 \ function('vlime#ui#ReadStringInputComplete', [a:thread, a:ttag]))
 endfunction
 
 function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val) dict
-    call vlime#ui#InputFromMiniBuffer(
+    call vlime#ui#input#FromBuffer(
                 \ a:conn, a:prompt, a:init_val,
                 \ function('vlime#ui#ReturnMiniBufferContent', [a:thread, a:ttag]))
 endfunction
@@ -631,164 +631,6 @@ function! vlime#ui#CloseWindow(conn, win_name)
     endfor
 endfunction
 
-function! vlime#ui#SaveInputBufferHistory(text)
-    if exists('g:vlime_input_buffer_history_limit')
-        if g:vlime_input_buffer_history_limit <= 0
-            return
-        endif
-        let max_items = g:vlime_input_buffer_history_limit
-    else
-        let max_items = 200
-    endif
-
-    let history = get(g:, 'vlime_input_buffer_history', [])
-
-    if len(history) > 0 && history[-1] == a:text
-        return
-    endif
-
-    let prev_idx = index(history, a:text)
-    while prev_idx >= 0
-        call remove(history, prev_idx)
-        let prev_idx = index(history, a:text)
-    endwhile
-
-    call add(history, a:text)
-    if len(history) > max_items
-        let delta = len(history) - max_items
-        let history = history[delta:-1]
-    endif
-
-    let g:vlime_input_buffer_history = history
-endfunction
-
-" vlime#ui#GetInputBufferHistory([direction[, idx]])
-function! vlime#ui#GetInputBufferHistory(...)
-    let history = get(g:, 'vlime_input_buffer_history', [])
-
-    let direction = vlime#GetNthVarArg(a:000, 0, 'backward')
-    let idx = vlime#GetNthVarArg(a:000, 1, len(history))
-
-    if direction == 'backward'
-        if idx <= 0
-            return [0, '']
-        elseif idx > len(history)
-            let idx = len(history)
-        endif
-        return (len(history) > 0) ? [idx - 1, history[idx - 1]] : [0, '']
-    elseif direction == 'forward'
-        if idx >= len(history) - 1
-            return [len(history), '']
-        elseif idx < -1
-            let idx = -1
-        endif
-        return (len(history) > 0) ? [idx + 1, history[idx + 1]] : [0, '']
-    endif
-endfunction
-
-" vlime#ui#InputBufferNextHistoryItem([direction])
-function! vlime#ui#InputBufferNextHistoryItem(...)
-    let direction = vlime#GetNthVarArg(a:000, 0, 'backward')
-
-    if exists('b:vlime_input_buffer_history_idx')
-        let [next_idx, text] = vlime#ui#GetInputBufferHistory(
-                    \ direction, b:vlime_input_buffer_history_idx)
-    else
-        let b:vlime_input_buffer_orig_text = vlime#ui#CurBufferContent(v:true)
-        let [next_idx, text] = vlime#ui#GetInputBufferHistory(direction)
-    endif
-
-    let b:vlime_input_buffer_history_idx = next_idx
-    let cur_pos = getcurpos()
-    if len(text) > 0
-        1,$delete _
-        call vlime#ui#AppendString(text)
-    elseif next_idx > 0 && exists('b:vlime_input_buffer_orig_text')
-        unlet b:vlime_input_buffer_history_idx
-        1,$delete _
-        call vlime#ui#AppendString(b:vlime_input_buffer_orig_text)
-        unlet b:vlime_input_buffer_orig_text
-    endif
-    call setpos('.', cur_pos)
-endfunction
-
-function! vlime#ui#InputFromMiniBuffer(conn, prompt, init_val, complete_cb)
-    let buf = vlime#ui#OpenBufferWithWinSettings(
-                \ vlime#ui#MiniBufName(a:conn, a:prompt), v:true, 'input')
-    call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
-    call setbufvar(buf, '&buflisted', 0)
-    call setbufvar(buf, '&filetype', 'vlime_input')
-    setlocal winfixheight
-    setlocal winfixwidth
-
-    call vlime#ui#AppendString('; ' . a:prompt . "\n")
-    if type(a:init_val) != type(v:null) && len(a:init_val) > 0
-        call vlime#ui#AppendString(a:init_val)
-    endif
-
-    augroup MiniBufferLeaveAu
-        autocmd!
-        execute 'autocmd BufWinLeave <buffer> bunload! ' . buf
-    augroup end
-
-    call setbufvar('%', 'vlime_input_complete_cb', a:complete_cb)
-    nnoremap <buffer> <silent> <cr> :call vlime#ui#InputFromMiniBufferComplete()<cr>
-    call vlime#ui#MapBufferKeys('input')
-endfunction
-
-" vlime#ui#MaybeInput(str, str_cb, prompt[, default[, conn[, completion_type]]])
-function! vlime#ui#MaybeInput(str, str_cb, prompt, ...)
-    if type(a:str) == type(v:null)
-        let default = vlime#GetNthVarArg(a:000, 0, '')
-        let conn = vlime#GetNthVarArg(a:000, 1, v:null)
-        if type(conn) == type(v:null)
-            let comp_type = vlime#GetNthVarArg(a:000, 2, v:null)
-            if type(comp_type) == type(v:null)
-                let content = input(a:prompt, default)
-            else
-                let content = input(a:prompt, default, comp_type)
-            endif
-            call s:CheckInputValidity(content, a:str_cb, v:true)
-        else
-            let cur_package = conn.GetCurrentPackage()
-            let cur_buf = bufnr('%')
-            " Oh yeah we LOVE callbacks. You don't go to the hell. The hell
-            " comes to you.
-            call vlime#ui#InputFromMiniBuffer(
-                        \ conn, a:prompt,
-                        \ default,
-                        \ { ->
-                            \ s:CheckInputValidity(vlime#ui#CurBufferContent(),
-                                \ { str -> vlime#ui#WithBuffer(cur_buf, function(a:str_cb, [str]))},
-                                \ v:true)})
-            if bufnr('%') != cur_buf
-                " We set the current package, so that the input buffer has the
-                " same context as the the buffer where we initiated the input
-                " operation, and completions etc. in the input buffer can work
-                " as expected.
-                call conn.SetCurrentPackage(cur_package)
-            endif
-        endif
-    else
-        call s:CheckInputValidity(a:str, a:str_cb, v:false)
-    endif
-endfunction
-
-function! vlime#ui#InputFromMiniBufferComplete()
-    " Should always be called in the input buffer
-    let input_buf = bufnr('%')
-    let Callback = getbufvar(input_buf, 'vlime_input_complete_cb', v:null)
-    if type(Callback) == type(v:null)
-        return
-    endif
-
-    if len(vlime#ui#CurBufferContent()) > 0
-        call vlime#ui#SaveInputBufferHistory(vlime#ui#CurBufferContent(v:true))
-    endif
-    call Callback()
-    execute 'bdelete! ' . input_buf
-endfunction
-
 function! vlime#ui#AppendString(str)
     let new_lines = split(a:str, "\n", v:true)
     let last_line_nr = line('$')
@@ -1044,7 +886,7 @@ function! vlime#ui#InspectorBufName(conn)
                 \ g:vlime_buf_name_sep)
 endfunction
 
-function! vlime#ui#MiniBufName(conn, prompt)
+function! vlime#ui#InputBufName(conn, prompt)
     return join(['vlime', 'input', a:conn.cb_data.name, a:prompt],
                 \ g:vlime_buf_name_sep)
 endfunction
@@ -1179,12 +1021,4 @@ function! s:NormalizePackageName(name)
         endif
     endif
     return toupper(r_name)
-endfunction
-
-function! s:CheckInputValidity(str_val, cb, cancellable)
-    if len(a:str_val) > 0
-        call a:cb(a:str_val)
-    elseif a:cancellable
-        call vlime#ui#ErrMsg('Canceled.')
-    endif
 endfunction
