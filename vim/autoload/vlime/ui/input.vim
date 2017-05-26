@@ -77,16 +77,16 @@ function! vlime#ui#input#FromBufferComplete()
 endfunction
 
 function! vlime#ui#input#SaveHistory(text)
-    if exists('g:vlime_input_buffer_history_limit')
-        if g:vlime_input_buffer_history_limit <= 0
+    if exists('g:vlime_input_history_limit')
+        if g:vlime_input_history_limit <= 0
             return
         endif
-        let max_items = g:vlime_input_buffer_history_limit
+        let max_items = g:vlime_input_history_limit
     else
         let max_items = 200
     endif
 
-    let history = get(g:, 'vlime_input_buffer_history', [])
+    let history = get(g:, 'vlime_input_history', [])
 
     if len(history) > 0 && history[-1] == a:text
         return
@@ -104,12 +104,12 @@ function! vlime#ui#input#SaveHistory(text)
         let history = history[delta:-1]
     endif
 
-    let g:vlime_input_buffer_history = history
+    let g:vlime_input_history = history
 endfunction
 
 " vlime#ui#input#GetHistory([direction[, idx]])
 function! vlime#ui#input#GetHistory(...)
-    let history = get(g:, 'vlime_input_buffer_history', [])
+    let history = get(g:, 'vlime_input_history', [])
 
     let direction = vlime#GetNthVarArg(a:000, 0, 'backward')
     let idx = vlime#GetNthVarArg(a:000, 1, len(history))
