@@ -31,6 +31,7 @@ CONTENTS                                              *vlime-contents*
                   ................... |vlime-mappings-thread-list|
             4.3.7 Server Output Buffer Mappings ................
                   ........................ |vlime-mappings-server|
+            4.3.8 Input Buffer Mappings ... |vlime-mappings-input|
     5. Configuration .............................. |vlime-config|
     6. License ................................... |vlime-license|
     7. Bugs ......................................... |vlime-bugs|
@@ -277,7 +278,7 @@ Note: When connecting to a remote server, relative file paths may
       tries to use absolute paths.
 
 ----------------------------------------------------------------------
-3.11 Input Buffer                                 *vlime-input-buffer*
+3.11 Input Buffers                                *vlime-input-buffer*
 
 When Vlime needs user input, a dedicated input buffer would pop up.
 One can use it as a normal Vim buffer, to compose any text snippet in
@@ -285,6 +286,10 @@ it, and then press <CR> in normal mode to submit the snippet to Vlime.
 
 If the operation that brought up the input buffer can be cancelled,
 submitting an empty snippet would usually cancel that operation.
+
+Submitted text snippets are remembered as a linear input history. You
+can move to the previous/next item in history with <C-p>/<C-n>. See
+|vlime-mappings-input|.
 
 The input buffer can be customized using |FileType| |autocmd|s. For
 example, omni-completion and auto indent are not enabled in the input
@@ -715,6 +720,16 @@ Key mappings avaialble in the server output buffer:
     <LocalLeader>s
         Stop this server.
 
+......................................................................
+4.3.8 Input Buffer Mappings                     *vlime-mappings-input*
+
+Key mappings avaialble in the input buffer:
+
+    <c-p>
+        Show the previous item in input history.
+    <c-n>
+        Show the next item in input history.
+
 ======================================================================
 5. Configuration                                        *vlime-config*
 
@@ -847,6 +862,11 @@ g:vlime_window_settings                      *g:vlime_window_settings*
     Vlime will try to use default values when any of these parameters
     are missing. See the value of g:vlime_default_window_settings for
     the default values.
+
+g:vlime_input_history_limit              *g:vlime_input_history_limit*
+    An integer to specify how many input history items to store. A
+    non-positive value disables input history. See
+    |vlime-input-buffer|. Default: 200
 
 g:vlime_neovim_connector                    *g:vlime_neovim_connector*
     For Neovim only. A |string| to designate the connector program to
