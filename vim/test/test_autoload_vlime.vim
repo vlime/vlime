@@ -25,7 +25,7 @@ endfunction
 function! TestConnectFailed()
     let conn = vlime#New()
     try
-        call conn.Connect('127.0.0.1', 65535)
+        call conn.Connect('127.0.0.1', 65535, '', 1)
         call assert_false(v:true, 'Connect call did not fail')
     catch
         call assert_exception('failed to open channel')

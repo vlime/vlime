@@ -62,15 +62,18 @@ function! VlimeRenameSelectedServer()
     call VlimeRenameServer(server, new_name)
 endfunction
 
-" VlimeConnectREPL([host[, port[, remote_prefix[, name]]]])
+" VlimeConnectREPL([host[, port[, remote_prefix[, timeout [, name]]]]])
 function! VlimeConnectREPL(...)
     let [def_host, def_port] = exists('g:vlime_address') ?
                 \ g:vlime_address : ['127.0.0.1', 7002]
+    let def_timeout = exists('g:vlime_connect_timeout') ?
+                \ g:vlime_connect_timeout : v:null
 
     let host = vlime#GetNthVarArg(a:000, 0, def_host)
     let port = vlime#GetNthVarArg(a:000, 1, def_port)
     let remote_prefix = vlime#GetNthVarArg(a:000, 2, '')
-    let name = vlime#GetNthVarArg(a:000, 3, v:null)
+    let timeout = vlime#GetNthVarArg(a:000, 3, def_timeout)
+    let name = vlime#GetNthVarArg(a:000, 4, v:null)
 
     if type(name) == type(v:null)
         let conn = VlimeNewConnection()
@@ -78,7 +81,7 @@ function! VlimeConnectREPL(...)
         let conn = VlimeNewConnection(name)
     endif
     try
-        call conn.Connect(host, port, remote_prefix)
+        call conn.Connect(host, port, remote_prefix, timeout)
     catch
         call VlimeCloseConnection(conn)
         call vlime#ui#ErrMsg(v:exception)

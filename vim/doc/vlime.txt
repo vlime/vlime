@@ -800,6 +800,12 @@ g:vlime_address                                      *g:vlime_address*
     will be used in the |vlime-mappings-conn-cc| command. Default:
     ["127.0.0.1", 7002]
 
+g:vlime_connect_timeout                      *g:vlime_connect_timeout*
+    An integer specifying the time to wait when connecting to the
+    server, in milliseconds. If set to |v:null|, Vlime would try to
+    use the default timeout values on different platforms. Default:
+    v:null
+
 g:vlime_compiler_policy                      *g:vlime_compiler_policy*
     A |dict| to hold the compiler policy. Setting this variable would
     affect the subsequent compiling operations. For example, a value
@@ -886,12 +892,26 @@ g:vlime_neovim_connector                    *g:vlime_neovim_connector*
     to use nc6:
 
         let g:vlime_neovim_connector = "nc6"
+        function! VlimeBuildConnectorCommandFor_nc6(host, port, timeout)
+            if type(a:timeout) == type(v:null)
+                return ['nc6', a:host, string(a:port)]
+            else
+                return ['nc6', '-w', string(a:timeout / 1000.0), a:host, string(a:port)]
+            endif
+        endfunction
+
+    Or, if you don't care about the timeout setting:
+
         function! VlimeBuildConnectorCommandFor_nc6(host, port)
             return ['nc6', a:host, string(a:port)]
         endfunction
 
     You can restart Neovim and call VlimeBuildConnectorCommand() to
     see whether the new command is OK:
+
+        :echo VlimeBuildConnectorCommand('127.0.0.1', 7002, 5000)
+
+    Or without the timeout:
 
         :echo VlimeBuildConnectorCommand('127.0.0.1', 7002)
 

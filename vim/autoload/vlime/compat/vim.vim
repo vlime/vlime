@@ -2,10 +2,13 @@ function! vlime#compat#vim#ch_type()
     return v:t_channel
 endfunction
 
-function! vlime#compat#vim#ch_open(host, port, callback)
+function! vlime#compat#vim#ch_open(host, port, callback, timeout)
     let opts = {'mode': 'json'}
     if type(a:callback) != type(v:null)
         let opts['callback'] = a:callback
+    endif
+    if type(a:timeout) != type(v:null)
+        let opts['waittime'] = a:timeout
     endif
     return ch_open(a:host . ':' . string(a:port), opts)
 endfunction

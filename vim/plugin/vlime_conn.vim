@@ -36,11 +36,17 @@ function! VlimeRenameConnection(conn, new_name)
     let r_conn.cb_data['name'] = a:new_name
 endfunction
 
-function! VlimeBuildConnectorCommandFor_ncat(host, port)
-    return ['ncat', a:host, string(a:port)]
+function! VlimeBuildConnectorCommandFor_ncat(host, port, timeout)
+    if type(a:timeout) == type(v:null)
+        return ['ncat', a:host, string(a:port)]
+    else
+        let timeout_sec = a:timeout / 1000.0
+        return ['ncat', '-w', string(timeout_sec), a:host, string(a:port)]
+    endif
 endfunction
 
-function! VlimeBuildConnectorCommand(host, port)
+" VlimeBuildConnectorCommand(host, port[, timeout])
+function! VlimeBuildConnectorCommand(host, port, ...)
     let connector_name = exists('g:vlime_neovim_connector') ?
                 \ g:vlime_neovim_connector : 'ncat'
 
@@ -51,7 +57,14 @@ function! VlimeBuildConnectorCommand(host, port)
                     \ string(connector_name) . ' not supported'
     endtry
 
-    return Builder(a:host, a:port)
+    let timeout = vlime#GetNthVarArg(a:000, 0, v:null)
+    try
+        let cmd = Builder(a:host, a:port, timeout)
+    catch /^Vim\%((\a\+)\)\=:E118/  " Too many arguments for function
+        let cmd = Builder(a:host, a:port)
+    endtry
+
+    return cmd
 endfunction
 
 function! VlimeSelectConnection(quiet)

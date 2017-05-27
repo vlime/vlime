@@ -2,7 +2,7 @@ function! vlime#compat#neovim#ch_type()
     return v:t_dict
 endfunction
 
-function! vlime#compat#neovim#ch_open(host, port, callback)
+function! vlime#compat#neovim#ch_open(host, port, callback, timeout)
     let chan_obj = {
                 \ 'hostname': a:host,
                 \ 'port': a:port,
@@ -13,9 +13,19 @@ function! vlime#compat#neovim#ch_open(host, port, callback)
     if type(a:callback) != type(v:null)
         let chan_obj['chan_callback'] = a:callback
     endif
+    if type(a:timeout) != type(v:null)
+        let connector_cmd = VlimeBuildConnectorCommand(a:host, a:port, a:timeout)
+    else
+        let connector_cmd = VlimeBuildConnectorCommand(a:host, a:port)
+    endif
 
-    let job_id = jobstart(VlimeBuildConnectorCommand(a:host, a:port), chan_obj)
+    let job_id = jobstart(connector_cmd, chan_obj)
     let chan_obj['job_id'] = job_id
+
+    " XXX: There should be a better way to wait for ncat
+    let waittime = (type(a:timeout) != type(v:null)) ? (a:timeout + 500) : 500
+    execute 'sleep ' . waittime . 'm'
+
     return chan_obj
 endfunction
 

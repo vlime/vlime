@@ -95,18 +95,19 @@ endfunction
 
 " ================== methods for vlime connections ==================
 
-" vlime#Connect(host, port[, remote_prefix])
+" vlime#Connect(host, port[, remote_prefix[, timeout]])
 function! vlime#Connect(host, port, ...) dict
+    let remote_prefix = vlime#GetNthVarArg(a:000, 0, '')
+    let timeout = vlime#GetNthVarArg(a:000, 1, v:null)
+
     let self.channel = vlime#compat#ch_open(a:host, a:port,
-                \ {chan, msg -> self.OnServerEvent(chan, msg)})
-    " XXX: There should be a better way to wait for ncat
-    sleep 500m
+                \ {chan, msg -> self.OnServerEvent(chan, msg)},
+                \ timeout)
     if vlime#compat#ch_status(self.channel) != 'open'
         call self.Close()
         throw 'vlime#Connect: failed to open channel'
     endif
 
-    let remote_prefix = vlime#GetNthVarArg(a:000, 0, '')
     let self['remote_prefix'] = remote_prefix
 
     return self
