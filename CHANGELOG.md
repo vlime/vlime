@@ -1,4 +1,5 @@
 * master
+    * Browse input history in the input buffer `:help vlime-mappings-input`.
     * Provide one-off input mode for top-level APIs.
     * When jumping to source locations (e.g. xref), use existing windows by default. `:help vlime-mappings-xref`
     * Functions and mappings for feeding top-level forms to the server.
