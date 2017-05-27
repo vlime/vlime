@@ -266,11 +266,14 @@ This command will also set up local port forwarding, so that we can
 connect to the server right here on Earth. Then, in Vim, call
 VlimeConnectREPL():
 
-    :call VlimeConnectREPL("127.0.0.1", 7002, "sftp://watney@mars-hab/")
+    :call VlimeConnectREPL("127.0.0.1", 7002, "sftp://watney@mars-hab/", 5000)
 
-The last argument is an SFTP URL to tell Vlime that all filenames
+The third argument is an SFTP URL to tell Vlime that all filenames
 returned by the server resides in the remote machine, and should be
-opened through SFTP.
+opened through SFTP. The last argument is the time to wait for the
+connection to be made, in milliseconds (Let's just pretend we can
+connect to Mars in 5 seconds). When running through a network with
+high latency, you may want to raise this value.
 
 Note: When connecting to a remote server, relative file paths may
       cause problems. Please make sure the remote Vlime server runs in
