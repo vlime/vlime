@@ -171,11 +171,11 @@ function! VlimeStopCurServer()
 endfunction
 
 function! VlimeBuildServerCommandFor_sbcl(vlime_loader, vlime_eval)
-    return join(['sbcl', '--load', a:vlime_loader, '--eval', a:vlime_eval], ' ')
+    return ['sbcl', '--load', a:vlime_loader, '--eval', a:vlime_eval]
 endfunction
 
 function! VlimeBuildServerCommandFor_ccl(vlime_loader, vlime_eval)
-    return join(['ccl', '--load', a:vlime_loader, '--eval', a:vlime_eval], ' ')
+    return ['ccl', '--load', a:vlime_loader, '--eval', a:vlime_eval]
 endfunction
 
 function! VlimeBuildServerCommand()
