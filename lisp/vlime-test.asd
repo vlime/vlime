@@ -3,7 +3,7 @@
   :description "Tests for vlime"
   :author "Kay Z. <l04m33@gmail.com>"
   :license "MIT"
-  :version "0.2.0"
+  :version "0.3.0"
   :depends-on (#:vlime
                #:prove
                #+sbcl #:sb-cover)
