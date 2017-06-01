@@ -217,9 +217,11 @@ There are two methods to set the package for a buffer:
 
     2. Type "\p" (without the quote marks) in a buffer in normal mode.
        Vim will then prompt for the new package name, with the current
-       package displayed as the default. The name to enter at the
-       prompt can be a nickname, and is case-insensitive. This method
-       will take precedence over method 1.
+       package displayed as the default. You can edit the package name
+       like you edit any other text in a normal buffer, and then press
+       <CR> in normal mode to submit (see |vlime-input-buffer|). The
+       name to enter can be a nickname, and is case-insensitive. This
+       method will take precedence over method 1.
 
        Now type "\p" in ad-hoc.lisp, and set the package to "cl-user"
        (without the quote marks). Evaluate the last line again, the
@@ -319,11 +321,14 @@ Note: Depending on how your Common Lisp implementation was built, you
 
 These are the locations where the REVERSE function is called. Press
 <CR> on one of them and Vlime will take you directly to the referenced
-location, provided the source code is readable. There are other kinds
-of cross references, see |vlime-mappings-invoke-xref|.
+location, provided the source code is readable. Use |CTRL-O| to go
+back to previous cursor locations. There are other kinds of cross
+references, see |vlime-mappings-invoke-xref|.
 
-You can close the xref window and the preview window before proceeding
-to the next section.
+Before proceeding to the next section, you can close all Vlime windows
+in the current tab page by typing "\wA" (without the quote marks) in
+fibonacci.lisp in normal mode. See |vlime-mappings-close-window| for
+all window-manipulating commands.
 
 ======================================================================
 6. Compiling                                     *vlime-tutor-compile*
