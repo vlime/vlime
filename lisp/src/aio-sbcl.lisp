@@ -164,13 +164,12 @@
     (setf (non-blocking-mode socket) t)
     (handler-case
       (socket-connect socket host port)
+      (operation-in-progress ()
+        (setf (aio-fd-write-handle afd)
+              (add-fd-handler fd :output #'socket-connect-cb)))
       (socket-error (c)
-        (if (= 115 (sb-bsd-sockets::socket-error-errno c)) ; operation in progress
-          (setf (aio-fd-write-handle afd)
-                (add-fd-handler fd :output #'socket-connect-cb))
-          (progn
-            (aio-fd-close afd)
-            (error c)))))
+        (aio-fd-close afd)
+        (error c)))
     (setf (gethash fd *fd-map*) afd)))
 
 
