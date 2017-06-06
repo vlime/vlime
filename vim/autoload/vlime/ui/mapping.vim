@@ -14,7 +14,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>cd', ':call VlimeCloseCurConnection()<cr>'],
                     \ ['n', '<LocalLeader>cR', ':call VlimeRenameCurConnection()<cr>'],
                     \
-                    \ ['n', '<LocalLeader>rr', ':call VlimeNewServer()<cr>'],
+                    \ ['n', '<LocalLeader>rr', ':call vlime#server#New()<cr>'],
                     \ ['n', '<LocalLeader>rv', ':call VlimeShowSelectedServer()<cr>'],
                     \ ['n', '<LocalLeader>rs', ':call VlimeStopSelectedServer()<cr>'],
                     \ ['n', '<LocalLeader>rR', ':call VlimeRenameSelectedServer()<cr>'],
@@ -137,8 +137,8 @@ if !exists('g:vlime_default_mappings')
                 \ ],
                 \
                 \ 'server': [
-                    \ ['n', '<LocalLeader>c', ':call VlimeConnectToCurServer()<cr>'],
-                    \ ['n', '<LocalLeader>s', ':call VlimeStopCurServer()<cr>'],
+                    \ ['n', '<LocalLeader>c', ':call vlime#server#ConnectToCurServer()<cr>'],
+                    \ ['n', '<LocalLeader>s', ':call vlime#server#StopCurServer()<cr>'],
                 \ ],
                 \
                 \ 'input': [

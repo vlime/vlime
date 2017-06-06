@@ -11,7 +11,7 @@ function! VlimeCloseCurConnection()
     else
         let answer = input('Also stop server ' . string(server['name']) . '? (y/n) ')
         if tolower(answer) == 'y' || tolower(answer) == 'yes'
-            call VlimeStopServer(server)
+            call vlime#server#Stop(server)
         elseif tolower(answer) == 'n' || tolower(answer) == 'no'
             call VlimeCloseConnection(conn)
             echom conn.cb_data['name'] . ' disconnected.'
@@ -32,34 +32,34 @@ function! VlimeRenameCurConnection()
 endfunction
 
 function! VlimeShowSelectedServer()
-    let server = VlimeSelectServer()
+    let server = vlime#server#Select()
     if type(server) == type(v:null)
         return
     endif
-    call VlimeShowServer(server)
+    call vlime#server#Show(server)
 endfunction
 
 function! VlimeStopSelectedServer()
-    let server = VlimeSelectServer()
+    let server = vlime#server#Select()
     if type(server) == type(v:null)
         return
     endif
 
     let answer = input('Stop server ' . string(server['name']) . '? (y/n) ')
     if tolower(answer) == 'y' || tolower(answer) == 'yes'
-        call VlimeStopServer(server)
+        call vlime#server#Stop(server)
     else
         call vlime#ui#ErrMsg('Canceled.')
     endif
 endfunction
 
 function! VlimeRenameSelectedServer()
-    let server = VlimeSelectServer()
+    let server = vlime#server#Select()
     if type(server) == type(v:null)
         return
     endif
     let new_name = input('New name: ', server['name'])
-    call VlimeRenameServer(server, new_name)
+    call vlime#server#Rename(server, new_name)
 endfunction
 
 " VlimeConnectREPL([host[, port[, remote_prefix[, timeout [, name]]]]])

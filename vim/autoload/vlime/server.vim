@@ -15,11 +15,11 @@ if !exists('g:vlime_next_server_id')
 endif
 
 let s:cur_src_path = resolve(expand('<sfile>:p'))
-let s:vlime_home = fnamemodify(s:cur_src_path, ':h:h:h')
+let s:vlime_home = fnamemodify(s:cur_src_path, ':h:h:h:h')
 let s:path_sep = s:cur_src_path[len(s:vlime_home)]
 
-" VlimeNewServer([auto_connect[, name]])
-function! VlimeNewServer(...)
+" vlime#server#New([auto_connect[, name]])
+function! vlime#server#New(...)
     let auto_connect = vlime#GetNthVarArg(a:000, 0, v:true)
     let name = vlime#GetNthVarArg(a:000, 1, v:null)
 
@@ -30,10 +30,10 @@ function! VlimeNewServer(...)
     endif
 
     let server_job = vlime#compat#job_start(
-                \ VlimeBuildServerCommand(),
+                \ vlime#server#BuildServerCommand(),
                 \ vlime#ui#ServerBufName(server_name))
     if vlime#compat#job_status(server_job) != 'run'
-        throw 'VlimeNewServer: failed to start server job'
+        throw 'vlime#server#New: failed to start server job'
     endif
 
     let server_obj = {
@@ -59,7 +59,7 @@ function! VlimeNewServer(...)
     return server_obj
 endfunction
 
-function! VlimeStopServer(server)
+function! vlime#server#Stop(server)
     let server_id = s:NormalizeServerID(a:server)
     let r_server = g:vlime_servers[server_id]
 
@@ -68,7 +68,7 @@ function! VlimeStopServer(server)
         call timer_stop(timer)
     endif
     if !vlime#compat#job_stop(r_server['job'])
-        call vlime#ui#ErrMsg('VlimeStopServer: failed to stop ' . r_server['name'])
+        call vlime#ui#ErrMsg('vlime#server#Stop: failed to stop ' . r_server['name'])
     else
         let r_server['timer'] = timer_start(g:vlime_cl_wait_interval,
                     \ function('s:CheckServerStopped', [r_server]),
@@ -76,7 +76,7 @@ function! VlimeStopServer(server)
     endif
 endfunction
 
-function! VlimeRenameServer(server, new_name)
+function! vlime#server#Rename(server, new_name)
     let server_id = s:NormalizeServerID(a:server)
     let r_server = g:vlime_servers[server_id]
     let old_buf_name = vlime#ui#ServerBufName(r_server['name'])
@@ -87,14 +87,14 @@ function! VlimeRenameServer(server, new_name)
                     \ [vlime#ui#ServerBufName(a:new_name)]))
 endfunction
 
-function! VlimeShowServer(server)
+function! vlime#server#Show(server)
     let server_id = s:NormalizeServerID(a:server)
     let r_server = g:vlime_servers[server_id]
     let buf = vlime#compat#job_getbufnr(r_server['job'])
     call vlime#ui#OpenBuffer(buf, v:false, 'botright')
 endfunction
 
-function! VlimeSelectServer()
+function! vlime#server#Select()
     if len(g:vlime_servers) == 0
         call vlime#ui#ErrMsg('No server started.')
         return v:null
@@ -126,7 +126,7 @@ function! VlimeSelectServer()
     endif
 endfunction
 
-function! VlimeConnectToCurServer()
+function! vlime#server#ConnectToCurServer()
     let port = v:null
     if vlime#compat#job_status(b:vlime_server['job']) == 'run'
         let port = get(b:vlime_server, 'port', v:null)
@@ -156,7 +156,7 @@ function! VlimeConnectToCurServer()
     endif
 endfunction
 
-function! VlimeStopCurServer()
+function! vlime#server#StopCurServer()
     if type(get(g:vlime_servers, b:vlime_server['id'], v:null)) == type(v:null)
         call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not running.')
         return
@@ -164,7 +164,7 @@ function! VlimeStopCurServer()
 
     let answer = input('Stop server ' . string(b:vlime_server['name']) . '? (y/n) ')
     if tolower(answer) == 'y' || tolower(answer) == 'yes'
-        call VlimeStopServer(b:vlime_server)
+        call vlime#server#Stop(b:vlime_server)
     else
         call vlime#ui#ErrMsg('Canceled.')
     endif
@@ -178,14 +178,14 @@ function! VlimeBuildServerCommandFor_ccl(vlime_loader, vlime_eval)
     return ['ccl', '--load', a:vlime_loader, '--eval', a:vlime_eval]
 endfunction
 
-function! VlimeBuildServerCommand()
+function! vlime#server#BuildServerCommand()
     let cl_impl = exists('g:vlime_cl_impl') ? g:vlime_cl_impl : 'sbcl'
     let vlime_loader = join([s:vlime_home, 'lisp', 'load-vlime.lisp'], s:path_sep)
 
     try
         let Builder = function('VlimeBuildServerCommandFor_' . cl_impl)
     catch /^Vim\%((\a\+)\)\=:E700/  " Unknown function
-        throw 'VlimeBuildServerCommand: implementation ' .
+        throw 'vlime#server#BuildServerCommand: implementation ' .
                     \ string(cl_impl) . ' not supported'
     endtry
 
@@ -220,7 +220,7 @@ function! s:CheckServerPort(server, lisp_buf, auto_connect, timer)
             if get(a:server, 'timer', -1) == a:timer
                 call remove(a:server, 'timer')
             endif
-            call vlime#ui#ErrMsg('VlimeNewServer: failed to wait for ' .
+            call vlime#ui#ErrMsg('vlime#server#New: failed to wait for ' .
                         \ a:server['name'] . '. Please inspect server output.')
         else
             let a:server['port_timer_count'] = timer_count + 1
@@ -252,7 +252,7 @@ function! s:CheckServerStopped(server, timer)
                 call remove(a:server, 'timer')
             endif
             call timer_stop(a:timer)
-            call vlime#ui#ErrMsg('VlimeStopServer: failed to stop ' .
+            call vlime#ui#ErrMsg('vlime#server#Stop: failed to stop ' .
                         \ a:server['name'])
         else
             let a:server['stop_timer_count'] = timer_count + 1

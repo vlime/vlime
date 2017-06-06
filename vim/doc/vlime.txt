@@ -101,7 +101,7 @@ Note: If it's your first time running the server, Vlime will try to
       install it's dependencies via Quicklisp. This may take some
       time, and Vlime may timeout and show a message:
 
-          VlimeNewServer: failed to wait for Vlime Server 1 ...
+          vlime#server#New: failed to wait for Vlime Server 1 ...
 
       In this case, you can use |vlime-mappings-server-c| to connect
       to this server manually when it's ready.
@@ -766,12 +766,12 @@ g:vlime_cl_impl                                      *g:vlime_cl_impl*
                         \ "--eval", a:vlime_eval]
         endfunction
 
-    Then restart Vim and call VlimeBuildServerCommand() to see whether
+    Then restart Vim and call vlime#server#BuildServerCommand() to see whether
     the new command is OK:
 
-        :echo VlimeBuildServerCommand()
+        :echo vlime#server#BuildServerCommand()
 
-    The command returned by VlimeBuildServerCommand() will be executed
+    The command returned by vlime#server#BuildServerCommand() will be executed
     to start a Vlime server when the |vlime-mappings-invoke-server-rr|
     command is invoked.
 
