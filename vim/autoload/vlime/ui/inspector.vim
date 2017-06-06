@@ -108,14 +108,7 @@ function! vlime#ui#inspector#ResetInspectorBuffer(bufnr)
 endfunction
 
 function! vlime#ui#inspector#InspectorSelect()
-    let cur_pos = getcurpos()
-    let coord = v:null
-    for c in b:vlime_inspector_coords
-        if vlime#ui#MatchCoord(c, cur_pos[1], cur_pos[2])
-            let coord = c
-            break
-        endif
-    endfor
+    let coord = s:GetCurCoord()
 
     if type(coord) == type(v:null)
         return
@@ -153,6 +146,28 @@ function! vlime#ui#inspector#InspectorSelect()
                         \ function('s:InspectorFetchAllCB', [acc]))
         endif
     endif
+endfunction
+
+function! vlime#ui#inspector#SendCurValueToREPL()
+    let coord = s:GetCurCoord()
+
+    if type(coord) == type(v:null) || coord['type'] != 'VALUE'
+        return
+    endif
+
+    call b:vlime_conn.ui.OnWriteString(b:vlime_conn,
+                \ "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    call b:vlime_conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                \ function(b:vlime_conn.ListenerEval,
+                    \ ['(nth-value 0 (swank:inspector-nth-part ' . coord['id'] . '))']))
+endfunction
+
+function! vlime#ui#inspector#SendCurInspecteeToREPL()
+    call b:vlime_conn.ui.OnWriteString(b:vlime_conn,
+                \ "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    call b:vlime_conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                \ function(b:vlime_conn.ListenerEval,
+                    \ ['(swank::istate.object swank::*istate*)']))
 endfunction
 
 function! vlime#ui#inspector#NextField(forward)
@@ -241,4 +256,16 @@ endfunction
 
 function! s:InitInspectorBuf()
     call vlime#ui#MapBufferKeys('inspector')
+endfunction
+
+function! s:GetCurCoord()
+    let cur_pos = getcurpos()
+    let coord = v:null
+    for c in b:vlime_inspector_coords
+        if vlime#ui#MatchCoord(c, cur_pos[1], cur_pos[2])
+            let coord = c
+            break
+        endif
+    endfor
+    return coord
 endfunction

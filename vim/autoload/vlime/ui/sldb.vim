@@ -172,6 +172,35 @@ function! vlime#ui#sldb#EvalStringInCurFrameInputComplete(frame, thread, package
     endif
 endfunction
 
+function! vlime#ui#sldb#SendValueInCurFrameToREPL()
+    let nth = s:MatchFrame()
+    if nth < 0
+        let nth = 0
+    endif
+
+    let thread = b:vlime_conn.GetCurrentThread()
+    call vlime#ui#input#FromBuffer(
+                \ b:vlime_conn, 'Eval in frame and send result to REPL:',
+                \ v:null,
+                \ function('vlime#ui#sldb#SendValueInCurFrameToREPLInputComplete',
+                    \ [nth, thread, b:vlime_conn.GetCurrentPackage()[0]]))
+endfunction
+
+function! vlime#ui#sldb#SendValueInCurFrameToREPLInputComplete(frame, thread, package)
+    let content = vlime#ui#CurBufferContent()
+    if len(content) > 0
+        call b:vlime_conn.WithThread(a:thread,
+                    \ function(b:vlime_conn.EvalStringInFrame,
+                        \ ['(setf cl-user::* #.(read-from-string "' . escape(content, '"') . '"))',
+                            \ a:frame, a:package,
+                            \ {c, r ->
+                                \ c.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                                    \ function(c.ListenerEval, ['cl-user::*']))}]))
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
+endfunction
+
 function! vlime#ui#sldb#DisassembleCurFrame()
     let nth = s:MatchFrame()
     if nth < 0

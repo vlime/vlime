@@ -93,6 +93,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', 'C', ':call vlime#ui#sldb#InspectCurCondition()<cr>'],
                     \ ['n', 'i', ':call vlime#ui#sldb#InspectInCurFrame()<cr>'],
                     \ ['n', 'e', ':call vlime#ui#sldb#EvalStringInCurFrame()<cr>'],
+                    \ ['n', 'E', ':call vlime#ui#sldb#SendValueInCurFrameToREPL()<cr>'],
                     \ ['n', 'D', ':call vlime#ui#sldb#DisassembleCurFrame()<cr>'],
                     \ ['n', 'R', ':call vlime#ui#sldb#ReturnFromCurFrame()<cr>'],
                 \ ],
@@ -106,6 +107,8 @@ if !exists('g:vlime_default_mappings')
                 \
                 \ 'inspector': [
                     \ ['n', ['<cr>', '<space>'], ':call vlime#ui#inspector#InspectorSelect()<cr>'],
+                    \ ['n', 's', ':call vlime#ui#inspector#SendCurValueToREPL()<cr>'],
+                    \ ['n', 'S', ':call vlime#ui#inspector#SendCurInspecteeToREPL()<cr>'],
                     \ ['n', ['<c-n>', '<tab>'], ':call vlime#ui#inspector#NextField(v:true)<cr>'],
                     \ ['n', '<c-p>', ':call vlime#ui#inspector#NextField(v:false)<cr>'],
                     \ ['n', 'p', ':call vlime#ui#inspector#InspectorPop()<cr>'],
