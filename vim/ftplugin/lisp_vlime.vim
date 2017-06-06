@@ -1,1 +1,1 @@
-call VlimeSetup()
+call vlime#plugin#Setup()
