@@ -129,11 +129,11 @@ function! vlime#ui#sldb#InspectInCurFrame()
     call vlime#ui#input#FromBuffer(
                 \ b:vlime_conn, 'Inspect in frame (evaluated):',
                 \ v:null,
-                \ function('vlime#ui#sldb#InspectInCurFrameInputComplete',
+                \ function('s:InspectInCurFrameInputComplete',
                     \ [nth, thread]))
 endfunction
 
-function! vlime#ui#sldb#InspectInCurFrameInputComplete(frame, thread)
+function! s:InspectInCurFrameInputComplete(frame, thread)
     let content = vlime#ui#CurBufferContent()
     if len(content) > 0
         call b:vlime_conn.WithThread(a:thread,
@@ -155,11 +155,11 @@ function! vlime#ui#sldb#EvalStringInCurFrame()
     call vlime#ui#input#FromBuffer(
                 \ b:vlime_conn, 'Eval in frame:',
                 \ v:null,
-                \ function('vlime#ui#sldb#EvalStringInCurFrameInputComplete',
+                \ function('s:EvalStringInCurFrameInputComplete',
                     \ [nth, thread, b:vlime_conn.GetCurrentPackage()[0]]))
 endfunction
 
-function! vlime#ui#sldb#EvalStringInCurFrameInputComplete(frame, thread, package)
+function! s:EvalStringInCurFrameInputComplete(frame, thread, package)
     let content = vlime#ui#CurBufferContent()
     if len(content) > 0
         call b:vlime_conn.WithThread(a:thread,
@@ -182,11 +182,11 @@ function! vlime#ui#sldb#SendValueInCurFrameToREPL()
     call vlime#ui#input#FromBuffer(
                 \ b:vlime_conn, 'Eval in frame and send result to REPL:',
                 \ v:null,
-                \ function('vlime#ui#sldb#SendValueInCurFrameToREPLInputComplete',
+                \ function('s:SendValueInCurFrameToREPLInputComplete',
                     \ [nth, thread, b:vlime_conn.GetCurrentPackage()[0]]))
 endfunction
 
-function! vlime#ui#sldb#SendValueInCurFrameToREPLInputComplete(frame, thread, package)
+function! s:SendValueInCurFrameToREPLInputComplete(frame, thread, package)
     let content = vlime#ui#CurBufferContent()
     if len(content) > 0
         call b:vlime_conn.WithThread(a:thread,
@@ -225,11 +225,11 @@ function! vlime#ui#sldb#ReturnFromCurFrame()
     call vlime#ui#input#FromBuffer(
                 \ b:vlime_conn, 'Return from frame (evaluated):',
                 \ v:null,
-                \ function('vlime#ui#sldb#ReturnFromCurFrameInputComplete',
+                \ function('s:ReturnFromCurFrameInputComplete',
                     \ [nth, thread]))
 endfunction
 
-function! vlime#ui#sldb#ReturnFromCurFrameInputComplete(frame, thread)
+function! s:ReturnFromCurFrameInputComplete(frame, thread)
     let content = vlime#ui#CurBufferContent()
     if len(content) > 0
         call b:vlime_conn.WithThread(a:thread,

@@ -120,7 +120,7 @@ endfunction
 function! vlime#ui#OnReadString(conn, thread, ttag) dict
     call vlime#ui#input#FromBuffer(
                 \ a:conn, 'Input string:', v:null,
-                \ function('vlime#ui#ReadStringInputComplete', [a:thread, a:ttag]))
+                \ function('s:ReadStringInputComplete', [a:thread, a:ttag]))
 endfunction
 
 function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val) dict
@@ -192,14 +192,6 @@ function! vlime#ui#OnThreads(conn, thread_list)
     let threads_buf = vlime#ui#threads#InitThreadsBuffer(a:conn)
     call vlime#ui#OpenBufferWithWinSettings(threads_buf, v:false, 'threads')
     call vlime#ui#threads#FillThreadsBuf(a:thread_list)
-endfunction
-
-function! vlime#ui#ReadStringInputComplete(thread, ttag)
-    let content = vlime#ui#CurBufferContent()
-    if content[len(content)-1] != "\n"
-        let content .= "\n"
-    endif
-    call b:vlime_conn.ReturnString(a:thread, a:ttag, content)
 endfunction
 
 function! vlime#ui#ReturnMiniBufferContent(thread, ttag)
@@ -1021,4 +1013,12 @@ function! s:NormalizePackageName(name)
         endif
     endif
     return toupper(r_name)
+endfunction
+
+function! s:ReadStringInputComplete(thread, ttag)
+    let content = vlime#ui#CurBufferContent()
+    if content[len(content)-1] != "\n"
+        let content .= "\n"
+    endif
+    call b:vlime_conn.ReturnString(a:thread, a:ttag, content)
 endfunction
