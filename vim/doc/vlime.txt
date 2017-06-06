@@ -264,9 +264,9 @@ Mars:
 
 This command will also set up local port forwarding, so that we can
 connect to the server right here on Earth. Then, in Vim, call
-VlimeConnectREPL():
+vlime#plugin#ConnectREPL():
 
-    :call VlimeConnectREPL("127.0.0.1", 7002, "sftp://watney@mars-hab/", 5000)
+    :call vlime#plugin#ConnectREPL("127.0.0.1", 7002, "sftp://watney@mars-hab/", 5000)
 
 The third argument is an SFTP URL to tell Vlime that all filenames
 returned by the server resides in the remote machine, and should be
@@ -301,9 +301,9 @@ your |vimrc|:
 
     augroup CustomVlimeInputBuffer
         autocmd!
-        autocmd FileType vlime_input inoremap <silent> <buffer> <tab> <c-r>=VlimeKey("tab")<cr>
-        autocmd FileType vlime_input setlocal omnifunc=VlimeCompleteFunc
-        autocmd FileType vlime_input setlocal indentexpr=VlimeCalcCurIndent()
+        autocmd FileType vlime_input inoremap <silent> <buffer> <tab> <c-r>=vlime#plugin#VlimeKey("tab")<cr>
+        autocmd FileType vlime_input setlocal omnifunc=vlime#plugin#CompleteFunc
+        autocmd FileType vlime_input setlocal indentexpr=vlime#plugin#CalcCurIndent()
     augroup end
 
 "Vlime_input" is the filetype set by Vlime to identify input buffers.
@@ -329,7 +329,7 @@ Vlime will automatically skip the Vlime functions mapped in your
     augroup LocalVlimeKeys
         autocmd!
         autocmd FileType lisp nnoremap <silent> <buffer> <LocalLeader>S
-            \ :call VlimeSendToREPL(vlime#ui#CurExprOrAtom())<cr>
+            \ :call vlime#plugin#SendToREPL(vlime#ui#CurExprOrAtom())<cr>
     augroup end
 
 This will change the mapping for |vlime-mappings-send-ss| from
@@ -914,18 +914,20 @@ g:vlime_neovim_connector                    *g:vlime_neovim_connector*
             return ['nc6', a:host, string(a:port)]
         endfunction
 
-    You can restart Neovim and call VlimeBuildConnectorCommand() to
-    see whether the new command is OK:
+    You can restart Neovim and call
+    vlime#connection#BuildConnectorCommand() to see whether the new
+    command is OK:
 
-        :echo VlimeBuildConnectorCommand('127.0.0.1', 7002, 5000)
+        :echo vlime#connection#BuildConnectorCommand('127.0.0.1', 7002, 5000)
 
     Or without the timeout:
 
-        :echo VlimeBuildConnectorCommand('127.0.0.1', 7002)
+        :echo vlime#connection#BuildConnectorCommand('127.0.0.1', 7002)
 
 Note: Vlime may move on to Neovim's new raw socket API when it's
       ready. The variable g:vlime_neovim_connector and
-      VlimeBuildConnectorCommand() may eventually be deprecated.
+      vlime#connection#BuildConnectorCommand() may eventually be
+      deprecated.
 
 g:vlime_contribs                                    *g:vlime_contribs*
     A |list| of Swank contribs to load when initializing a Vlime

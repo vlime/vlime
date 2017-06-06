@@ -75,10 +75,10 @@ Vlime will show a message in Vim if everything went well:
 
 There can be multiple Vlime connections in a single Vim process. You
 can use "\cc" to make more connections to the same server (though that
-usually doesn't make any sense), or call VlimeConnectREPL() in Vim to
-connect to another server. For example:
+usually doesn't make any sense), or call vlime#plugin#ConnectREPL() in
+Vim to connect to another server. For example:
 
-    :call VlimeConnectREPL("127.0.0.1", 9999)
+    :call vlime#plugin#ConnectREPL("127.0.0.1", 9999)
 
 This will try to make a connection to 127.0.0.1:9999.
 

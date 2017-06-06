@@ -1,4 +1,4 @@
-function! VlimeCloseCurConnection()
+function! vlime#plugin#CloseCurConnection()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -22,7 +22,7 @@ function! VlimeCloseCurConnection()
     endif
 endfunction
 
-function! VlimeRenameCurConnection()
+function! vlime#plugin#RenameCurConnection()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -31,7 +31,7 @@ function! VlimeRenameCurConnection()
     call vlime#connection#Rename(conn, new_name)
 endfunction
 
-function! VlimeShowSelectedServer()
+function! vlime#plugin#ShowSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
         return
@@ -39,7 +39,7 @@ function! VlimeShowSelectedServer()
     call vlime#server#Show(server)
 endfunction
 
-function! VlimeStopSelectedServer()
+function! vlime#plugin#StopSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
         return
@@ -53,7 +53,7 @@ function! VlimeStopSelectedServer()
     endif
 endfunction
 
-function! VlimeRenameSelectedServer()
+function! vlime#plugin#RenameSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
         return
@@ -62,8 +62,8 @@ function! VlimeRenameSelectedServer()
     call vlime#server#Rename(server, new_name)
 endfunction
 
-" VlimeConnectREPL([host[, port[, remote_prefix[, timeout [, name]]]]])
-function! VlimeConnectREPL(...)
+" vlime#plugin#ConnectREPL([host[, port[, remote_prefix[, timeout [, name]]]]])
+function! vlime#plugin#ConnectREPL(...)
     let [def_host, def_port] = exists('g:vlime_address') ?
                 \ g:vlime_address : ['127.0.0.1', 7002]
     let def_timeout = exists('g:vlime_connect_timeout') ?
@@ -106,7 +106,7 @@ function! VlimeConnectREPL(...)
     return conn
 endfunction
 
-function! VlimeSelectCurConnection()
+function! vlime#plugin#SelectCurConnection()
     let conn = vlime#connection#Select(v:false)
     if type(conn) != type(v:null)
         " XXX: Cleanup buffers & windows for the old connection?
@@ -114,8 +114,8 @@ function! VlimeSelectCurConnection()
     endif
 endfunction
 
-" VlimeSendToREPL([content])
-function! VlimeSendToREPL(...)
+" vlime#plugin#SendToREPL([content])
+function! vlime#plugin#SendToREPL(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -129,8 +129,8 @@ function! VlimeSendToREPL(...)
                 \ conn)
 endfunction
 
-" VlimeCompile([content])
-function! VlimeCompile(...)
+" vlime#plugin#Compile([content])
+function! vlime#plugin#Compile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -146,8 +146,8 @@ function! VlimeCompile(...)
                 \ conn)
 endfunction
 
-" VlimeInspect([content])
-function! VlimeInspect(...)
+" vlime#plugin#Inspect([content])
+function! vlime#plugin#Inspect(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -163,8 +163,8 @@ function! VlimeInspect(...)
                 \ conn)
 endfunction
 
-" VlimeCompileFile([file_name[, policy]])
-function! VlimeCompileFile(...)
+" vlime#plugin#CompileFile([file_name[, policy]])
+function! vlime#plugin#CompileFile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -182,8 +182,8 @@ function! VlimeCompileFile(...)
                 \ 'file')
 endfunction
 
-" VlimeExpandMacro([expr[, expand_all]])
-function! VlimeExpandMacro(...)
+" vlime#plugin#ExpandMacro([expr[, expand_all]])
+function! vlime#plugin#ExpandMacro(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -201,8 +201,8 @@ function! VlimeExpandMacro(...)
     call vlime#ui#input#MaybeInput(expr, CB, 'Expand macro: ', v:null, conn)
 endfunction
 
-" VlimeDisassembleForm([content])
-function! VlimeDisassembleForm(...)
+" vlime#plugin#DisassembleForm([content])
+function! vlime#plugin#DisassembleForm(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -217,8 +217,8 @@ function! VlimeDisassembleForm(...)
                 \ conn)
 endfunction
 
-" VlimeLoadFile([file_name])
-function! VlimeLoadFile(...)
+" vlime#plugin#LoadFile([file_name])
+function! vlime#plugin#LoadFile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -234,8 +234,8 @@ function! VlimeLoadFile(...)
                 \ 'file')
 endfunction
 
-" VlimeSetPackage([pkg])
-function! VlimeSetPackage(...)
+" vlime#plugin#SetPackage([pkg])
+function! vlime#plugin#SetPackage(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -251,7 +251,7 @@ function! VlimeSetPackage(...)
                 \ conn)
 endfunction
 
-function! VlimeSwankRequire(contribs)
+function! vlime#plugin#SwankRequire(contribs)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -259,8 +259,8 @@ function! VlimeSwankRequire(contribs)
     call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete'))
 endfunction
 
-" VlimeShowOperatorArgList([op])
-function! VlimeShowOperatorArgList(...)
+" vlime#plugin#ShowOperatorArgList([op])
+function! vlime#plugin#ShowOperatorArgList(...)
     let conn = vlime#connection#Get(v:true)
     if type(conn) == type(v:null)
         return
@@ -275,8 +275,8 @@ function! VlimeShowOperatorArgList(...)
                 \ conn)
 endfunction
 
-" VlimeDescribeSymbol([symbol])
-function! VlimeDescribeSymbol(...)
+" vlime#plugin#DescribeSymbol([symbol])
+function! vlime#plugin#DescribeSymbol(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -291,8 +291,8 @@ function! VlimeDescribeSymbol(...)
                 \ conn)
 endfunction
 
-" VlimeXRefSymbol(ref_type[, sym])
-function! VlimeXRefSymbol(ref_type, ...)
+" vlime#plugin#XRefSymbol(ref_type[, sym])
+function! vlime#plugin#XRefSymbol(ref_type, ...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -309,7 +309,7 @@ function! VlimeXRefSymbol(ref_type, ...)
                 \ conn)
 endfunction
 
-function! VlimeXRefSymbolWrapper()
+function! vlime#plugin#XRefSymbolWrapper()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -343,14 +343,14 @@ function! VlimeXRefSymbolWrapper()
 
     let rtype = ref_types[answer - 1]
     if rtype == 'definition'
-        call VlimeFindDefinition()
+        call vlime#plugin#FindDefinition()
     else
-        call VlimeXRefSymbol(toupper(rtype))
+        call vlime#plugin#XRefSymbol(toupper(rtype))
     endif
 endfunction
 
-" VlimeFindDefinition([sym])
-function! VlimeFindDefinition(...)
+" vlime#plugin#FindDefinition([sym])
+function! vlime#plugin#FindDefinition(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -367,8 +367,8 @@ function! VlimeFindDefinition(...)
                 \ conn)
 endfunction
 
-" VlimeAproposList([pattern])
-function! VlimeAproposList(...)
+" vlime#plugin#AproposList([pattern])
+function! vlime#plugin#AproposList(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -385,8 +385,8 @@ function! VlimeAproposList(...)
                 \ conn)
 endfunction
 
-" VlimeDocumentationSymbol([symbol])
-function! VlimeDocumentationSymbol(...)
+" vlime#plugin#DocumentationSymbol([symbol])
+function! vlime#plugin#DocumentationSymbol(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -401,8 +401,8 @@ function! VlimeDocumentationSymbol(...)
                 \ conn)
 endfunction
 
-" VlimeSetBreakpoint([sym])
-function! VlimeSetBreakpoint(...)
+" vlime#plugin#SetBreakpoint([sym])
+function! vlime#plugin#SetBreakpoint(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -417,7 +417,7 @@ function! VlimeSetBreakpoint(...)
                 \ conn)
 endfunction
 
-function! VlimeListThreads()
+function! vlime#plugin#ListThreads()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -426,8 +426,8 @@ function! VlimeListThreads()
     call conn.ListThreads(function('s:OnListThreadsComplete'))
 endfunction
 
-" VlimeUndefineFunction([sym])
-function! VlimeUndefineFunction(...)
+" vlime#plugin#UndefineFunction([sym])
+function! vlime#plugin#UndefineFunction(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -442,8 +442,8 @@ function! VlimeUndefineFunction(...)
                 \ conn)
 endfunction
 
-" VlimeUninternSymbol([sym])
-function! VlimeUninternSymbol(...)
+" vlime#plugin#UninternSymbol([sym])
+function! vlime#plugin#UninternSymbol(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -457,7 +457,7 @@ function! VlimeUninternSymbol(...)
                 \ conn)
 endfunction
 
-function! VlimeUndefineUninternWrapper()
+function! vlime#plugin#UndefineUninternWrapper()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
@@ -476,16 +476,16 @@ function! VlimeUndefineUninternWrapper()
     if answer <= 0
         call vlime#ui#ErrMsg('Canceled.')
     elseif answer == 1
-        call VlimeUndefineFunction()
+        call vlime#plugin#UndefineFunction()
     elseif answer == 2
-        call VlimeUninternSymbol()
+        call vlime#plugin#UninternSymbol()
     else
         call vlime#ui#ErrMsg('Invalid action: ' . answer)
     endif
 endfunction
 
-" VlimeCloseWindow([win_name])
-function! VlimeCloseWindow(...)
+" vlime#plugin#CloseWindow([win_name])
+function! vlime#plugin#CloseWindow(...)
     let win_name = vlime#GetNthVarArg(a:000, 0, v:null)
     if type(win_name) == type(v:null)
         let win_list = vlime#ui#GetWindowList(v:null, '')
@@ -521,7 +521,7 @@ function! VlimeCloseWindow(...)
     endif
 endfunction
 
-function! VlimeCompleteFunc(findstart, base)
+function! vlime#plugin#CompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
         return start_col
@@ -544,23 +544,23 @@ function! VlimeCompleteFunc(findstart, base)
     return {'words': [], 'refresh': 'always'}
 endfunction
 
-function! VlimeKey(key)
+function! vlime#plugin#VlimeKey(key)
     if tolower(a:key) == 'space'
         let op = vlime#ui#SurroundingOperator()
         if s:NeedToShowArgList(op)
-            call VlimeShowOperatorArgList(op)
+            call vlime#plugin#ShowOperatorArgList(op)
         endif
     elseif tolower(a:key) == 'cr'
         let op = vlime#ui#SurroundingOperator()
         if s:NeedToShowArgList(op)
-            call VlimeShowOperatorArgList(op)
+            call vlime#plugin#ShowOperatorArgList(op)
         endif
     elseif tolower(a:key) == 'tab'
         let line = getline('.')
         let spaces = vlime#ui#CalcLeadingSpaces(line, v:true)
         let col = virtcol('.')
         if col <= spaces + 1
-            let indent = VlimeCalcCurIndent()
+            let indent = vlime#plugin#CalcCurIndent()
             if spaces < indent
                 call vlime#ui#IndentCurLine(indent)
             else
@@ -570,12 +570,12 @@ function! VlimeKey(key)
             return "\<c-x>\<c-o>"
         endif
     else
-        throw 'VlimeKey: Unknown key: ' . a:key
+        throw 'vlime#plugin#VlimeKey: Unknown key: ' . a:key
     endif
     return ''
 endfunction
 
-function! VlimeCalcCurIndent()
+function! vlime#plugin#CalcCurIndent()
     let line_no = line('.')
 
     let conn = vlime#connection#Get(v:true)
@@ -624,8 +624,8 @@ function! VlimeCalcCurIndent()
     endif
 endfunction
 
-" VlimeSetup([force])
-function! VlimeSetup(...)
+" vlime#plugin#Setup([force])
+function! vlime#plugin#Setup(...)
     let force = vlime#GetNthVarArg(a:000, 0, v:false)
 
     if !force && exists('b:vlime_setup') && b:vlime_setup
@@ -633,13 +633,13 @@ function! VlimeSetup(...)
     endif
     let b:vlime_setup = v:true
 
-    setlocal omnifunc=VlimeCompleteFunc
-    setlocal indentexpr=VlimeCalcCurIndent()
+    setlocal omnifunc=vlime#plugin#CompleteFunc
+    setlocal indentexpr=vlime#plugin#CalcCurIndent()
 
     call vlime#ui#MapBufferKeys('lisp')
 endfunction
 
-function! VlimeInteractionMode()
+function! vlime#plugin#InteractionMode()
     if getbufvar(bufnr('%'), 'vlime_interaction_mode', v:false)
         let b:vlime_interaction_mode = v:false
         nnoremap <buffer> <cr> <cr>
@@ -647,8 +647,8 @@ function! VlimeInteractionMode()
         echom 'Interaction mode disabled.'
     else
         let b:vlime_interaction_mode = v:true
-        nnoremap <buffer> <silent> <cr> :call VlimeSendToREPL(vlime#ui#CurExprOrAtom())<cr>
-        vnoremap <buffer> <silent> <cr> :<c-u>call VlimeSendToREPL(vlime#ui#CurSelection())<cr>
+        nnoremap <buffer> <silent> <cr> :call vlime#plugin#SendToREPL(vlime#ui#CurExprOrAtom())<cr>
+        vnoremap <buffer> <silent> <cr> :<c-u>call vlime#plugin#SendToREPL(vlime#ui#CurSelection())<cr>
         echom 'Interaction mode enabled.'
     endif
 endfunction

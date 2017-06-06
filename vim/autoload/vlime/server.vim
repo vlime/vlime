@@ -147,7 +147,7 @@ function! vlime#server#ConnectToCurServer()
         return
     endif
 
-    let conn = VlimeConnectREPL('127.0.0.1', port)
+    let conn = vlime#plugin#ConnectREPL('127.0.0.1', port)
     if type(conn) != type(v:null)
         let conn.cb_data['server'] = b:vlime_server
         let conn_list = get(b:vlime_server, 'connections', {})
@@ -239,7 +239,7 @@ function! s:CheckServerPort(server, lisp_buf, auto_connect, timer)
         echom 'Vlime server listening on port ' . port
 
         if a:auto_connect
-            let auto_conn = VlimeConnectREPL('127.0.0.1', port)
+            let auto_conn = vlime#plugin#ConnectREPL('127.0.0.1', port)
             if type(auto_conn) != type(v:null)
                 let auto_conn.cb_data['server'] = a:server
                 let a:server['connections'] =
