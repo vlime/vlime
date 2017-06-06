@@ -28,7 +28,11 @@ function! vlime#plugin#RenameCurConnection()
         return
     endif
     let new_name = input('New name: ', conn.cb_data['name'])
-    call vlime#connection#Rename(conn, new_name)
+    if len(new_name) > 0
+        call vlime#connection#Rename(conn, new_name)
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
 endfunction
 
 function! vlime#plugin#ShowSelectedServer()
@@ -59,7 +63,11 @@ function! vlime#plugin#RenameSelectedServer()
         return
     endif
     let new_name = input('New name: ', server['name'])
-    call vlime#server#Rename(server, new_name)
+    if len(new_name) > 0
+        call vlime#server#Rename(server, new_name)
+    else
+        call vlime#ui#ErrMsg('Canceled.')
+    endif
 endfunction
 
 " vlime#plugin#ConnectREPL([host[, port[, remote_prefix[, timeout [, name]]]]])
