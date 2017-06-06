@@ -1,3 +1,7 @@
+* master
+    * Move `vim/plugin/*.vim` to `vim/autoload/vlime/`, for better start-up performance.
+    * Top-level API functions are renamed.
+
 * v0.3.0
     * Browse input history in the input buffer `:help vlime-mappings-input`.
     * Provide one-off input mode for top-level APIs.
