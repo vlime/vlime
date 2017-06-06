@@ -593,7 +593,7 @@ Key mappings avaialble in the REPL buffer:
         Interrupt the REPL thread.
     <LocalLeader>I
         Inspect the evaluation result under the cursor.
-    <LocalLeader>y
+    <LocalLeader>y                             *vlime-mappings-repl-y*
         Yank the evaluation result under the cursor into the default
         register |quotequote|. Note that this yanked value is an
         expression to be evaluated in the same REPL session. It is
@@ -644,6 +644,12 @@ Key mappings avaialble in the debugger:
         Evaluate an expression in the frame under the cursor. An input
         buffer would pop up, prompting for the expression. See
         |vlime-input-buffer|.
+    E
+        Evaluate an expression in the frame under the cursor, and then
+        send the result to the REPL, so that you can yank the value
+        with |vlime-mappings-repl-y| and further manipulate it. An
+        input buffer would pop up, prompting for the expression. See
+        |vlime-input-buffer|.
     D
         Disassemble the frame under the cursor.
     R
@@ -661,6 +667,10 @@ Key mappings avaialble in the inspector:
         Activate the interactable field/button under the cursor.
     <Space>
         Same as <CR>
+    s
+        Send the value of the field under the cursor to the REPL.
+    S
+        Send the value being inspected to the REPL.
     <Tab>
         Select the next interactable field/button.
     CTRL-n
