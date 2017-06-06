@@ -170,11 +170,11 @@ function! vlime#server#StopCurServer()
     endif
 endfunction
 
-function! VlimeBuildServerCommandFor_sbcl(vlime_loader, vlime_eval)
+function! vlime#server#BuildServerCommandFor_sbcl(vlime_loader, vlime_eval)
     return ['sbcl', '--load', a:vlime_loader, '--eval', a:vlime_eval]
 endfunction
 
-function! VlimeBuildServerCommandFor_ccl(vlime_loader, vlime_eval)
+function! vlime#server#BuildServerCommandFor_ccl(vlime_loader, vlime_eval)
     return ['ccl', '--load', a:vlime_loader, '--eval', a:vlime_eval]
 endfunction
 
@@ -182,12 +182,17 @@ function! vlime#server#BuildServerCommand()
     let cl_impl = exists('g:vlime_cl_impl') ? g:vlime_cl_impl : 'sbcl'
     let vlime_loader = join([s:vlime_home, 'lisp', 'load-vlime.lisp'], s:path_sep)
 
-    try
-        let Builder = function('VlimeBuildServerCommandFor_' . cl_impl)
-    catch /^Vim\%((\a\+)\)\=:E700/  " Unknown function
+    let user_func_name = 'VlimeBuildServerCommandFor_' . cl_impl
+    let default_func_name = 'vlime#server#BuildServerCommandFor_' . cl_impl
+
+    if exists('*' . user_func_name)
+        let Builder = function(user_func_name)
+    elseif exists('*' . default_func_name)
+        let Builder = function(default_func_name)
+    else
         throw 'vlime#server#BuildServerCommand: implementation ' .
                     \ string(cl_impl) . ' not supported'
-    endtry
+    endif
 
     return Builder(vlime_loader, '(vlime:main)')
 endfunction

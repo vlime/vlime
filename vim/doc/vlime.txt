@@ -778,9 +778,9 @@ g:vlime_cl_impl                                      *g:vlime_cl_impl*
     Vlime has these builder functions predefined:
 
         " For SBCL, the default
-        VlimeBuildServerCommandFor_sbcl()
+        vlime#server#BuildServerCommandFor_sbcl()
         " For Clozure CL, set g:vlime_cl_impl to "ccl"
-        VlimeBuildServerCommandFor_ccl()
+        vlime#server#BuildServerCommandFor_ccl()
 
     If you use other implementations, such as clisp and abcl, or need
     to pass special arguments to the server, you'll need to define the
