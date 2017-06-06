@@ -14,9 +14,9 @@ function! vlime#compat#neovim#ch_open(host, port, callback, timeout)
         let chan_obj['chan_callback'] = a:callback
     endif
     if type(a:timeout) != type(v:null)
-        let connector_cmd = VlimeBuildConnectorCommand(a:host, a:port, a:timeout)
+        let connector_cmd = vlime#connection#BuildConnectorCommand(a:host, a:port, a:timeout)
     else
-        let connector_cmd = VlimeBuildConnectorCommand(a:host, a:port)
+        let connector_cmd = vlime#connection#BuildConnectorCommand(a:host, a:port)
     endif
 
     let job_id = jobstart(connector_cmd, chan_obj)

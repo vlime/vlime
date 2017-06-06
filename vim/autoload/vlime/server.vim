@@ -272,7 +272,7 @@ function! s:CheckServerStopped(server, timer)
 
         let conn_dict = get(a:server, 'connections', {})
         for conn_id in keys(conn_dict)
-            call VlimeCloseConnection(conn_dict[conn_id])
+            call vlime#connection#Close(conn_dict[conn_id])
         endfor
         let a:server['connections'] = {}
     endif

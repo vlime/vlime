@@ -1,19 +1,19 @@
 function! VlimeCloseCurConnection()
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
     let server = get(conn.cb_data, 'server', v:null)
     if type(server) == type(v:null)
-        call VlimeCloseConnection(conn)
+        call vlime#connection#Close(conn)
         echom conn.cb_data['name'] . ' disconnected.'
     else
         let answer = input('Also stop server ' . string(server['name']) . '? (y/n) ')
         if tolower(answer) == 'y' || tolower(answer) == 'yes'
             call vlime#server#Stop(server)
         elseif tolower(answer) == 'n' || tolower(answer) == 'no'
-            call VlimeCloseConnection(conn)
+            call vlime#connection#Close(conn)
             echom conn.cb_data['name'] . ' disconnected.'
             call remove(server['connections'], conn.cb_data['id'])
         else
@@ -23,12 +23,12 @@ function! VlimeCloseCurConnection()
 endfunction
 
 function! VlimeRenameCurConnection()
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
     let new_name = input('New name: ', conn.cb_data['name'])
-    call VlimeRenameConnection(conn, new_name)
+    call vlime#connection#Rename(conn, new_name)
 endfunction
 
 function! VlimeShowSelectedServer()
@@ -76,14 +76,14 @@ function! VlimeConnectREPL(...)
     let name = vlime#GetNthVarArg(a:000, 4, v:null)
 
     if type(name) == type(v:null)
-        let conn = VlimeNewConnection()
+        let conn = vlime#connection#New()
     else
-        let conn = VlimeNewConnection(name)
+        let conn = vlime#connection#New(name)
     endif
     try
         call conn.Connect(host, port, remote_prefix, timeout)
     catch
-        call VlimeCloseConnection(conn)
+        call vlime#connection#Close(conn)
         call vlime#ui#ErrMsg(v:exception)
         return v:null
     endtry
@@ -107,7 +107,7 @@ function! VlimeConnectREPL(...)
 endfunction
 
 function! VlimeSelectCurConnection()
-    let conn = VlimeSelectConnection(v:false)
+    let conn = vlime#connection#Select(v:false)
     if type(conn) != type(v:null)
         " XXX: Cleanup buffers & windows for the old connection?
         let b:vlime_conn = conn
@@ -116,7 +116,7 @@ endfunction
 
 " VlimeSendToREPL([content])
 function! VlimeSendToREPL(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -131,7 +131,7 @@ endfunction
 
 " VlimeCompile([content])
 function! VlimeCompile(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -148,7 +148,7 @@ endfunction
 
 " VlimeInspect([content])
 function! VlimeInspect(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -165,7 +165,7 @@ endfunction
 
 " VlimeCompileFile([file_name[, policy]])
 function! VlimeCompileFile(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -184,7 +184,7 @@ endfunction
 
 " VlimeExpandMacro([expr[, expand_all]])
 function! VlimeExpandMacro(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -203,7 +203,7 @@ endfunction
 
 " VlimeDisassembleForm([content])
 function! VlimeDisassembleForm(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -219,7 +219,7 @@ endfunction
 
 " VlimeLoadFile([file_name])
 function! VlimeLoadFile(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -236,7 +236,7 @@ endfunction
 
 " VlimeSetPackage([pkg])
 function! VlimeSetPackage(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -252,7 +252,7 @@ function! VlimeSetPackage(...)
 endfunction
 
 function! VlimeSwankRequire(contribs)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -261,7 +261,7 @@ endfunction
 
 " VlimeShowOperatorArgList([op])
 function! VlimeShowOperatorArgList(...)
-    let conn = VlimeGetConnection(v:true)
+    let conn = vlime#connection#Get(v:true)
     if type(conn) == type(v:null)
         return
     endif
@@ -277,7 +277,7 @@ endfunction
 
 " VlimeDescribeSymbol([symbol])
 function! VlimeDescribeSymbol(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -293,7 +293,7 @@ endfunction
 
 " VlimeXRefSymbol(ref_type[, sym])
 function! VlimeXRefSymbol(ref_type, ...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -310,7 +310,7 @@ function! VlimeXRefSymbol(ref_type, ...)
 endfunction
 
 function! VlimeXRefSymbolWrapper()
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -351,7 +351,7 @@ endfunction
 
 " VlimeFindDefinition([sym])
 function! VlimeFindDefinition(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -369,7 +369,7 @@ endfunction
 
 " VlimeAproposList([pattern])
 function! VlimeAproposList(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -387,7 +387,7 @@ endfunction
 
 " VlimeDocumentationSymbol([symbol])
 function! VlimeDocumentationSymbol(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -403,7 +403,7 @@ endfunction
 
 " VlimeSetBreakpoint([sym])
 function! VlimeSetBreakpoint(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -418,7 +418,7 @@ function! VlimeSetBreakpoint(...)
 endfunction
 
 function! VlimeListThreads()
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -428,7 +428,7 @@ endfunction
 
 " VlimeUndefineFunction([sym])
 function! VlimeUndefineFunction(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -444,7 +444,7 @@ endfunction
 
 " VlimeUninternSymbol([sym])
 function! VlimeUninternSymbol(...)
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -458,7 +458,7 @@ function! VlimeUninternSymbol(...)
 endfunction
 
 function! VlimeUndefineUninternWrapper()
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
@@ -527,7 +527,7 @@ function! VlimeCompleteFunc(findstart, base)
         return start_col
     endif
 
-    let conn = VlimeGetConnection()
+    let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return -1
     endif
@@ -578,7 +578,7 @@ endfunction
 function! VlimeCalcCurIndent()
     let line_no = line('.')
 
-    let conn = VlimeGetConnection(v:true)
+    let conn = vlime#connection#Get(v:true)
     if type(conn) == type(v:null)
         return lispindent(line_no)
     endif
@@ -870,7 +870,7 @@ function! s:NeedToShowArgList(op)
         if !arglist_visible || a:op != s:last_imode_arglist_op
             return !!v:true
         else
-            let conn = VlimeGetConnection(v:true)
+            let conn = vlime#connection#Get(v:true)
             if type(conn) == type(v:null)
                 " The current buffer doesn't have an active connection.
                 " Close the arglist window explicitly, to avoid confusion.
