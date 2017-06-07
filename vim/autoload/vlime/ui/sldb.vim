@@ -366,7 +366,9 @@ function! s:OpenFrameSourceCB(edit_cmd, win_nr, conn, result)
             call vlime#ui#ErrMsg('Invalid window number: ' . a:win_nr)
             return
         endif
-        call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1], a:edit_cmd, force_open)
+        call vlime#ui#JumpToOrOpenFile(
+                    \ valid_loc[0], valid_loc[1], valid_loc[2],
+                    \ a:edit_cmd, force_open)
     elseif a:result[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(a:result[1])
     else

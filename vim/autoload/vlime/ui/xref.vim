@@ -98,7 +98,9 @@ function! vlime#ui#xref#OpenCurXref(...)
             execute win_id2win(xref_win_id) . 'wincmd c'
         endif
 
-        call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1], edit_cmd, count_specified)
+        call vlime#ui#JumpToOrOpenFile(
+                    \ valid_loc[0], valid_loc[1], valid_loc[2],
+                    \ edit_cmd, count_specified)
     elseif raw_xref_loc[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(raw_xref_loc[1])
     else

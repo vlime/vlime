@@ -756,10 +756,11 @@ function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
     return v:false
 endfunction
 
-" vlime#ui#JumpToOrOpenFile(file_path, byte_pos[, edit_cmd[, force_open]])
+" vlime#ui#JumpToOrOpenFile(file_path, byte_pos[, snippet[, edit_cmd[, force_open]]])
 function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
-    let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
-    let force_open = vlime#GetNthVarArg(a:000, 1, v:false)
+    let snippet = vlime#GetNthVarArg(a:000, 0, v:null)
+    let edit_cmd = vlime#GetNthVarArg(a:000, 1, 'hide edit')
+    let force_open = vlime#GetNthVarArg(a:000, 2, v:false)
 
     " We are using setpos() to jump around the target file, and it doesn't
     " save the locations to the jumplist. We need to save the current location
@@ -824,6 +825,13 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
         if a:byte_pos - cur_pos > 0
             call setpos('.', [0, src_line, a:byte_pos - cur_pos + 1, 0])
         endif
+        if type(snippet) != type(v:null)
+            let to_search = '\V' . substitute(escape(snippet, '\'), "\n", '\\n', 'g')
+            call search(to_search, 'cW')
+        endif
+        " Vim may not update the screen when we move the cursor around like
+        " this. Force a redraw.
+        redraw
     endif
 endfunction
 

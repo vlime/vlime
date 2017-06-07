@@ -937,6 +937,8 @@ function! vlime#GetValidSourceLocation(loc)
         let loc_offset = get(a:loc, 'OFFSET', v:null)
         let loc_snippet = get(a:loc, 'SNIPPET', v:null)
         if type(loc_offset) != type(v:null)
+            " Negative offsets are used to designate the code snippets entered
+            " via the input buffer
             if loc_offset[0] < 0 || loc_offset[1] < 0
                 let loc_offset = v:null
             else
