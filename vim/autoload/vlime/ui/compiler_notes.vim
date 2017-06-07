@@ -83,9 +83,7 @@ function! vlime#ui#compiler_notes#OpenCurNote(...)
         elseif count_specified
             return
         endif
-        call vlime#ui#JumpToOrOpenFile(
-                    \ valid_loc[0], valid_loc[1], valid_loc[2]
-                    \ edit_cmd, count_specified)
+        call vlime#ui#ShowSource(b:vlime_conn, valid_loc, edit_cmd, count_specified)
     elseif raw_note_loc[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(raw_note_loc[1])
     else

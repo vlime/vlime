@@ -928,6 +928,7 @@ function! vlime#GetValidSourceLocation(loc)
     let loc_file = get(a:loc, 'FILE', v:null)
     let loc_buffer = get(a:loc, 'BUFFER', v:null)
     let loc_buf_and_file = get(a:loc, 'BUFFER-AND-FILE', v:null)
+    let loc_src_form = get(a:loc, 'SOURCE-FORM', v:null)
 
     if type(loc_file) != type(v:null)
         let loc_pos = get(a:loc, 'POSITION', v:null)
@@ -957,6 +958,8 @@ function! vlime#GetValidSourceLocation(loc)
             endif
         endif
         let valid_loc = [loc_buf_and_file[0], loc_offset, loc_snippet]
+    elseif type(loc_src_form) != type(v:null)
+        let valid_loc = [v:null, 1, loc_src_form]
     else
         let valid_loc = []
     endif

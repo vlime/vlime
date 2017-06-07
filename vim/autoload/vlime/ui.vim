@@ -835,6 +835,22 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
     endif
 endfunction
 
+" vlime#ui#ShowSource(loc[, edit_cmd[, force_open]])
+function! vlime#ui#ShowSource(conn, loc, ...)
+    let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
+    let force_open = vlime#GetNthVarArg(a:000, 1, 'hide edit')
+
+    let file_name = a:loc[0]
+    let byte_pos = a:loc[1]
+    let snippet = a:loc[2]
+
+    if type(file_name) == type(v:null)
+        call vlime#ui#ShowPreview(a:conn, "Source form:\n\n" . snippet, v:false)
+    else
+        call vlime#ui#JumpToOrOpenFile(file_name, byte_pos, snippet, edit_cmd, force_open)
+    endif
+endfunction
+
 function! vlime#ui#CalcLeadingSpaces(str, ...)
     let expand_tab = vlime#GetNthVarArg(a:000, 0, v:false)
     if expand_tab
