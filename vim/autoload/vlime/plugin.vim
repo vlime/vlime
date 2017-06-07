@@ -804,15 +804,13 @@ function! s:CompileInputComplete(conn, win, content)
     if type(a:content) == v:t_list
         let str = a:content[0]
         let [str_line, str_col] = a:content[1]
+
+        let buf = bufnr('%')
+        let cur_byte = line2byte(str_line) + str_col - 1
+        let cur_file = expand('%:p')
     elseif type(a:content) == v:t_string
         let str = a:content
-        let str_line = 0
-        let str_col = 0
     endif
-
-    let buf = bufnr('%')
-    let cur_byte = line2byte(str_line) + str_col - 1
-    let cur_file = expand('%:p')
 
     if exists('g:vlime_compiler_policy')
         let policy = g:vlime_compiler_policy
@@ -821,9 +819,16 @@ function! s:CompileInputComplete(conn, win, content)
     endif
 
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call a:conn.CompileStringForEmacs(
-                \ str, buf, cur_byte, cur_file,
-                \ policy, function('s:OnCompilationComplete', [a:win]))
+
+    if type(a:content) == v:t_string
+        call a:conn.CompileStringForEmacs(
+                    \ str, v:null, 1, v:null,
+                    \ policy, function('s:OnCompilationComplete', [a:win]))
+    else
+        call a:conn.CompileStringForEmacs(
+                    \ str, buf, cur_byte, cur_file,
+                    \ policy, function('s:OnCompilationComplete', [a:win]))
+    endif
 endfunction
 
 function! s:CompileFileInputComplete(conn, win, policy, file_name)

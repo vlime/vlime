@@ -160,6 +160,10 @@ function! vlime#FixRemotePath(path) dict
 endfunction
 
 function! vlime#FixLocalPath(path) dict
+    if type(a:path) != v:t_string
+        return a:path
+    endif
+
     let prefix_len = len(self['remote_prefix'])
     if prefix_len > 0 && a:path[0:prefix_len-1] == self['remote_prefix']
         return a:path[prefix_len:]
