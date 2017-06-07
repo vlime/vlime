@@ -1,4 +1,5 @@
 * master
+    * More precise jumps to source locations
     * Move `vim/plugin/*.vim` to `vim/autoload/vlime/`, for better start-up performance.
     * Top-level API functions are renamed.
 
