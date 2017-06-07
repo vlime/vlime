@@ -349,21 +349,29 @@ function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
 endfunction
 
 function! s:OpenFrameSourceCB(edit_cmd, win_nr, conn, result)
-    if a:result[0]['name'] != 'LOCATION'
-        call vlime#ui#ErrMsg(a:result[1])
-        return
-    endif
+    try
+        let src_loc = vlime#ParseSourceLocation(a:result)
+        let valid_loc = vlime#GetValidSourceLocation(src_loc)
+    catch
+        let valid_loc = []
+    endtry
 
-    let force_open = v:false
-    if a:win_nr > 0 && win_getid(a:win_nr) > 0
-        " The user specified a valid window to use explicitly, set the forced flag
-        let force_open = v:true
-        call win_gotoid(win_getid(a:win_nr))
-    elseif a:win_nr > 0
-        call vlime#ui#ErrMsg('Invalid window number: ' . a:win_nr)
-        return
+    if len(valid_loc) > 0 && type(valid_loc[1]) != type(v:null)
+        let force_open = v:false
+        if a:win_nr > 0 && win_getid(a:win_nr) > 0
+            " The user specified a valid window to use explicitly, set the forced flag
+            let force_open = v:true
+            call win_gotoid(win_getid(a:win_nr))
+        elseif a:win_nr > 0
+            call vlime#ui#ErrMsg('Invalid window number: ' . a:win_nr)
+            return
+        endif
+        call vlime#ui#JumpToOrOpenFile(valid_loc[0], valid_loc[1], a:edit_cmd, force_open)
+    elseif a:result[0]['name'] == 'ERROR'
+        call vlime#ui#ErrMsg(a:result[1])
+    else
+        call vlime#ui#ErrMsg('No source available.')
     endif
-    call vlime#ui#JumpToOrOpenFile(a:result[1][1], a:result[2][1], a:edit_cmd, force_open)
 endfunction
 
 function! s:InitSLDBBuf()

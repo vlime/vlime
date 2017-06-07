@@ -931,9 +931,11 @@ function! vlime#GetValidSourceLocation(loc)
 
     if type(loc_file) != type(v:null)
         let loc_pos = get(a:loc, 'POSITION', v:null)
-        let valid_loc = [loc_file, loc_pos]
+        let loc_snippet = get(a:loc, 'SNIPPET', v:null)
+        let valid_loc = [loc_file, loc_pos, loc_snippet]
     elseif type(loc_buffer) != type(v:null)
         let loc_offset = get(a:loc, 'OFFSET', v:null)
+        let loc_snippet = get(a:loc, 'SNIPPET', v:null)
         if type(loc_offset) != type(v:null)
             if loc_offset[0] < 0 || loc_offset[1] < 0
                 let loc_offset = v:null
@@ -941,9 +943,10 @@ function! vlime#GetValidSourceLocation(loc)
                 let loc_offset = loc_offset[0] + loc_offset[1]
             endif
         endif
-        let valid_loc = [loc_buffer, loc_offset]
+        let valid_loc = [loc_buffer, loc_offset, loc_snippet]
     elseif type(loc_buf_and_file) != type(v:null)
         let loc_offset = get(a:loc, 'OFFSET', v:null)
+        let loc_snippet = get(a:loc, 'SNIPPET', v:null)
         if type(loc_offset) != type(v:null)
             if loc_offset[0] < 0 || loc_offset[1] < 0
                 let loc_offset = v:null
@@ -951,7 +954,7 @@ function! vlime#GetValidSourceLocation(loc)
                 let loc_offset = loc_offset[0] + loc_offset[1]
             endif
         endif
-        let valid_loc = [loc_buf_and_file[0], loc_offset]
+        let valid_loc = [loc_buf_and_file[0], loc_offset, loc_snippet]
     else
         let valid_loc = []
     endif
