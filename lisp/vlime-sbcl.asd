@@ -14,4 +14,4 @@
                              (:file "aio-sbcl")
                              (:file "vlime-sbcl"
                               :depends-on ("vlime-connection" "aio-sbcl")))))
-  :in-order-to ((test-op (test-op #:vlime-test))))
+  :in-order-to ((test-op (test-op #:vlime-sbcl-test))))
