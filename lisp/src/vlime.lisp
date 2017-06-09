@@ -80,7 +80,7 @@
           (try-to-load :vlime-sbcl)
           (when start-swank
             (dyn-call "SWANK" "SETUP-SERVER"
-                      0 #'announce-swank-port swank-comm-style t nil))
+                      swank-port #'announce-swank-port swank-comm-style t nil))
           (start-vlime-server :sbcl))
         (:vlime-patched
           (try-to-load :vlime-patched)
