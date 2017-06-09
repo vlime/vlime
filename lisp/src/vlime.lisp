@@ -37,7 +37,7 @@
     (asdf:missing-dependency ()
       (install-with-quicklisp package))))
 
-(defun main (&key backend (port 0) port-file)
+(defun main (&key backend (port 0) port-file (start-swank t) (swank-port 0))
   (when (not backend)
     (let ((preferred-style (dyn-call "SWANK/BACKEND" "PREFERRED-COMMUNICATION-STYLE")))
       (case preferred-style
@@ -52,8 +52,7 @@
                   "Vlime: Communication style ~s not supported.~%" preferred-style)
           (return-from main)))))
 
-  (let ((swank-port nil)
-        (swank-comm-style
+  (let ((swank-comm-style
           (dyn-call "SWANK/BACKEND" "PREFERRED-COMMUNICATION-STYLE")))
     (labels ((announce-swank-port (port)
                (setf swank-port port))
@@ -73,13 +72,15 @@
       (ecase backend
         (:vlime-usocket
           (try-to-load :vlime-usocket)
-          (dyn-call "SWANK" "SETUP-SERVER"
-                    0 #'announce-swank-port swank-comm-style t nil)
+          (when start-swank
+            (dyn-call "SWANK" "SETUP-SERVER"
+                      swank-port #'announce-swank-port swank-comm-style t nil))
           (start-vlime-server :usocket))
         (:vlime-sbcl
           (try-to-load :vlime-sbcl)
-          (dyn-call "SWANK" "SETUP-SERVER"
-                    0 #'announce-swank-port swank-comm-style t nil)
+          (when start-swank
+            (dyn-call "SWANK" "SETUP-SERVER"
+                      0 #'announce-swank-port swank-comm-style t nil))
           (start-vlime-server :sbcl))
         (:vlime-patched
           (try-to-load :vlime-patched)
