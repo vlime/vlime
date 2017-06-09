@@ -791,6 +791,27 @@ function! s:OnUninternSymbolComplete(conn, result)
     echom a:result
 endfunction
 
+function! s:OnListenerEvalComplete(conn, result)
+    if type(a:result) == v:t_list && len(a:result) > 0 &&
+                \ type(a:result[0]) == v:t_dict && a:result[0]['name'] == 'VALUES' &&
+                \ type(a:conn.ui) != type(v:null)
+        let values = a:result[1:]
+        if len(values) > 0
+            for val in values
+                call a:conn.ui.OnWriteString(
+                            \ a:conn,
+                            \ val . "\n",
+                            \ {'name': 'REPL-RESULT', 'package': 'KEYWORD'})
+            endfor
+        else
+            call a:conn.ui.OnWriteString(
+                        \ a:conn,
+                        \ "; No value\n",
+                        \ {'name': 'REPL-RESULT', 'package': 'KEYWORD'})
+        endif
+    endif
+endfunction
+
 function! s:ShowAsyncResult(conn, result)
     call vlime#ui#ShowPreview(a:conn, a:result, v:false)
 endfunction
@@ -798,7 +819,7 @@ endfunction
 function! s:SendToREPLInputComplete(conn, content)
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
     call a:conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
-                \ function(a:conn.ListenerEval, [a:content]))
+                \ function(a:conn.ListenerEval, [a:content, function('s:OnListenerEvalComplete')]))
 endfunction
 
 function! s:CompileInputComplete(conn, win, content)
