@@ -33,7 +33,7 @@
 (defun write-form (form)
   (with-standard-io-syntax
     (let ((*package* swank::*swank-io-package*))
-      (write-to-string form))))
+      (write-to-string form :case :downcase))))
 
 
 (defun seq-client-to-swank (form)
