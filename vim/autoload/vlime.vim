@@ -763,7 +763,12 @@ endfunction
 
 function! vlime#OnDebugActivate(conn, msg)
     if type(a:conn.ui) != type(v:null)
-        let [_msg_type, thread, level, select] = a:msg
+        if len(a:msg) == 4
+            let [_msg_type, thread, level, select] = a:msg
+        elseif len(a:msg) == 3
+            let [_msg_type, thread, level] = a:msg
+            let select = v:null
+        endif
         call a:conn.ui.OnDebugActivate(a:conn, thread, level, select)
     endif
 endfunction

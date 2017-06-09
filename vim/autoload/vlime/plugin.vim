@@ -689,12 +689,13 @@ function! s:OnCallInitializersComplete(conn)
 endfunction
 
 function! s:OnSwankRequireComplete(conn, result)
-    let a:conn.cb_data['contribs'] = a:result
+    let a:conn.cb_data['contribs'] =
+                \ (type(a:result) == v:t_list) ? a:result : []
 endfunction
 
 function! s:OnConnectionInfoComplete(conn, result)
-    let a:conn.cb_data['version'] = a:result['VERSION']
-    let a:conn.cb_data['pid'] = a:result['PID']
+    let a:conn.cb_data['version'] = get(a:result, 'VERSION', '<unkown version>')
+    let a:conn.cb_data['pid'] = get(a:result, 'PID', '<unknown pid>')
 endfunction
 
 function! s:OnFuzzyCompletionsComplete(col, conn, result)
