@@ -1,10 +1,3 @@
-function! TestGetNthVarArg()
-    call assert_equal('default', vlime#GetNthVarArg([], 0, 'default'))
-    call assert_equal('first', vlime#GetNthVarArg(['first', 'second'], 0, 'default'))
-    call assert_equal('second', vlime#GetNthVarArg(['first', 'second'], 1, 'default'))
-    call assert_equal('default', vlime#GetNthVarArg(['first', 'second'], 2, 'default'))
-endfunction
-
 function! TestSimpleSendCB()
     function! s:TestSimpleSendCBDummyCB(conn, msg)
         let b:vlime_test_send_cb_called_with_conn = a:conn
@@ -210,7 +203,6 @@ function! TestMessage(name, expected, reply, ...)
 endfunction
 
 let v:errors = []
-call TestGetNthVarArg()
 call TestSimpleSendCB()
 call TestConnectFailed()
 call TestIsConnected()

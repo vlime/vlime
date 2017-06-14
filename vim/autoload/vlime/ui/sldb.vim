@@ -78,7 +78,7 @@ endfunction
 
 " vlime#ui#sldb#OpenFrameSource([edit_cmd])
 function! vlime#ui#sldb#OpenFrameSource(...)
-    let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
+    let edit_cmd = get(a:000, 0, 'hide edit')
     let nth = s:MatchFrame()
     if nth < 0
         let nth = 0

@@ -52,7 +52,7 @@ endfunction
 
 " vlime#ui#compiler_notes#OpenCurNote([edit_cmd])
 function! vlime#ui#compiler_notes#OpenCurNote(...)
-    let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
+    let edit_cmd = get(a:000, 0, 'hide edit')
 
     let cur_pos = getcurpos()
     let note_coord = v:null

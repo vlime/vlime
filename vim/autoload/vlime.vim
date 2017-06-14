@@ -97,8 +97,8 @@ endfunction
 
 " vlime#Connect(host, port[, remote_prefix[, timeout]])
 function! vlime#Connect(host, port, ...) dict
-    let remote_prefix = vlime#GetNthVarArg(a:000, 0, '')
-    let timeout = vlime#GetNthVarArg(a:000, 1, v:null)
+    let remote_prefix = get(a:000, 0, '')
+    let timeout = get(a:000, 1, v:null)
 
     let self.channel = vlime#compat#ch_open(a:host, a:port,
                 \ {chan, msg -> self.OnServerEvent(chan, msg)},
@@ -135,7 +135,7 @@ endfunction
 
 " vlime#Send(msg[, callback])
 function! vlime#Send(msg, ...) dict
-    let Callback = vlime#GetNthVarArg(a:000, 0, v:null)
+    let Callback = get(a:000, 0, v:null)
     if type(Callback) != type(v:null)
         call vlime#compat#ch_sendexpr(self.channel, a:msg, Callback)
     else
@@ -555,8 +555,8 @@ endfunction
 
 "vlime#UninternSymbol(sym_name[, package[, callback]])
 function! vlime#UninternSymbol(sym_name, ...) dict
-    let pkg = vlime#GetNthVarArg(a:000, 0, v:null)
-    let Callback = vlime#GetNthVarArg(a:000, 1, v:null)
+    let pkg = get(a:000, 0, v:null)
+    let Callback = get(a:000, 1, v:null)
     if type(pkg) == type(v:null)
         let pkg_info = self.GetCurrentPackage()
         if type(pkg_info) == v:t_list
@@ -835,13 +835,6 @@ function! vlime#OnServerEvent(chan, msg) dict
 endfunction
 
 " ================== end of methods for vlime connections ==================
-
-function! vlime#GetNthVarArg(args, n, ...)
-    let n_args = [a:args, a:n]
-    call extend(n_args, a:000)
-    let Ref = function('s:GetNthVarArg', n_args)
-    return Ref()
-endfunction
 
 function! vlime#SimpleSendCB(conn, Callback, caller, chan, msg) abort
     call s:CheckReturnStatus(a:msg, a:caller)

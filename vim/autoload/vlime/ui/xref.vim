@@ -53,8 +53,8 @@ endfunction
 
 " vlime#ui#xref#OpenCurXref([close_xref[, edit_cmd]])
 function! vlime#ui#xref#OpenCurXref(...)
-    let close_xref = vlime#GetNthVarArg(a:000, 0, v:true)
-    let edit_cmd = vlime#GetNthVarArg(a:000, 1, 'hide edit')
+    let close_xref = get(a:000, 0, v:true)
+    let edit_cmd = get(a:000, 1, 'hide edit')
 
     let cur_pos = getcurpos()
     let xref_coord = v:null

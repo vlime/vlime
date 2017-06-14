@@ -20,8 +20,8 @@ let s:path_sep = s:cur_src_path[len(s:vlime_home)]
 
 " vlime#server#New([auto_connect[, name]])
 function! vlime#server#New(...)
-    let auto_connect = vlime#GetNthVarArg(a:000, 0, v:true)
-    let name = vlime#GetNthVarArg(a:000, 1, v:null)
+    let auto_connect = get(a:000, 0, v:true)
+    let name = get(a:000, 1, v:null)
 
     if type(name) != type(v:null)
         let server_name = name

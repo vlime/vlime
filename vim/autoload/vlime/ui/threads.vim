@@ -93,8 +93,8 @@ endfunction
 
 " vlime#ui#threads#Refresh([conn[, keep_cur_pos]])
 function! vlime#ui#threads#Refresh(...)
-    let conn = vlime#GetNthVarArg(a:000, 0)
-    let keep_cur_pos = vlime#GetNthVarArg(a:000, 1, v:true)
+    let conn = get(a:000, 0, v:null)
+    let keep_cur_pos = get(a:000, 1, v:true)
 
     if keep_cur_pos
         let cur_pos = getcurpos()

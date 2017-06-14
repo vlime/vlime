@@ -62,7 +62,7 @@ function! vlime#connection#BuildConnectorCommand(host, port, ...)
                     \ string(connector_name) . ' not supported'
     endif
 
-    let timeout = vlime#GetNthVarArg(a:000, 0, v:null)
+    let timeout = get(a:000, 0, v:null)
     try
         let cmd = Builder(a:host, a:port, timeout)
     catch /^Vim\%((\a\+)\)\=:E118/  " Too many arguments for function
@@ -119,7 +119,7 @@ endfunction
 
 " vlime#connection#Get([quiet])
 function! vlime#connection#Get(...) abort
-    let quiet = vlime#GetNthVarArg(a:000, 0, v:false)
+    let quiet = get(a:000, 0, v:false)
 
     if !exists('b:vlime_conn') ||
                 \ (type(b:vlime_conn) != type(v:null) &&

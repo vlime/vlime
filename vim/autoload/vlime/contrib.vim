@@ -7,7 +7,7 @@ endif
 
 " vlime#contrib#CallInitializers(conn[, callback])
 function! vlime#contrib#CallInitializers(conn, ...)
-    let Callback = vlime#GetNthVarArg(a:000, 0, v:null)
+    let Callback = get(a:000, 0, v:null)
 
     let contribs = get(a:conn.cb_data, 'contribs', [])
     for c in contribs

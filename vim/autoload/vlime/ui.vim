@@ -44,7 +44,7 @@ endfunction
 
 " vlime#ui#GetCurrentPackage([buffer])
 function! vlime#ui#GetCurrentPackage(...) dict
-    let buf_spec = vlime#GetNthVarArg(a:000, 0, '%')
+    let buf_spec = get(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
     let buf_pkg = get(self.buffer_package_map, cur_buf, v:null)
     if type(buf_pkg) != v:t_list
@@ -60,21 +60,21 @@ endfunction
 
 " vlime#ui#SetCurrentPackage(pkg[, buffer])
 function! vlime#ui#SetCurrentPackage(pkg, ...) dict
-    let buf_spec = vlime#GetNthVarArg(a:000, 0, '%')
+    let buf_spec = get(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
     let self.buffer_package_map[cur_buf] = a:pkg
 endfunction
 
 " vlime#ui#GetCurrentThread([buffer])
 function! vlime#ui#GetCurrentThread(...) dict
-    let buf_spec = vlime#GetNthVarArg(a:000, 0, '%')
+    let buf_spec = get(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
     return get(self.buffer_thread_map, cur_buf, v:true)
 endfunction
 
 " vlime#ui#SetCurrentThread(thread[, buffer])
 function! vlime#ui#SetCurrentThread(thread, ...) dict
-    let buf_spec = vlime#GetNthVarArg(a:000, 0, '%')
+    let buf_spec = get(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
     let self.buffer_thread_map[cur_buf] = a:thread
 endfunction
@@ -223,7 +223,7 @@ endfunction
 
 " vlime#ui#CurExpr([return_pos])
 function! vlime#ui#CurExpr(...)
-    let return_pos = vlime#GetNthVarArg(a:000, 0, v:false)
+    let return_pos = get(a:000, 0, v:false)
 
     let cur_char = vlime#ui#CurChar()
     let from_pos = vlime#ui#CurExprPos(cur_char, 'begin')
@@ -239,7 +239,7 @@ let s:cur_expr_pos_search_flags = {
 
 " vlime#ui#CurExprPos(cur_char[, side])
 function! vlime#ui#CurExprPos(cur_char, ...)
-    let side = vlime#GetNthVarArg(a:000, 0, 'begin')
+    let side = get(a:000, 0, 'begin')
     if a:cur_char == '('
         return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][0])
     elseif a:cur_char == ')'
@@ -251,7 +251,7 @@ endfunction
 
 " vlime#ui#CurTopExpr([return_pos])
 function! vlime#ui#CurTopExpr(...)
-    let return_pos = vlime#GetNthVarArg(a:000, 0, v:false)
+    let return_pos = get(a:000, 0, v:false)
 
     let [s_line, s_col] = vlime#ui#CurTopExprPos('begin')
     if s_line > 0 && s_col > 0
@@ -269,7 +269,7 @@ endfunction
 
 " vlime#ui#CurTopExprPos([side])
 function! vlime#ui#CurTopExprPos(...)
-    let side = vlime#GetNthVarArg(a:000, 0, 'begin')
+    let side = get(a:000, 0, 'begin')
 
     if side == 'begin'
         let search_flags = 'bW'
@@ -358,7 +358,7 @@ endfunction
 
 " vlime#ui#CurSelection([return_pos])
 function! vlime#ui#CurSelection(...)
-    let return_pos = vlime#GetNthVarArg(a:000, 0, v:false)
+    let return_pos = get(a:000, 0, v:false)
     let sel_start = getpos("'<")
     let sel_end = getpos("'>")
     let lines = getline(sel_start[1], sel_end[1])
@@ -379,7 +379,7 @@ endfunction
 
 " vlime#ui#CurBufferContent([raw])
 function! vlime#ui#CurBufferContent(...)
-    let raw = vlime#GetNthVarArg(a:000, 0, v:false)
+    let raw = get(a:000, 0, v:false)
 
     let lines = getline(1, '$')
     if !raw
@@ -453,7 +453,7 @@ endfunction
 
 " vlime#ui#WithBuffer(buf, Func[, ev_ignore])
 function! vlime#ui#WithBuffer(buf, Func, ...)
-    let ev_ignore = vlime#GetNthVarArg(a:000, 0, 'all')
+    let ev_ignore = get(a:000, 0, 'all')
 
     let buf_win = bufwinid(a:buf)
     let buf_visible = (buf_win >= 0) ? v:true : v:false
@@ -493,8 +493,8 @@ endfunction
 
 " vlime#ui#OpenBuffer(name, create, show[, vertical[, initial_size]])
 function! vlime#ui#OpenBuffer(name, create, show, ...)
-    let vertical = vlime#GetNthVarArg(a:000, 0, v:false)
-    let initial_size = vlime#GetNthVarArg(a:000, 1)
+    let vertical = get(a:000, 0, v:false)
+    let initial_size = get(a:000, 1, v:null)
     let buf = bufnr(a:name, a:create)
     if buf > 0
         if (type(a:show) == v:t_string && len(a:show) > 0) || a:show
@@ -537,7 +537,7 @@ endfunction
 "       conn, content, append, buf_name, win_name[, file_type])
 function! vlime#ui#ShowTransientWindow(
             \ conn, content, append, buf_name, win_name, ...)
-    let file_type = vlime#GetNthVarArg(a:000, 0, v:null)
+    let file_type = get(a:000, 0, v:null)
     let old_win_id = win_getid()
     try
         let buf = vlime#ui#OpenBufferWithWinSettings(
@@ -659,7 +659,7 @@ endfunction
 
 " vlime#ui#CurArgPosForIndent([pos])
 function! vlime#ui#CurArgPosForIndent(...)
-    let s_pos = vlime#GetNthVarArg(a:000, 0, v:null)
+    let s_pos = get(a:000, 0, v:null)
     let arg_pos = -1
 
     if type(s_pos) == type(v:null)
@@ -758,9 +758,9 @@ endfunction
 
 " vlime#ui#JumpToOrOpenFile(file_path, byte_pos[, snippet[, edit_cmd[, force_open]]])
 function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
-    let snippet = vlime#GetNthVarArg(a:000, 0, v:null)
-    let edit_cmd = vlime#GetNthVarArg(a:000, 1, 'hide edit')
-    let force_open = vlime#GetNthVarArg(a:000, 2, v:false)
+    let snippet = get(a:000, 0, v:null)
+    let edit_cmd = get(a:000, 1, 'hide edit')
+    let force_open = get(a:000, 2, v:false)
 
     " We are using setpos() to jump around the target file, and it doesn't
     " save the locations to the jumplist. We need to save the current location
@@ -837,8 +837,8 @@ endfunction
 
 " vlime#ui#ShowSource(loc[, edit_cmd[, force_open]])
 function! vlime#ui#ShowSource(conn, loc, ...)
-    let edit_cmd = vlime#GetNthVarArg(a:000, 0, 'hide edit')
-    let force_open = vlime#GetNthVarArg(a:000, 1, 'hide edit')
+    let edit_cmd = get(a:000, 0, 'hide edit')
+    let force_open = get(a:000, 1, 'hide edit')
 
     let file_name = a:loc[0]
     let byte_pos = a:loc[1]
@@ -852,7 +852,7 @@ function! vlime#ui#ShowSource(conn, loc, ...)
 endfunction
 
 function! vlime#ui#CalcLeadingSpaces(str, ...)
-    let expand_tab = vlime#GetNthVarArg(a:000, 0, v:false)
+    let expand_tab = get(a:000, 0, v:false)
     if expand_tab
         let n_str = substitute(a:str, "\t", repeat(' ', &tabstop), 'g')
     else
@@ -952,9 +952,9 @@ endfunction
 
 " vlime#ui#EnsureKeyMapped(mode, key, cmd[, force[, log[, flags]]])
 function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
-    let force = vlime#GetNthVarArg(a:000, 0, v:false)
-    let log = vlime#GetNthVarArg(a:000, 1, v:null)
-    let flags = vlime#GetNthVarArg(a:000, 2, '<buffer> <silent>')
+    let force = get(a:000, 0, v:false)
+    let log = get(a:000, 1, v:null)
+    let flags = get(a:000, 2, '<buffer> <silent>')
     if type(a:key) != v:t_list
         let key_list = [a:key]
     else

@@ -26,10 +26,10 @@ endfunction
 " vlime#ui#input#MaybeInput(str, str_cb, prompt[, default[, conn[, completion_type]]])
 function! vlime#ui#input#MaybeInput(str, str_cb, prompt, ...)
     if type(a:str) == type(v:null)
-        let default = vlime#GetNthVarArg(a:000, 0, '')
-        let conn = vlime#GetNthVarArg(a:000, 1, v:null)
+        let default = get(a:000, 0, '')
+        let conn = get(a:000, 1, v:null)
         if type(conn) == type(v:null)
-            let comp_type = vlime#GetNthVarArg(a:000, 2, v:null)
+            let comp_type = get(a:000, 2, v:null)
             if type(comp_type) == type(v:null)
                 let content = input(a:prompt, default)
             else
@@ -111,8 +111,8 @@ endfunction
 function! vlime#ui#input#GetHistory(...)
     let history = get(g:, 'vlime_input_history', [])
 
-    let direction = vlime#GetNthVarArg(a:000, 0, 'backward')
-    let idx = vlime#GetNthVarArg(a:000, 1, len(history))
+    let direction = get(a:000, 0, 'backward')
+    let idx = get(a:000, 1, len(history))
 
     if direction == 'backward'
         if idx <= 0
@@ -133,7 +133,7 @@ endfunction
 
 " vlime#ui#input#NextHistoryItem([direction])
 function! vlime#ui#input#NextHistoryItem(...)
-    let direction = vlime#GetNthVarArg(a:000, 0, 'backward')
+    let direction = get(a:000, 0, 'backward')
 
     if exists('b:vlime_input_history_idx')
         let [next_idx, text] = vlime#ui#input#GetHistory(
