@@ -1,5 +1,31 @@
-" Vlime Connection constructor.
-" vlime#New([cb_data[, ui]])
+""
+" @dict VlimeConnection
+" Vlime uses connection objects (dictionaries) to represent connections to the
+" servers. You can create such an object by calling @function(vlime#New) or
+" @function(vlime#plugin#ConnectREPL). See below for a detailed list of
+" methods for connection objects.
+"
+" Most of the methods are asynchronous. All async methods have an optional
+" callback argument, to allow you to register a function for handling the
+" result returned by the server. These callback functions should accept two
+" arguments:
+"
+"     function! SomeCallbackFunc({conn_obj}, {result}) ...
+"
+" {conn_obj} is the connection object in question, and {result} is the
+" returned value.
+
+""
+" @usage [cb_data] [ui]
+" @public
+"
+" Create a connection object.
+"
+" [cb_data] is arbitrary data, accessible from the connection callbacks.
+" [ui] is an instance of the UI object, see @function(vlime#ui#New).
+"
+" This function is seldom used directly. To connect to a server, call
+" @function(vlime#plugin#ConnectREPL).
 function! vlime#New(...)
     let cb_data = get(a:000, 0, v:null)
     let ui = get(a:000, 1, v:null)
@@ -95,7 +121,18 @@ endfunction
 
 " ================== methods for vlime connections ==================
 
-" vlime#Connect(host, port[, remote_prefix[, timeout]])
+""
+" @dict VlimeConnection.Connect
+" @usage {host} {port} [remote_prefix] [timeout]
+" @public
+"
+" Connect to a server.
+"
+" {host} and {port} specify the server to connect to.
+" [remote_prefix], if specified, is an SFTP URL prefix, to tell Vlime to open
+" remote files via SFTP (see |vlime-remote-server|).
+" [timeout] is the time to wait for the connection to be made, in
+" milliseconds.
 function! vlime#Connect(host, port, ...) dict
     let remote_prefix = get(a:000, 0, '')
     let timeout = get(a:000, 1, v:null)
@@ -113,11 +150,21 @@ function! vlime#Connect(host, port, ...) dict
     return self
 endfunction
 
+""
+" @dict VlimeConnection.IsConnected
+" @public
+"
+" Return |TRUE| for a connected connection, |FALSE| otherwise.
 function! vlime#IsConnected() dict
     return type(self.channel) == vlime#compat#ch_type() &&
                 \ vlime#compat#ch_status(self.channel) == 'open'
 endfunction
 
+""
+" @dict VlimeConnection.Close
+" @public
+"
+" Close this connection.
 function! vlime#Close() dict
     if type(self.channel) == vlime#compat#ch_type()
         try
@@ -129,11 +176,22 @@ function! vlime#Close() dict
     return self
 endfunction
 
+""
+" @dict VlimeConnection.Call
+" @public
+"
+" Send a raw message {msg} to the server, and wait for a reply.
 function! vlime#Call(msg) dict
     return vlime#compat#ch_evalexpr(self.channel, a:msg)
 endfunction
 
-" vlime#Send(msg[, callback])
+""
+" @dict VlimeConnection.Send
+" @usage {msg} [callback]
+" @public
+"
+" Send a raw message {msg} to the server, and optionally register an async
+" [callback] function to handle the reply.
 function! vlime#Send(msg, ...) dict
     let Callback = get(a:000, 0, v:null)
     if type(Callback) != type(v:null)
@@ -143,6 +201,13 @@ function! vlime#Send(msg, ...) dict
     endif
 endfunction
 
+""
+" @dict VlimeConnection.FixRemotePath
+" @public
+"
+" Fix the remote file paths after they are received from the server, so that
+" Vim can open the files via SFTP.
+" {path} can be a plain string or a Swank source location object.
 function! vlime#FixRemotePath(path) dict
     if type(a:path) == v:t_string
         return self['remote_prefix'] . a:path
@@ -159,6 +224,13 @@ function! vlime#FixRemotePath(path) dict
     endif
 endfunction
 
+""
+" @dict VlimeConnection.FixLocalPath
+" @public
+"
+" Fix the local file paths before sending them to the server, so that the
+" server can see the correct files.
+" {path} should be a plain string or v:null.
 function! vlime#FixLocalPath(path) dict
     if type(a:path) != v:t_string
         return a:path
@@ -172,6 +244,12 @@ function! vlime#FixLocalPath(path) dict
     endif
 endfunction
 
+""
+" @dict VlimeConnection.GetCurrentPackage
+" @public
+"
+" Return the Common Lisp package bound to the current buffer. See
+" |vlime-current-package|.
 function! vlime#GetCurrentPackage() dict
     if type(self.ui) != type(v:null)
         return self.ui.GetCurrentPackage()
@@ -180,12 +258,26 @@ function! vlime#GetCurrentPackage() dict
     endif
 endfunction
 
+""
+" @dict VlimeConnection.SetCurrentPackage
+" @public
+"
+" Bind a Common Lisp package to the current buffer. See
+" |vlime-current-package|. This method does NOT check whether the argument is
+" a valid package. See @function(VlimeConnection.SetPackage) for a safer
+" alternative.
 function! vlime#SetCurrentPackage(package) dict
     if type(self.ui) != type(v:null)
         call self.ui.SetCurrentPackage(a:package)
     endif
 endfunction
 
+""
+" @dict VlimeConnection.GetCurrentThread
+" @public
+"
+" Return the thread bound to the current buffer. Currently this method only
+" makes sense in the debugger buffer.
 function! vlime#GetCurrentThread() dict
     if type(self.ui) != type(v:null)
         return self.ui.GetCurrentThread()
@@ -194,12 +286,25 @@ function! vlime#GetCurrentThread() dict
     endif
 endfunction
 
+""
+" @dict VlimeConnection.SetCurrentThread
+" @public
+"
+" Bind a thread to the current buffer. Don't call this method directly, unless
+" you know what you're doing.
 function! vlime#SetCurrentThread(thread) dict
     if type(self.ui) != type(v:null)
         call self.ui.SetCurrentThread(a:thread)
     endif
 endfunction
 
+""
+" @dict VlimeConnection.WithThread
+" @public
+"
+" Call {Func} with {thread} set as the current thread. The current thread will
+" be reset once this method returns. This is useful when you want to e.g.
+" evaluate something in certain threads.
 function! vlime#WithThread(thread, Func) dict
     let old_thread = self.GetCurrentThread()
     try
@@ -210,6 +315,12 @@ function! vlime#WithThread(thread, Func) dict
     endtry
 endfunction
 
+""
+" @dict VlimeConnection.WithPackage
+" @public
+"
+" Call {Func} with {package} set as the current package. The current package
+" will be reset once this method returns.
 function! vlime#WithPackage(package, Func) dict
     let old_package = self.GetCurrentPackage()
     try
@@ -220,6 +331,13 @@ function! vlime#WithPackage(package, Func) dict
     endtry
 endfunction
 
+""
+" @dict VlimeConnection.EmacsRex
+" @public
+"
+" Construct an :EMACS-REX message, with the current package and the current
+" thread.
+" {cmd} should be a raw :EMACS-REX command.
 function! vlime#EmacsRex(cmd) dict
     let pkg_info = self.GetCurrentPackage()
     if type(pkg_info) != v:t_list
@@ -230,6 +348,11 @@ function! vlime#EmacsRex(cmd) dict
     return s:EmacsRex(a:cmd, pkg, self.GetCurrentThread())
 endfunction
 
+""
+" @dict VlimeConnection.Ping
+" @public
+"
+" Send a PING request to the server, and wait for the reply.
 function! vlime#Ping() dict
     let cur_tag = self.ping_tag
     let self.ping_tag = (self.ping_tag >= 65536) ? 1 : (self.ping_tag + 1)
@@ -246,11 +369,27 @@ function! vlime#Ping() dict
     endif
 endfunction
 
+""
+" @dict VlimeConnection.Pong
+" @public
+"
+" Reply to server PING messages.
+" {thread} and {ttag} are parameters received in the PING message from the
+" server.
 function! vlime#Pong(thread, ttag) dict
     call self.Send([s:KW('EMACS-PONG'), a:thread, a:ttag])
 endfunction
 
-" vlime#ConnectionInfo([return_dict[, callback]])
+""
+" @dict VlimeConnection.ConnectionInfo
+" @usage [return_dict] [callback]
+" @public
+"
+" Ask the server for some info regarding this connection, and optionally
+" register a [callback] function to handle the result.
+"
+" If [return_dict] is specified and |TRUE|, this method will convert the
+" result to a dictionary before passing it to the [callback] function.
 function! vlime#ConnectionInfo(...) dict
     " We pass local variables as extra arguments instead of
     " using the 'closure' flag on inner functions, to prevent
@@ -271,7 +410,17 @@ function! vlime#ConnectionInfo(...) dict
                 \ function('s:ConnectionInfoCB', [self, Callback, return_dict]))
 endfunction
 
-" vlime#SwankRequire(contrib[, callback])
+""
+" @dict VlimeConnection.SwankRequire
+" @usage {contrib} [callback]
+" @public
+"
+" Require Swank contrib modules, and optionally register a [callback] function
+" to handle the result.
+"
+" {contrib} can be a string or a list of strings. Each string is a contrib
+" module name. These names are case-sensitive. Normally you should use
+" uppercase.
 function! vlime#SwankRequire(contrib, ...) dict
     let Callback = get(a:000, 0, v:null)
     if type(a:contrib) == v:t_list
@@ -284,7 +433,16 @@ function! vlime#SwankRequire(contrib, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SwankRequire']))
 endfunction
 
-" vlime#CreateREPL([coding_system[, callback]])
+""
+" @dict VlimeConnection.CreateREPL
+" @usage [coding_system] [callback]
+" @public
+"
+" Create the REPL thread, and optionally register a [callback] function to
+" handle the result.
+"
+" [coding_system] is implementation-dependent. Omit this argument or pass
+" v:null to let the server choose it for you.
 function! vlime#CreateREPL(...) dict
     function! s:CreateREPL_CB(conn, Callback, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#CreateREPL')
@@ -304,7 +462,15 @@ function! vlime#CreateREPL(...) dict
                 \ function('s:CreateREPL_CB', [self, Callback]))
 endfunction
 
-" vlime#ListenerEval(expr[, callback])
+""
+" @dict VlimeConnection.ListenerEval
+" @usage {expr} [callback]
+" @public
+"
+" Evaluate {expr} in the current package and thread, and optionally register a
+" [callback] function to handle the result.
+" {expr} should be a plain string containing the lisp expression to be
+" evaluated.
 function! vlime#ListenerEval(expr, ...) dict
     function! s:ListenerEvalCB(conn, Callback, chan, msg) abort
         let stat = s:CheckAndReportReturnStatus(a:conn, a:msg, 'vlime#ListenerEval')
@@ -319,18 +485,35 @@ function! vlime#ListenerEval(expr, ...) dict
                 \ function('s:ListenerEvalCB', [self, Callback]))
 endfunction
 
+""
+" @dict VlimeConnection.Interrupt
+" @public
+"
+" Interrupt {thread}.
+" {thread} should be a numeric thread ID, or {"package": "KEYWORD", "name":
+" "REPL-THREAD"} for the REPL thread.
 function! vlime#Interrupt(thread) dict
     call self.Send([s:KW('EMACS-INTERRUPT'), a:thread])
 endfunction
 
-" vlime#SLDBAbort([callback])
+""
+" @dict VlimeConnection.SLDBAbort
+" @usage [callback]
+" @public
+"
+" When the debugger is active, invoke the ABORT restart.
 function! vlime#SLDBAbort(...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-ABORT')]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBAbort']))
 endfunction
 
-" vlime#SLDBBreak(func_name[, callback])
+""
+" @dict VlimeConnection.SLDBBreak
+" @usage {func_name} [callback]
+" @public
+"
+" Set a breakpoint at entry to a function with the name {func_name}.
 function! vlime#SLDBBreak(func_name, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-BREAK'), a:func_name]),
@@ -338,35 +521,64 @@ function! vlime#SLDBBreak(func_name, ...) dict
                     \ [self, Callback, 'vlime#SLDBBreak']))
 endfunction
 
-" vlime#SLDBContinue([callback])
+""
+" @dict VlimeConnection.SLDBContinue
+" @usage [callback]
+" @public
+"
+" When the debugger is active, invoke the CONTINUE restart.
 function! vlime#SLDBContinue(...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-CONTINUE')]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBContinue']))
 endfunction
 
-" vlime#SLDBStep(frame[, callback]) dict
+""
+" @dict VlimeConnection.SLDBStep
+" @usage {frame} [callback]
+" @public
+"
+" When the debugger is active, enter stepping mode in {frame}.
+" {frame} should be a valid frame number presented by the debugger.
 function! vlime#SLDBStep(frame, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-STEP'), a:frame]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBStep']))
 endfunction
 
-" vlime#SLDBNext(frame[, callback])
+""
+" @dict VlimeConnection.SLDBNext
+" @usage {frame} [callback]
+" @public
+"
+" When the debugger is active, step over the current function call in {frame}.
 function! vlime#SLDBNext(frame, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-NEXT'), a:frame]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBNext']))
 endfunction
 
-" vlime#SLDBOut(frame[, callback])
+""
+" @dict VlimeConnection.SLDBOut
+" @usage {frame} [callback]
+" @public
+"
+" When the debugger is active, step out of the current function in {frame}.
 function! vlime#SLDBOut(frame, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-OUT'), a:frame]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBOut']))
 endfunction
 
-" vlime#SLDBReturnFromFrame(frame, str[, callback]) dict
+""
+" @dict VlimeConnection.SLDBReturnFromFrame
+" @usage {frame} {str} [callback]
+" @public
+"
+" When the debugger is active, evaluate {str} and return from {frame} with the
+" evaluation result.
+" {str} should be a plain string containing the lisp expression to be
+" evaluated.
 function! vlime#SLDBReturnFromFrame(frame, str, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-RETURN-FROM-FRAME'), a:frame, a:str]),
@@ -374,7 +586,12 @@ function! vlime#SLDBReturnFromFrame(frame, str, ...) dict
                     \ [self, Callback, 'vlime#SLDBReturnFromFrame']))
 endfunction
 
-" vlime#SLDBDisassemble(frame[, callback]) dict
+""
+" @dict VlimeConnection.SLDBDisassemble
+" @usage {frame} [callback]
+" @public
+"
+" Disassemble the code for {frame}.
 function! vlime#SLDBDisassemble(frame, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-DISASSEMBLE'), a:frame]),
@@ -382,7 +599,14 @@ function! vlime#SLDBDisassemble(frame, ...) dict
                     \ [self, Callback, 'vlime#SLDBDisassemble']))
 endfunction
 
-" vlime#InvokeNthRestartForEmacs(level, restart[, callback])
+""
+" @dict VlimeConnection.InvokeNthRestartForEmacs
+" @usage {level} {restart} [callback]
+" @public
+"
+" When the debugger is active, invoke a {restart} at {level}.
+" {restart} should be a valid restart number, and {level} a valid debugger
+" level.
 function! vlime#InvokeNthRestartForEmacs(level, restart, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -390,7 +614,12 @@ function! vlime#InvokeNthRestartForEmacs(level, restart, ...) dict
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#InvokeNthRestartForEmacs']))
 endfunction
 
-" vlime#RestartFrame(frame[, callback])
+""
+" @dict VlimeConnection.RestartFrame
+" @usage {frame} [callback]
+" @public
+"
+" When the debugger is active, restart a {frame}.
 function! vlime#RestartFrame(frame, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -399,7 +628,13 @@ function! vlime#RestartFrame(frame, ...) dict
                     \ [self, Callback, 'vlime#RestartFrame']))
 endfunction
 
-" vlime#FrameLocalsAndCatchTags(frame[, callback])
+""
+" @dict VlimeConnection.FrameLocalsAndCatchTags
+" @usage {frame} [callback]
+" @public
+"
+" When the debugger is active, get info about local variables and catch tags
+" for {frame}.
 function! vlime#FrameLocalsAndCatchTags(frame, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -408,7 +643,12 @@ function! vlime#FrameLocalsAndCatchTags(frame, ...) dict
                     \ [self, Callback, 'vlime#FrameLocalsAndCatchTags']))
 endfunction
 
-" vlime#FrameSourceLocation(frame[, callback])
+""
+" @dict VlimeConnection.FrameSourceLocation
+" @usage {frame} [callback]
+" @public
+"
+" When the debugger is active, get the source location for {frame}.
 function! vlime#FrameSourceLocation(frame, ...) dict
     function! s:FrameSourceLocationCB(conn, Callback, chan, msg)
         call s:CheckReturnStatus(a:msg,  'vlime#FrameSourceLocation')
@@ -426,7 +666,13 @@ function! vlime#FrameSourceLocation(frame, ...) dict
                 \ function('s:FrameSourceLocationCB', [self, Callback]))
 endfunction
 
-" vlime#EvalStringInFrame(str, frame, package[, callback]) dict
+""
+" @dict VlimeConnection.EvalStringInFrame
+" @usage {str} {frame} {package} [callback]
+" @public
+"
+" When the debugger is active, evaluate {str} in {package}, and within the
+" context of {frame}.
 function! vlime#EvalStringInFrame(str, frame, package, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -436,7 +682,15 @@ function! vlime#EvalStringInFrame(str, frame, package, ...) dict
                     \ [self, Callback, 'vlime#EvalStringInFrame']))
 endfunction
 
-" vlime#InitInspector(thing[, callback])
+""
+" @dict VlimeConnection.InitInspector
+" @usage {thing} [callback]
+" @public
+"
+" Evaluate {thing} and start inspecting the evaluation result with the
+" inspector.
+" {thing} should be a plain string containing the lisp expression to be
+" evaluated.
 function! vlime#InitInspector(thing, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -445,7 +699,12 @@ function! vlime#InitInspector(thing, ...) dict
                     \ [self, Callback, 'vlime#InitInspector']))
 endfunction
 
-" vlime#InspectorReinspect([callback])
+""
+" @dict VlimeConnection.InspectorReinspect
+" @usage [callback]
+" @public
+"
+" Reload the object being inspected, and update inspector states.
 function! vlime#InspectorReinspect(...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -454,7 +713,14 @@ function! vlime#InspectorReinspect(...) dict
                     \ [self, Callback, 'vlime#InspectorReinspect']))
 endfunction
 
-" vlime#InspectorRange(r_start, r_end[, callback])
+""
+" @dict VlimeConnection.InspectorRange
+" @usage {r_start} {r_end} [callback]
+" @public
+"
+" Pagination for inspector content.
+" {r_start} is the first index to retrieve in the inspector content list.
+" {r_end} is the last index plus one.
 function! vlime#InspectorRange(r_start, r_end, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -463,7 +729,13 @@ function! vlime#InspectorRange(r_start, r_end, ...) dict
                     \ [self, Callback, 'vlime#InspectorRange']))
 endfunction
 
-" vlime#InspectNthPart(nth[, callback])
+""
+" @dict VlimeConnection.InspectNthPart
+" @usage {nth} [callback]
+" @public
+"
+" Inspect an object presented by the inspector.
+" {nth} should be a valid part number presented by the inspector.
 function! vlime#InspectNthPart(nth, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -472,7 +744,13 @@ function! vlime#InspectNthPart(nth, ...) dict
                     \ [self, Callback, 'vlime#InspectNthPart']))
 endfunction
 
-" vlime#InspectorCallNthAction(nth[, callback])
+""
+" @dict VlimeConnection.InspectorCallNthAction
+" @usage {nth} [callback]
+" @public
+"
+" Perform an action in the inspector.
+" {nth} should be a valid action number presented by the inspector.
 function! vlime#InspectorCallNthAction(nth, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -481,7 +759,13 @@ function! vlime#InspectorCallNthAction(nth, ...) dict
                     \ [self, Callback, 'vlime#InspectorCallNthAction']))
 endfunction
 
-" vlime#InspectorPop([callback])
+""
+" @dict VlimeConnection.InspectorPop
+" @usage [callback]
+" @public
+"
+" Remove one object from the stack of inspected objects, and inspect the top
+" object in the stack.
 function! vlime#InspectorPop(...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -490,7 +774,12 @@ function! vlime#InspectorPop(...) dict
                     \ [self, Callback, 'vlime#InspectorPop']))
 endfunction
 
-" vlime#InspectCurrentCondition([callback])
+""
+" @dict VlimeConnection.InspectCurrentCondition
+" @usage [callback]
+" @public
+"
+" When the debugger is active, inspect the current condition.
 function! vlime#InspectCurrentCondition(...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -499,7 +788,13 @@ function! vlime#InspectCurrentCondition(...) dict
                     \ [self, Callback, 'vlime#InspectCurrentCondition']))
 endfunction
 
-" vlime#InspectInFrame(thing, frame[, callback])
+""
+" @dict VlimeConnection.InspectInFrame
+" @usage {thing} {frame} [callback]
+" @public
+"
+" When the debugger is active, evaluate {thing} in the context of {frame}, and
+" start inspecting the evaluation result.
 function! vlime#InspectInFrame(thing, frame, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -508,7 +803,14 @@ function! vlime#InspectInFrame(thing, frame, ...) dict
                     \ [self, Callback, 'vlime#InspectInFrame']))
 endfunction
 
-" vlime#InspectPresentation(pres_id, reset[, callback])
+""
+" @dict VlimeConnection.InspectPresentation
+" @usage {pres_id} {reset} [callback]
+" @public
+"
+" Start inspecting an object saved by SWANK-PRESENTATIONS.
+" {pres_id} should be a valid ID presented by PRESENTATION-START messages.
+" If {reset} is |TRUE|, the inspector will be reset first.
 function! vlime#InspectPresentation(pres_id, reset, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -517,7 +819,12 @@ function! vlime#InspectPresentation(pres_id, reset, ...) dict
                     \ [self, Callback, 'vlime#InspectPresentation']))
 endfunction
 
-" vlime#ListThreads([callback])
+""
+" @dict VlimeConnection.ListThreads
+" @usage [callback]
+" @public
+"
+" Get a list of running threads.
 function! vlime#ListThreads(...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -526,7 +833,13 @@ function! vlime#ListThreads(...) dict
                     \ [self, Callback, 'vlime#ListThreads']))
 endfunction
 
-" vlime#KillNthThread(nth[, callback])
+""
+" @dict VlimeConnection.KillNthThread
+" @usage {nth} [callback]
+" @public
+"
+" Kill a thread presented in the thread list.
+" {nth} should be a valid index in the thread list, instead of a thread ID.
 function! vlime#KillNthThread(nth, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -535,7 +848,13 @@ function! vlime#KillNthThread(nth, ...) dict
                     \ [self, Callback, 'vlime#KillNthThread']))
 endfunction
 
-" vlime#DebugNthThread(nth[, callback])
+""
+" @dict VlimeConnection.DebugNthThread
+" @usage {nth} [callback]
+" @public
+"
+" Activate the debugger in a thread presented in the thread list.
+" {nth} should be a valid index in the thread list, instead of a thread ID.
 function! vlime#DebugNthThread(nth, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -544,7 +863,12 @@ function! vlime#DebugNthThread(nth, ...) dict
                     \ [self, Callback, 'vlime#DebugNthThread']))
 endfunction
 
-" vlime#UndefineFunction(func_name[, callback])
+""
+" @dict VlimeConnection.UndefineFunction
+" @usage {func_name} [callback]
+" @public
+"
+" Undefine a function with the name {func_name}.
 function! vlime#UndefineFunction(func_name, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -553,7 +877,14 @@ function! vlime#UndefineFunction(func_name, ...) dict
                     \ [self, Callback, 'vlime#UndefineFunction']))
 endfunction
 
-"vlime#UninternSymbol(sym_name[, package[, callback]])
+""
+" @dict VlimeConnection.UninternSymbol
+" @usage {sym_name} [package] [callback]
+" @public
+"
+" Unintern a symbol with the name {sym_name}.
+" {sym_name} should be a plain string containing the name of the symbol to be
+" uninterned.
 function! vlime#UninternSymbol(sym_name, ...) dict
     let pkg = get(a:000, 0, v:null)
     let Callback = get(a:000, 1, v:null)
@@ -570,7 +901,13 @@ function! vlime#UninternSymbol(sym_name, ...) dict
                     \ [self, Callback, 'vlime#UninternSymbol']))
 endfunction
 
-" vlime#SetPackage(package[, callback])
+""
+" @dict VlimeConnection.SetPackage
+" @usage {package} [callback]
+" @public
+"
+" Bind a Common Lisp package to the current buffer. See
+" |vlime-current-package|.
 function! vlime#SetPackage(package, ...) dict
     function! s:SetPackageCB(conn, buf, Callback, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#SetPackage')
@@ -583,14 +920,26 @@ function! vlime#SetPackage(package, ...) dict
                 \ function('s:SetPackageCB', [self, bufnr('%'), Callback]))
 endfunction
 
-" vlime#DescribeSymbol(symbol[, callback])
+""
+" @dict VlimeConnection.DescribeSymbol
+" @usage {symbol} [callback]
+" @public
+"
+" Get a description for {symbol}.
+" {symbol} should be a plain string containing the symbol name.
 function! vlime#DescribeSymbol(symbol, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'DESCRIBE-SYMBOL'), a:symbol]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#DescribeSymbol']))
 endfunction
 
-" vlime#OperatorArgList(operator[, callback])
+""
+" @dict VlimeConnection.OperatorArgList
+" @usage {operator} [callback]
+" @public
+"
+" Get the arglist description for {operator}.
+" {operator} should be a plain string containing a symbol name.
 function! vlime#OperatorArgList(operator, ...) dict
     let Callback = get(a:000, 0, v:null)
     let cur_package = self.GetCurrentPackage()
@@ -602,7 +951,13 @@ function! vlime#OperatorArgList(operator, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#OperatorArgList']))
 endfunction
 
-" vlime#SimpleCompletions(symbol[, callback])
+""
+" @dict VlimeConnection.SimpleCompletions
+" @usage {symbol} [callback]
+" @public
+"
+" Get a simple completion list for {symbol}.
+" {symbol} should be a plain string containing a (partial) symbol name.
 function! vlime#SimpleCompletions(symbol, ...) dict
     let Callback = get(a:000, 0, v:null)
     let cur_package = self.GetCurrentPackage()
@@ -614,7 +969,13 @@ function! vlime#SimpleCompletions(symbol, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SimpleCompletions']))
 endfunction
 
-" vlime#FuzzyCompletions(symbol[, callback])
+""
+" @dict VlimeConnection.FuzzyCompletions
+" @usage {symbol} [callback]
+" @public
+"
+" Get a completion list for {symbol}, using a more clever fuzzy algorithm.
+" {symbol} should be a plain string containing a (partial) symbol name.
 function! vlime#FuzzyCompletions(symbol, ...) dict
     let Callback = get(a:000, 0, v:null)
     let cur_package = self.GetCurrentPackage()
@@ -634,7 +995,14 @@ function! vlime#Return(thread, ttag, val) dict
     call self.Send([s:KW('EMACS-RETURN'), a:thread, a:ttag, a:val])
 endfunction
 
-" vlime#SwankMacroExpandOne(expr[, callback])
+""
+" @dict VlimeConnection.SwankMacroExpandOne
+" @usage {expr} [callback]
+" @public
+"
+" Perform one macro expansion on {expr}.
+" {expr} should be a plain string containing the lisp expression to be
+" expanded.
 function! vlime#SwankMacroExpandOne(expr, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -642,7 +1010,12 @@ function! vlime#SwankMacroExpandOne(expr, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpandOne']))
 endfunction
 
-" vlime#SwankMacroExpand(expr[, callback])
+""
+" @dict VlimeConnection.SwankMacroExpand
+" @usage {expr} [callback]
+" @public
+"
+" Expand {expr}, until the resulting form cannot be macro-expanded anymore.
 function! vlime#SwankMacroExpand(expr, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -650,7 +1023,12 @@ function! vlime#SwankMacroExpand(expr, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpand']))
 endfunction
 
-" vlime#SwankMacroExpandAll(expr[, callback])
+""
+" @dict VlimeConnection.SwankMacroExpandAll
+" @usage {expr} [callback]
+" @public
+"
+" Recursively expand all macros in {expr}.
 function! vlime#SwankMacroExpandAll(expr, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -658,7 +1036,12 @@ function! vlime#SwankMacroExpandAll(expr, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SwankMacroExpandAll']))
 endfunction
 
-" vlime#DisassembleForm(expr[, callback])
+""
+" @dict VlimeConnection.DisassembleForm
+" @usage {expr} [callback]
+" @public
+"
+" Compile and disassemble {expr}.
 function! vlime#DisassembleForm(expr, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -666,7 +1049,19 @@ function! vlime#DisassembleForm(expr, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#DisassembleForm']))
 endfunction
 
-" vlime#CompileStringForEmacs(expr, buffer, position, filename[, policy[, callback]])
+""
+" @dict VlimeConnection.CompileStringForEmacs
+" @usage {expr} {buffer} {position} {filename} [policy] [callback]
+" @public
+"
+" Compile {expr}.
+" {buffer}, {position} and {filename} specify where {expr} is from. When
+" {buffer} or {filename} is unknown, one can pass v:null instead.
+" [policy] should be a dictionary specifying a compiler policy. For example,
+"
+"     {"DEBUG": 3, "SPEED": 0}
+"
+" This means no optimization in runtime speed, and maximum debug info.
 function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dict
     let policy = s:TransformCompilerPolicy(get(a:000, 0, v:null))
     let Callback = get(a:000, 1, v:null)
@@ -680,7 +1075,16 @@ function! vlime#CompileStringForEmacs(expr, buffer, position, filename, ...) dic
 endfunction
 
 
-" vlime#CompileFileForEmacs(filename[, load[, policy[, callback]]]) dict
+""
+" @dict VlimeConnection.CompileFileForEmacs
+" @usage {filename} [load] [policy] [callback]
+" @public
+"
+" Compile a file with the name {filename}.
+" [load], if present and |TRUE|, tells Vlime to automatically load the compiled
+" file after successful compilation.
+" [policy] is the compiler policy, see
+" @function(VlimeConnection.CompileStringForEmacs).
 function! vlime#CompileFileForEmacs(filename, ...) dict
     let load = get(a:000, 0, v:true)
     let policy = s:TransformCompilerPolicy(get(a:000, 1, v:null))
@@ -694,7 +1098,12 @@ function! vlime#CompileFileForEmacs(filename, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#CompileFileForEmacs']))
 endfunction
 
-" vlime#LoadFile(filename[, callback])
+""
+" @dict VlimeConnection.LoadFile
+" @usage {filename} [callback]
+" @public
+"
+" Load a file with the name {filename}.
 function! vlime#LoadFile(filename, ...) dict
     let Callback = get(a:000, 0, v:null)
     let fixed_filename = self.FixLocalPath(a:filename)
@@ -702,7 +1111,15 @@ function! vlime#LoadFile(filename, ...) dict
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#LoadFile']))
 endfunction
 
-" vlime#XRef(ref_type, name[, callback])
+""
+" @dict VlimeConnection.XRef
+" @usage {ref_type} {name} [callback]
+" @public
+"
+" Cross reference lookup.
+" {ref_type} can be "CALLS", "CALLS-WHO", "REFERENCES", "BINDS", "SETS",
+" "MACROEXPANDS", or "SPECIALIZES".
+" {name} is the symbol name to lookup.
 function! vlime#XRef(ref_type, name, ...) dict
     function! s:XRefCB(conn, Callback, chan, msg)
         call s:CheckReturnStatus(a:msg,  'vlime#XRef')
@@ -715,7 +1132,12 @@ function! vlime#XRef(ref_type, name, ...) dict
                 \ function('s:XRefCB', [self, Callback]))
 endfunction
 
-" vlime#FindDefinitionsForEmacs(name[, callback])
+""
+" @dict VlimeConnection.FindDefinitionsForEmacs
+" @usage {name} [callback]
+" @public
+"
+" Lookup definitions for symbol {name}.
 function! vlime#FindDefinitionsForEmacs(name, ...) dict
     function! s:FindDefinitionsForEmacsCB(conn, Callback, chan, msg)
         call s:CheckReturnStatus(a:msg, 'vlime#FindDefinitionsForEmacs')
@@ -728,7 +1150,15 @@ function! vlime#FindDefinitionsForEmacs(name, ...) dict
                 \ function('s:FindDefinitionsForEmacsCB', [self, Callback]))
 endfunction
 
-" vlime#AproposListForEmacs(name, external_only, case_sensitive, package[, callback])
+""
+" @dict VlimeConnection.AproposListForEmacs
+" @usage {name} {external_only} {case_sensitive} {package} [callback]
+"
+" Lookup symbol names containing {name}.
+" If {external_only} is |TRUE|, only return external symbols.
+" {case_sensitive} specifies whether the search is case-sensitive or not.
+" {package} limits the search to a specific package, but one can pass v:null
+" to search all packages.
 function! vlime#AproposListForEmacs(name, external_only, case_sensitive, package, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'APROPOS-LIST-FOR-EMACS'),
@@ -736,7 +1166,12 @@ function! vlime#AproposListForEmacs(name, external_only, case_sensitive, package
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#AproposListForEmacs']))
 endfunction
 
-" vlime#DocumentationSymbol(sym_name[, callback])
+""
+" @dict VlimeConnection.DocumentationSymbol
+" @usage {sym_name} [callback]
+" @public
+"
+" Find the documentation for symbol {sym_name}.
 function! vlime#DocumentationSymbol(sym_name, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'DOCUMENTATION-SYMBOL'), a:sym_name]),
