@@ -257,12 +257,17 @@ function! vlime#plugin#CompileFile(...)
 endfunction
 
 ""
-" @usage [expr] [expand_all]
+" @usage [expr] [type]
 " @public
 "
 " Perform macro expansion on [expr] and show the result in the preview window.
-" If [expr] is omitted, show an input buffer. If [expand_all] is present and
-" |TRUE|, recursively expand all macros in [expr].
+" If [expr] is omitted or v:null, show an input buffer.
+"
+" [type] specifies the type of expansion to perform. It can be "expand",
+" "one", or "all". When it's omitted or "expand", repeatedly expand {expr}
+" until the resulting form cannot be expanded anymore. When it's "one", only
+" expand once. And "all" means to recursively expand all macros contained in
+" {expr}.
 function! vlime#plugin#ExpandMacro(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -270,11 +275,13 @@ function! vlime#plugin#ExpandMacro(...)
     endif
 
     let expr = get(a:000, 0, v:null)
-    let expand_all = get(a:000, 1, v:false)
+    let type = get(a:000, 1, v:null)
 
-    if expand_all
+    if type(type) == type(v:null) || type == 'expand'
+        let CB = { e -> conn.SwankMacroExpand(e, function('s:ShowAsyncResult'))}
+    elseif type == 'all'
         let CB = { e -> conn.SwankMacroExpandAll(e, function('s:ShowAsyncResult'))}
-    else
+    elseif type == 'one'
         let CB = { e -> conn.SwankMacroExpandOne(e, function('s:ShowAsyncResult'))}
     endif
 

@@ -449,8 +449,10 @@ Key mappings avaialble in lisp source files:
             (In visual mode) Send the current selection to the REPL.
 
     Expanding Macros                    *vlime-mappings-expand-macros*
-        <LocalLeader>m1
+        <LocalLeader>mm
             Expand the macro under the cursor.
+        <LocalLeader>m1
+            Expand the macro under the cursor once.
         <LocalLeader>ma
             Expand the macro under the cursor and all nested macros.
 
