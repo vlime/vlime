@@ -713,12 +713,17 @@ function! vlime#plugin#CompleteFunc(findstart, base)
         return -1
     endif
 
+    let cur_pos = [bufnr('%')] + getcurpos()[1:2]
+    " Hairy detail: Vim may move the cursor before the second call of this
+    " function. We make up the difference here.
+    let cur_pos[2] += len(a:base)
+
     if s:ConnHasContrib(conn, 'SWANK-FUZZY')
         call conn.FuzzyCompletions(a:base,
-                    \ function('s:OnFuzzyCompletionsComplete', [start_col + 1]))
+                    \ function('s:OnFuzzyCompletionsComplete', [start_col + 1, cur_pos]))
     else
         call conn.SimpleCompletions(a:base,
-                    \ function('s:OnSimpleCompletionsComplete', [start_col + 1]))
+                    \ function('s:OnSimpleCompletionsComplete', [start_col + 1, cur_pos]))
     endif
     " Actual completions are found in s:OnFuzzyCompletionsComplete(...)
     " XXX: The refresh option doesn't work, why?
@@ -886,7 +891,13 @@ function! s:OnConnectionInfoComplete(conn, result)
     let a:conn.cb_data['pid'] = get(a:result, 'PID', '<unknown pid>')
 endfunction
 
-function! s:OnFuzzyCompletionsComplete(col, conn, result)
+function! s:OnFuzzyCompletionsComplete(col, cur_pos, conn, result)
+    let cur_pos = [bufnr('%')] + getcurpos()[1:2]
+    if a:cur_pos != cur_pos
+        " The cursor moved, abort.
+        return
+    endif
+
     let comps = a:result[0]
     if type(comps) == type(v:null)
         let comps = []
@@ -896,15 +907,31 @@ function! s:OnFuzzyCompletionsComplete(col, conn, result)
         let cobj = {'word': c[0],'menu': c[3]}
         call add(r_comps, cobj)
     endfor
-    call complete(a:col, r_comps)
+
+    try
+        call complete(a:col, r_comps)
+    catch /^Vim\%((\a\+)\)\=:E785/  " complete() can only be used in Insert mode
+        " There's nothing we can do. Just ignore it.
+    endtry
 endfunction
 
-function! s:OnSimpleCompletionsComplete(col, conn, result)
+function! s:OnSimpleCompletionsComplete(col, cur_pos, conn, result)
+    let cur_pos = [bufnr('%')] + getcurpos()[1:2]
+    if a:cur_pos != cur_pos
+        " The cursor moved, abort.
+        return
+    endif
+
     let comps = a:result[0]
     if type(comps) == type(v:null)
         let comps = []
     endif
-    call complete(a:col, comps)
+
+    try
+        call complete(a:col, comps)
+    catch /^Vim\%((\a\+)\)\=:E785/  " complete() can only be used in Insert mode
+        " There's nothing we can do. Just ignore it.
+    endtry
 endfunction
 
 function! s:OnOperatorArgListComplete(sym, conn, result)
