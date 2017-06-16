@@ -1,0 +1,586 @@
+*vlime-api.txt*
+                                                                   *vlime-api*
+
+==============================================================================
+CONTENTS                                                  *vlime-api-contents*
+  1. Dictionaries............................................|vlime-api-dicts|
+  2. Functions...........................................|vlime-api-functions|
+
+==============================================================================
+DICTIONARIES                                                 *vlime-api-dicts*
+
+                                                   *vlime-api.VlimeConnection*
+Vlime uses connection objects (dictionaries) to represent connections to the
+servers. You can create such an object by calling |vlime#plugin#ConnectREPL()|
+or |vlime#New()|.
+
+Most of the connection object's methods are asynchronous. All async methods
+have an optional callback argument, to allow a function be registered for
+handling the result returned by the server. These callback functions should
+accept two arguments:
+
+    function! SomeCallbackFunc({conn_obj}, {result}) ...
+
+{conn_obj} is the connection object in question, and {result} is the returned
+value.
+
+See below for a detailed list of methods for connection objects.
+
+
+VlimeConnection.Connect({host}, {port}, [remote_prefix], [timeout])
+                                                   *VlimeConnection.Connect()*
+
+  Connect to a server.
+
+  {host} and {port} specify the server to connect to. [remote_prefix], if
+  specified, is an SFTP URL prefix, to tell Vlime to open remote files via
+  SFTP (see |vlime-remote-server|). [timeout] is the time to wait for the
+  connection to be made, in milliseconds.
+
+VlimeConnection.IsConnected()                  *VlimeConnection.IsConnected()*
+
+  Return |TRUE| for a connected connection, |FALSE| otherwise.
+
+VlimeConnection.Close()                              *VlimeConnection.Close()*
+
+  Close this connection.
+
+VlimeConnection.Call({msg})                           *VlimeConnection.Call()*
+
+  Send a raw message {msg} to the server, and wait for a reply.
+
+VlimeConnection.Send({msg}, [callback])               *VlimeConnection.Send()*
+
+  Send a raw message {msg} to the server, and optionally register an async
+  [callback] function to handle the reply.
+
+VlimeConnection.FixRemotePath({path})        *VlimeConnection.FixRemotePath()*
+
+  Fix the remote file paths after they are received from the server, so that
+  Vim can open the files via SFTP. {path} can be a plain string or a Swank
+  source location object.
+
+VlimeConnection.FixLocalPath({path})          *VlimeConnection.FixLocalPath()*
+
+  Fix the local file paths before sending them to the server, so that the
+  server can see the correct files. {path} should be a plain string or v:null.
+
+VlimeConnection.GetCurrentPackage()      *VlimeConnection.GetCurrentPackage()*
+
+  Return the Common Lisp package bound to the current buffer. See
+  |vlime-current-package|.
+
+VlimeConnection.SetCurrentPackage({package})
+                                         *VlimeConnection.SetCurrentPackage()*
+
+  Bind a Common Lisp package to the current buffer. See
+  |vlime-current-package|. This method does NOT check whether the argument is
+  a valid package. See |VlimeConnection.SetPackage()| for a safer alternative.
+
+VlimeConnection.GetCurrentThread()        *VlimeConnection.GetCurrentThread()*
+
+  Return the thread bound to the current buffer. Currently this method only
+  makes sense in the debugger buffer.
+
+VlimeConnection.SetCurrentThread({thread})
+                                          *VlimeConnection.SetCurrentThread()*
+
+  Bind a thread to the current buffer. Don't call this method directly, unless
+  you know what you're doing.
+
+VlimeConnection.WithThread({thread}, {Func})    *VlimeConnection.WithThread()*
+
+  Call {Func} with {thread} set as the current thread. The current thread will
+  be reset once this method returns. This is useful when you want to e.g.
+  evaluate something in certain threads.
+
+VlimeConnection.WithPackage({package}, {Func}) *VlimeConnection.WithPackage()*
+
+  Call {Func} with {package} set as the current package. The current package
+  will be reset once this method returns.
+
+VlimeConnection.EmacsRex({cmd})                   *VlimeConnection.EmacsRex()*
+
+  Construct an :EMACS-REX message, with the current package and the current
+  thread. {cmd} should be a raw :EMACS-REX command.
+
+VlimeConnection.Ping()                                *VlimeConnection.Ping()*
+
+  Send a PING request to the server, and wait for the reply.
+
+VlimeConnection.Pong({thread}, {ttag})                *VlimeConnection.Pong()*
+
+  Reply to server PING messages. {thread} and {ttag} are parameters received
+  in the PING message from the server.
+
+VlimeConnection.ConnectionInfo([return_dict], [callback])
+                                            *VlimeConnection.ConnectionInfo()*
+
+  Ask the server for some info regarding this connection, and optionally
+  register a [callback] function to handle the result.
+
+  If [return_dict] is specified and |TRUE|, this method will convert the
+  result to a dictionary before passing it to the [callback] function.
+
+VlimeConnection.SwankRequire({contrib}, [callback])
+                                              *VlimeConnection.SwankRequire()*
+
+  Require Swank contrib modules, and optionally register a [callback] function
+  to handle the result.
+
+  {contrib} can be a string or a list of strings. Each string is a contrib
+  module name. These names are case-sensitive. Normally you should use
+  uppercase.
+
+VlimeConnection.CreateREPL([coding_system], [callback])
+                                                *VlimeConnection.CreateREPL()*
+
+  Create the REPL thread, and optionally register a [callback] function to
+  handle the result.
+
+  [coding_system] is implementation-dependent. Omit this argument or pass
+  v:null to let the server choose it for you.
+
+VlimeConnection.ListenerEval({expr}, [callback])
+                                              *VlimeConnection.ListenerEval()*
+
+  Evaluate {expr} in the current package and thread, and optionally register a
+  [callback] function to handle the result. {expr} should be a plain string
+  containing the lisp expression to be evaluated.
+
+VlimeConnection.Interrupt({thread})              *VlimeConnection.Interrupt()*
+
+  Interrupt {thread}. {thread} should be a numeric thread ID, or {"package":
+  "KEYWORD", "name": "REPL-THREAD"} for the REPL thread.
+
+VlimeConnection.SLDBAbort([callback])            *VlimeConnection.SLDBAbort()*
+
+  When the debugger is active, invoke the ABORT restart.
+
+VlimeConnection.SLDBBreak({func_name}, [callback])
+                                                 *VlimeConnection.SLDBBreak()*
+
+  Set a breakpoint at entry to a function with the name {func_name}.
+
+VlimeConnection.SLDBContinue([callback])      *VlimeConnection.SLDBContinue()*
+
+  When the debugger is active, invoke the CONTINUE restart.
+
+VlimeConnection.SLDBStep({frame}, [callback])     *VlimeConnection.SLDBStep()*
+
+  When the debugger is active, enter stepping mode in {frame}. {frame} should
+  be a valid frame number presented by the debugger.
+
+VlimeConnection.SLDBNext({frame}, [callback])     *VlimeConnection.SLDBNext()*
+
+  When the debugger is active, step over the current function call in {frame}.
+
+VlimeConnection.SLDBOut({frame}, [callback])       *VlimeConnection.SLDBOut()*
+
+  When the debugger is active, step out of the current function in {frame}.
+
+VlimeConnection.SLDBReturnFromFrame({frame}, {str}, [callback])
+                                       *VlimeConnection.SLDBReturnFromFrame()*
+
+  When the debugger is active, evaluate {str} and return from {frame} with the
+  evaluation result. {str} should be a plain string containing the lisp
+  expression to be evaluated.
+
+VlimeConnection.SLDBDisassemble({frame}, [callback])
+                                           *VlimeConnection.SLDBDisassemble()*
+
+  Disassemble the code for {frame}.
+
+VlimeConnection.InvokeNthRestartForEmacs({level}, {restart}, [callback])
+                                  *VlimeConnection.InvokeNthRestartForEmacs()*
+
+  When the debugger is active, invoke a {restart} at {level}. {restart} should
+  be a valid restart number, and {level} a valid debugger level.
+
+VlimeConnection.RestartFrame({frame}, [callback])
+                                              *VlimeConnection.RestartFrame()*
+
+  When the debugger is active, restart a {frame}.
+
+VlimeConnection.FrameLocalsAndCatchTags({frame}, [callback])
+                                   *VlimeConnection.FrameLocalsAndCatchTags()*
+
+  When the debugger is active, get info about local variables and catch tags
+  for {frame}.
+
+VlimeConnection.FrameSourceLocation({frame}, [callback])
+                                       *VlimeConnection.FrameSourceLocation()*
+
+  When the debugger is active, get the source location for {frame}.
+
+VlimeConnection.EvalStringInFrame({str}, {frame}, {package}, [callback])
+                                         *VlimeConnection.EvalStringInFrame()*
+
+  When the debugger is active, evaluate {str} in {package}, and within the
+  context of {frame}.
+
+VlimeConnection.InitInspector({thing}, [callback])
+                                             *VlimeConnection.InitInspector()*
+
+  Evaluate {thing} and start inspecting the evaluation result with the
+  inspector. {thing} should be a plain string containing the lisp expression
+  to be evaluated.
+
+VlimeConnection.InspectorReinspect([callback])
+                                        *VlimeConnection.InspectorReinspect()*
+
+  Reload the object being inspected, and update inspector states.
+
+VlimeConnection.InspectorRange({r_start}, {r_end}, [callback])
+                                            *VlimeConnection.InspectorRange()*
+
+  Pagination for inspector content. {r_start} is the first index to retrieve
+  in the inspector content list. {r_end} is the last index plus one.
+
+VlimeConnection.InspectNthPart({nth}, [callback])
+                                            *VlimeConnection.InspectNthPart()*
+
+  Inspect an object presented by the inspector. {nth} should be a valid part
+  number presented by the inspector.
+
+VlimeConnection.InspectorCallNthAction({nth}, [callback])
+                                    *VlimeConnection.InspectorCallNthAction()*
+
+  Perform an action in the inspector. {nth} should be a valid action number
+  presented by the inspector.
+
+VlimeConnection.InspectorPop([callback])      *VlimeConnection.InspectorPop()*
+
+  Inspect the previous object in the stack of inspected objects.
+
+VlimeConnection.InspectCurrentCondition([callback])
+                                   *VlimeConnection.InspectCurrentCondition()*
+
+  When the debugger is active, inspect the current condition.
+
+VlimeConnection.InspectInFrame({thing}, {frame}, [callback])
+                                            *VlimeConnection.InspectInFrame()*
+
+  When the debugger is active, evaluate {thing} in the context of {frame}, and
+  start inspecting the evaluation result.
+
+VlimeConnection.InspectPresentation({pres_id}, {reset}, [callback])
+                                       *VlimeConnection.InspectPresentation()*
+
+  Start inspecting an object saved by SWANK-PRESENTATIONS. {pres_id} should be
+  a valid ID presented by PRESENTATION-START messages. If {reset} is |TRUE|,
+  the inspector will be reset first.
+
+VlimeConnection.ListThreads([callback])        *VlimeConnection.ListThreads()*
+
+  Get a list of running threads.
+
+VlimeConnection.KillNthThread({nth}, [callback])
+                                             *VlimeConnection.KillNthThread()*
+
+  Kill a thread presented in the thread list. {nth} should be a valid index in
+  the thread list, instead of a thread ID.
+
+VlimeConnection.DebugNthThread({nth}, [callback])
+                                            *VlimeConnection.DebugNthThread()*
+
+  Activate the debugger in a thread presented in the thread list. {nth} should
+  be a valid index in the thread list, instead of a thread ID.
+
+VlimeConnection.UndefineFunction({func_name}, [callback])
+                                          *VlimeConnection.UndefineFunction()*
+
+  Undefine a function with the name {func_name}.
+
+VlimeConnection.UninternSymbol({sym_name}, [package], [callback])
+                                            *VlimeConnection.UninternSymbol()*
+
+  Unintern a symbol with the name {sym_name}. {sym_name} should be a plain
+  string containing the name of the symbol to be uninterned.
+
+VlimeConnection.SetPackage({package}, [callback])
+                                                *VlimeConnection.SetPackage()*
+
+  Bind a Common Lisp package to the current buffer. See
+  |vlime-current-package|.
+
+VlimeConnection.DescribeSymbol({symbol}, [callback])
+                                            *VlimeConnection.DescribeSymbol()*
+
+  Get a description for {symbol}. {symbol} should be a plain string containing
+  the symbol name.
+
+VlimeConnection.OperatorArgList({operator}, [callback])
+                                           *VlimeConnection.OperatorArgList()*
+
+  Get the arglist description for {operator}. {operator} should be a plain
+  string containing a symbol name.
+
+VlimeConnection.SimpleCompletions({symbol}, [callback])
+                                         *VlimeConnection.SimpleCompletions()*
+
+  Get a simple completion list for {symbol}. {symbol} should be a plain string
+  containing a (partial) symbol name.
+
+VlimeConnection.FuzzyCompletions({symbol}, [callback])
+                                          *VlimeConnection.FuzzyCompletions()*
+
+  Get a completion list for {symbol}, using a more clever fuzzy algorithm.
+  {symbol} should be a plain string containing a (partial) symbol name.
+
+VlimeConnection.SwankMacroExpandOne({expr}, [callback])
+                                       *VlimeConnection.SwankMacroExpandOne()*
+
+  Perform one macro expansion on {expr}. {expr} should be a plain string
+  containing the lisp expression to be expanded.
+
+VlimeConnection.SwankMacroExpand({expr}, [callback])
+                                          *VlimeConnection.SwankMacroExpand()*
+
+  Expand {expr}, until the resulting form cannot be macro-expanded anymore.
+
+VlimeConnection.SwankMacroExpandAll({expr}, [callback])
+                                       *VlimeConnection.SwankMacroExpandAll()*
+
+  Recursively expand all macros in {expr}.
+
+VlimeConnection.DisassembleForm({expr}, [callback])
+                                           *VlimeConnection.DisassembleForm()*
+
+  Compile and disassemble {expr}.
+
+VlimeConnection.CompileStringForEmacs({expr}, {buffer}, {position},
+  {filename}, [policy], [callback])  *VlimeConnection.CompileStringForEmacs()*
+
+  Compile {expr}. {buffer}, {position} and {filename} specify where {expr} is
+  from. When {buffer} or {filename} is unknown, one can pass v:null instead.
+  [policy] should be a dictionary specifying a compiler policy. For example,
+
+      {"DEBUG": 3, "SPEED": 0}
+
+  This means no optimization in runtime speed, and maximum debug info.
+
+VlimeConnection.CompileFileForEmacs({filename}, [load], [policy], [callback])
+                                       *VlimeConnection.CompileFileForEmacs()*
+
+  Compile a file with the name {filename}. [load], if present and |TRUE|,
+  tells Vlime to automatically load the compiled file after successful
+  compilation. [policy] is the compiler policy, see
+  |VlimeConnection.CompileStringForEmacs()|.
+
+VlimeConnection.LoadFile({filename}, [callback])  *VlimeConnection.LoadFile()*
+
+  Load a file with the name {filename}.
+
+VlimeConnection.XRef({ref_type}, {name}, [callback])  *VlimeConnection.XRef()*
+
+  Cross reference lookup. {ref_type} can be "CALLS", "CALLS-WHO",
+  "REFERENCES", "BINDS", "SETS", "MACROEXPANDS", or "SPECIALIZES". {name} is
+  the symbol name to lookup.
+
+VlimeConnection.FindDefinitionsForEmacs({name}, [callback])
+                                   *VlimeConnection.FindDefinitionsForEmacs()*
+
+  Lookup definitions for symbol {name}.
+
+VlimeConnection.DocumentationSymbol({sym_name}, [callback])
+                                       *VlimeConnection.DocumentationSymbol()*
+
+  Find the documentation for symbol {sym_name}.
+
+==============================================================================
+FUNCTIONS                                                *vlime-api-functions*
+
+vlime#New([cb_data], [ui])                                       *vlime#New()*
+
+  Create a connection object.
+
+  [cb_data] is arbitrary data, accessible from the connection callbacks. [ui]
+  is an instance of the UI object, see |vlime#ui#New()|.
+
+  This function is seldom used directly. To connect to a server, call
+  |vlime#plugin#ConnectREPL()|.
+
+vlime#plugin#CloseCurConnection()          *vlime#plugin#CloseCurConnection()*
+
+  Close the connection bound to the current buffer. If no connection is bound,
+  show a menu to choose one.
+
+vlime#plugin#RenameCurConnection()        *vlime#plugin#RenameCurConnection()*
+
+  Rename the connection bound to the current buffer. If no connection is
+  bound, show a menu to choose one.
+
+vlime#plugin#ShowSelectedServer()          *vlime#plugin#ShowSelectedServer()*
+
+  Show the output buffer for a server started by Vlime.
+
+vlime#plugin#StopSelectedServer()          *vlime#plugin#StopSelectedServer()*
+
+  Stop a server started by Vlime.
+
+vlime#plugin#RenameSelectedServer()      *vlime#plugin#RenameSelectedServer()*
+
+  Rename a server started by Vlime. Prompt for the new server name.
+
+vlime#plugin#ConnectREPL([host], [port], [remote_prefix], [timeout], [name])
+                                                  *vlime#plugin#ConnectREPL()*
+
+  Connect to a server, and return a connection object (see
+  |vlime-api.VlimeConnection|).
+
+  [host] and [port] specify the server to connect to. This function will use
+  the value in |g:vlime_address| if they are omitted. [remote_prefix], if
+  specified, is an SFTP URL prefix, to tell Vlime to open remote files via
+  SFTP (see |vlime-remote-server|). [timeout] is the time to wait for the
+  connection to be made, in milliseconds. [name] gives the new connection a
+  name. Omit this argument to use an automatically generated name.
+
+vlime#plugin#SelectCurConnection()        *vlime#plugin#SelectCurConnection()*
+
+  Show a menu to let you choose a connection, and bind this connection to the
+  current buffer.
+
+vlime#plugin#SendToREPL([content])                 *vlime#plugin#SendToREPL()*
+
+  Evaluate [content] in the REPL and show the result in the REPL buffer. If
+  [content] is omitted, show an input buffer.
+
+vlime#plugin#Compile([content], [policy])             *vlime#plugin#Compile()*
+
+  Compile [content], with the specified [policy], and show the result in the
+  REPL buffer. If [content] is omitted or v:null, show an input buffer. If
+  [policy] is omitted, try to use |g:vlime_compiler_policy|. Open the compiler
+  notes window when there are warnings or errors etc.
+
+vlime#plugin#Inspect([content])                       *vlime#plugin#Inspect()*
+
+  Evaluate [content] and launch the inspector with the evaluation result
+  loaded. If [content] is omitted, show an input buffer.
+
+vlime#plugin#CompileFile([file_name], [policy])   *vlime#plugin#CompileFile()*
+
+  Compile a file named [file_name], with the specified [policy], and show the
+  result in the REPL buffer. If [file_name] is omitted or v:null, prompt for
+  the file name. If [policy] is omitted, try to use |g:vlime_compiler_policy|.
+  Open the compiler notes window when there are warnings or errors etc.
+
+vlime#plugin#ExpandMacro([expr], [expand_all])    *vlime#plugin#ExpandMacro()*
+
+  Perform macro expansion on [expr] and show the result in the preview window.
+  If [expr] is omitted, show an input buffer. If [expand_all] is present and
+  |TRUE|, recursively expand all macros in [expr].
+
+vlime#plugin#DisassembleForm([content])       *vlime#plugin#DisassembleForm()*
+
+  Compile and disassemble [content]. Show the result in the preview window. If
+  [content] is omitted, show an input buffer.
+
+vlime#plugin#LoadFile([file_name])                   *vlime#plugin#LoadFile()*
+
+  Load a file named [file_name]. If [file_name] is omitted, prompt for the
+  file name.
+
+vlime#plugin#SetPackage([pkg])                     *vlime#plugin#SetPackage()*
+
+  Bind a Common Lisp package [pkg] to the current buffer. If [pkg] is omitted,
+  show an input buffer.
+
+vlime#plugin#SwankRequire({contribs})            *vlime#plugin#SwankRequire()*
+
+  Require Swank contrib modules. {contribs} should be a plain string or a list
+  of strings. Each string is a contrib module name. These names are
+  case-sensitive. Normally you should use uppercase.
+
+vlime#plugin#ShowOperatorArgList([op])    *vlime#plugin#ShowOperatorArgList()*
+
+  Show the arglist description for operator [op] in the arglist window. If
+  [op] is omitted, show an input buffer.
+
+vlime#plugin#DescribeSymbol([symbol])          *vlime#plugin#DescribeSymbol()*
+
+  Show a description for [symbol] in the preview window. If [symbol] is
+  omitted, show an input buffer.
+
+vlime#plugin#XRefSymbol({ref_type}, [sym])         *vlime#plugin#XRefSymbol()*
+
+  Lookup cross references for [sym], and show the results in the xref window.
+  If [sym] is omitted, show an input buffer. See |VlimeConnection.XRef()| for
+  possible values for {ref_type}.
+
+vlime#plugin#XRefSymbolWrapper()            *vlime#plugin#XRefSymbolWrapper()*
+
+  A wrapper function for |vlime#plugin#XRefSymbol()| and
+  |vlime#plugin#FindDefinition()|. Pick the type of cross reference
+  interactively.
+
+vlime#plugin#FindDefinition([sym])             *vlime#plugin#FindDefinition()*
+
+  Find the definition for [sym], and show the results in the xref window. If
+  [sym] is omitted, show an input buffer.
+
+vlime#plugin#AproposList([pattern])               *vlime#plugin#AproposList()*
+
+  Apropos search for [pattern]. Show the results in the preview window. If
+  [pattern] is omitted, show an input buffer.
+
+vlime#plugin#DocumentationSymbol([symbol])
+                                          *vlime#plugin#DocumentationSymbol()*
+
+  Show the documentation for [symbol] in the preview window. If [symbol] is
+  omitted, show an input buffer.
+
+vlime#plugin#SetBreakpoint([sym])               *vlime#plugin#SetBreakpoint()*
+
+  Set a breakpoint at entry to a function with the name [sym]. If [sym] is
+  omitted, show an input buffer.
+
+vlime#plugin#ListThreads()                        *vlime#plugin#ListThreads()*
+
+  Show the thread list window.
+
+vlime#plugin#UndefineFunction([sym])         *vlime#plugin#UndefineFunction()*
+
+  Undefine a function with the name [sym]. If [sym] is omitted, show an input
+  buffer.
+
+vlime#plugin#UninternSymbol([sym])             *vlime#plugin#UninternSymbol()*
+
+  Unintern a symbol [sym]. If [sym] is omitted, show an input buffer.
+
+vlime#plugin#UndefineUninternWrapper()
+                                      *vlime#plugin#UndefineUninternWrapper()*
+
+  A wrapper function for |vlime#plugin#UndefineFunction()| and
+  |vlime#plugin#UninternSymbol()|. Pick the type of action to perform
+  interactively.
+
+vlime#plugin#CloseWindow([win_name])              *vlime#plugin#CloseWindow()*
+
+  Close Vlime special windows. [win_name] is the type of windows to close. See
+  |vlime#ui#GetWindowList()| for valid values for [win_name]. If [win_name] is
+  omitted, show a menu to let you choose which window to close.
+
+vlime#plugin#CompleteFunc({findstart}, {base})   *vlime#plugin#CompleteFunc()*
+
+  The completion function. This function is meant to be used as |omnifunc| or
+  |completefunc|. It is asynchronous, and will NOT return the completion list
+  immediately.
+
+vlime#plugin#CalcCurIndent()                    *vlime#plugin#CalcCurIndent()*
+
+  Calculate the indent size for the current line, in number of <space>
+  characters.
+
+vlime#plugin#Setup([force])                             *vlime#plugin#Setup()*
+
+  Set up Vlime for the current buffer. Do nothing if the current buffer is
+  already initialized. If [force] is present and |TRUE|, always perform the
+  initialization.
+
+vlime#plugin#InteractionMode()                *vlime#plugin#InteractionMode()*
+
+  Toggle interaction mode.
+
+
+vim:tw=78:ts=8:ft=help:norl:
