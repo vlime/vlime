@@ -1,4 +1,4 @@
-*vlime-tutor.txt*  A tutorial for Vlime
+*vlime-tutor.txt*  A tutorial for Vlime                  *vlime-tutor*
 
 ======================================================================
 CONTENTS                                        *vlime-tutor-contents*

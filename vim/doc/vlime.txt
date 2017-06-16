@@ -1,4 +1,4 @@
-*vlime.txt*  A Common Lisp dev environment for Vim
+*vlime.txt*  A Common Lisp dev environment for Vim             *vlime*
 
 ======================================================================
 CONTENTS                                              *vlime-contents*
