@@ -1,19 +1,21 @@
 ""
 " @dict VlimeConnection
 " Vlime uses connection objects (dictionaries) to represent connections to the
-" servers. You can create such an object by calling @function(vlime#New) or
-" @function(vlime#plugin#ConnectREPL). See below for a detailed list of
-" methods for connection objects.
+" servers. You can create such an object by calling
+" @function(vlime#plugin#ConnectREPL) or @function(vlime#New).
 "
-" Most of the methods are asynchronous. All async methods have an optional
-" callback argument, to allow you to register a function for handling the
-" result returned by the server. These callback functions should accept two
-" arguments:
+" Most of the connection object's methods are asynchronous. All async methods
+" have an optional callback argument, to allow a function be registered for
+" handling the result returned by the server. These callback functions should
+" accept two arguments:
 "
 "     function! SomeCallbackFunc({conn_obj}, {result}) ...
 "
 " {conn_obj} is the connection object in question, and {result} is the
 " returned value.
+"
+" See below for a detailed list of methods for connection objects.
+"
 
 ""
 " @usage [cb_data] [ui]
@@ -764,8 +766,7 @@ endfunction
 " @usage [callback]
 " @public
 "
-" Remove one object from the stack of inspected objects, and inspect the top
-" object in the stack.
+" Inspect the previous object in the stack of inspected objects.
 function! vlime#InspectorPop(...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(

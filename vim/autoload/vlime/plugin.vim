@@ -1,3 +1,8 @@
+""
+" @public
+"
+" Close the connection bound to the current buffer. If no connection is bound,
+" show a menu to choose one.
 function! vlime#plugin#CloseCurConnection()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -22,6 +27,11 @@ function! vlime#plugin#CloseCurConnection()
     endif
 endfunction
 
+""
+" @public
+"
+" Rename the connection bound to the current buffer. If no connection is
+" bound, show a menu to choose one.
 function! vlime#plugin#RenameCurConnection()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -35,6 +45,10 @@ function! vlime#plugin#RenameCurConnection()
     endif
 endfunction
 
+""
+" @public
+"
+" Show the output buffer for a server started by Vlime.
 function! vlime#plugin#ShowSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
@@ -43,6 +57,10 @@ function! vlime#plugin#ShowSelectedServer()
     call vlime#server#Show(server)
 endfunction
 
+""
+" @public
+"
+" Stop a server started by Vlime.
 function! vlime#plugin#StopSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
@@ -57,6 +75,10 @@ function! vlime#plugin#StopSelectedServer()
     endif
 endfunction
 
+""
+" @public
+"
+" Rename a server started by Vlime. Prompt for the new server name.
 function! vlime#plugin#RenameSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
@@ -70,7 +92,21 @@ function! vlime#plugin#RenameSelectedServer()
     endif
 endfunction
 
-" vlime#plugin#ConnectREPL([host[, port[, remote_prefix[, timeout [, name]]]]])
+""
+" @usage [host] [port] [remote_prefix] [timeout] [name]
+" @public
+"
+" Connect to a server, and return a connection object (see
+" @dict(VlimeConnection)).
+"
+" [host] and [port] specify the server to connect to. This function will use
+" the value in |g:vlime_address| if they are omitted.
+" [remote_prefix], if specified, is an SFTP URL prefix, to tell Vlime to open
+" remote files via SFTP (see |vlime-remote-server|).
+" [timeout] is the time to wait for the connection to be made, in
+" milliseconds.
+" [name] gives the new connection a name. Omit this argument to use an
+" automatically generated name.
 function! vlime#plugin#ConnectREPL(...)
     let [def_host, def_port] = exists('g:vlime_address') ?
                 \ g:vlime_address : ['127.0.0.1', 7002]
@@ -114,6 +150,11 @@ function! vlime#plugin#ConnectREPL(...)
     return conn
 endfunction
 
+""
+" @public
+"
+" Show a menu to let you choose a connection, and bind this connection to the
+" current buffer.
 function! vlime#plugin#SelectCurConnection()
     let conn = vlime#connection#Select(v:false)
     if type(conn) != type(v:null)
@@ -122,7 +163,12 @@ function! vlime#plugin#SelectCurConnection()
     endif
 endfunction
 
-" vlime#plugin#SendToREPL([content])
+""
+" @usage [content]
+" @public
+"
+" Evaluate [content] in the REPL and show the result in the REPL buffer. If
+" [content] is omitted, show an input buffer.
 function! vlime#plugin#SendToREPL(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -137,7 +183,12 @@ function! vlime#plugin#SendToREPL(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#Compile([content])
+""
+" @usage [content]
+" @public
+"
+" Compile [content], and show the result in the REPL buffer. If [content] is
+" omitted, show an input buffer. Use |g:vlime_compiler_policy| when it's set.
 function! vlime#plugin#Compile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -154,7 +205,12 @@ function! vlime#plugin#Compile(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#Inspect([content])
+""
+" @usage [content]
+" @public
+"
+" Evaluate [content] and launch the inspector with the evaluation result
+" loaded. If [content] is omitted, show an input buffer.
 function! vlime#plugin#Inspect(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -171,7 +227,14 @@ function! vlime#plugin#Inspect(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#CompileFile([file_name[, policy]])
+""
+" @usage [file_name] [policy]
+" @public
+"
+" Compile a file named [file_name], with the specified [policy], and show the
+" result in the REPL buffer. If [file_name] is omitted or v:null, prompt for
+" the file name. If [policy] is omitted, try to use |g:vlime_compiler_policy|.
+" Open the compiler notes window when there are warnings or errors etc.
 function! vlime#plugin#CompileFile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -190,7 +253,13 @@ function! vlime#plugin#CompileFile(...)
                 \ 'file')
 endfunction
 
-" vlime#plugin#ExpandMacro([expr[, expand_all]])
+""
+" @usage [expr] [expand_all]
+" @public
+"
+" Perform macro expansion on [expr] and show the result in the preview window.
+" If [expr] is omitted, show an input buffer. If [expand_all] is present and
+" |TRUE|, recursively expand all macros in [expr].
 function! vlime#plugin#ExpandMacro(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -209,7 +278,12 @@ function! vlime#plugin#ExpandMacro(...)
     call vlime#ui#input#MaybeInput(expr, CB, 'Expand macro: ', v:null, conn)
 endfunction
 
-" vlime#plugin#DisassembleForm([content])
+""
+" @usage [content]
+" @public
+"
+" Compile and disassemble [content]. Show the result in the preview window. If
+" [content] is omitted, show an input buffer.
 function! vlime#plugin#DisassembleForm(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -225,7 +299,12 @@ function! vlime#plugin#DisassembleForm(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#LoadFile([file_name])
+""
+" @usage [file_name]
+" @public
+"
+" Load a file named [file_name]. If [file_name] is omitted, prompt for the
+" file name.
 function! vlime#plugin#LoadFile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -242,7 +321,12 @@ function! vlime#plugin#LoadFile(...)
                 \ 'file')
 endfunction
 
-" vlime#plugin#SetPackage([pkg])
+""
+" @usage [pkg]
+" @public
+"
+" Bind a Common Lisp package [pkg] to the current buffer. If [pkg] is omitted,
+" show an input buffer.
 function! vlime#plugin#SetPackage(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -259,6 +343,12 @@ function! vlime#plugin#SetPackage(...)
                 \ conn)
 endfunction
 
+""
+" @public
+"
+" Require Swank contrib modules. {contribs} should be a plain string or a list
+" of strings. Each string is a contrib module name. These names are
+" case-sensitive. Normally you should use uppercase.
 function! vlime#plugin#SwankRequire(contribs)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -267,7 +357,12 @@ function! vlime#plugin#SwankRequire(contribs)
     call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete'))
 endfunction
 
-" vlime#plugin#ShowOperatorArgList([op])
+""
+" @usage [op]
+" @public
+"
+" Show the arglist description for operator [op] in the arglist window. If
+" [op] is omitted, show an input buffer.
 function! vlime#plugin#ShowOperatorArgList(...)
     let conn = vlime#connection#Get(v:true)
     if type(conn) == type(v:null)
@@ -283,7 +378,12 @@ function! vlime#plugin#ShowOperatorArgList(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#DescribeSymbol([symbol])
+""
+" @usage [symbol]
+" @public
+"
+" Show a description for [symbol] in the preview window. If [symbol] is
+" omitted, show an input buffer.
 function! vlime#plugin#DescribeSymbol(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -299,7 +399,13 @@ function! vlime#plugin#DescribeSymbol(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#XRefSymbol(ref_type[, sym])
+""
+" @usage {ref_type} [sym]
+" @public
+"
+" Lookup cross references for [sym], and show the results in the xref window.
+" If [sym] is omitted, show an input buffer. See
+" @function(VlimeConnection.XRef) for possible values for {ref_type}.
 function! vlime#plugin#XRefSymbol(ref_type, ...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -317,6 +423,12 @@ function! vlime#plugin#XRefSymbol(ref_type, ...)
                 \ conn)
 endfunction
 
+""
+" @public
+"
+" A wrapper function for @function(vlime#plugin#XRefSymbol) and
+" @function(vlime#plugin#FindDefinition). Pick the type of cross reference
+" interactively.
 function! vlime#plugin#XRefSymbolWrapper()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -357,7 +469,12 @@ function! vlime#plugin#XRefSymbolWrapper()
     endif
 endfunction
 
-" vlime#plugin#FindDefinition([sym])
+""
+" @usage [sym]
+" @public
+"
+" Find the definition for [sym], and show the results in the xref window. If
+" [sym] is omitted, show an input buffer.
 function! vlime#plugin#FindDefinition(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -375,7 +492,12 @@ function! vlime#plugin#FindDefinition(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#AproposList([pattern])
+""
+" @usage [pattern]
+" @public
+"
+" Apropos search for [pattern]. Show the results in the preview window. If
+" [pattern] is omitted, show an input buffer.
 function! vlime#plugin#AproposList(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -393,7 +515,12 @@ function! vlime#plugin#AproposList(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#DocumentationSymbol([symbol])
+""
+" @usage [symbol]
+" @public
+"
+" Show the documentation for [symbol] in the preview window. If [symbol] is
+" omitted, show an input buffer.
 function! vlime#plugin#DocumentationSymbol(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -409,7 +536,12 @@ function! vlime#plugin#DocumentationSymbol(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#SetBreakpoint([sym])
+""
+" @usage [sym]
+" @public
+"
+" Set a breakpoint at entry to a function with the name [sym]. If [sym] is
+" omitted, show an input buffer.
 function! vlime#plugin#SetBreakpoint(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -425,6 +557,10 @@ function! vlime#plugin#SetBreakpoint(...)
                 \ conn)
 endfunction
 
+""
+" @public
+"
+" Show the thread list window.
 function! vlime#plugin#ListThreads()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -434,7 +570,12 @@ function! vlime#plugin#ListThreads()
     call conn.ListThreads(function('s:OnListThreadsComplete'))
 endfunction
 
-" vlime#plugin#UndefineFunction([sym])
+""
+" @usage [sym]
+" @public
+"
+" Undefine a function with the name [sym]. If [sym] is omitted, show an input
+" buffer.
 function! vlime#plugin#UndefineFunction(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -450,7 +591,11 @@ function! vlime#plugin#UndefineFunction(...)
                 \ conn)
 endfunction
 
-" vlime#plugin#UninternSymbol([sym])
+""
+" @usage [sym]
+" @public
+"
+" Unintern a symbol [sym]. If [sym] is omitted, show an input buffer.
 function! vlime#plugin#UninternSymbol(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -465,6 +610,12 @@ function! vlime#plugin#UninternSymbol(...)
                 \ conn)
 endfunction
 
+""
+" @public
+"
+" A wrapper function for @function(vlime#plugin#UndefineFunction) and
+" @function(vlime#plugin#UninternSymbol). Pick the type of action to perform
+" interactively.
 function! vlime#plugin#UndefineUninternWrapper()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -492,7 +643,13 @@ function! vlime#plugin#UndefineUninternWrapper()
     endif
 endfunction
 
-" vlime#plugin#CloseWindow([win_name])
+""
+" @usage [win_name]
+" @public
+"
+" Close Vlime special windows. [win_name] is the type of windows to close. See
+" @function(vlime#ui#GetWindowList) for valid values for [win_name]. If
+" [win_name] is omitted, show a menu to let you choose which window to close.
 function! vlime#plugin#CloseWindow(...)
     let win_name = get(a:000, 0, v:null)
     if type(win_name) == type(v:null)
@@ -529,6 +686,12 @@ function! vlime#plugin#CloseWindow(...)
     endif
 endfunction
 
+""
+" @public
+"
+" The completion function. This function is meant to be used as |omnifunc| or
+" |completefunc|. It is asynchronous, and will NOT return the completion list
+" immediately.
 function! vlime#plugin#CompleteFunc(findstart, base)
     let start_col = s:CompleteFindStart()
     if a:findstart
@@ -583,6 +746,11 @@ function! vlime#plugin#VlimeKey(key)
     return ''
 endfunction
 
+""
+" @public
+"
+" Calculate the indent size for the current line, in number of <space>
+" characters.
 function! vlime#plugin#CalcCurIndent()
     let line_no = line('.')
 
@@ -632,7 +800,13 @@ function! vlime#plugin#CalcCurIndent()
     endif
 endfunction
 
-" vlime#plugin#Setup([force])
+""
+" @usage [force]
+" @public
+"
+" Set up Vlime for the current buffer. Do nothing if the current buffer is
+" already initialized. If [force] is present and |TRUE|, always perform the
+" initialization.
 function! vlime#plugin#Setup(...)
     let force = get(a:000, 0, v:false)
 
@@ -647,6 +821,10 @@ function! vlime#plugin#Setup(...)
     call vlime#ui#MapBufferKeys('lisp')
 endfunction
 
+""
+" @public
+"
+" Toggle interaction mode.
 function! vlime#plugin#InteractionMode()
     if getbufvar(bufnr('%'), 'vlime_interaction_mode', v:false)
         let b:vlime_interaction_mode = v:false
