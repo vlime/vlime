@@ -184,11 +184,13 @@ function! vlime#plugin#SendToREPL(...)
 endfunction
 
 ""
-" @usage [content]
+" @usage [content] [policy]
 " @public
 "
-" Compile [content], and show the result in the REPL buffer. If [content] is
-" omitted, show an input buffer. Use |g:vlime_compiler_policy| when it's set.
+" Compile [content], with the specified [policy], and show the result in the
+" REPL buffer. If [content] is omitted or v:null, show an input buffer. If
+" [policy] is omitted, try to use |g:vlime_compiler_policy|. Open the compiler
+" notes window when there are warnings or errors etc.
 function! vlime#plugin#Compile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -196,10 +198,11 @@ function! vlime#plugin#Compile(...)
     endif
 
     let content = get(a:000, 0, v:null)
+    let policy = get(a:000, 1, v:null)
     let win = win_getid()
     call vlime#ui#input#MaybeInput(
                 \ content,
-                \ function('s:CompileInputComplete', [conn, win]),
+                \ function('s:CompileInputComplete', [conn, win, policy]),
                 \ 'Compile: ',
                 \ v:null,
                 \ conn)
@@ -1000,7 +1003,7 @@ function! s:SendToREPLInputComplete(conn, content)
                 \ function(a:conn.ListenerEval, [a:content, function('s:OnListenerEvalComplete')]))
 endfunction
 
-function! s:CompileInputComplete(conn, win, content)
+function! s:CompileInputComplete(conn, win, policy, content)
     if type(a:content) == v:t_list
         let str = a:content[0]
         let [str_line, str_col] = a:content[1]
@@ -1012,7 +1015,9 @@ function! s:CompileInputComplete(conn, win, content)
         let str = a:content
     endif
 
-    if exists('g:vlime_compiler_policy')
+    if type(a:policy) != type(v:null)
+        let policy = a:policy
+    elseif exists('g:vlime_compiler_policy')
         let policy = g:vlime_compiler_policy
     else
         let policy = v:null
