@@ -1,4 +1,7 @@
 * master
+    * API documentation `:help vlime-api`.
+    * Experimental support for swank-kawa.scm.
+    * Provide an option to use an existing Swank server.
     * More precise jumps to source locations
     * Move `vim/plugin/*.vim` to `vim/autoload/vlime/`, for better start-up performance.
     * Top-level API functions are renamed.
