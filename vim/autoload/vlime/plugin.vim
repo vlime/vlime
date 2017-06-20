@@ -264,10 +264,10 @@ endfunction
 " If [expr] is omitted or v:null, show an input buffer.
 "
 " [type] specifies the type of expansion to perform. It can be "expand",
-" "one", or "all". When it's omitted or "expand", repeatedly expand {expr}
+" "one", or "all". When it's omitted or "expand", repeatedly expand [expr]
 " until the resulting form cannot be expanded anymore. When it's "one", only
 " expand once. And "all" means to recursively expand all macros contained in
-" {expr}.
+" [expr].
 function! vlime#plugin#ExpandMacro(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
