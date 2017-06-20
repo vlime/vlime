@@ -681,6 +681,8 @@ Key mappings avaialble in the inspector:
         Select the previous interactable field/button.
     p
         Return to the previous inspected object.
+    P
+        Move to the next inspected object.
     R
         Refresh the inspector.
 

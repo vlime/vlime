@@ -95,6 +95,7 @@ function! vlime#New(...)
                 \ 'InspectNthPart': function('vlime#InspectNthPart'),
                 \ 'InspectorCallNthAction': function('vlime#InspectorCallNthAction'),
                 \ 'InspectorPop': function('vlime#InspectorPop'),
+                \ 'InspectorNext': function('vlime#InspectorNext'),
                 \ 'InspectCurrentCondition': function('vlime#InspectCurrentCondition'),
                 \ 'InspectInFrame': function('vlime#InspectInFrame'),
                 \ 'InspectPresentation': function('vlime#InspectPresentation'),
@@ -773,6 +774,20 @@ function! vlime#InspectorPop(...) dict
                     \ [s:SYM('SWANK', 'INSPECTOR-POP')]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectorPop']))
+endfunction
+
+""
+" @dict VlimeConnection.InspectorNext
+" @usage [callback]
+" @public
+"
+" Inspect the next object in the stack of inspected objects.
+function! vlime#InspectorNext(...) dict
+    let Callback = get(a:000, 0, v:null)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'INSPECTOR-NEXT')]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#InspectorNext']))
 endfunction
 
 ""

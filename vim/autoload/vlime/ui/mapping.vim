@@ -113,6 +113,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', ['<c-n>', '<tab>'], ':call vlime#ui#inspector#NextField(v:true)<cr>'],
                     \ ['n', '<c-p>', ':call vlime#ui#inspector#NextField(v:false)<cr>'],
                     \ ['n', 'p', ':call vlime#ui#inspector#InspectorPop()<cr>'],
+                    \ ['n', 'P', ':call vlime#ui#inspector#InspectorNext()<cr>'],
                     \ ['n', 'R', ':call b:vlime_conn.InspectorReinspect({c, r -> c.ui.OnInspect(c, r, v:null, v:null)})<cr>'],
                 \ ],
                 \

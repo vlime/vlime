@@ -209,12 +209,16 @@ function! vlime#ui#inspector#NextField(forward)
 endfunction
 
 function! vlime#ui#inspector#InspectorPop()
-    call b:vlime_conn.InspectorPop(function('s:OnInspectorPopComplete'))
+    call b:vlime_conn.InspectorPop(function('s:OnInspectorPopComplete', ['previous']))
 endfunction
 
-function! s:OnInspectorPopComplete(conn, result)
+function! vlime#ui#inspector#InspectorNext()
+    call b:vlime_conn.InspectorNext(function('s:OnInspectorPopComplete', ['next']))
+endfunction
+
+function! s:OnInspectorPopComplete(which, conn, result)
     if type(a:result) == type(v:null)
-        call vlime#ui#ErrMsg('The inspector stack is empty.')
+        call vlime#ui#ErrMsg('No ' . a:which . ' object.')
     else
         call a:conn.ui.OnInspect(a:conn, a:result, v:null, v:null)
     endif
