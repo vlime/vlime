@@ -253,6 +253,10 @@ VlimeConnection.InspectorPop([callback])      *VlimeConnection.InspectorPop()*
 
   Inspect the previous object in the stack of inspected objects.
 
+VlimeConnection.InspectorNext([callback])    *VlimeConnection.InspectorNext()*
+
+  Inspect the next object in the stack of inspected objects.
+
 VlimeConnection.InspectCurrentCondition([callback])
                                    *VlimeConnection.InspectCurrentCondition()*
 
@@ -465,11 +469,16 @@ vlime#plugin#CompileFile([file_name], [policy])   *vlime#plugin#CompileFile()*
   the file name. If [policy] is omitted, try to use |g:vlime_compiler_policy|.
   Open the compiler notes window when there are warnings or errors etc.
 
-vlime#plugin#ExpandMacro([expr], [expand_all])    *vlime#plugin#ExpandMacro()*
+vlime#plugin#ExpandMacro([expr], [type])          *vlime#plugin#ExpandMacro()*
 
   Perform macro expansion on [expr] and show the result in the preview window.
-  If [expr] is omitted, show an input buffer. If [expand_all] is present and
-  |TRUE|, recursively expand all macros in [expr].
+  If [expr] is omitted or v:null, show an input buffer.
+
+  [type] specifies the type of expansion to perform. It can be "expand",
+  "one", or "all". When it's omitted or "expand", repeatedly expand [expr]
+  until the resulting form cannot be expanded anymore. When it's "one", only
+  expand once. And "all" means to recursively expand all macros contained in
+  [expr].
 
 vlime#plugin#DisassembleForm([content])       *vlime#plugin#DisassembleForm()*
 
