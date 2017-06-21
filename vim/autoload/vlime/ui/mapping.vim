@@ -85,6 +85,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', 'd', ':call vlime#ui#sldb#ShowFrameDetails()<cr>'],
                     \ ['n', 'S', ':<c-u>call vlime#ui#sldb#OpenFrameSource()<cr>'],
                     \ ['n', 'T', ':<c-u>call vlime#ui#sldb#OpenFrameSource("tabedit")<cr>'],
+                    \ ['n', 'O', ':<c-u>call vlime#ui#sldb#FindSource()<cr>'],
                     \ ['n', 'r', ':call vlime#ui#sldb#RestartCurFrame()<cr>'],
                     \ ['n', 's', ':call vlime#ui#sldb#StepCurOrLastFrame("step")<cr>'],
                     \ ['n', 'x', ':call vlime#ui#sldb#StepCurOrLastFrame("next")<cr>'],

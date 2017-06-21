@@ -93,6 +93,24 @@ function! vlime#ui#sldb#OpenFrameSource(...)
                 \ function('s:OpenFrameSourceCB', [edit_cmd, win_to_go, count_specified]))
 endfunction
 
+" vlime#ui#sldb#FindSource([edit_cmd])
+function! vlime#ui#sldb#FindSource(...)
+    let edit_cmd = get(a:000, 0, 'hide edit')
+    let nth = s:MatchFrame()
+    if nth < 0
+        let nth = 0
+    endif
+
+    let [win_to_go, count_specified] = vlime#ui#ChooseWindowWithCount(v:null)
+    if win_to_go <= 0 && count_specified
+        return
+    endif
+
+    call b:vlime_conn.FrameLocalsAndCatchTags(nth,
+                \ function('s:FindSourceCB',
+                    \ [edit_cmd, win_to_go, count_specified, nth]))
+endfunction
+
 function! vlime#ui#sldb#RestartCurFrame()
     let nth = s:MatchFrame()
     if nth >= 0 && nth < len(b:vlime_sldb_frames)
@@ -375,6 +393,28 @@ function! s:OpenFrameSourceCB(edit_cmd, win_to_go, force_open, conn, result)
         call vlime#ui#ErrMsg(a:result[1])
     else
         call vlime#ui#ErrMsg('No source available.')
+    endif
+endfunction
+
+function! s:FindSourceCB(edit_cmd, win_to_go, force_open, frame, conn, msg)
+    let locals = a:msg[0]
+    if type(locals) == type(v:null)
+        call vlime#ui#ErrMsg('No local variable.')
+        return
+    endif
+
+    let options = map(locals, {idx, lc -> string(idx + 1) . '. ' . vlime#PListToDict(lc)['NAME']})
+    echohl Question
+    echom 'Which variable?'
+    echohl None
+    let nth_var = inputlist(options)
+
+    if nth_var > 0
+        call a:conn.FindSourceLocationForEmacs(['SLDB', a:frame, nth_var - 1],
+                    \ function('s:OpenFrameSourceCB',
+                        \ [a:edit_cmd, a:win_to_go, a:force_open]))
+    else
+        call vlime#ui#ErrMsg('Canceled.')
     endif
 endfunction
 
