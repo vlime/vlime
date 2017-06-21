@@ -170,6 +170,29 @@ function! vlime#ui#inspector#SendCurInspecteeToREPL()
                     \ ['(swank::istate.object swank::*istate*)']))
 endfunction
 
+" vlime#ui#inspector#FindSource(type[, edit_cmd])
+function! vlime#ui#inspector#FindSource(type, ...)
+    let edit_cmd = get(a:000, 0, 'hide edit')
+
+    if a:type == 'inspectee'
+        let id = 0
+    elseif a:type == 'part'
+        let coord = s:GetCurCoord()
+        if type(coord) == type(v:null) || coord['type'] != 'VALUE'
+            return
+        endif
+        let id = coord['id']
+    endif
+
+    let [win_to_go, count_specified] = vlime#ui#ChooseWindowWithCount(win_getid())
+    if win_to_go <= 0 && count_specified
+        return
+    endif
+
+    call b:vlime_conn.FindSourceLocationForEmacs(['INSPECTOR', id],
+                \ function('s:FindSourceCB', [edit_cmd, win_to_go, count_specified]))
+endfunction
+
 function! vlime#ui#inspector#NextField(forward)
     if len(b:vlime_inspector_coords) <= 0
         return
@@ -239,6 +262,28 @@ function! s:InspectorFetchAllCB(acc, conn, result)
                     \ {'name': 'CONTENT', 'package': 'KEYWORD'}, a:acc['CONTENT']]
         call a:conn.ui.OnInspect(a:conn, full_content, v:null, v:null)
         echom 'Done fetching inspector content.'
+    endif
+endfunction
+
+function! s:FindSourceCB(edit_cmd, win_to_go, force_open, conn, msg)
+    try
+        let loc = vlime#ParseSourceLocation(a:msg)
+        let valid_loc = vlime#GetValidSourceLocation(loc)
+    catch
+        let valid_loc = []
+    endtry
+
+    if len(valid_loc) > 0 && type(valid_loc[1]) != type(v:null)
+        if win_id2win(a:win_to_go) <= 0
+            return
+        endif
+        call win_gotoid(a:win_to_go)
+
+        call vlime#ui#ShowSource(a:conn, valid_loc, a:edit_cmd, a:force_open)
+    elseif a:msg[0]['name'] == 'ERROR'
+        call vlime#ui#ErrMsg(a:msg[1])
+    else
+        call vlime#ui#ErrMsg('No source available.')
     endif
 endfunction
 

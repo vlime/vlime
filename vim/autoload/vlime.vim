@@ -73,6 +73,7 @@ function! vlime#New(...)
                 \ 'LoadFile': function('vlime#LoadFile'),
                 \ 'XRef': function('vlime#XRef'),
                 \ 'FindDefinitionsForEmacs': function('vlime#FindDefinitionsForEmacs'),
+                \ 'FindSourceLocationForEmacs': function('vlime#FindSourceLocationForEmacs'),
                 \ 'AproposListForEmacs': function('vlime#AproposListForEmacs'),
                 \ 'DocumentationSymbol': function('vlime#DocumentationSymbol'),
                 \ 'Interrupt': function('vlime#Interrupt'),
@@ -1164,6 +1165,36 @@ function! vlime#FindDefinitionsForEmacs(name, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex([s:SYM('SWANK', 'FIND-DEFINITIONS-FOR-EMACS'), a:name]),
                 \ function('s:FindDefinitionsForEmacsCB', [self, Callback]))
+endfunction
+
+""
+" @dict VlimeConnection.FindSourceLocationForEmacs
+" @usage {spec} [callback]
+"
+" Lookup source locations for certain objects.
+" {spec} specifies what to look for. When {spec} is ['STRING', <expr>,
+" <package>], evaluate <expr> in <package>, and then find the source for the
+" resulting object. When {spec} is ['INSPECTOR', <part_id>], find the source
+" for the object shown in the inspector with <part_id>. When {spec} is
+" ['SLDB', <frame>, <nth>], find the source for the <nth> local variable in
+" <frame> in the debugger.
+function! vlime#FindSourceLocationForEmacs(spec, ...) dict
+    function! s:FindSourceLocationForEmacsCB(conn, Callback, chan, msg)
+        call s:CheckReturnStatus(a:msg, 'vlime#FindSourceLocationForEmacs')
+        if a:msg[1][1][0]['name'] == 'LOCATION'
+            let fixed_loc = a:conn.FixRemotePath(a:msg[1][1])
+        else
+            let fixed_loc = a:msg[1][1]
+        endif
+        call s:TryToCall(a:Callback, [a:conn, fixed_loc])
+    endfunction
+
+    let Callback = get(a:000, 0, v:null)
+    let spec_type = a:spec[0]
+    let spec = [s:CL('QUOTE'), [s:KW(spec_type)] + a:spec[1:]]
+
+    call self.Send(self.EmacsRex([s:SYM('SWANK', 'FIND-SOURCE-LOCATION-FOR-EMACS'), spec]),
+                \ function('s:FindSourceLocationForEmacsCB', [self, Callback]))
 endfunction
 
 ""
