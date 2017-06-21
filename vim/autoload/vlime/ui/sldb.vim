@@ -84,7 +84,7 @@ function! vlime#ui#sldb#OpenFrameSource(...)
         let nth = 0
     endif
 
-    let [win_to_go, count_specified] = vlime#ui#ChooseWindowWithCount(win_getid())
+    let [win_to_go, count_specified] = vlime#ui#ChooseWindowWithCount(v:null)
     if win_to_go <= 0 && count_specified
         return
     endif
@@ -363,10 +363,12 @@ function! s:OpenFrameSourceCB(edit_cmd, win_to_go, force_open, conn, result)
     endtry
 
     if len(valid_loc) > 0 && type(valid_loc[1]) != type(v:null)
-        if win_id2win(a:win_to_go) <= 0
-            return
+        if a:win_to_go > 0
+            if win_id2win(a:win_to_go) <= 0
+                return
+            endif
+            call win_gotoid(a:win_to_go)
         endif
-        call win_gotoid(a:win_to_go)
 
         call vlime#ui#ShowSource(a:conn, valid_loc, a:edit_cmd, a:force_open)
     elseif a:result[0]['name'] == 'ERROR'

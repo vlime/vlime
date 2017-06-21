@@ -613,6 +613,20 @@ function! vlime#ui#GetWindowList(conn, win_name)
     return winid_list
 endfunction
 
+function! vlime#ui#GetFiletypeWindowList(ft)
+    let winid_list = []
+    let old_win_id = win_getid()
+    try
+        windo if &filetype == a:ft |
+                    \ call add(winid_list, [win_getid(), bufname('%')]) |
+                \ endif
+    finally
+        call win_gotoid(old_win_id)
+    endtry
+
+    return winid_list
+endfunction
+
 function! vlime#ui#CloseWindow(conn, win_name)
     let winid_list = vlime#ui#GetWindowList(a:conn, a:win_name)
     for [winid, bufname] in winid_list
@@ -1002,7 +1016,8 @@ function! vlime#ui#ChooseWindowWithCount(default_win)
     elseif type(a:default_win) != type(v:null) && win_id2win(a:default_win) > 0
         let win_to_go = a:default_win
     else
-        let win_to_go = 0
+        let win_list = vlime#ui#GetFiletypeWindowList('lisp')
+        let win_to_go = (len(win_list) > 0) ? win_list[0][0] : 0
     endif
 
     return [win_to_go, count_specified]
