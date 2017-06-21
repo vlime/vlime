@@ -83,8 +83,14 @@ function! vlime#ui#sldb#OpenFrameSource(...)
     if nth < 0
         let nth = 0
     endif
+
+    let [win_to_go, count_specified] = vlime#ui#ChooseWindowWithCount(win_getid())
+    if win_to_go <= 0 && count_specified
+        return
+    endif
+
     call b:vlime_conn.FrameSourceLocation(nth,
-                \ function('s:OpenFrameSourceCB', [edit_cmd, v:count]))
+                \ function('s:OpenFrameSourceCB', [edit_cmd, win_to_go, count_specified]))
 endfunction
 
 function! vlime#ui#sldb#RestartCurFrame()
@@ -348,7 +354,7 @@ function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
     endif
 endfunction
 
-function! s:OpenFrameSourceCB(edit_cmd, win_nr, conn, result)
+function! s:OpenFrameSourceCB(edit_cmd, win_to_go, force_open, conn, result)
     try
         let src_loc = vlime#ParseSourceLocation(a:result)
         let valid_loc = vlime#GetValidSourceLocation(src_loc)
@@ -357,16 +363,12 @@ function! s:OpenFrameSourceCB(edit_cmd, win_nr, conn, result)
     endtry
 
     if len(valid_loc) > 0 && type(valid_loc[1]) != type(v:null)
-        let force_open = v:false
-        if a:win_nr > 0 && win_getid(a:win_nr) > 0
-            " The user specified a valid window to use explicitly, set the forced flag
-            let force_open = v:true
-            call win_gotoid(win_getid(a:win_nr))
-        elseif a:win_nr > 0
-            call vlime#ui#ErrMsg('Invalid window number: ' . a:win_nr)
+        if win_id2win(a:win_to_go) <= 0
             return
         endif
-        call vlime#ui#ShowSource(a:conn, valid_loc, a:edit_cmd, force_open)
+        call win_gotoid(a:win_to_go)
+
+        call vlime#ui#ShowSource(a:conn, valid_loc, a:edit_cmd, a:force_open)
     elseif a:result[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(a:result[1])
     else
