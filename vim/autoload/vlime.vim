@@ -1170,6 +1170,7 @@ endfunction
 ""
 " @dict VlimeConnection.FindSourceLocationForEmacs
 " @usage {spec} [callback]
+" @public
 "
 " Lookup source locations for certain objects.
 " {spec} specifies what to look for. When {spec} is ['STRING', <expr>,
@@ -1200,6 +1201,7 @@ endfunction
 ""
 " @dict VlimeConnection.AproposListForEmacs
 " @usage {name} {external_only} {case_sensitive} {package} [callback]
+" @public
 "
 " Lookup symbol names containing {name}.
 " If {external_only} is |TRUE|, only return external symbols.

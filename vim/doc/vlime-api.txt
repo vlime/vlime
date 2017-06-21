@@ -387,6 +387,24 @@ VlimeConnection.FindDefinitionsForEmacs({name}, [callback])
 
   Lookup definitions for symbol {name}.
 
+VlimeConnection.FindSourceLocationForEmacs({spec}, [callback])
+                                *VlimeConnection.FindSourceLocationForEmacs()*
+
+  Lookup source locations for certain objects. {spec} specifies what to look
+  for. When {spec} is ['STRING', <expr>, <package>], evaluate <expr> in
+  <package>, and then find the source for the resulting object. When {spec} is
+  ['INSPECTOR', <part_id>], find the source for the object shown in the
+  inspector with <part_id>. When {spec} is ['SLDB', <frame>, <nth>], find the
+  source for the <nth> local variable in <frame> in the debugger.
+
+VlimeConnection.AproposListForEmacs({name}, {external_only}, {case_sensitive},
+  {package}, [callback])               *VlimeConnection.AproposListForEmacs()*
+
+  Lookup symbol names containing {name}. If {external_only} is |TRUE|, only
+  return external symbols. {case_sensitive} specifies whether the search is
+  case-sensitive or not. {package} limits the search to a specific package,
+  but one can pass v:null to search all packages.
+
 VlimeConnection.DocumentationSymbol({sym_name}, [callback])
                                        *VlimeConnection.DocumentationSymbol()*
 
