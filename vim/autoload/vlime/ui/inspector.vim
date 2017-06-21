@@ -282,7 +282,7 @@ function! s:FindSourceCB(edit_cmd, win_to_go, force_open, conn, msg)
         endif
 
         call vlime#ui#ShowSource(a:conn, valid_loc, a:edit_cmd, a:force_open)
-    elseif a:msg[0]['name'] == 'ERROR'
+    elseif type(a:msg) != type(v:null) && a:msg[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(a:msg[1])
     else
         call vlime#ui#ErrMsg('No source available.')

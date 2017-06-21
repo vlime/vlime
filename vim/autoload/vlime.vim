@@ -1182,7 +1182,7 @@ endfunction
 function! vlime#FindSourceLocationForEmacs(spec, ...) dict
     function! s:FindSourceLocationForEmacsCB(conn, Callback, chan, msg)
         call s:CheckReturnStatus(a:msg, 'vlime#FindSourceLocationForEmacs')
-        if a:msg[1][1][0]['name'] == 'LOCATION'
+        if type(a:msg[1][1]) != type(v:null) && a:msg[1][1][0]['name'] == 'LOCATION'
             let fixed_loc = a:conn.FixRemotePath(a:msg[1][1])
         else
             let fixed_loc = a:msg[1][1]

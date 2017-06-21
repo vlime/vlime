@@ -84,7 +84,7 @@ function! vlime#ui#compiler_notes#OpenCurNote(...)
             return
         endif
         call vlime#ui#ShowSource(b:vlime_conn, valid_loc, edit_cmd, count_specified)
-    elseif raw_note_loc[0]['name'] == 'ERROR'
+    elseif type(raw_note_loc) != type(v:null) && raw_note_loc[0]['name'] == 'ERROR'
         call vlime#ui#ErrMsg(raw_note_loc[1])
     else
         call vlime#ui#ErrMsg('No source available.')
