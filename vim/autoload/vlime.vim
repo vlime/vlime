@@ -1333,6 +1333,10 @@ function! s:SLDBSendCB(conn, Callback, caller, chan, msg) abort
     call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
 endfunction
 
+""
+" @public
+"
+" Convert a {plist} sent from the server to a native |dict|.
 function! vlime#PListToDict(plist)
     if type(a:plist) == type(v:null)
         return {}
@@ -1347,6 +1351,16 @@ function! vlime#PListToDict(plist)
     return d
 endfunction
 
+""
+" @usage [func_and_cb...]
+" @public
+"
+" Make a chain of async calls and corresponding callbacks. For example:
+"
+"     call vlime#ChainCallbacks(<f1>, <cb1>, <f2>, <cb2>, <f3>, <cb3>)
+"
+" <f2> will be called after <cb1> has finished, and <f3> will be called after
+" <cb2> has finished, and so on.
 function! vlime#ChainCallbacks(...)
     let cbs = a:000
     if len(cbs) <= 0
@@ -1371,6 +1385,11 @@ function! vlime#ChainCallbacks(...)
     call FirstFunc(function('s:ChainCallbackCB', [cbs[1:]]))
 endfunction
 
+""
+" @public
+"
+" Parse a source location object {loc} sent from the server, and convert it
+" into a native |dict|.
 function! vlime#ParseSourceLocation(loc)
     if type(a:loc[0]) != v:t_dict || a:loc[0]['name'] != 'LOCATION'
         throw 'vlime#ParseSourceLocation: invalid location: ' . string(a:loc)
@@ -1395,6 +1414,11 @@ function! vlime#ParseSourceLocation(loc)
     return loc_obj
 endfunction
 
+""
+" @public
+"
+" Normalize a source location object parsed by
+" @function(vlime#ParseSourceLocation).
 function! vlime#GetValidSourceLocation(loc)
     let loc_file = get(a:loc, 'FILE', v:null)
     let loc_buffer = get(a:loc, 'BUFFER', v:null)

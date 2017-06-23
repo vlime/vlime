@@ -994,7 +994,19 @@ function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
     return v:false
 endfunction
 
-" vlime#ui#JumpToOrOpenFile(file_path, byte_pos[, snippet[, edit_cmd[, force_open]]])
+""
+" @usage {file_path} {byte_pos} [snippet] [edit_cmd] [force_open]
+" @public
+"
+" Open a file specified by {file_path}, and move the cursor to {byte_pos}. If
+" the specified file is already loaded in a window, move the cursor to that
+" window instead.
+"
+" [snippet] is used to fine-tune the cursor position to jump to. One can pass
+" v:null to safely ignore the fine-tuning. [edit_cmd] is the command used to
+" open the specified file, if it's not loaded in any window yet. The default
+" is "hide edit". When [force_open] is specified and |TRUE|, always open the
+" file with [edit_cmd].
 function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
     let snippet = get(a:000, 0, v:null)
     let edit_cmd = get(a:000, 1, 'hide edit')
@@ -1073,10 +1085,18 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
     endif
 endfunction
 
-" vlime#ui#ShowSource(loc[, edit_cmd[, force_open]])
+""
+" @usage {conn} {loc} [edit_cmd] [force_open]
+" @public
+"
+" Open the source location specified by {loc}.
+" {conn} should be a @dict(VlimeConnection), and {loc} a normalized source
+" location returned by @function(vlime#GetValidSourceLocation). See
+" @function(vlime#ui#JumpToOrOpenFile) for the use of [edit_cmd] and
+" [force_open].
 function! vlime#ui#ShowSource(conn, loc, ...)
     let edit_cmd = get(a:000, 0, 'hide edit')
-    let force_open = get(a:000, 1, 'hide edit')
+    let force_open = get(a:000, 1, v:false)
 
     let file_name = a:loc[0]
     let byte_pos = a:loc[1]
@@ -1165,6 +1185,11 @@ function! vlime#ui#ServerBufName(server_name)
                 \ g:vlime_buf_name_sep)
 endfunction
 
+""
+" @public
+"
+" Return settings for a window type {win_name}. See |g:vlime_window_settings|
+" for the format of the settings and a full list of window types.
 function! vlime#ui#GetWindowSettings(win_name)
     let settings = get(g:vlime_default_window_settings, a:win_name, v:null)
     if type(settings) == type(v:null)
@@ -1188,7 +1213,16 @@ function! vlime#ui#GetWindowSettings(win_name)
                 \ get(settings, 'vertical', v:false)]
 endfunction
 
-" vlime#ui#EnsureKeyMapped(mode, key, cmd[, force[, log[, flags]]])
+""
+" @usage {mode} {key} {cmd} [force] [log] [flags]
+" @public
+"
+" Ensure the specified {key} or {cmd} is mapped in {mode}. If both {key} and
+" {cmd} are not mapped, map {key} to run {cmd}. If [force] is specified and
+" |TRUE|, always do the mapping. [log] is the category for logging conflicting
+" keys, should usually be the buffer type. See the value of
+" g:vlime_default_mappings for all buffer types. [flags] is a string
+" specifying |:map-arguments|.
 function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
     let force = get(a:000, 0, v:false)
     let log = get(a:000, 1, v:null)
@@ -1222,13 +1256,34 @@ function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
     endif
 endfunction
 
-function! vlime#ui#MapBufferKeys(buf_type)
-    let force = exists('g:vlime_force_default_keys') ? g:vlime_force_default_keys : v:false
+""
+" @usage {buf_type} [force]
+" @public
+"
+" Map default Vlime keys for buffer type {buf_type}. See the value of
+" g:vlime_default_mappings for all buffer types. This function consults
+" |g:vlime_force_default_keys| when trying to map the keys. If [force] is
+" specified, it's value overrides the global variable.
+function! vlime#ui#MapBufferKeys(buf_type, ...)
+    let force = get(a:000, 0, v:null)
+    if type(force) == type(v:null)
+        let force = exists('g:vlime_force_default_keys') ? g:vlime_force_default_keys : v:false
+    endif
     for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings(a:buf_type)
         call vlime#ui#EnsureKeyMapped(mode, key, cmd, force, a:buf_type)
     endfor
 endfunction
 
+""
+" @public
+"
+" Choose a window with |v:count|. The special variable v:count should contain
+" a valid window number (see |winnr()|) or zero when this function is called.
+" The coresponding window ID is returned. If v:count is zero, try to use
+" {default_win} as the result. In that case, if {default_win} is not a legal
+" window number, try to find a window automatically.
+"
+" When all measures fail, zero is returned.
 function! vlime#ui#ChooseWindowWithCount(default_win)
     let count_specified = v:false
     if v:count > 0

@@ -462,6 +462,28 @@ vlime#New([cb_data], [ui])                                       *vlime#New()*
   This function is seldom used directly. To connect to a server, call
   |vlime#plugin#ConnectREPL()|.
 
+vlime#PListToDict({plist})                               *vlime#PListToDict()*
+
+  Convert a {plist} sent from the server to a native |dict|.
+
+vlime#ChainCallbacks([func_and_cb...])                *vlime#ChainCallbacks()*
+
+  Make a chain of async calls and corresponding callbacks. For example:
+
+      call vlime#ChainCallbacks(<f1>, <cb1>, <f2>, <cb2>, <f3>, <cb3>)
+
+  <f2> will be called after <cb1> has finished, and <f3> will be called after
+  <cb2> has finished, and so on.
+
+vlime#ParseSourceLocation({loc})                 *vlime#ParseSourceLocation()*
+
+  Parse a source location object {loc} sent from the server, and convert it
+  into a native |dict|.
+
+vlime#GetValidSourceLocation({loc})           *vlime#GetValidSourceLocation()*
+
+  Normalize a source location object parsed by |vlime#ParseSourceLocation()|.
+
 vlime#plugin#CloseCurConnection()          *vlime#plugin#CloseCurConnection()*
 
   Close the connection bound to the current buffer. If no connection is bound,
@@ -826,6 +848,60 @@ vlime#ui#CurArgPos([pos])                               *vlime#ui#CurArgPos()*
 vlime#ui#ErrMsg({msg})                                     *vlime#ui#ErrMsg()*
 
   Show an error message.
+
+vlime#ui#JumpToOrOpenFile({file_path}, {byte_pos}, [snippet], [edit_cmd],
+  [force_open])                                  *vlime#ui#JumpToOrOpenFile()*
+
+  Open a file specified by {file_path}, and move the cursor to {byte_pos}. If
+  the specified file is already loaded in a window, move the cursor to that
+  window instead.
+
+  [snippet] is used to fine-tune the cursor position to jump to. One can pass
+  v:null to safely ignore the fine-tuning. [edit_cmd] is the command used to
+  open the specified file, if it's not loaded in any window yet. The default
+  is "hide edit". When [force_open] is specified and |TRUE|, always open the
+  file with [edit_cmd].
+
+vlime#ui#ShowSource({conn}, {loc}, [edit_cmd], [force_open])
+                                                       *vlime#ui#ShowSource()*
+
+  Open the source location specified by {loc}. {conn} should be a
+  |vlime-api.VlimeConnection|, and {loc} a normalized source location returned
+  by |vlime#GetValidSourceLocation()|. See |vlime#ui#JumpToOrOpenFile()| for
+  the use of [edit_cmd] and [force_open].
+
+vlime#ui#GetWindowSettings({win_name})          *vlime#ui#GetWindowSettings()*
+
+  Return settings for a window type {win_name}. See |g:vlime_window_settings|
+  for the format of the settings and a full list of window types.
+
+vlime#ui#EnsureKeyMapped({mode}, {key}, {cmd}, [force], [log], [flags])
+                                                  *vlime#ui#EnsureKeyMapped()*
+
+  Ensure the specified {key} or {cmd} is mapped in {mode}. If both {key} and
+  {cmd} are not mapped, map {key} to run {cmd}. If [force] is specified and
+  |TRUE|, always do the mapping. [log] is the category for logging conflicting
+  keys, should usually be the buffer type. See the value of
+  g:vlime_default_mappings for all buffer types. [flags] is a string
+  specifying |:map-arguments|.
+
+vlime#ui#MapBufferKeys({buf_type}, [force])         *vlime#ui#MapBufferKeys()*
+
+  Map default Vlime keys for buffer type {buf_type}. See the value of
+  g:vlime_default_mappings for all buffer types. This function consults
+  |g:vlime_force_default_keys| when trying to map the keys. If [force] is
+  specified, it's value overrides the global variable.
+
+vlime#ui#ChooseWindowWithCount({default_win})
+                                            *vlime#ui#ChooseWindowWithCount()*
+
+  Choose a window with |v:count|. The special variable v:count should contain
+  a valid window number (see |winnr()|) or zero when this function is called.
+  The coresponding window ID is returned. If v:count is zero, try to use
+  {default_win} as the result. In that case, if {default_win} is not a legal
+  window number, try to find a window automatically.
+
+  When all measures fail, zero is returned.
 
 
 vim:tw=78:ts=8:ft=help:norl:
