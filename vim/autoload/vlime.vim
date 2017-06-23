@@ -1,6 +1,6 @@
 ""
 " @dict VlimeConnection
-" Vlime uses connection objects (dictionaries) to represent connections to the
+" Vlime uses @dict(VlimeConnection) objects to represent connections to the
 " servers. You can create such an object by calling
 " @function(vlime#plugin#ConnectREPL) or @function(vlime#New).
 "
@@ -14,17 +14,17 @@
 " {conn_obj} is the connection object in question, and {result} is the
 " returned value.
 "
-" See below for a detailed list of methods for connection objects.
+" See below for a detailed list of methods for @dict(VlimeConnection) objects.
 "
 
 ""
 " @usage [cb_data] [ui]
 " @public
 "
-" Create a connection object.
+" Create a @dict(VlimeConnection).
 "
 " [cb_data] is arbitrary data, accessible from the connection callbacks.
-" [ui] is an instance of the UI object, see @function(vlime#ui#New).
+" [ui] is an instance of @dict(VlimeUI), see @function(vlime#ui#GetUI).
 "
 " This function is seldom used directly. To connect to a server, call
 " @function(vlime#plugin#ConnectREPL).

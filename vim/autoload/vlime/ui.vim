@@ -11,6 +11,18 @@ let g:vlime_default_window_settings = {
             \ 'server': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
             \ }
 
+""
+" @dict VlimeUI
+" The @dict(VlimeUI) object is a singleton. It's meant to be injected into
+" @dict(VlimeConnection) objects, to grant them access to the user interface.
+" See @function(vlime#New).
+"
+
+""
+" @public
+"
+" Create a @dict(VlimeUI) object. One should probably use
+" @function(vlime#ui#GetUI) instead.
 function! vlime#ui#New()
     let obj = {
                 \ 'buffer_package_map': {},
@@ -35,6 +47,10 @@ function! vlime#ui#New()
     return obj
 endfunction
 
+""
+" @public
+"
+" Return the UI singleton.
 function! vlime#ui#GetUI()
     if !exists('g:vlime_ui')
         let g:vlime_ui = vlime#ui#New()
@@ -42,7 +58,19 @@ function! vlime#ui#GetUI()
     return g:vlime_ui
 endfunction
 
-" vlime#ui#GetCurrentPackage([buffer])
+""
+" @dict VlimeUI.GetCurrentPackage
+" @usage [buffer]
+" @public
+"
+" Return the Common Lisp package bound to the specified [buffer]. If no
+" package is bound yet, try to guess one by looking into the buffer content.
+" [buffer], if specified, should be an expression as described in |bufname()|.
+" When [buffer] is omitted, work on the current buffer.
+"
+" The returned value is a list of two strings. The first string is the full
+" name of the package, and the second string is one of the package's
+" nicknames.
 function! vlime#ui#GetCurrentPackage(...) dict
     let buf_spec = get(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
@@ -58,21 +86,45 @@ function! vlime#ui#GetCurrentPackage(...) dict
     return buf_pkg
 endfunction
 
-" vlime#ui#SetCurrentPackage(pkg[, buffer])
+""
+" @dict VlimeUI.SetCurrentPackage
+" @usage {pkg} [buffer]
+" @public
+"
+" Bind a Common Lisp package {pkg} to the specified [buffer].
+" {pkg} should be a list of two strings, i.e. in the same format as the return
+" value of @function(VlimeUI.GetCurrentPackage).
+" See @function(VlimeUI.GetCurrentPackage) for the use of [buffer].
+"
+" Note that this method doesn't check the validity of {pkg}.
 function! vlime#ui#SetCurrentPackage(pkg, ...) dict
     let buf_spec = get(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
     let self.buffer_package_map[cur_buf] = a:pkg
 endfunction
 
-" vlime#ui#GetCurrentThread([buffer])
+""
+" @dict VlimeUI.GetCurrentThread
+" @usage [buffer]
+" @public
+"
+" Return the thread bound to [buffer]. See @function(VlimeUI.GetCurrentPackage)
+" for the use of [buffer].
+"
+" Currently, this method only makes sense in the debugger buffer.
 function! vlime#ui#GetCurrentThread(...) dict
     let buf_spec = get(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
     return get(self.buffer_thread_map, cur_buf, v:true)
 endfunction
 
-" vlime#ui#SetCurrentThread(thread[, buffer])
+""
+" @dict VlimeUI.SetCurrentThread
+" @usage {thread} [buffer]
+" @public
+"
+" Bind a thread to [buffer]. See @function(VlimeUI.GetCurrentPackage) for the
+" use of [buffer].
 function! vlime#ui#SetCurrentThread(thread, ...) dict
     let buf_spec = get(a:000, 0, '%')
     let cur_buf = bufnr(buf_spec)
@@ -107,6 +159,12 @@ function! vlime#ui#OnDebugReturn(conn, thread, level, stepping) dict
     endif
 endfunction
 
+""
+" @public
+"
+" Write an arbitrary string {str} to the REPL buffer.
+" {conn} should be a valid @dict(VlimeConnection). {str_type} is currently
+" ignored.
 function! vlime#ui#OnWriteString(conn, str, str_type) dict
     let repl_buf = vlime#ui#repl#InitREPLBuf(a:conn)
     if len(win_findbuf(repl_buf)) <= 0
@@ -126,7 +184,7 @@ endfunction
 function! vlime#ui#OnReadFromMiniBuffer(conn, thread, ttag, prompt, init_val) dict
     call vlime#ui#input#FromBuffer(
                 \ a:conn, a:prompt, a:init_val,
-                \ function('vlime#ui#ReturnMiniBufferContent', [a:thread, a:ttag]))
+                \ function('s:ReturnMiniBufferContent', [a:thread, a:ttag]))
 endfunction
 
 function! vlime#ui#OnIndentationUpdate(conn, indent_info) dict
@@ -161,7 +219,7 @@ function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     redraw
 endfunction
 
-function! vlime#ui#OnXRef(conn, xref_list, orig_win)
+function! vlime#ui#OnXRef(conn, xref_list, orig_win) dict
     if type(a:xref_list) == type(v:null)
         call vlime#ui#ErrMsg('No xref found.')
     elseif type(a:xref_list) == v:t_dict &&
@@ -174,7 +232,7 @@ function! vlime#ui#OnXRef(conn, xref_list, orig_win)
     endif
 endfunction
 
-function! vlime#ui#OnCompilerNotes(conn, note_list, orig_win)
+function! vlime#ui#OnCompilerNotes(conn, note_list, orig_win) dict
     let notes_buf = vlime#ui#compiler_notes#InitCompilerNotesBuffer(a:conn, a:orig_win)
     let buf_opened = len(win_findbuf(notes_buf)) > 0
     if buf_opened || type(a:note_list) != type(v:null)
@@ -188,21 +246,32 @@ function! vlime#ui#OnCompilerNotes(conn, note_list, orig_win)
     endif
 endfunction
 
-function! vlime#ui#OnThreads(conn, thread_list)
+function! vlime#ui#OnThreads(conn, thread_list) dict
     let threads_buf = vlime#ui#threads#InitThreadsBuffer(a:conn)
     call vlime#ui#OpenBufferWithWinSettings(threads_buf, v:false, 'threads')
     call vlime#ui#threads#FillThreadsBuf(a:thread_list)
 endfunction
 
-function! vlime#ui#ReturnMiniBufferContent(thread, ttag)
+function! s:ReturnMiniBufferContent(thread, ttag)
     let content = vlime#ui#CurBufferContent()
     call b:vlime_conn.Return(a:thread, a:ttag, content)
 endfunction
 
+""
+" @public
+"
+" Return the current character under the cursor. If there's no character, an
+" empty string is returned.
 function! vlime#ui#CurChar()
     return matchstr(getline('.'), '\%' . col('.') . 'c.')
 endfunction
 
+""
+" @public
+"
+" If there is a parentheses-enclosed expression under the cursor, return it.
+" Otherwise look for an atom under the cursor. Return an empty string if
+" nothing is found.
 function! vlime#ui#CurExprOrAtom()
     let str = vlime#ui#CurExpr()
     if len(str) <= 0
@@ -211,6 +280,10 @@ function! vlime#ui#CurExprOrAtom()
     return str
 endfunction
 
+""
+" @public
+"
+" Return the atom under the cursor, or an empty string if there is no atom.
 function! vlime#ui#CurAtom()
     let old_kw = &iskeyword
     try
@@ -221,7 +294,14 @@ function! vlime#ui#CurAtom()
     endtry
 endfunction
 
-" vlime#ui#CurExpr([return_pos])
+""
+" @usage [return_pos]
+" @public
+"
+" Return the parentheses-enclosed expression under the cursor, or an empty
+" string, when there is no expression.
+" If [return_pos] is specified and |TRUE|, return a list containing the
+" expression, as well as the beginning and ending positions.
 function! vlime#ui#CurExpr(...)
     let return_pos = get(a:000, 0, v:false)
 
@@ -237,7 +317,17 @@ let s:cur_expr_pos_search_flags = {
             \ 'end':   ['nW', 'cnW', 'nW'],
             \ }
 
-" vlime#ui#CurExprPos(cur_char[, side])
+""
+" @usage {cur_char} [side]
+" @public
+"
+" Return the beginning or ending position of the parentheses-enclosed
+" expression under the cursor.
+" {cur_char} is the character under the cursor, which can be obtained by
+" calling @function(vlime#ui#CurChar).
+" If [side] is "begin", the beginning position is returned. If [side] is
+" "end", the ending position is returned. "begin" is the default when [side]
+" is omitted.
 function! vlime#ui#CurExprPos(cur_char, ...)
     let side = get(a:000, 0, 'begin')
     if a:cur_char == '('
@@ -249,7 +339,12 @@ function! vlime#ui#CurExprPos(cur_char, ...)
     endif
 endfunction
 
-" vlime#ui#CurTopExpr([return_pos])
+""
+" @usage [return_pos]
+" @public
+"
+" Return the top-level parentheses-enclosed expression. See
+" @function(vlime#ui#CurExpr) for the use of [return_pos].
 function! vlime#ui#CurTopExpr(...)
     let return_pos = get(a:000, 0, v:false)
 
@@ -267,7 +362,13 @@ function! vlime#ui#CurTopExpr(...)
     endif
 endfunction
 
-" vlime#ui#CurTopExprPos([side])
+""
+" @usage [side]
+" @public
+"
+" Return the beginning or ending position of the top-level
+" parentheses-enclosed expression under the cursor. See
+" @function(vlime#ui#CurExprPos) for the use of [side].
 function! vlime#ui#CurTopExprPos(...)
     let side = get(a:000, 0, 'begin')
 
@@ -301,6 +402,12 @@ function! vlime#ui#CurTopExprPos(...)
     endtry
 endfunction
 
+""
+" @public
+"
+" Search for an "in-package" expression in the current buffer, and return the
+" package name specified in that expression. If no such an expression can be
+" found, an empty string is returned.
 function! vlime#ui#CurInPackage()
     let pattern = '(\_s*in-package\_s\+\(.\+\)\_s*)'
     let old_cur_pos = getcurpos()
@@ -323,6 +430,11 @@ function! vlime#ui#CurInPackage()
     endtry
 endfunction
 
+""
+" @public
+"
+" Return the operator symbol name of the parentheses-enclosed expression under
+" the cursor. If no expression is found, return an empty string.
 function! vlime#ui#CurOperator()
     let expr = vlime#ui#CurExpr()
     if len(expr) > 0
@@ -344,6 +456,12 @@ function! vlime#ui#CurOperator()
     return ''
 endfunction
 
+""
+" @public
+"
+" Similar to @function(vlime#ui#CurOperator), but return the operator of the
+" surrounding expression instead, if the cursor is on the left enclosing
+" parentheses.
 function! vlime#ui#SurroundingOperator()
     let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
     if s_line > 0 && s_col > 0
@@ -356,7 +474,12 @@ function! vlime#ui#SurroundingOperator()
     return ''
 endfunction
 
-" vlime#ui#CurSelection([return_pos])
+""
+" @usage [return_pos]
+" @public
+"
+" Return the content of current/last selection. See
+" @function(vlime#ui#CurExpr) for the use of [return_pos].
 function! vlime#ui#CurSelection(...)
     let return_pos = get(a:000, 0, v:false)
     let sel_start = getpos("'<")
@@ -377,7 +500,12 @@ function! vlime#ui#CurSelection(...)
     endif
 endfunction
 
-" vlime#ui#CurBufferContent([raw])
+""
+" @usage [raw]
+" @public
+"
+" Get the text content of the current buffer. Lines starting with ";" will be
+" dropped, unless [raw] is specified and |TRUE|.
 function! vlime#ui#CurBufferContent(...)
     let raw = get(a:000, 0, v:false)
 
@@ -389,6 +517,11 @@ function! vlime#ui#CurBufferContent(...)
     return join(lines, "\n")
 endfunction
 
+""
+" @public
+"
+" Retrieve the text in the current buffer from {from_pos} to {to_pos}.
+" These positions should be lists in the form [<line>, <col>].
 function! vlime#ui#GetText(from_pos, to_pos)
     let [s_line, s_col] = a:from_pos
     let [e_line, e_col] = a:to_pos
@@ -442,6 +575,11 @@ function! vlime#ui#RestoreWindowLayout(layout)
     endtry
 endfunction
 
+""
+" @public
+"
+" Call {Func}. When {Func} returns, move the cursor back to the current
+" window.
 function! vlime#ui#KeepCurWindow(Func)
     let cur_win_id = win_getid()
     try
@@ -451,7 +589,14 @@ function! vlime#ui#KeepCurWindow(Func)
     endtry
 endfunction
 
-" vlime#ui#WithBuffer(buf, Func[, ev_ignore])
+""
+" @usage {buf} {Func} [ev_ignore]
+" @public
+"
+" Call {Func} with {buf} set as the current buffer. {buf} should be an
+" expression as described in |bufname()|. [ev_ignore] specifies what
+" autocmd events to ignore when switching buffers. When [ev_ignore] is
+" omitted, all events are ignored by default.
 function! vlime#ui#WithBuffer(buf, Func, ...)
     let ev_ignore = get(a:000, 0, 'all')
 
@@ -491,7 +636,24 @@ function! vlime#ui#WithBuffer(buf, Func, ...)
     endtry
 endfunction
 
-" vlime#ui#OpenBuffer(name, create, show[, vertical[, initial_size]])
+""
+" @usage {name} {create} {show} [vertical] [initial_size]
+" @public
+"
+" Open a buffer with the specified {name}.
+" {name} should be an expression as described in |bufname()|. Return -1 if the
+" buffer doesn't exist, unless {create} is |TRUE|. In that case, a new buffer
+" is created.
+"
+" When {show} is |TRUE| or a non-empty string, the buffer will be shown in a
+" new window, but if the buffer is already visible, move the cursor to it's
+" window instead. The string values can be "aboveleft", "belowright",
+" "topleft", or "botright", to further specify the window position. See
+" |aboveleft| and the alike to get explanations of these positions.
+"
+" [vertical], if specified and |TRUE|, indicates that the new window should be
+" created vertically. [initial_size] assigns an initial size to the newly
+" created window.
 function! vlime#ui#OpenBuffer(name, create, show, ...)
     let vertical = get(a:000, 0, v:false)
     let initial_size = get(a:000, 1, v:null)
@@ -527,6 +689,14 @@ function! vlime#ui#OpenBuffer(name, create, show, ...)
     return buf
 endfunction
 
+""
+" @public
+"
+" Like @function(vlime#ui#OpenBuffer), but consult |g:vlime_window_settings|
+" when creating a new window. {buf_name} should be an expression as described
+" in |bufname()|. {buf_create} specifies whether to create a new buffer or
+" not. {win_name} is the type of the window to create. See
+" |g:vlime_window_settings| for a list of Vlime window types.
 function! vlime#ui#OpenBufferWithWinSettings(buf_name, buf_create, win_name)
     let [win_pos, win_size, win_vert] = vlime#ui#GetWindowSettings(a:win_name)
     return vlime#ui#OpenBuffer(a:buf_name, a:buf_create,
@@ -570,18 +740,37 @@ function! vlime#ui#ShowTransientWindow(
     endtry
 endfunction
 
+""
+" @public
+"
+" Show {content} in the preview buffer. {conn} should be a
+" @dict(VlimeConnection). When {append} is |TRUE|, append {content} to the
+" existing content in the preview buffer.
 function! vlime#ui#ShowPreview(conn, content, append)
     return vlime#ui#ShowTransientWindow(
                 \ a:conn, a:content, a:append,
                 \ vlime#ui#PreviewBufName(), 'preview', 'vlime_preview')
 endfunction
 
+""
+" @public
+"
+" Show {content} in the arglist buffer. {conn} should be a
+" @dict(VlimeConnection).
 function! vlime#ui#ShowArgList(conn, content)
     return vlime#ui#ShowTransientWindow(
                 \ a:conn, a:content, v:false,
                 \ vlime#ui#ArgListBufName(), 'arglist', 'vlime_arglist')
 endfunction
 
+""
+" @public
+"
+" Return a list of Vlime windows. {conn} should be a @dict(VlimeConnection) or
+" v:null. When {conn} is v:null, windows associated with all connections are
+" returned. {win_name} is the type of window to look for, or an empty string to indicate
+" all window types. See |g:vlime_window_settings| for a full list of window
+" types.
 function! vlime#ui#GetWindowList(conn, win_name)
     if a:win_name == 'preview' || a:win_name == 'arglist' ||
                 \ a:win_name == 'server'
@@ -613,6 +802,10 @@ function! vlime#ui#GetWindowList(conn, win_name)
     return winid_list
 endfunction
 
+""
+" @public
+"
+" Return a list of windows containing buffers of filetype {ft}.
 function! vlime#ui#GetFiletypeWindowList(ft)
     let winid_list = []
     let old_win_id = win_getid()
@@ -627,6 +820,11 @@ function! vlime#ui#GetFiletypeWindowList(ft)
     return winid_list
 endfunction
 
+""
+" @public
+"
+" Close Vlime windows. See @function(vlime#ui#GetWindowList) for the use of
+" {conn} and {win_name}.
 function! vlime#ui#CloseWindow(conn, win_name)
     let winid_list = vlime#ui#GetWindowList(a:conn, a:win_name)
     for [winid, bufname] in winid_list
@@ -637,6 +835,10 @@ function! vlime#ui#CloseWindow(conn, win_name)
     endfor
 endfunction
 
+""
+" @public
+"
+" Append {str} to the current buffer. Elaborately handle newline characters.
 function! vlime#ui#AppendString(str)
     let new_lines = split(a:str, "\n", v:true)
     let last_line_nr = line('$')
@@ -650,12 +852,21 @@ function! vlime#ui#AppendString(str)
     endif
 endfunction
 
+""
+" @public
+"
+" Replace the content of the current buffer with {str}.
 function! vlime#ui#ReplaceContent(str)
     1,$delete _
     call vlime#ui#AppendString(a:str)
     call setpos('.', [0, 1, 1, 0, 1])
 endfunction
 
+""
+" @public
+"
+" Adjust the indentation of the current line. {indent} is the amount to
+" indent, in number of space characters.
 function! vlime#ui#IndentCurLine(indent)
     if &expandtab
         let indent_str = repeat(' ', a:indent)
@@ -671,8 +882,17 @@ function! vlime#ui#IndentCurLine(indent)
     call setpos('.', [0, line('.'), spaces + 1, 0, a:indent + 1])
 endfunction
 
-" vlime#ui#CurArgPosForIndent([pos])
-function! vlime#ui#CurArgPosForIndent(...)
+""
+" @usage [pos]
+" @public
+"
+" Return the index of the argument under the cursor, inside a
+" parentheses-enclosed expression. A returned value of zero means the cursor
+" is on the operator. If no parentheses-enclosed expression is found, -1 is
+" returned. [pos] should be the position where the parentheses-enclosed
+" expression begins, in the form [<line>, <col>]. If [pos] is omitted, this
+" function will try to find the beginning position.
+function! vlime#ui#CurArgPos(...)
     let s_pos = get(a:000, 0, v:null)
     let arg_pos = -1
 
@@ -728,6 +948,10 @@ function! vlime#ui#Pad(prefix, sep, max_len)
     return a:prefix . a:sep . repeat(' ', a:max_len + 1 - len(a:prefix))
 endfunction
 
+""
+" @public
+"
+" Show an error message.
 function! vlime#ui#ErrMsg(msg)
     echohl ErrorMsg
     echom a:msg

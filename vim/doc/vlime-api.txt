@@ -10,7 +10,7 @@ CONTENTS                                                  *vlime-api-contents*
 DICTIONARIES                                                 *vlime-api-dicts*
 
                                                    *vlime-api.VlimeConnection*
-Vlime uses connection objects (dictionaries) to represent connections to the
+Vlime uses |vlime-api.VlimeConnection| objects to represent connections to the
 servers. You can create such an object by calling |vlime#plugin#ConnectREPL()|
 or |vlime#New()|.
 
@@ -24,7 +24,8 @@ accept two arguments:
 {conn_obj} is the connection object in question, and {result} is the returned
 value.
 
-See below for a detailed list of methods for connection objects.
+See below for a detailed list of methods for |vlime-api.VlimeConnection|
+objects.
 
 
 VlimeConnection.Connect({host}, {port}, [remote_prefix], [timeout])
@@ -410,15 +411,53 @@ VlimeConnection.DocumentationSymbol({sym_name}, [callback])
 
   Find the documentation for symbol {sym_name}.
 
+                                                           *vlime-api.VlimeUI*
+The |vlime-api.VlimeUI| object is a singleton. It's meant to be injected into
+|vlime-api.VlimeConnection| objects, to grant them access to the user
+interface. See |vlime#New()|.
+
+
+VlimeUI.GetCurrentPackage([buffer])              *VlimeUI.GetCurrentPackage()*
+
+  Return the Common Lisp package bound to the specified [buffer]. If no
+  package is bound yet, try to guess one by looking into the buffer content.
+  [buffer], if specified, should be an expression as described in |bufname()|.
+  When [buffer] is omitted, work on the current buffer.
+
+  The returned value is a list of two strings. The first string is the full
+  name of the package, and the second string is one of the package's
+  nicknames.
+
+VlimeUI.SetCurrentPackage({pkg}, [buffer])       *VlimeUI.SetCurrentPackage()*
+
+  Bind a Common Lisp package {pkg} to the specified [buffer]. {pkg} should be
+  a list of two strings, i.e. in the same format as the return value of
+  |VlimeUI.GetCurrentPackage()|. See |VlimeUI.GetCurrentPackage()| for the use
+  of [buffer].
+
+  Note that this method doesn't check the validity of {pkg}.
+
+VlimeUI.GetCurrentThread([buffer])                *VlimeUI.GetCurrentThread()*
+
+  Return the thread bound to [buffer]. See |VlimeUI.GetCurrentPackage()| for
+  the use of [buffer].
+
+  Currently, this method only makes sense in the debugger buffer.
+
+VlimeUI.SetCurrentThread({thread}, [buffer])      *VlimeUI.SetCurrentThread()*
+
+  Bind a thread to [buffer]. See |VlimeUI.GetCurrentPackage()| for the use of
+  [buffer].
+
 ==============================================================================
 FUNCTIONS                                                *vlime-api-functions*
 
 vlime#New([cb_data], [ui])                                       *vlime#New()*
 
-  Create a connection object.
+  Create a |vlime-api.VlimeConnection|.
 
   [cb_data] is arbitrary data, accessible from the connection callbacks. [ui]
-  is an instance of the UI object, see |vlime#ui#New()|.
+  is an instance of |vlime-api.VlimeUI|, see |vlime#ui#GetUI()|.
 
   This function is seldom used directly. To connect to a server, call
   |vlime#plugin#ConnectREPL()|.
@@ -608,6 +647,185 @@ vlime#plugin#Setup([force])                             *vlime#plugin#Setup()*
 vlime#plugin#InteractionMode()                *vlime#plugin#InteractionMode()*
 
   Toggle interaction mode.
+
+vlime#ui#New()                                                *vlime#ui#New()*
+
+  Create a |vlime-api.VlimeUI| object. One should probably use
+  |vlime#ui#GetUI()| instead.
+
+vlime#ui#GetUI()                                            *vlime#ui#GetUI()*
+
+  Return the UI singleton.
+
+vlime#ui#OnWriteString({conn}, {str}, {str_type})   *vlime#ui#OnWriteString()*
+
+  Write an arbitrary string {str} to the REPL buffer. {conn} should be a valid
+  |vlime-api.VlimeConnection|. {str_type} is currently ignored.
+
+vlime#ui#CurChar()                                        *vlime#ui#CurChar()*
+
+  Return the current character under the cursor. If there's no character, an
+  empty string is returned.
+
+vlime#ui#CurExprOrAtom()                            *vlime#ui#CurExprOrAtom()*
+
+  If there is a parentheses-enclosed expression under the cursor, return it.
+  Otherwise look for an atom under the cursor. Return an empty string if
+  nothing is found.
+
+vlime#ui#CurAtom()                                        *vlime#ui#CurAtom()*
+
+  Return the atom under the cursor, or an empty string if there is no atom.
+
+vlime#ui#CurExpr([return_pos])                            *vlime#ui#CurExpr()*
+
+  Return the parentheses-enclosed expression under the cursor, or an empty
+  string, when there is no expression. If [return_pos] is specified and
+  |TRUE|, return a list containing the expression, as well as the beginning
+  and ending positions.
+
+vlime#ui#CurExprPos({cur_char}, [side])                *vlime#ui#CurExprPos()*
+
+  Return the beginning or ending position of the parentheses-enclosed
+  expression under the cursor. {cur_char} is the character under the cursor,
+  which can be obtained by calling |vlime#ui#CurChar()|. If [side] is "begin",
+  the beginning position is returned. If [side] is "end", the ending position
+  is returned. "begin" is the default when [side] is omitted.
+
+vlime#ui#CurTopExpr([return_pos])                      *vlime#ui#CurTopExpr()*
+
+  Return the top-level parentheses-enclosed expression. See
+  |vlime#ui#CurExpr()| for the use of [return_pos].
+
+vlime#ui#CurTopExprPos([side])                      *vlime#ui#CurTopExprPos()*
+
+  Return the beginning or ending position of the top-level
+  parentheses-enclosed expression under the cursor. See
+  |vlime#ui#CurExprPos()| for the use of [side].
+
+vlime#ui#CurInPackage()                              *vlime#ui#CurInPackage()*
+
+  Search for an "in-package" expression in the current buffer, and return the
+  package name specified in that expression. If no such an expression can be
+  found, an empty string is returned.
+
+vlime#ui#CurOperator()                                *vlime#ui#CurOperator()*
+
+  Return the operator symbol name of the parentheses-enclosed expression under
+  the cursor. If no expression is found, return an empty string.
+
+vlime#ui#SurroundingOperator()                *vlime#ui#SurroundingOperator()*
+
+  Similar to |vlime#ui#CurOperator()|, but return the operator of the
+  surrounding expression instead, if the cursor is on the left enclosing
+  parentheses.
+
+vlime#ui#CurSelection([return_pos])                  *vlime#ui#CurSelection()*
+
+  Return the content of current/last selection. See |vlime#ui#CurExpr()| for
+  the use of [return_pos].
+
+vlime#ui#CurBufferContent([raw])                 *vlime#ui#CurBufferContent()*
+
+  Get the text content of the current buffer. Lines starting with ";" will be
+  dropped, unless [raw] is specified and |TRUE|.
+
+vlime#ui#GetText({from_pos}, {to_pos})                    *vlime#ui#GetText()*
+
+  Retrieve the text in the current buffer from {from_pos} to {to_pos}. These
+  positions should be lists in the form [<line>, <col>].
+
+vlime#ui#KeepCurWindow({Func})                      *vlime#ui#KeepCurWindow()*
+
+  Call {Func}. When {Func} returns, move the cursor back to the current
+  window.
+
+vlime#ui#WithBuffer({buf}, {Func}, [ev_ignore])        *vlime#ui#WithBuffer()*
+
+  Call {Func} with {buf} set as the current buffer. {buf} should be an
+  expression as described in |bufname()|. [ev_ignore] specifies what autocmd
+  events to ignore when switching buffers. When [ev_ignore] is omitted, all
+  events are ignored by default.
+
+vlime#ui#OpenBuffer({name}, {create}, {show}, [vertical], [initial_size])
+                                                       *vlime#ui#OpenBuffer()*
+
+  Open a buffer with the specified {name}. {name} should be an expression as
+  described in |bufname()|. Return -1 if the buffer doesn't exist, unless
+  {create} is |TRUE|. In that case, a new buffer is created.
+
+  When {show} is |TRUE| or a non-empty string, the buffer will be shown in a
+  new window, but if the buffer is already visible, move the cursor to it's
+  window instead. The string values can be "aboveleft", "belowright",
+  "topleft", or "botright", to further specify the window position. See
+  |aboveleft| and the alike to get explanations of these positions.
+
+  [vertical], if specified and |TRUE|, indicates that the new window should be
+  created vertically. [initial_size] assigns an initial size to the newly
+  created window.
+
+vlime#ui#OpenBufferWithWinSettings({buf_name}, {buf_create}, {win_name})
+                                        *vlime#ui#OpenBufferWithWinSettings()*
+
+  Like |vlime#ui#OpenBuffer()|, but consult |g:vlime_window_settings| when
+  creating a new window. {buf_name} should be an expression as described in
+  |bufname()|. {buf_create} specifies whether to create a new buffer or not.
+  {win_name} is the type of the window to create. See
+  |g:vlime_window_settings| for a list of Vlime window types.
+
+vlime#ui#ShowPreview({conn}, {content}, {append})     *vlime#ui#ShowPreview()*
+
+  Show {content} in the preview buffer. {conn} should be a
+  |vlime-api.VlimeConnection|. When {append} is |TRUE|, append {content} to
+  the existing content in the preview buffer.
+
+vlime#ui#ShowArgList({conn}, {content})               *vlime#ui#ShowArgList()*
+
+  Show {content} in the arglist buffer. {conn} should be a
+  |vlime-api.VlimeConnection|.
+
+vlime#ui#GetWindowList({conn}, {win_name})          *vlime#ui#GetWindowList()*
+
+  Return a list of Vlime windows. {conn} should be a
+  |vlime-api.VlimeConnection| or v:null. When {conn} is v:null, windows
+  associated with all connections are returned. {win_name} is the type of
+  window to look for, or an empty string to indicate all window types. See
+  |g:vlime_window_settings| for a full list of window types.
+
+vlime#ui#GetFiletypeWindowList({ft})        *vlime#ui#GetFiletypeWindowList()*
+
+  Return a list of windows containing buffers of filetype {ft}.
+
+vlime#ui#CloseWindow({conn}, {win_name})              *vlime#ui#CloseWindow()*
+
+  Close Vlime windows. See |vlime#ui#GetWindowList()| for the use of {conn}
+  and {win_name}.
+
+vlime#ui#AppendString({str})                         *vlime#ui#AppendString()*
+
+  Append {str} to the current buffer. Elaborately handle newline characters.
+
+vlime#ui#ReplaceContent({str})                     *vlime#ui#ReplaceContent()*
+
+  Replace the content of the current buffer with {str}.
+
+vlime#ui#IndentCurLine({indent})                    *vlime#ui#IndentCurLine()*
+
+  Adjust the indentation of the current line. {indent} is the amount to
+  indent, in number of space characters.
+
+vlime#ui#CurArgPos([pos])                               *vlime#ui#CurArgPos()*
+
+  Return the index of the argument under the cursor, inside a
+  parentheses-enclosed expression. A returned value of zero means the cursor
+  is on the operator. If no parentheses-enclosed expression is found, -1 is
+  returned. [pos] should be the position where the parentheses-enclosed
+  expression begins, in the form [<line>, <col>]. If [pos] is omitted, this
+  function will try to find the beginning position.
+
+vlime#ui#ErrMsg({msg})                                     *vlime#ui#ErrMsg()*
+
+  Show an error message.
 
 
 vim:tw=78:ts=8:ft=help:norl:
