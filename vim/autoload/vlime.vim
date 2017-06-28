@@ -4,10 +4,11 @@
 " servers. You can create such an object by calling
 " @function(vlime#plugin#ConnectREPL) or @function(vlime#New).
 "
-" Most of the connection object's methods are asynchronous. All async methods
-" have an optional callback argument, to allow a function be registered for
-" handling the result returned by the server. These callback functions should
-" accept two arguments:
+" Most of the connection object's methods are thin wrappers around raw
+" SLIME/SWANK messages, and they are asynchronous. These async methods have an
+" optional callback argument, to allow a function be registered for handling
+" the result returned by the server. The callback functions should accept two
+" arguments:
 "
 "     function! SomeCallbackFunc({conn_obj}, {result}) ...
 "
