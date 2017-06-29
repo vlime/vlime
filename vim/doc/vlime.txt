@@ -33,9 +33,10 @@ CONTENTS                                              *vlime-contents*
                   ........................ |vlime-mappings-server|
             4.3.8 Input Buffer Mappings ... |vlime-mappings-input|
     5. Configuration .............................. |vlime-config|
-    6. License ................................... |vlime-license|
-    7. Bugs ......................................... |vlime-bugs|
-    8. Contributing .............................. |vlime-contrib|
+    6. API ..................................... |vlime-api-intro|
+    7. License ................................... |vlime-license|
+    8. Bugs ......................................... |vlime-bugs|
+    9. Contributing .............................. |vlime-contrib|
 
 ======================================================================
 1. Introduction                                          *vlime-intro*
@@ -962,13 +963,60 @@ g:vlime_buf_name_sep                            *g:vlime_buf_name_sep*
     try changing this variable. Default: " | "
 
 ======================================================================
-6. License                                             *vlime-license*
+6. API                                               *vlime-api-intro*
+
+Vlime's source code on the Vim side is roughly organized into these
+groups, and some of them are exported to be user-callable APIs:
+
+    "vlime#plugin#..." functions
+        Top-level entry points to Vlime features. Most of Vlime's key
+        mappings are mapped to these functions. Some of these
+        functions are exported as APIs. See |vlime-api-functions|.
+
+    "vlime#ui#..." functions
+        UI-related code, which handles user input and special windows
+        etc. Some of these functions are exported as APIs. See
+        |vlime-api-functions|.
+
+    "vlime#connection#..." functions
+        Connection management. Internal use only.
+
+    "vlime#server#..." functions
+        Server management. Internal use only.
+
+    "vlime#contrib#..." functions
+        Support for Swank contrib modules. Internal use only.
+
+    "vlime#compat#..." functions
+        Compatibility code, dealing with the differences between Vim
+        and Neovim. Internal use only.
+
+    |vlime-api.VlimeConnection| object
+        The low-level code encapsulating Vlime's protocol and Swank
+        messages. Most of the methods are exported as APIs.
+
+Simply put, when you want to build something on top of Vlime's
+infrastructure, start from the top-level "vlime#plugin#..." API
+functions. Then, if you don't find what you want in the top-level API,
+resort to the |vlime-api.VlimeConnection| object, and maybe the
+"vlime#ui#..." API functions.
+
+All exported APIs are listed in |vlime-api-functions| and
+|vlime-api.VlimeConnection|. You can take a glance at the
+documentation to see what exactly a certain group of functions can do.
+
+Note that The API documentation is far from complete. When in doubt,
+use the source. And please file an issue if you find any mistake in it
+(see |vlime-contrib|).
+
+======================================================================
+7. License                                             *vlime-license*
 
 This plugin is licensed under the terms of the MIT license. See
 LICENSE.txt for details.
 
 ======================================================================
-7. Bugs                                                   *vlime-bugs*
+8. Bugs                                                   *vlime-bugs*
 
 * In Vim prior to version 8.0.0312, there was a bug in the channel
   implementation that caused large messages to be dropped incorrectly.
@@ -987,7 +1035,7 @@ Please file an issue on https://github.com/l04m33/vlime/issues if you
 find any other problem.
 
 ======================================================================
-8. Contributing                                        *vlime-contrib*
+9. Contributing                                        *vlime-contrib*
 
 The source repo for Vlime is hosted on GitHub:
 
