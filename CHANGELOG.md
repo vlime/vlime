@@ -1,5 +1,5 @@
 * master
-    * API documentation `:help vlime-api`.
+    * API documentation `:help vlime-api-intro`.
     * Experimental support for swank-kawa.scm.
     * Provide an option to use an existing Swank server.
     * More precise jumps to source locations
