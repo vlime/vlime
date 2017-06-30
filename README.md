@@ -43,9 +43,9 @@ Dependencies
 
 Must-have:
 
-* Vim 8.0+ with +channel, or Neovim 0.2.0+ with ncat
+* Vim 8.0+ with +channel feature, or Neovim 0.2.0+ and [ncat command](https://nmap.org/book/install.html)
 * ASDF
-* Quicklisp
+* [Quicklisp](https://www.quicklisp.org/beta/#installation)
 * An Internet connection to install other dependencies from Quicklisp
 
 Note that there was a bug in the channel implementation of Vim, which may
@@ -89,6 +89,10 @@ Usage
 2. Clone this repo.
 3. Install the Vim plugin from Vlime's `vim` directory using your usual way
    (Vundle or something).
+   for example, install current plugin by dein:
+   ```vim
+   call dein#add('l04m33/vlime', {'on_ft' : 'lisp', 'rtp': 'vim'})
+   ```
 4. Run the server: `sbcl --load <vlime repo>/lisp/start-vlime.lisp`
 5. When the server is up and running, use Vim to start editing a CL source file,
    and type "\cc" (without the quote marks) in normal mode to connect to the
