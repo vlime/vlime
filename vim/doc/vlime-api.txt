@@ -110,11 +110,6 @@ VlimeConnection.Ping()                                *VlimeConnection.Ping()*
 
   Send a PING request to the server, and wait for the reply.
 
-VlimeConnection.Pong({thread}, {ttag})                *VlimeConnection.Pong()*
-
-  Reply to server PING messages. {thread} and {ttag} are parameters received
-  in the PING message from the server.
-
 VlimeConnection.ConnectionInfo([return_dict], [callback])
                                             *VlimeConnection.ConnectionInfo()*
 
@@ -134,6 +129,11 @@ VlimeConnection.SwankRequire({contrib}, [callback])
   module name. These names are case-sensitive. Normally you should use
   uppercase.
 
+  For example, "conn_obj.SwankRequire('SWANK-REPL')" tells Swank to load the
+  SWANK-REPL contrib module, and "conn_obj.SwankRequire(['SWANK-REPL',
+  'SWANK-PRESENTATIONS'])" tells Swank to load both SWANK-REPL and
+  SWANK-PRESENTATIONS.
+
 VlimeConnection.CreateREPL([coding_system], [callback])
                                                 *VlimeConnection.CreateREPL()*
 
@@ -143,6 +143,9 @@ VlimeConnection.CreateREPL([coding_system], [callback])
   [coding_system] is implementation-dependent. Omit this argument or pass
   v:null to let the server choose it for you.
 
+  This method needs the SWANK-REPL contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
 VlimeConnection.ListenerEval({expr}, [callback])
                                               *VlimeConnection.ListenerEval()*
 
@@ -150,10 +153,14 @@ VlimeConnection.ListenerEval({expr}, [callback])
   [callback] function to handle the result. {expr} should be a plain string
   containing the lisp expression to be evaluated.
 
+  This method needs the SWANK-REPL contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
 VlimeConnection.Interrupt({thread})              *VlimeConnection.Interrupt()*
 
   Interrupt {thread}. {thread} should be a numeric thread ID, or {"package":
-  "KEYWORD", "name": "REPL-THREAD"} for the REPL thread.
+  "KEYWORD", "name": "REPL-THREAD"} for the REPL thread. The debugger will be
+  activated upon interruption.
 
 VlimeConnection.SLDBAbort([callback])            *VlimeConnection.SLDBAbort()*
 
@@ -277,6 +284,9 @@ VlimeConnection.InspectPresentation({pres_id}, {reset}, [callback])
   a valid ID presented by PRESENTATION-START messages. If {reset} is |TRUE|,
   the inspector will be reset first.
 
+  This method needs the SWANK-PRESENTATIONS contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
 VlimeConnection.ListThreads([callback])        *VlimeConnection.ListThreads()*
 
   Get a list of running threads.
@@ -333,6 +343,9 @@ VlimeConnection.FuzzyCompletions({symbol}, [callback])
 
   Get a completion list for {symbol}, using a more clever fuzzy algorithm.
   {symbol} should be a plain string containing a (partial) symbol name.
+
+  This method needs the SWANK-FUZZY contrib module. See
+  |VlimeConnection.SwankRequire()|.
 
 VlimeConnection.SwankMacroExpandOne({expr}, [callback])
                                        *VlimeConnection.SwankMacroExpandOne()*

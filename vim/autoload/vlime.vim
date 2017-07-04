@@ -376,7 +376,7 @@ endfunction
 
 ""
 " @dict VlimeConnection.Pong
-" @public
+" @private
 "
 " Reply to server PING messages.
 " {thread} and {ttag} are parameters received in the PING message from the
@@ -426,6 +426,11 @@ endfunction
 " {contrib} can be a string or a list of strings. Each string is a contrib
 " module name. These names are case-sensitive. Normally you should use
 " uppercase.
+"
+" For example, "conn_obj.SwankRequire('SWANK-REPL')" tells Swank to load the
+" SWANK-REPL contrib module, and "conn_obj.SwankRequire(['SWANK-REPL',
+" 'SWANK-PRESENTATIONS'])" tells Swank to load both SWANK-REPL and
+" SWANK-PRESENTATIONS.
 function! vlime#SwankRequire(contrib, ...) dict
     let Callback = get(a:000, 0, v:null)
     if type(a:contrib) == v:t_list
@@ -448,6 +453,9 @@ endfunction
 "
 " [coding_system] is implementation-dependent. Omit this argument or pass
 " v:null to let the server choose it for you.
+"
+" This method needs the SWANK-REPL contrib module. See
+" @function(VlimeConnection.SwankRequire).
 function! vlime#CreateREPL(...) dict
     function! s:CreateREPL_CB(conn, Callback, chan, msg) abort
         call s:CheckReturnStatus(a:msg, 'vlime#CreateREPL')
@@ -476,6 +484,9 @@ endfunction
 " [callback] function to handle the result.
 " {expr} should be a plain string containing the lisp expression to be
 " evaluated.
+"
+" This method needs the SWANK-REPL contrib module. See
+" @function(VlimeConnection.SwankRequire).
 function! vlime#ListenerEval(expr, ...) dict
     function! s:ListenerEvalCB(conn, Callback, chan, msg) abort
         let stat = s:CheckAndReportReturnStatus(a:conn, a:msg, 'vlime#ListenerEval')
@@ -496,7 +507,8 @@ endfunction
 "
 " Interrupt {thread}.
 " {thread} should be a numeric thread ID, or {"package": "KEYWORD", "name":
-" "REPL-THREAD"} for the REPL thread.
+" "REPL-THREAD"} for the REPL thread. The debugger will be activated upon
+" interruption.
 function! vlime#Interrupt(thread) dict
     call self.Send([s:KW('EMACS-INTERRUPT'), a:thread])
 endfunction
@@ -829,6 +841,9 @@ endfunction
 " Start inspecting an object saved by SWANK-PRESENTATIONS.
 " {pres_id} should be a valid ID presented by PRESENTATION-START messages.
 " If {reset} is |TRUE|, the inspector will be reset first.
+"
+" This method needs the SWANK-PRESENTATIONS contrib module. See
+" @function(VlimeConnection.SwankRequire).
 function! vlime#InspectPresentation(pres_id, reset, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
@@ -994,6 +1009,9 @@ endfunction
 "
 " Get a completion list for {symbol}, using a more clever fuzzy algorithm.
 " {symbol} should be a plain string containing a (partial) symbol name.
+"
+" This method needs the SWANK-FUZZY contrib module. See
+" @function(VlimeConnection.SwankRequire).
 function! vlime#FuzzyCompletions(symbol, ...) dict
     let Callback = get(a:000, 0, v:null)
     let cur_package = self.GetCurrentPackage()
