@@ -43,14 +43,13 @@ Dependencies
 
 Must-have:
 
-* Vim 8.0+ with +channel, or Neovim 0.2.0+ with ncat
+* Vim 8.0.0312+ with +channel, or Neovim 0.2.0+ with ncat
 * ASDF
 * Quicklisp
 * An Internet connection to install other dependencies from Quicklisp
 
 Note that there was a bug in the channel implementation of Vim, which may
-cause large messages to be dropped incorrectly. This was fixed in 8.0.0312,
-so using 8.0.0312 or a more recent version is strongly recommended.
+cause large messages to be dropped incorrectly. This was fixed in 8.0.0312.
 [Details](https://groups.google.com/d/topic/vim_dev/Rl0X_R5pjxk/discussion).
 
 When running inside Neovim, Vlime relies on the [ncat](https://nmap.org/ncat/)
