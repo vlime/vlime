@@ -175,11 +175,15 @@ function! TestToRawForm()
                 \ vlime#ToRawForm('(cons "some string" '))
     call assert_equal([['cons', '"some\"\\string"', '', cursor_marker], 24, v:false],
                 \ vlime#ToRawForm('(cons "some\"\\\string" '))
+    call assert_equal([['cons', '', cursor_marker], 19, v:false],
+                \ vlime#ToRawForm('(cons "some string '))
 
     call assert_equal([['cons', '|some sym|', '', cursor_marker], 17, v:false],
                 \ vlime#ToRawForm('(cons |some sym| '))
     call assert_equal([['cons', '|some"\\\|sym|', '', cursor_marker], 23, v:false],
                 \ vlime#ToRawForm('(cons |some\"\\\|\sym| '))
+    call assert_equal([['cons', '', cursor_marker], 16, v:false],
+                \ vlime#ToRawForm('(cons |some sym '))
 
     call assert_equal([['cons', ["1", "2"], '', cursor_marker], 13, v:false],
                 \ vlime#ToRawForm('(cons #(1 2) '))
