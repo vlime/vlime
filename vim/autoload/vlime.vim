@@ -1534,7 +1534,7 @@ function! vlime#ToRawForm(expr)
                 let str = ''
                 let delta = len(a:expr) - idx
             endtry
-            let cur_token .= string(str)
+            let cur_token .= join(['"', escape(str, '"\'), '"'], '')
         elseif ch == '#'
             let delimiter = v:false
             if idx + 1 >= len(a:expr) || a:expr[idx+1] != '('
