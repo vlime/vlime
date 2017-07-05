@@ -162,6 +162,26 @@ function! TestOnServerEvent()
     unlet b:vlime_test_ping_handler_called
 endfunction
 
+function! TestToRawForm()
+    let cursor_marker = {'package': 'SWANK', 'name': '%CURSOR-MARKER%'}
+    call assert_equal([['cons', '1', '2'], 10, v:true],
+                \ vlime#ToRawForm('(cons 1 2)'))
+    call assert_equal([['cons', '1', '', cursor_marker], 8, v:false],
+                \ vlime#ToRawForm('(cons 1 '))
+    call assert_equal([['cons', '1', ['list', '', cursor_marker]], 14, v:false],
+                \ vlime#ToRawForm('(cons 1 (list '))
+
+    call assert_equal([['cons', '"some string"', '', cursor_marker], 20, v:false],
+                \ vlime#ToRawForm('(cons "some string" '))
+    call assert_equal([['cons', '"some\"\\string"', '', cursor_marker], 24, v:false],
+                \ vlime#ToRawForm('(cons "some\"\\\string" '))
+
+    call assert_equal([['cons', ["1", "2"], '', cursor_marker], 13, v:false],
+                \ vlime#ToRawForm('(cons #(1 2) '))
+    call assert_equal([['cons', ["1", "2", '', cursor_marker]], 12, v:false],
+                \ vlime#ToRawForm('(cons #(1 2 '))
+endfunction
+
 function! s:SYM(package, name)
     return {'name': a:name, 'package': a:package}
 endfunction
@@ -215,6 +235,7 @@ call TestWithThread()
 call TestWithPackage()
 call TestEmacsRex()
 call TestOnServerEvent()
+call TestToRawForm()
 
 " [msg_name, expected, dummy_reply, args...]
 let b:messages_to_test = [
