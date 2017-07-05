@@ -180,6 +180,17 @@ function! TestToRawForm()
                 \ vlime#ToRawForm('(cons #(1 2) '))
     call assert_equal([['cons', ["1", "2", '', cursor_marker]], 12, v:false],
                 \ vlime#ToRawForm('(cons #(1 2 '))
+
+    call assert_equal([['cons', '', cursor_marker], 7, v:false],
+                \ vlime#ToRawForm('(cons #'))
+    call assert_equal([['cons', '#', '', cursor_marker], 8, v:false],
+                \ vlime#ToRawForm('(cons # '))
+    call assert_equal([['cons', '', cursor_marker], 8, v:false],
+                \ vlime#ToRawForm('(cons #\'))
+    call assert_equal([['cons', '#p"some_path"', '"some string"', '', cursor_marker], 34, v:false],
+                \ vlime#ToRawForm('(cons #p"some_path" "some string" '))
+    call assert_equal([['cons', '#\"', '"some string"', '', cursor_marker], 24, v:false],
+                \ vlime#ToRawForm('(cons #\" "some string" '))
 endfunction
 
 function! s:SYM(package, name)

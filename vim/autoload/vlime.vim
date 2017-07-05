@@ -1537,9 +1537,13 @@ function! vlime#ToRawForm(expr)
             let cur_token .= join(['"', escape(str, '"\'), '"'], '')
         elseif ch == '#'
             let delimiter = v:false
-            if idx + 1 >= len(a:expr) || a:expr[idx+1] != '('
-                let cur_token .= ch
-            endif
+            try
+                let [str, delta] = s:read_raw_form_sharp(a:expr[idx:])
+            catch 'read_raw_form_sharp:.\+'
+                let str = ''
+                let delta = len(a:expr) - idx
+            endtry
+            let cur_token .= str
         else
             let delimiter = v:false
             let cur_token .= ch
@@ -1669,6 +1673,26 @@ function! s:read_raw_form_string(expr)
         endwhile
 
         throw 'read_raw_form_string: unterminated string'
+    else
+        return ['', 0]
+    endif
+endfunction
+
+function! s:read_raw_form_sharp(expr)
+    if a:expr[0] == '#'
+        if len(a:expr) <= 1
+            return [a:expr, len(a:expr)]
+        elseif a:expr[1] == '('
+            return ['', 1]
+        elseif a:expr[1] == '\'
+            if len(a:expr) < 3
+                throw 'read_raw_form_sharp: early eof'
+            else
+                return [a:expr[0:2], 3]
+            endif
+        else
+            return ['#', 1]
+        endif
     else
         return ['', 0]
     endif
