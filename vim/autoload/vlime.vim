@@ -1527,14 +1527,14 @@ function! vlime#ToRawForm(expr)
             let paren_level -= 1
         elseif ch == ' ' || ch == "\<tab>" || ch == "\n"
             let delimiter = v:true
-        elseif ch == '"'
+        elseif ch == '"' || ch == '|'
             try
-                let [str, delta] = s:read_raw_form_string(a:expr[idx:])
+                let [str, delta] = s:read_raw_form_string(a:expr[idx:], ch)
             catch 'read_raw_form_string:.\+'
                 let str = ''
                 let delta = len(a:expr) - idx
             endtry
-            let cur_token .= join(['"', escape(str, '"\'), '"'], '')
+            let cur_token .= join([ch, escape(str, ch . '\'), ch], '')
         elseif ch == '#'
             try
                 let [str, delta] = s:read_raw_form_sharp(a:expr[idx:])
@@ -1656,8 +1656,8 @@ function! s:TransformCompilerPolicy(policy)
     endif
 endfunction
 
-function! s:read_raw_form_string(expr)
-    if a:expr[0] == '"'
+function! s:read_raw_form_string(expr, mark)
+    if a:expr[0] == a:mark
         let str = []
         let idx = 1
         while idx < len(a:expr)
@@ -1669,7 +1669,7 @@ function! s:read_raw_form_string(expr)
                 else
                     throw 'read_raw_form_string: early eof'
                 endif
-            elseif ch == '"'
+            elseif ch == a:mark
                 return [join(str, ''), idx + 1]
             endif
 
