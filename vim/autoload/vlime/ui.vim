@@ -405,6 +405,27 @@ endfunction
 ""
 " @public
 "
+" Retrieve the parentheses-enclosed expression under the cursor, and parse it
+" into a "raw form" usable by @function(VlimeConnection.Autodoc). See the
+" source of SWANK:AUTODOC for an explanation of the raw forms.
+function! vlime#ui#CurRawForm()
+    " Note that there may be an incomplete expression
+    let s_pos = vlime#ui#CurTopExprPos('begin')
+    let [s_line, s_col] = s_pos
+    if s_line <= 0 || s_col <= 0
+        return []
+    endif
+
+    let cur_pos = getcurpos()[1:2]
+    let cur_pos[1] -= 1
+    let partial_expr = vlime#ui#GetText(s_pos, cur_pos)
+
+    return vlime#ToRawForm(partial_expr)[0]
+endfunction
+
+""
+" @public
+"
 " Search for an "in-package" expression in the current buffer, and return the
 " package name specified in that expression. If no such an expression can be
 " found, an empty string is returned.

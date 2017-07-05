@@ -389,6 +389,32 @@ function! vlime#plugin#ShowOperatorArgList(...)
 endfunction
 
 ""
+" @public
+"
+" Show the arglist description for the current expression and cursor position,
+" in the arglist window. If the SWANK-ARGLISTS contrib module is available,
+" the current argument will be marked in the arglist.
+function! vlime#plugin#CurAutodoc()
+    let conn = vlime#connection#Get(v:true)
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    if s:ConnHasContrib(conn, 'SWANK-ARGLISTS')
+        let raw_form = vlime#ui#CurRawForm()
+        if len(raw_form) > 0
+            let raw_form = [{'package': 'COMMON-LISP', 'name': 'QUOTE'}, raw_form]
+            call conn.Autodoc(raw_form, function('s:OnCurAutodocComplete'))
+        endif
+    else
+        let op = vlime#ui#SurroundingOperator()
+        if s:NeedToShowArgList(op)
+            call vlime#plugin#ShowOperatorArgList(op)
+        endif
+    endif
+endfunction
+
+""
 " @usage [symbol]
 " @public
 "
@@ -731,17 +757,10 @@ function! vlime#plugin#CompleteFunc(findstart, base)
 endfunction
 
 function! vlime#plugin#VlimeKey(key)
-    if tolower(a:key) == 'space'
-        let op = vlime#ui#SurroundingOperator()
-        if s:NeedToShowArgList(op)
-            call vlime#plugin#ShowOperatorArgList(op)
-        endif
-    elseif tolower(a:key) == 'cr'
-        let op = vlime#ui#SurroundingOperator()
-        if s:NeedToShowArgList(op)
-            call vlime#plugin#ShowOperatorArgList(op)
-        endif
-    elseif tolower(a:key) == 'tab'
+    let key = tolower(a:key)
+    if key == 'space' || key == 'cr'
+        call vlime#plugin#CurAutodoc()
+    elseif key == 'tab'
         let line = getline('.')
         let spaces = vlime#ui#CalcLeadingSpaces(line, v:true)
         let col = virtcol('.')
@@ -940,6 +959,12 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
     endif
     call vlime#ui#ShowArgList(a:conn, a:result)
     let s:last_imode_arglist_op = a:sym
+endfunction
+
+function! s:OnCurAutodocComplete(conn, result)
+    if type(a:result[0]) == v:t_string
+        call vlime#ui#ShowArgList(a:conn, a:result[0])
+    endif
 endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)

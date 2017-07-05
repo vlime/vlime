@@ -61,6 +61,7 @@ function! vlime#New(...)
                 \ 'SetPackage': function('vlime#SetPackage'),
                 \ 'DescribeSymbol': function('vlime#DescribeSymbol'),
                 \ 'OperatorArgList': function('vlime#OperatorArgList'),
+                \ 'Autodoc': function('vlime#Autodoc'),
                 \ 'SimpleCompletions': function('vlime#SimpleCompletions'),
                 \ 'FuzzyCompletions': function('vlime#FuzzyCompletions'),
                 \ 'ReturnString': function('vlime#ReturnString'),
@@ -985,6 +986,24 @@ function! vlime#OperatorArgList(operator, ...) dict
 endfunction
 
 ""
+" @dict VlimeConnection.Autodoc
+" @usage {raw_form} [callback]
+" @public
+"
+" Get the arglist description for {raw_form}. {raw_form} should be a value
+" returned by @function(vlime#ui#CurRawForm) or @function(vlime#ToRawForm).
+" See the source of SWANK:AUTODOC for an explanation of the raw forms.
+"
+" This method needs the SWANK-ARGLISTS contrib module. See
+" @function(VlimeConnection.SwankRequire).
+function! vlime#Autodoc(raw_form, ...) dict
+    let Callback = get(a:000, 0, v:null)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'AUTODOC'), a:raw_form]),
+                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#Autodoc']))
+endfunction
+
+""
 " @dict VlimeConnection.SimpleCompletions
 " @usage {symbol} [callback]
 " @public
@@ -1481,6 +1500,75 @@ function! vlime#GetValidSourceLocation(loc)
     return valid_loc
 endfunction
 
+""
+" @public
+"
+" Parse {expr} and turn it into a raw form usable by
+" @function(VlimeConnection.Autodoc). See the source of SWANK:AUTODOC for an
+" explanation of the raw forms.
+function! vlime#ToRawForm(expr)
+    let form = []
+    let paren_level = 0
+    let idx = 0
+    let cur_token = ''
+    let delimiter = v:false
+    let sub_form_complete = v:true
+
+    while idx < len(a:expr)
+        let delta = 1
+
+        let ch = a:expr[idx]
+        if ch == '('
+            let delimiter = v:true
+            let paren_level += 1
+        elseif ch == ')'
+            let delimiter = v:true
+            let paren_level -= 1
+        elseif ch == ' ' || ch == "\<tab>" || ch == "\n"
+            let delimiter = v:true
+        elseif ch == '"'
+            let delimiter = v:false
+            try
+                let [str, delta] = s:read_raw_form_string(a:expr[idx:])
+            catch 'read_raw_form_string:.\+'
+                let str = ''
+                let delta = len(a:expr) - idx
+            endtry
+            let cur_token .= string(str)
+        elseif ch == '#'
+            let delimiter = v:false
+            if idx + 1 >= len(a:expr) || a:expr[idx+1] != '('
+                let cur_token .= ch
+            endif
+        else
+            let delimiter = v:false
+            let cur_token .= ch
+        endif
+
+        if delimiter && len(cur_token) > 0
+            call add(form, cur_token)
+            let cur_token = ''
+        endif
+
+        if paren_level > 1
+            let [sub_form, delta, sub_form_complete] = vlime#ToRawForm(a:expr[idx:])
+            call add(form, sub_form)
+            let paren_level -= 1
+        elseif paren_level <= 0
+            return [form, idx + 1, v:true]
+        endif
+
+        let idx += delta
+    endwhile
+
+    if sub_form_complete
+        call add(form, "")
+        call add(form, {'package': 'SWANK', 'name': '%CURSOR-MARKER%'})
+    endif
+
+    return [form, len(a:expr), v:false]
+endfunction
+
 function! s:SearchPList(plist, name)
     let i = 0
     while i < len(a:plist)
@@ -1556,6 +1644,33 @@ function! s:TransformCompilerPolicy(policy)
         return [s:CL('QUOTE'), plc_list]
     else
         return a:policy
+    endif
+endfunction
+
+function! s:read_raw_form_string(expr)
+    if a:expr[0] == '"'
+        let str = []
+        let idx = 1
+        while idx < len(a:expr)
+            let ch = a:expr[idx]
+            if ch == '\'
+                let idx += 1
+                if idx < len(a:expr)
+                    let ch = a:expr[idx]
+                else
+                    throw 'read_raw_form_string: early eof'
+                endif
+            elseif ch == '"'
+                return [join(str, ''), idx + 1]
+            endif
+
+            call add(str, ch)
+            let idx += 1
+        endwhile
+
+        throw 'read_raw_form_string: unterminated string'
+    else
+        return ['', 0]
     endif
 endfunction
 
