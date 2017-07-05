@@ -191,6 +191,11 @@ function! TestToRawForm()
                 \ vlime#ToRawForm('(cons #p"some_path" "some string" '))
     call assert_equal([['cons', '#\"', '"some string"', '', cursor_marker], 24, v:false],
                 \ vlime#ToRawForm('(cons #\" "some string" '))
+
+    call assert_equal([['cons', '''\ ', '1', '', cursor_marker], 12, v:false],
+                \ vlime#ToRawForm('(cons ''\  1 '))
+    call assert_equal([['cons', '''\"', '"some string"', '', cursor_marker], 24, v:false],
+                \ vlime#ToRawForm('(cons ''\" "some string" '))
 endfunction
 
 function! s:SYM(package, name)

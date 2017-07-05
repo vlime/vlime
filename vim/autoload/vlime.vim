@@ -1516,6 +1516,7 @@ function! vlime#ToRawForm(expr)
 
     while idx < len(a:expr)
         let delta = 1
+        let delimiter = v:false
 
         let ch = a:expr[idx]
         if ch == '('
@@ -1527,7 +1528,6 @@ function! vlime#ToRawForm(expr)
         elseif ch == ' ' || ch == "\<tab>" || ch == "\n"
             let delimiter = v:true
         elseif ch == '"'
-            let delimiter = v:false
             try
                 let [str, delta] = s:read_raw_form_string(a:expr[idx:])
             catch 'read_raw_form_string:.\+'
@@ -1536,7 +1536,6 @@ function! vlime#ToRawForm(expr)
             endtry
             let cur_token .= join(['"', escape(str, '"\'), '"'], '')
         elseif ch == '#'
-            let delimiter = v:false
             try
                 let [str, delta] = s:read_raw_form_sharp(a:expr[idx:])
             catch 'read_raw_form_sharp:.\+'
@@ -1544,8 +1543,14 @@ function! vlime#ToRawForm(expr)
                 let delta = len(a:expr) - idx
             endtry
             let cur_token .= str
+        elseif ch == '\'
+            if idx + 1 < len(a:expr)
+                let cur_token .= a:expr[idx:idx+1]
+                let delta = 2
+            else
+                let delta = len(a:expr) - idx
+            endif
         else
-            let delimiter = v:false
             let cur_token .= ch
         endif
 
