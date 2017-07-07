@@ -1377,9 +1377,9 @@ function! s:InComment(cur_pos)
     endif
 endfunction
 
-function! s:InString(_cur_pos)
+function! vlime#ui#InString(_cur_pos)
     let quote_count = 0
-    let pattern = '\([^\\]\@<="\)\|\(^"\)'
+    let pattern = '\v((^|[^\\])@<=")|(((^|[^\\])((\\\\)+))@<=")'
     let old_pos = getcurpos()
     try
         let quote_pos = searchpos(pattern, 'bW')
