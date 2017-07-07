@@ -384,7 +384,9 @@ function! vlime#ui#CurTopExprPos(...)
     try
         let cur_pos = searchpairpos('(', '', ')', search_flags)
         while cur_pos[0] > 0 && cur_pos[1] > 0
-            let last_pos = cur_pos
+            if !s:InComment(cur_pos)
+                let last_pos = cur_pos
+            endif
             let cur_pos = searchpairpos('(', '', ')', search_flags)
         endwhile
         if last_pos[0] > 0 && last_pos[1] > 0
@@ -1360,4 +1362,20 @@ function! s:ReadStringInputComplete(thread, ttag)
         let content .= "\n"
     endif
     call b:vlime_conn.ReturnString(a:thread, a:ttag, content)
+endfunction
+
+function! s:InComment(cur_pos)
+    if searchpair('#|', '', '|#', 'bnW') > 0
+        return v:true
+    else
+        let line = getline(a:cur_pos[0])
+        let semi_colon_idx = match(line, ';')
+        if semi_colon_idx >= 0 && (a:cur_pos[1] - 1) > semi_colon_idx
+            return v:true
+        endif
+        return v:false
+    endif
+endfunction
+
+function! s:InString(pos)
 endfunction
