@@ -225,6 +225,12 @@ function! TestCurTopExpr()
         call assert_equal(['(cons 1 2)', [cur_line, 1], [cur_line, 10]],
                     \ vlime#ui#CurTopExpr(v:true))
 
+        call append(line('$'), ['"\\"', '(cons 1 2)'])
+        call setpos('.', [0, line('$'), 2, 0])
+        let cur_line = line('.')
+        call assert_equal(['(cons 1 2)', [cur_line, 1], [cur_line, 10]],
+                    \ vlime#ui#CurTopExpr(v:true))
+
         call append(line('$'), ['#\"', '(cons 1 2)'])
         call setpos('.', [0, line('$'), 2, 0])
         let cur_line = line('.')
