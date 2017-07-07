@@ -403,8 +403,14 @@ function! vlime#plugin#CurAutodoc()
     if s:ConnHasContrib(conn, 'SWANK-ARGLISTS')
         let raw_form = vlime#ui#CurRawForm()
         if len(raw_form) > 0
-            let raw_form = [{'package': 'COMMON-LISP', 'name': 'QUOTE'}, raw_form]
-            call conn.Autodoc(raw_form, function('s:OnCurAutodocComplete'))
+            let autodoc_cache = get(s:, 'autodoc_cache', {})
+            let cached_result = get(autodoc_cache, string(raw_form), v:null)
+            if type(cached_result) == type(v:null)
+                let quoted_raw_form = [{'package': 'COMMON-LISP', 'name': 'QUOTE'}, raw_form]
+                call conn.Autodoc(quoted_raw_form, function('s:OnCurAutodocComplete', [raw_form]))
+            else
+                call vlime#ui#ShowArgList(conn, cached_result)
+            endif
         endif
     else
         let op = vlime#ui#SurroundingOperator()
@@ -961,9 +967,14 @@ function! s:OnOperatorArgListComplete(sym, conn, result)
     let s:last_imode_arglist_op = a:sym
 endfunction
 
-function! s:OnCurAutodocComplete(conn, result)
-    if type(a:result[0]) == v:t_string
+function! s:OnCurAutodocComplete(raw_form, conn, result)
+    if type(a:result) == v:t_list && type(a:result[0]) == v:t_string
         call vlime#ui#ShowArgList(a:conn, a:result[0])
+        if type(a:result[1]) != type(v:null)
+            let autodoc_cache = get(s:, 'autodoc_cache', {})
+            let autodoc_cache[string(a:raw_form)] = a:result[0]
+            let s:autodoc_cache = autodoc_cache
+        endif
     endif
 endfunction
 
