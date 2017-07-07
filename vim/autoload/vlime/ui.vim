@@ -384,7 +384,7 @@ function! vlime#ui#CurTopExprPos(...)
     try
         let cur_pos = searchpairpos('(', '', ')', search_flags)
         while cur_pos[0] > 0 && cur_pos[1] > 0
-            if !s:InComment(cur_pos)
+            if !s:InComment(cur_pos) && !s:InString(cur_pos)
                 let last_pos = cur_pos
             endif
             let cur_pos = searchpairpos('(', '', ')', search_flags)
@@ -1377,5 +1377,18 @@ function! s:InComment(cur_pos)
     endif
 endfunction
 
-function! s:InString(pos)
+function! s:InString(_cur_pos)
+    let quote_count = 0
+    let pattern = '\([^\\]\@<="\)\|\(^"\)'
+    let old_pos = getcurpos()
+    try
+        let quote_pos = searchpos(pattern, 'bW')
+        while quote_pos[0] > 0 && quote_pos[1] > 0
+            let quote_count += 1
+            let quote_pos = searchpos(pattern, 'bW')
+        endwhile
+        return (quote_count % 2) > 0
+    finally
+        call setpos('.', old_pos)
+    endtry
 endfunction
