@@ -1550,6 +1550,9 @@ function! vlime#ToRawForm(expr)
             else
                 let delta = len(a:expr) - idx
             endif
+        elseif ch == ';'
+            let delimiter = v:true
+            let delta = s:read_raw_form_semi_colon(a:expr[idx:])
         else
             let cur_token .= ch
         endif
@@ -1700,6 +1703,18 @@ function! s:read_raw_form_sharp(expr)
         endif
     else
         return ['', 0]
+    endif
+endfunction
+
+function! s:read_raw_form_semi_colon(expr)
+    if a:expr[0] == ';'
+        let idx = 1
+        while idx < len(a:expr) && a:expr[idx] != "\n"
+            let idx += 1
+        endwhile
+        return idx + 1
+    else
+        return 0
     endif
 endfunction
 
