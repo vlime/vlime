@@ -402,7 +402,7 @@ function! vlime#plugin#CurAutodoc()
 
     if s:ConnHasContrib(conn, 'SWANK-ARGLISTS')
         let raw_form = vlime#ui#CurRawForm()
-        if len(raw_form) > 0
+        if s:NeedToShowArgList(raw_form)
             let autodoc_cache = get(s:, 'autodoc_cache', {})
             let cached_result = get(autodoc_cache, string(raw_form), v:null)
             if type(cached_result) == type(v:null)
@@ -975,6 +975,7 @@ function! s:OnCurAutodocComplete(raw_form, conn, result)
             let autodoc_cache[string(a:raw_form)] = a:result[0]
             let s:autodoc_cache = autodoc_cache
         endif
+        let s:last_imode_arglist_op = a:raw_form
     endif
 endfunction
 
@@ -1151,6 +1152,7 @@ if !exists('s:last_imode_arglist_op')
 endif
 
 function! s:NeedToShowArgList(op)
+    " Note that {op} may be a string or a list
     if len(a:op) > 0
         let arglist_buf = bufnr(vlime#ui#ArgListBufName())
         let arglist_win_nr = bufwinnr(arglist_buf)
