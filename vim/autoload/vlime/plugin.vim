@@ -1157,7 +1157,8 @@ function! s:NeedToShowArgList(op)
         let arglist_buf = bufnr(vlime#ui#ArgListBufName())
         let arglist_win_nr = bufwinnr(arglist_buf)
         let arglist_visible = (arglist_win_nr >= 0)
-        if !arglist_visible || a:op != s:last_imode_arglist_op
+        if !arglist_visible || type(a:op) != type(s:last_imode_arglist_op) ||
+                    \ a:op != s:last_imode_arglist_op
             return !!v:true
         else
             let conn = vlime#connection#Get(v:true)
