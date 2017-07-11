@@ -363,14 +363,20 @@ function! vlime#ui#CurTopExpr(...)
 endfunction
 
 ""
-" @usage [side]
+" @usage [side] [max_level] [max_lines]
 " @public
 "
 " Return the beginning or ending position of the top-level
 " parentheses-enclosed expression under the cursor. See
 " @function(vlime#ui#CurExprPos) for the use of [side].
+"
+" Stop when [max_level] parentheses are seen, or [max_lines] lines have been
+" searched. Pass v:null or ommit these two arguments to impose no limit at
+" all.
 function! vlime#ui#CurTopExprPos(...)
     let side = get(a:000, 0, 'begin')
+    let max_level = get(a:000, 1, v:null)
+    let max_lines = get(a:000, 2, v:null)
 
     if side == 'begin'
         let search_flags = 'bW'
@@ -381,13 +387,18 @@ function! vlime#ui#CurTopExprPos(...)
     let last_pos = [0, 0]
 
     let old_cur_pos = getcurpos()
+    let cur_level = 1
     try
-        let cur_pos = searchpairpos('(', '', ')', search_flags)
-        while cur_pos[0] > 0 && cur_pos[1] > 0
+        while type(max_level) == type(v:null) || cur_level <= max_level
+            let cur_pos = searchpairpos('(', '', ')', search_flags)
+            if cur_pos[0] <= 0 || cur_pos[1] <= 0 ||
+                        \ (type(max_lines) != type(v:null) && abs(old_cur_pos[1] - cur_pos[0]) > max_lines)
+                break
+            endif
             if !s:InComment(cur_pos) && !s:InString(cur_pos)
                 let last_pos = cur_pos
+                let cur_level += 1
             endif
-            let cur_pos = searchpairpos('(', '', ')', search_flags)
         endwhile
         if last_pos[0] > 0 && last_pos[1] > 0
             return last_pos
@@ -412,7 +423,7 @@ endfunction
 " source of SWANK:AUTODOC for an explanation of the raw forms.
 function! vlime#ui#CurRawForm()
     " Note that there may be an incomplete expression
-    let s_pos = vlime#ui#CurTopExprPos('begin')
+    let s_pos = vlime#ui#CurTopExprPos('begin', 5, 50)
     let [s_line, s_col] = s_pos
     if s_line <= 0 || s_col <= 0
         return []
@@ -421,8 +432,24 @@ function! vlime#ui#CurRawForm()
     let cur_pos = getcurpos()[1:2]
     let cur_pos[1] -= 1
     let partial_expr = vlime#ui#GetText(s_pos, cur_pos)
+    let partial_expr = substitute(partial_expr, '\v(\_s)+$', '', '')
 
-    return vlime#ToRawForm(partial_expr)[0]
+    if len(partial_expr) <= 0
+        return []
+    endif
+
+    let raw_form_cache = get(s:, 'raw_form_cache', {})
+    let raw_form = get(raw_form_cache, partial_expr, v:null)
+    if type(raw_form) == type(v:null)
+        let raw_form = vlime#ToRawForm(partial_expr)[0]
+        if len(raw_form) > 0
+            let raw_form_cache[partial_expr] = raw_form
+            let s:raw_form_cache = raw_form_cache
+        endif
+        return raw_form
+    else
+        return raw_form
+    endif
 endfunction
 
 ""
