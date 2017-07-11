@@ -1581,6 +1581,50 @@ function! vlime#ToRawForm(expr)
     return [form, len(a:expr), v:false]
 endfunction
 
+""
+" @usage {func} {key} {cache} [scope] [cache_limit]
+" @private
+"
+" Memoize {func} by caching it's result in a dictionary in [scope]. The result
+" will be stored under {key}. If [scope] is omitted, default to |b:|. If
+" [cache_limit] is specified, impose a limit to the cache size.
+function! vlime#Memoize(func, key, cache, ...)
+    let scope = get(a:000, 0, b:)
+    let cache_limit = get(a:000, 1, v:null)
+
+    let cache = get(scope, a:cache, {})
+    try
+        let result = cache[a:key]
+        let key_present = v:true
+    catch /^Vim\%((\a\+)\)\=:E716/  " Key not present in Dictionary
+        let key_present = v:false
+    endtry
+
+    if key_present
+        return result
+    else
+        let result = a:func()
+        if type(cache_limit) != type(v:null) && cache_limit > 0
+            let keys = keys(cache)
+            while len(keys) >= cache_limit
+                let idx = vlime#Rand() % len(keys)
+                call remove(cache, remove(keys, idx))
+            endwhile
+        endif
+        let cache[a:key] = result
+        let scope[a:cache] = cache
+        return result
+    endif
+endfunction
+
+""
+" @private
+"
+" Generate a "random" number.
+function! vlime#Rand()
+    return str2nr(matchstr(reltimestr(reltime()), '\v\.@<=\d+')[1:])
+endfunction
+
 function! s:SearchPList(plist, name)
     let i = 0
     while i < len(a:plist)

@@ -212,6 +212,25 @@ function! TestToRawForm()
                 \ vlime#ToRawForm("(cons ; abc\n  (list 1 2 "))
 endfunction
 
+function! TestMemoize()
+    call assert_equal(9, vlime#Memoize(function('abs', [-9]), -9, 'dummy_cache'))
+    call assert_equal({-9: 9}, b:dummy_cache)
+
+    let b:dummy_cache[-9] = 10
+    call assert_equal(10, vlime#Memoize(function('abs', [-9]), -9, 'dummy_cache'))
+
+    call assert_equal(11, vlime#Memoize(function('abs', [11]), 11, 'dummy_cache'))
+    call assert_equal(2, len(b:dummy_cache))
+
+    call assert_equal(12, vlime#Memoize(function('abs', [12]), 12, 'dummy_cache'))
+    call assert_equal(3, len(b:dummy_cache))
+
+    call assert_equal(13, vlime#Memoize(function('abs', [13]), 13, 'dummy_cache', b:, 1))
+    call assert_equal({13: 13}, b:dummy_cache)
+
+    unlet b:dummy_cache
+endfunction
+
 function! s:SYM(package, name)
     return {'name': a:name, 'package': a:package}
 endfunction
@@ -266,6 +285,7 @@ call TestWithPackage()
 call TestEmacsRex()
 call TestOnServerEvent()
 call TestToRawForm()
+call TestMemoize()
 
 " [msg_name, expected, dummy_reply, args...]
 let b:messages_to_test = [
