@@ -401,7 +401,9 @@ function! vlime#plugin#CurAutodoc()
     endif
 
     if s:ConnHasContrib(conn, 'SWANK-ARGLISTS')
-        let raw_form = vlime#ui#CurRawForm()
+        let raw_form = vlime#ui#CurRawForm(
+                    \ get(g:, 'vlime_autodoc_max_level', 5),
+                    \ get(g:, 'vlime_autodoc_max_lines', 50))
         if s:NeedToShowArgList(raw_form)
             let autodoc_cache = get(s:, 'autodoc_cache', {})
             let cached_result = get(autodoc_cache, string(raw_form), v:null)
@@ -765,7 +767,14 @@ endfunction
 function! vlime#plugin#VlimeKey(key)
     let key = tolower(a:key)
     if key == 'space' || key == 'cr'
-        call vlime#plugin#CurAutodoc()
+        if get(g:, 'vlime_enable_autodoc', v:false)
+            call vlime#plugin#CurAutodoc()
+        else
+            let op = vlime#ui#SurroundingOperator()
+            if s:NeedToShowArgList(op)
+                call vlime#plugin#ShowOperatorArgList(op)
+            endif
+        endif
     elseif key == 'tab'
         let line = getline('.')
         let spaces = vlime#ui#CalcLeadingSpaces(line, v:true)
