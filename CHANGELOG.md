@@ -1,4 +1,5 @@
 * master
+    * The AUTODOC feature `:help g:vlime_enable_autodoc`.
     * API documentation `:help vlime-api-intro`.
     * Experimental support for swank-kawa.scm.
     * Provide an option to use an existing Swank server.
