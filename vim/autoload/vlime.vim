@@ -1543,6 +1543,10 @@ function! vlime#ToRawForm(expr)
                 let delta = len(a:expr) - idx
             endtry
             let cur_token .= str
+        elseif ch == '''' || ch == '`' || ch == ','
+            if idx + 1 >= len(a:expr) || a:expr[idx+1] != '('
+                let cur_token .= ch
+            endif
         elseif ch == '\'
             if idx + 1 < len(a:expr)
                 let cur_token .= a:expr[idx:idx+1]
@@ -1745,7 +1749,7 @@ function! s:read_raw_form_sharp(expr)
         elseif a:expr[1] == '.'
             return ['', 2]
         else
-            return ['#', 1]
+            return [a:expr[0:1], 2]
         endif
     else
         return ['', 0]
