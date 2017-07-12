@@ -332,6 +332,15 @@ VlimeConnection.OperatorArgList({operator}, [callback])
   Get the arglist description for {operator}. {operator} should be a plain
   string containing a symbol name.
 
+VlimeConnection.Autodoc({raw_form}, [callback])    *VlimeConnection.Autodoc()*
+
+  Get the arglist description for {raw_form}. {raw_form} should be a value
+  returned by |vlime#ui#CurRawForm()| or |vlime#ToRawForm()|. See the source
+  of SWANK:AUTODOC for an explanation of the raw forms.
+
+  This method needs the SWANK-ARGLISTS contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
 VlimeConnection.SimpleCompletions({symbol}, [callback])
                                          *VlimeConnection.SimpleCompletions()*
 
@@ -498,6 +507,12 @@ vlime#GetValidSourceLocation({loc})           *vlime#GetValidSourceLocation()*
 
   Normalize a source location object parsed by |vlime#ParseSourceLocation()|.
 
+vlime#ToRawForm({expr})                                    *vlime#ToRawForm()*
+
+  Parse {expr} and turn it into a raw form usable by
+  |VlimeConnection.Autodoc()|. See the source of SWANK:AUTODOC for an
+  explanation of the raw forms.
+
 vlime#plugin#CloseCurConnection()          *vlime#plugin#CloseCurConnection()*
 
   Close the connection bound to the current buffer. If no connection is bound,
@@ -598,6 +613,12 @@ vlime#plugin#ShowOperatorArgList([op])    *vlime#plugin#ShowOperatorArgList()*
 
   Show the arglist description for operator [op] in the arglist window. If
   [op] is omitted, show an input buffer.
+
+vlime#plugin#CurAutodoc()                          *vlime#plugin#CurAutodoc()*
+
+  Show the arglist description for the current expression and cursor position,
+  in the arglist window. If the SWANK-ARGLISTS contrib module is available,
+  the current argument will be marked in the arglist.
 
 vlime#plugin#DescribeSymbol([symbol])          *vlime#plugin#DescribeSymbol()*
 
@@ -733,11 +754,26 @@ vlime#ui#CurTopExpr([return_pos])                      *vlime#ui#CurTopExpr()*
   Return the top-level parentheses-enclosed expression. See
   |vlime#ui#CurExpr()| for the use of [return_pos].
 
-vlime#ui#CurTopExprPos([side])                      *vlime#ui#CurTopExprPos()*
+vlime#ui#CurTopExprPos([side], [max_level], [max_lines])
+                                                    *vlime#ui#CurTopExprPos()*
 
   Return the beginning or ending position of the top-level
   parentheses-enclosed expression under the cursor. See
   |vlime#ui#CurExprPos()| for the use of [side].
+
+  Stop when [max_level] parentheses are seen, or [max_lines] lines have been
+  searched. Pass v:null or ommit these two arguments to impose no limit at
+  all.
+
+vlime#ui#CurRawForm([max_level], [max_lines])          *vlime#ui#CurRawForm()*
+
+  Retrieve the parentheses-enclosed expression under the cursor, and parse it
+  into a "raw form" usable by |VlimeConnection.Autodoc()|. See the source of
+  SWANK:AUTODOC for an explanation of the raw forms.
+
+  The raw-form-parsing operation is quite slow, you can pass [max_level] and
+  [max_lines] to impose some limits when searching for expressions. See
+  |vlime#ui#CurTopExprPos()| for the use of these arguments.
 
 vlime#ui#CurInPackage()                              *vlime#ui#CurInPackage()*
 
