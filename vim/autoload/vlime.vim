@@ -1525,7 +1525,7 @@ function! vlime#ToRawForm(expr)
         elseif ch == ')'
             let delimiter = v:true
             let paren_level -= 1
-        elseif ch == ' ' || ch == "\<tab>" || ch == "\n"
+        elseif ch =~ '\_s'
             let delimiter = v:true
         elseif ch == '"' || ch == '|'
             try
@@ -1748,7 +1748,7 @@ function! s:read_raw_form_sharp(expr)
             endif
         elseif a:expr[1] == '.'
             return ['', 2]
-        elseif a:expr[1] == ' '
+        elseif a:expr[1] =~ '\_s'
             return [a:expr[0], 1]
         else
             return [a:expr[0:1], 2]
