@@ -979,8 +979,16 @@ endfunction
 function! s:OnCurAutodocComplete(raw_form, conn, result)
     if type(a:result) == v:t_list && type(a:result[0]) == v:t_string
         call vlime#ui#ShowArgList(a:conn, a:result[0])
-        if type(a:result[1]) != type(v:null)
+        if type(a:result[1]) != type(v:null) && a:result[1]
             let autodoc_cache = get(s:, 'autodoc_cache', {})
+            let cache_limit = 1024
+            if len(autodoc_cache) >= cache_limit
+                let keys = keys(autodoc_cache)
+                while len(keys) >= cache_limit
+                    let idx = vlime#Rand() % len(keys)
+                    call remove(cache, remove(keys, idx))
+                endwhile
+            endif
             let autodoc_cache[string(a:raw_form)] = a:result[0]
             let s:autodoc_cache = autodoc_cache
         endif

@@ -1608,7 +1608,7 @@ function! vlime#Memoize(func, key, cache, ...)
         return result
     else
         let result = a:func()
-        if type(cache_limit) != type(v:null) && cache_limit > 0
+        if type(cache_limit) != type(v:null) && cache_limit > 0 && len(cache) >= cache_limit
             let keys = keys(cache)
             while len(keys) >= cache_limit
                 let idx = vlime#Rand() % len(keys)
