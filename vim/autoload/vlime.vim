@@ -1748,6 +1748,8 @@ function! s:read_raw_form_sharp(expr)
             endif
         elseif a:expr[1] == '.'
             return ['', 2]
+        elseif a:expr[1] == ' '
+            return [a:expr[0], 1]
         else
             return [a:expr[0:1], 2]
         endif
