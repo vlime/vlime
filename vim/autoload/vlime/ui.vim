@@ -806,6 +806,14 @@ endfunction
 " Show {content} in the arglist buffer. {conn} should be a
 " @dict(VlimeConnection).
 function! vlime#ui#ShowArgList(conn, content)
+    if !exists('#VlimeArgListInit')
+        augroup VlimeArgListInit
+            autocmd!
+            let escaped_name = escape(vlime#ui#ArgListBufName(), ' |\' . g:vlime_buf_name_sep)
+            execute 'autocmd BufWinEnter' escaped_name 'setlocal conceallevel=2'
+        augroup end
+    endif
+
     return vlime#ui#ShowTransientWindow(
                 \ a:conn, a:content, v:false,
                 \ vlime#ui#ArgListBufName(), 'arglist', 'vlime_arglist')
