@@ -1390,30 +1390,40 @@ function! s:ReadStringInputComplete(thread, ttag)
 endfunction
 
 function! s:InComment(cur_pos)
-    if searchpair('#|', '', '|#', 'bnW') > 0
-        return v:true
+    let syn_id = synID(a:cur_pos[0], a:cur_pos[1], v:false)
+    if syn_id > 0
+        return synIDattr(syn_id, 'name') =~ '[Cc]omment'
     else
-        let line = getline(a:cur_pos[0])
-        let semi_colon_idx = match(line, ';')
-        if semi_colon_idx >= 0 && (a:cur_pos[1] - 1) > semi_colon_idx
+        if searchpair('#|', '', '|#', 'bnW') > 0
             return v:true
+        else
+            let line = getline(a:cur_pos[0])
+            let semi_colon_idx = match(line, ';')
+            if semi_colon_idx >= 0 && (a:cur_pos[1] - 1) > semi_colon_idx
+                return v:true
+            endif
+            return v:false
         endif
-        return v:false
     endif
 endfunction
 
-function! s:InString(_cur_pos)
-    let quote_count = 0
-    let pattern = '\v((^|[^\\])@<=")|(((^|[^\\])((\\\\)+))@<=")'
-    let old_pos = getcurpos()
-    try
-        let quote_pos = searchpos(pattern, 'bW')
-        while quote_pos[0] > 0 && quote_pos[1] > 0
-            let quote_count += 1
+function! s:InString(cur_pos)
+    let syn_id = synID(a:cur_pos[0], a:cur_pos[1], v:false)
+    if syn_id > 0
+        return synIDattr(syn_id, 'name') =~ '[Ss]tring'
+    else
+        let quote_count = 0
+        let pattern = '\v((^|[^\\])@<=")|(((^|[^\\])((\\\\)+))@<=")'
+        let old_pos = getcurpos()
+        try
             let quote_pos = searchpos(pattern, 'bW')
-        endwhile
-        return (quote_count % 2) > 0
-    finally
-        call setpos('.', old_pos)
-    endtry
+            while quote_pos[0] > 0 && quote_pos[1] > 0
+                let quote_count += 1
+                let quote_pos = searchpos(pattern, 'bW')
+            endwhile
+            return (quote_count % 2) > 0
+        finally
+            call setpos('.', old_pos)
+        endtry
+    endif
 endfunction
