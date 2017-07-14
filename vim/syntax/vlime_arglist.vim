@@ -3,6 +3,7 @@ if exists('b:current_syntax')
 endif
 
 syntax region vlime_arglistMarkedArg start=/\m\(\(^\|[^=]\)===>\(\_s\+\)\)\@<=/ end=/\m\(\(\_s\+\)<===\($\|[^=]\)\)\@=/
+syntax region vlime_arglistMarkedArg start=/\m\(\(^\|[^=]\)===>\(\_s\+\)(\)\@<=/ end=/\m\(\_s\+\)\@=/
 syntax match vlime_arglistArgMarker /\m\(^\|[^=]\)\@<====>\(\_s\+\)/ conceal
 syntax match vlime_arglistArgMarker /\m\(\_s\+\)<===\($\|[^=]\)\@=/ conceal
 syntax match vlime_arglistOperator /\m\(^(\)\@<=[^[:space:]]\+\(\_s\+\)\@=/
