@@ -409,7 +409,14 @@ function! vlime#plugin#CurAutodoc()
             let cached_result = get(autodoc_cache, string(raw_form), v:null)
             if type(cached_result) == type(v:null)
                 let quoted_raw_form = [{'package': 'COMMON-LISP', 'name': 'QUOTE'}, raw_form]
-                call conn.Autodoc(quoted_raw_form, function('s:OnCurAutodocComplete', [raw_form]))
+                let margin = s:GetArgListWinWidth()
+                if type(margin) != type(v:null) &&
+                            \ (&number || &relativenumber) &&
+                            \ margin > &numberwidth
+                    let margin -= &numberwidth
+                endif
+                call conn.Autodoc(quoted_raw_form, margin,
+                            \ function('s:OnCurAutodocComplete', [raw_form]))
             else
                 call vlime#ui#ShowArgList(conn, cached_result)
             endif
@@ -998,6 +1005,7 @@ endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)
     echom 'Loaded: ' . a:fname
+    call s:ResetArgListState()
 endfunction
 
 function! s:OnXRefComplete(orig_win, conn, result)
@@ -1079,6 +1087,8 @@ function! s:OnListenerEvalComplete(conn, result)
                         \ {'name': 'REPL-RESULT', 'package': 'KEYWORD'})
         endif
     endif
+
+    call s:ResetArgListState()
 endfunction
 
 function! s:ShowAsyncResult(conn, result)
@@ -1195,5 +1205,23 @@ function! s:NeedToShowArgList(op)
         endif
     else
         return !!v:false
+    endif
+endfunction
+
+" Clear the cacehd states of the arglist. Should be called after an operation
+" that potentially changes function signatures, e.g. loading a file or sending
+" something to the REPL.
+function! s:ResetArgListState()
+    let s:autodoc_cache = {}
+    let s:last_imode_arglist_op = ''
+endfunction
+
+function! s:GetArgListWinWidth()
+    let arglist_buf = bufnr(vlime#ui#ArgListBufName())
+    let arglist_win_nr = bufwinnr(arglist_buf)
+    if arglist_win_nr >= 0
+        return winwidth(arglist_win_nr)
+    else
+        return v:null
     endif
 endfunction
