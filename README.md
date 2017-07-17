@@ -115,3 +115,6 @@ The source repo for Vlime is hosted on GitHub:
 
 Issues and pull requests are welcome. Please feel free to contact me at
 l04m33(at)gmail.com if you have any suggestions for improving Vlime.
+
+See `:help vlime-tests` for a how-to on setting up and running the
+tests for development.
