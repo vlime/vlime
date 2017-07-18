@@ -8,6 +8,8 @@ It provides REPL integration, as well as omni-completions, cross reference
 utilities, a nice inspector, debugger support, and many other great facilities
 to aid you in your glorious Common Lisp hacking quest.
 
+To get your feet wet: [Quickstart](#quickstart)
+
 Short demo:
 
 [![asciicast](https://asciinema.org/a/106146.png)](https://asciinema.org/a/106146)
@@ -81,20 +83,40 @@ SBCL            1.3.13
 LispWorks       6.1      Tested with the Personal Edition
 ```
 
-Usage
-=====
+Quickstart
+==========
 
-1. Set up Quicklisp properly.
-2. Clone this repo.
-3. Install the Vim plugin from Vlime's `vim` directory using your usual way
-   (Vundle or something).
-4. Run the server: `sbcl --load <vlime repo>/lisp/start-vlime.lisp`
-5. When the server is up and running, use Vim to start editing a CL source file,
-   and type "\cc" (without the quote marks) in normal mode to connect to the
-   server.
+Before proceeding with the instructions shown below, please make sure
+[Quicklisp](https://www.quicklisp.org/beta/#installation) is properly installed.
+
+Installing using [Vundle](https://github.com/VundleVim/Vundle.Vim):
+
+1. Add `Plugin 'l04m33/vlime', {'rtp': 'vim/'}` to your `vimrc`, then run
+   `:PluginInstall` in Vim.
+2. Run the server: `sbcl --load <your bundle dir>/vlime/lisp/start-vlime.lisp`
+
+Installing using [dein.vim](https://github.com/Shougo/dein.vim):
+
+1. Add `call dein#add('l04m33/vlime', {'rtp': 'vim/'})` to your `vimrc`, then run
+   `:call dein#install(['vlime'])` in Vim.
+2. Run the server:
+   `sbcl --load <your bundle dir>/repos/github.com/l04m33/vlime/lisp/start-vlime.lisp`
+
+Installing manually:
+
+1. Clone this repo.
+2. Make sure the `<vlime repo>/vim/` directory is in your `runtimepath` (see
+   `:help rtp`). You may use symlinks to point to this directory, but please
+   don't move it from the Vlime source tree, or Vlime may not be able to
+   automatically locate the server entry point.
+3. Run the server: `sbcl --load <vlime repo>/lisp/start-vlime.lisp`
 
 If it's your first time running the server, Vlime will try to install it's
 dependencies via Quicklisp.
+
+When the server is up and running, use Vim to start editing a CL source file,
+and type "\cc" (without the quote marks) in normal mode to connect to the
+server.
 
 You can also let Vim start the server for you. See `:help vlime-start-up`.
 
