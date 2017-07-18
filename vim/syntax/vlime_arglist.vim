@@ -8,7 +8,7 @@ syntax match vlime_arglistArgMarker /\m\(^\|[^=]\)\@<====>\(\_s\+\)/ conceal
 syntax match vlime_arglistArgMarker /\m\(\_s\+\)<===\($\|[^=]\)\@=/ conceal
 syntax match vlime_arglistOperator /\m\(^(\)\@<=[^[:space:]]\+\(\_s\+\)\@=/
 
-hi def link vlime_arglistOperator Function
+hi def link vlime_arglistOperator Operator
 hi def link vlime_arglistArgMarker Comment
 hi def link vlime_arglistMarkedArg Identifier
 
