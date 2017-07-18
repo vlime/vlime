@@ -662,15 +662,22 @@ function! vlime#ui#WithBuffer(buf, Func, ...)
     try
         if buf_visible
             call win_gotoid(buf_win)
-            return a:Func()
+            try
+                let &eventignore = old_ei
+                return a:Func()
+            finally
+                let &eventignore = ev_ignore
+            endtry
         else
             let old_layout = vlime#ui#GetCurWindowLayout()
             try
                 silent call vlime#ui#OpenBuffer(a:buf, v:false, v:true)
                 let tmp_win_id = win_getid()
                 try
+                    let &eventignore = old_ei
                     return a:Func()
                 finally
+                    let &eventignore = ev_ignore
                     execute win_id2win(tmp_win_id) . 'wincmd c'
                 endtry
             finally
