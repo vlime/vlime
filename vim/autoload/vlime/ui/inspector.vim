@@ -98,13 +98,18 @@ function! vlime#ui#inspector#FillInspectorBufContent(content, coords)
 endfunction
 
 function! vlime#ui#inspector#ResetInspectorBuffer(bufnr)
+    " Clear the content instead of unloading the buffer, to preserve the
+    " syntax highlighting settings
     call setbufvar(a:bufnr, 'vlime_inspector_coords', [])
+    call setbufvar(a:bufnr, '&modifiable', 1)
+    call vlime#ui#WithBuffer(a:bufnr, {-> vlime#ui#ReplaceContent('')})
+    call setbufvar(a:bufnr, '&modifiable', 0)
+
     " This function is called in an autocmd in this particular augroup we are
     " clearing, but it seemed okay to do so.
     augroup VlimeInspectorLeaveAu
         autocmd!
     augroup end
-    execute 'bunload! ' . a:bufnr
 endfunction
 
 function! vlime#ui#inspector#InspectorSelect()
