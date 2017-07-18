@@ -59,8 +59,8 @@ support making non-messagepack socket connections
 [yet](https://github.com/neovim/neovim/pull/6594#issuecomment-298851709).
 
 Currently Vlime can only detect s-expressions inside parentheses. To make your
-life easier, use [paredit](https://github.com/kovisoft/paredit) or
-[vim-surround](https://github.com/tpope/vim-surround).
+life easier, use [parinfer](https://github.com/bhurlow/vim-parinfer) or
+[paredit](https://github.com/kovisoft/paredit).
 
 Supported CL Implementations
 ============================
