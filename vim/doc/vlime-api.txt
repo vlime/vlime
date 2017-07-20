@@ -332,11 +332,13 @@ VlimeConnection.OperatorArgList({operator}, [callback])
   Get the arglist description for {operator}. {operator} should be a plain
   string containing a symbol name.
 
-VlimeConnection.Autodoc({raw_form}, [callback])    *VlimeConnection.Autodoc()*
+VlimeConnection.Autodoc({raw_form}, [margin], [callback])
+                                                   *VlimeConnection.Autodoc()*
 
   Get the arglist description for {raw_form}. {raw_form} should be a value
   returned by |vlime#ui#CurRawForm()| or |vlime#ToRawForm()|. See the source
-  of SWANK:AUTODOC for an explanation of the raw forms.
+  of SWANK:AUTODOC for an explanation of the raw forms. [margin], if specified
+  and not v:null, gives the line width to wrap to.
 
   This method needs the SWANK-ARGLISTS contrib module. See
   |VlimeConnection.SwankRequire()|.
@@ -844,6 +846,12 @@ vlime#ui#OpenBufferWithWinSettings({buf_name}, {buf_create}, {win_name})
   |bufname()|. {buf_create} specifies whether to create a new buffer or not.
   {win_name} is the type of the window to create. See
   |g:vlime_window_settings| for a list of Vlime window types.
+
+vlime#ui#CloseBuffer({buf})                           *vlime#ui#CloseBuffer()*
+
+  Close all windows that contain {buf}. It's like "execute 'bunload!' {buf}",
+  but the buffer remains loaded, and the local settings for {buf} are kept.
+  {buf} should be a buffer number as returned by |bufnr()|.
 
 vlime#ui#ShowPreview({conn}, {content}, {append})     *vlime#ui#ShowPreview()*
 
