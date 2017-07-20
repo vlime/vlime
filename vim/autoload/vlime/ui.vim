@@ -758,6 +758,39 @@ function! vlime#ui#OpenBufferWithWinSettings(buf_name, buf_create, win_name)
                 \ win_pos, win_vert, win_size)
 endfunction
 
+""
+" @public
+"
+" Close all windows that contain {buf}. It's like "execute 'bunload!' {buf}",
+" but the buffer remains loaded, and the local settings for {buf} are kept.
+" {buf} should be a buffer number as returned by |bufnr()|.
+function! vlime#ui#CloseBuffer(buf)
+    let win_id_list = win_findbuf(a:buf)
+    if len(win_id_list) <= 0
+        return
+    endif
+
+    let cur_win_id = win_getid()
+    let close_cur_win = v:false
+    let old_lazyredraw = &lazyredraw
+
+    try
+        let &lazyredraw = 1
+        for win_id in win_id_list
+            if win_id == cur_win_id
+                let close_cur_win = v:true
+            elseif win_gotoid(win_id)
+                wincmd c
+            endif
+        endfor
+    finally
+        if win_gotoid(cur_win_id) && close_cur_win
+            wincmd c
+        endif
+        let &lazyredraw = old_lazyredraw
+    endtry
+endfunction
+
 " vlime#ui#ShowTransientWindow(
 "       conn, content, append, buf_name, win_name[, file_type])
 function! vlime#ui#ShowTransientWindow(

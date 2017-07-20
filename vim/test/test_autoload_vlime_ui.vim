@@ -55,14 +55,23 @@ endfunction
 
 function! TestWithBuffer()
     function! s:DummyWithBufferAction()
+        set filetype=vlime_test_dummy_ft
         let b:vlime_test_dummy_value = 2
     endfunction
 
+    augroup VlimeTestWithBuffer
+        autocmd!
+        autocmd FileType vlime_test_dummy_ft let b:vlime_test_dummy_au_value = 4
+    augroup end
+
     let b:vlime_test_dummy_value = 1
+    let b:vlime_test_dummy_au_value = 3
     let new_buf = bufnr('vlime_test_with_buffer', v:true)
     call vlime#ui#WithBuffer(new_buf, function('s:DummyWithBufferAction'))
     call assert_equal(1, b:vlime_test_dummy_value)
     call assert_equal(2, getbufvar(new_buf, 'vlime_test_dummy_value'))
+    call assert_equal(3, b:vlime_test_dummy_au_value)
+    call assert_equal(4, getbufvar(new_buf, 'vlime_test_dummy_au_value'))
 endfunction
 
 function! TestOpenBuffer()
@@ -75,6 +84,18 @@ function! TestOpenBuffer()
     let buf = vlime#ui#OpenBuffer(
                 \ 'vlime_test_open_buffer_2', v:true, v:false)
     call assert_notequal('vlime_test_open_buffer_2', expand('%'))
+endfunction
+
+function! TestCloseBuffer()
+    let new_buf = bufnr('vlime_test_close_buffer', v:true)
+    let cur_win_id = win_getid()
+    for i in range(5)
+        execute 'tabedit #' . new_buf
+    endfor
+    call win_gotoid(cur_win_id)
+    call vlime#ui#CloseBuffer(new_buf)
+    call assert_equal(cur_win_id, win_getid())
+    call assert_equal([], win_findbuf(new_buf))
 endfunction
 
 function! TestCurBufferContent()
@@ -496,6 +517,7 @@ call TestCurInPackage()
 call TestCurrentThread()
 call TestWithBuffer()
 call TestOpenBuffer()
+call TestCloseBuffer()
 call TestCurBufferContent()
 call TestCurChar()
 call TestCurAtom()
