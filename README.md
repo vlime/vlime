@@ -12,7 +12,7 @@ To get your feet wet: [Quickstart](#quickstart)
 
 Short demo:
 
-[![asciicast](https://asciinema.org/a/106146.png)](https://asciinema.org/a/106146)
+[![asciicast](https://asciinema.org/a/129756.png)](https://asciinema.org/a/129756)
 
 Why?
 ====
