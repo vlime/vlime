@@ -154,7 +154,13 @@ function! vlime#ui#OnDebugReturn(conn, thread, level, stepping) dict
         let buf_level = getbufvar(bufnr, 'vlime_sldb_level', -1)
         if buf_level == a:level
             call setbufvar(bufnr, '&buflisted', 0)
-            execute 'bunload! ' . bufnr
+            " Clear the content instead of unloading the buffer, to preserve the
+            " syntax highlighting settings and everything set by FileType
+            " autocmds.
+            call setbufvar(bufnr, '&modifiable', 1)
+            call vlime#ui#WithBuffer(bufnr, {-> vlime#ui#ReplaceContent('')})
+            call setbufvar(bufnr, '&modifiable', 0)
+            call vlime#ui#CloseBuffer(bufnr)
         endif
     endif
 endfunction
