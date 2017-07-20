@@ -15,7 +15,7 @@ function! vlime#ui#input#FromBuffer(conn, prompt, init_val, complete_cb)
 
     augroup VlimeInputBufferLeaveAu
         autocmd!
-        execute 'autocmd BufWinLeave <buffer> bunload! ' . buf
+        execute 'autocmd BufWinLeave <buffer> bunload!' buf
     augroup end
 
     call setbufvar(buf, 'vlime_input_complete_cb', a:complete_cb)
@@ -73,7 +73,7 @@ function! vlime#ui#input#FromBufferComplete()
         call vlime#ui#input#SaveHistory(vlime#ui#CurBufferContent(v:true))
     endif
     call Callback()
-    execute 'bdelete! ' . input_buf
+    execute 'bdelete!' input_buf
 endfunction
 
 function! vlime#ui#input#SaveHistory(text)
@@ -162,7 +162,7 @@ function! vlime#ui#input#ResetBufferHistory()
                     \ 'b:vlime_input_orig_text',
                     \ 'b:vlime_input_complete_cb']
         if exists(buf_var)
-            execute 'unlet ' . buf_var
+            execute 'unlet' buf_var
         endif
     endfor
 endfunction

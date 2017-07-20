@@ -1170,7 +1170,7 @@ function! s:CleanUpNullBufConnections()
         bufdo! if exists('b:vlime_conn') && type(b:vlime_conn) == type(v:null)
                     \ | unlet b:vlime_conn | endif
     finally
-        execute 'hide buffer ' . old_buf
+        execute 'hide buffer' old_buf
     endtry
 endfunction
 

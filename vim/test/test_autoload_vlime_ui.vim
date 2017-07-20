@@ -78,7 +78,7 @@ function! TestOpenBuffer()
     let buf = vlime#ui#OpenBuffer(
                 \ 'vlime_test_open_buffer', v:true, 'botright')
     call assert_equal('vlime_test_open_buffer', expand('%'))
-    execute 'bunload! ' . buf
+    execute 'bunload!' buf
 
     let cur_buf_name = expand('%')
     let buf = vlime#ui#OpenBuffer(

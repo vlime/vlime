@@ -24,7 +24,7 @@ function! vlime#compat#neovim#ch_open(host, port, callback, timeout)
 
     " XXX: There should be a better way to wait for ncat
     let waittime = (type(a:timeout) != type(v:null)) ? (a:timeout + 500) : 500
-    execute 'sleep ' . waittime . 'm'
+    execute 'sleep' waittime 'm'
 
     return chan_obj
 endfunction

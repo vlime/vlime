@@ -289,7 +289,7 @@ endfunction
 function! s:RenameBuffer(new_name)
     " Use silent! to supress the 'Cannot rename swapfile' message on Windows
     silent! 0file
-    silent! execute 'file ' . escape(a:new_name, ' |\''"')
+    silent! execute 'file' escape(a:new_name, ' |\''"')
 endfunction
 
 function! s:CalcServerCheckTimesLimit()

@@ -619,8 +619,8 @@ function! vlime#ui#RestoreWindowLayout(layout)
     try
         for ws in a:layout
             if win_gotoid(ws['id'])
-                execute 'resize ' . ws['height']
-                execute 'vertical resize ' . ws['width']
+                execute 'resize' ws['height']
+                execute 'vertical resize' ws['width']
             endif
         endfor
     finally
@@ -731,7 +731,7 @@ function! vlime#ui#OpenBuffer(name, create, show, ...)
                     endif
                     " Use silent! to suppress the 'Illegal file name' message
                     " and E303: Unable to open swap file...
-                    silent! execute join([a:show, split_cmd])
+                    silent! execute a:show split_cmd
                 else
                     silent! execute 'split #' . buf
                 endif
@@ -1149,7 +1149,7 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
             if bufnr(a:file_path) > 0
                 try
                     normal! m'
-                    execute join([edit_cmd, '#' . a:file_path])
+                    execute edit_cmd ('#' . a:file_path)
                 catch /^Vim\%((\a\+)\)\=:E37/  " No write since last change
                     " Vim will raise E37 when editing the same buffer with
                     " unsaved changes. Double-check it IS the same buffer.
@@ -1163,7 +1163,7 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
             endif
         elseif a:file_path[0:6] == 'sftp://' || filereadable(a:file_path)
             normal! m'
-            execute join([edit_cmd, escape(a:file_path, ' \')])
+            execute edit_cmd escape(a:file_path, ' \')
         else
             call vlime#ui#ErrMsg('Not readable: ' . a:file_path)
             return
@@ -1337,13 +1337,15 @@ function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
 
     if force
         for kk in key_list
-            execute a:mode . join(['noremap', flags, kk, a:cmd])
+            let map_cmd = a:mode . 'noremap'
+            execute map_cmd flags kk a:cmd
         endfor
     else
         if !hasmapto(a:cmd, a:mode)
             for kk in key_list
                 if len(maparg(kk, a:mode)) <= 0
-                    execute a:mode . join(['noremap', flags, kk, a:cmd])
+                    let map_cmd = a:mode . 'noremap'
+                    execute map_cmd flags kk a:cmd
                 else
                     call s:LogSkippedKey(log, a:mode, kk, a:cmd,
                                 \ 'Key already mapped.')
