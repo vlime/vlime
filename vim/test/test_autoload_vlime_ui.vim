@@ -420,31 +420,31 @@ endfunction
 function! TestAppendString()
     call NewDummyBuffer()
     try
-        call vlime#ui#AppendString('line1')
-        call vlime#ui#AppendString(" line1 line1\n")
-        call vlime#ui#AppendString("line2\nline3")
-        call vlime#ui#AppendString("\nline5\nline6\nline7")
+        call assert_equal(0, vlime#ui#AppendString('line1'))
+        call assert_equal(1, vlime#ui#AppendString(" line1 line1\n"))
+        call assert_equal(1, vlime#ui#AppendString("line2\nline3"))
+        call assert_equal(3, vlime#ui#AppendString("\nline5\nline6\nline7"))
         call assert_equal("line1 line1 line1\nline2\nline3\nline5\nline6\nline7",
                     \ vlime#ui#CurBufferContent())
 
-        call vlime#ui#AppendString(" and\nline2.1\n", 2)
+        call assert_equal(1, vlime#ui#AppendString(" and\nline2.1\n", 2))
         call assert_equal("line1 line1 line1\nline2 and\nline2.1\nline3\nline5\nline6\nline7",
                     \ vlime#ui#CurBufferContent())
-        call vlime#ui#AppendString("\nline2.2 and ", 3)
+        call assert_equal(0, vlime#ui#AppendString("\nline2.2 and ", 3))
         call assert_equal("line1 line1 line1\nline2 and\nline2.1\nline2.2 and line3\nline5\nline6\nline7",
                     \ vlime#ui#CurBufferContent())
-        call vlime#ui#AppendString("line0\n", 0)
+        call assert_equal(1, vlime#ui#AppendString("line0\n", 0))
         call assert_equal("line0\nline1 line1 line1\nline2 and\nline2.1\nline2.2 and line3\nline5\nline6\nline7",
                     \ vlime#ui#CurBufferContent())
 
-        call vlime#ui#ReplaceContent("new line5\nnew line6\n", 6, 7)
+        call assert_equal(2, vlime#ui#ReplaceContent("new line5\nnew line6\n", 6, 7))
         call assert_equal("line0\nline1 line1 line1\nline2 and\nline2.1\nline2.2 and line3\nnew line5\nnew line6\nline7",
                     \ vlime#ui#CurBufferContent())
 
-        call vlime#ui#ReplaceContent("replaced\ncontent")
+        call assert_equal(1, vlime#ui#ReplaceContent("replaced\ncontent"))
         call assert_equal("replaced\ncontent", vlime#ui#CurBufferContent())
 
-        call vlime#ui#ReplaceContent("some other\ntext")
+        call assert_equal(1, vlime#ui#ReplaceContent("some other\ntext"))
         call assert_equal("some other\ntext", vlime#ui#CurBufferContent())
     finally
         call CleanupDummyBuffer()

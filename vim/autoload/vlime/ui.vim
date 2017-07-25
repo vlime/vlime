@@ -969,6 +969,9 @@ function! vlime#ui#AppendString(str, ...)
     if cur_line_nr == last_line_nr
         call setpos('.', [0, line('$'), 1, 0, 1])
     endif
+
+    " How many new lines are added.
+    return len(new_lines) + eidx - sidx + 1
 endfunction
 
 ""
@@ -989,8 +992,9 @@ function! vlime#ui#ReplaceContent(str, ...)
     else
         let str = a:str
     endif
-    call vlime#ui#AppendString(str, first_line - 1)
+    let ret = vlime#ui#AppendString(str, first_line - 1)
     call setpos('.', [0, first_line, 1, 0, 1])
+    return ret
 endfunction
 
 ""
