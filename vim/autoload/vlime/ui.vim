@@ -938,15 +938,32 @@ function! vlime#ui#CloseWindow(conn, win_name)
 endfunction
 
 ""
+" @usage {str} [line]
 " @public
 "
-" Append {str} to the current buffer. Elaborately handle newline characters.
-function! vlime#ui#AppendString(str)
-    let new_lines = split(a:str, "\n", v:true)
+" Append {str} to [line] in the current buffer. Append to the last line if
+" [line] is omitted. Elaborately handle newline characters.
+function! vlime#ui#AppendString(str, ...)
     let last_line_nr = line('$')
-    let last_line = getline(last_line_nr)
-    call setline(last_line_nr, last_line . new_lines[0])
-    call append('$', new_lines[1:])
+    let to_append = get(a:000, 0, last_line_nr)
+
+    let new_lines = split(a:str, "\n", v:true)
+    let sidx = 0
+    let eidx = -1
+
+    if to_append > 0 " && len(new_lines) > 0
+        let line_to_append = getline(to_append)
+        call setline(to_append, line_to_append . new_lines[0])
+        let sidx = 1
+    endif
+
+    if to_append < last_line_nr && len(new_lines) > 1
+        let line_after_append = getline(to_append + 1)
+        call setline(to_append + 1, new_lines[-1] . line_after_append)
+        let eidx = -2
+    endif
+
+    call append(to_append, new_lines[sidx:eidx])
 
     let cur_line_nr = line('.')
     if cur_line_nr == last_line_nr
@@ -955,13 +972,25 @@ function! vlime#ui#AppendString(str)
 endfunction
 
 ""
+" @usage {str} [first_line] [last_line]
 " @public
 "
-" Replace the content of the current buffer with {str}.
-function! vlime#ui#ReplaceContent(str)
-    1,$delete _
-    call vlime#ui#AppendString(a:str)
-    call setpos('.', [0, 1, 1, 0, 1])
+" Replace the content of the current buffer, from [first_line] to [last_line]
+" (inclusive), with {str}. If [first_line] is omitted, start from line 1. If
+" [last_line] is omitted, stop at the last line of the current buffer.
+function! vlime#ui#ReplaceContent(str, ...)
+    let first_line = get(a:000, 0, 1)
+    let last_line = get(a:000, 1, line('$'))
+
+    execute first_line . ',' . last_line . 'delete _'
+
+    if first_line > 1
+        let str = "\n" . a:str
+    else
+        let str = a:str
+    endif
+    call vlime#ui#AppendString(str, first_line - 1)
+    call setpos('.', [0, first_line, 1, 0, 1])
 endfunction
 
 ""
@@ -1259,6 +1288,11 @@ endfunction
 
 function! vlime#ui#InspectorBufName(conn)
     return join(['vlime', 'inspect', a:conn.cb_data.name],
+                \ g:vlime_buf_name_sep)
+endfunction
+
+function! vlime#ui#TraceDialogBufName(conn)
+    return join(['vlime', 'trace', a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 
