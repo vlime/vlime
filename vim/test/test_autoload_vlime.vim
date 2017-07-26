@@ -263,7 +263,15 @@ function! TestMessage(name, expected, reply, ...)
 
     let conn = vlime#New()
     let conn['Send'] = function('s:TestMessageDummySend', [conn, a:reply])
-    let ToCall = function(conn[a:name], a:000)
+
+    " Messages handled by contrib modules
+    let conn['CreateREPL'] = function('vlime#contrib#repl#CreateREPL')
+    let conn['ListenerEval'] = function('vlime#contrib#repl#ListenerEval')
+    let conn['FuzzyCompletions'] = function('vlime#contrib#fuzzy#FuzzyCompletions')
+    let conn['Autodoc'] = function('vlime#contrib#arglists#Autodoc')
+    let conn['InspectPresentation'] = function('vlime#contrib#presentations#InspectPresentation')
+
+    let ToCall = function(conn[a:name], a:000, conn)
     let b:vlime_test_dummy_sent_msg = v:null
     call ToCall()
     call assert_equal(a:expected, b:vlime_test_dummy_sent_msg)
