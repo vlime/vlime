@@ -1,6 +1,6 @@
 if !exists('g:vlime_contrib_initializers')
     let g:vlime_contrib_initializers = {
-                \ 'SWANK-REPL': function('vlime#contrib#InitSwankREPL'),
+                \ 'SWANK-REPL': function('vlime#contrib#repl#Init'),
                 \ 'SWANK-PRESENTATIONS': function('vlime#contrib#InitSwankPresentations'),
                 \ }
 endif
@@ -36,10 +36,6 @@ function! vlime#contrib#InitSwankPresentations(conn)
                     \ [{'package': 'SWANK', 'name': 'INIT-PRESENTATIONS'}]),
                 \ function('vlime#SimpleSendCB',
                     \ [a:conn, v:null, 'vlime#contrib#InitSwankPresentations']))
-endfunction
-
-function! vlime#contrib#InitSwankREPL(conn)
-    call a:conn.CreateREPL(v:null)
 endfunction
 
 function! s:OnPresentationStart(conn, msg)
