@@ -13,7 +13,7 @@
 " @function(VlimeConnection.SwankRequire).
 function! vlime#contrib#repl#CreateREPL(...) dict
     function! s:CreateREPL_CB(conn, Callback, chan, msg) abort
-        call vlime#CheckReturnStatus(a:msg, 'vlime#CreateREPL')
+        call vlime#CheckReturnStatus(a:msg, 'vlime#contrib#repl#CreateREPL')
         " The package for the REPL defaults to ['COMMON-LISP-USER', 'CL-USER'],
         " so SetCurrentPackage(...) is not necessary.
         "call a:conn.SetCurrentPackage(a:msg[1][1])
@@ -44,7 +44,8 @@ endfunction
 " @function(VlimeConnection.SwankRequire).
 function! vlime#contrib#repl#ListenerEval(expr, ...) dict
     function! s:ListenerEvalCB(conn, Callback, chan, msg) abort
-        let stat = s:CheckAndReportReturnStatus(a:conn, a:msg, 'vlime#ListenerEval')
+        let stat = s:CheckAndReportReturnStatus(a:conn, a:msg,
+                    \ 'vlime#contrib#repl#ListenerEval')
         if stat
             call vlime#TryToCall(a:Callback, [a:conn, a:msg[1][1]])
         endif

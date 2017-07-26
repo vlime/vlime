@@ -99,7 +99,6 @@ function! vlime#New(...)
                 \ 'InspectorNext': function('vlime#InspectorNext'),
                 \ 'InspectCurrentCondition': function('vlime#InspectCurrentCondition'),
                 \ 'InspectInFrame': function('vlime#InspectInFrame'),
-                \ 'InspectPresentation': function('vlime#InspectPresentation'),
                 \ 'ListThreads': function('vlime#ListThreads'),
                 \ 'KillNthThread': function('vlime#KillNthThread'),
                 \ 'DebugNthThread': function('vlime#DebugNthThread'),
@@ -772,25 +771,6 @@ function! vlime#InspectInFrame(thing, frame, ...) dict
                     \ [s:SYM('SWANK', 'INSPECT-IN-FRAME'), a:thing, a:frame]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectInFrame']))
-endfunction
-
-""
-" @dict VlimeConnection.InspectPresentation
-" @usage {pres_id} {reset} [callback]
-" @public
-"
-" Start inspecting an object saved by SWANK-PRESENTATIONS.
-" {pres_id} should be a valid ID presented by PRESENTATION-START messages.
-" If {reset} is |TRUE|, the inspector will be reset first.
-"
-" This method needs the SWANK-PRESENTATIONS contrib module. See
-" @function(VlimeConnection.SwankRequire).
-function! vlime#InspectPresentation(pres_id, reset, ...) dict
-    let Callback = get(a:000, 0, v:null)
-    call self.Send(self.EmacsRex(
-                    \ [s:SYM('SWANK', 'INSPECT-PRESENTATION'), a:pres_id, a:reset]),
-                \ function('vlime#SimpleSendCB',
-                    \ [self, Callback, 'vlime#InspectPresentation']))
 endfunction
 
 ""

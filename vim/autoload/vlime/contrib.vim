@@ -1,7 +1,7 @@
 if !exists('g:vlime_contrib_initializers')
     let g:vlime_contrib_initializers = {
                 \ 'SWANK-REPL': function('vlime#contrib#repl#Init'),
-                \ 'SWANK-PRESENTATIONS': function('vlime#contrib#InitSwankPresentations'),
+                \ 'SWANK-PRESENTATIONS': function('vlime#contrib#presentations#Init'),
                 \ }
 endif
 
@@ -25,50 +25,4 @@ function! vlime#contrib#CallInitializers(conn, ...)
         let ToCall = function(Callback, [a:conn])
         call ToCall()
     endif
-endfunction
-
-function! vlime#contrib#InitSwankPresentations(conn)
-    let a:conn['server_event_handlers']['PRESENTATION-START'] =
-                \ function('s:OnPresentationStart')
-    let a:conn['server_event_handlers']['PRESENTATION-END'] =
-                \ function('s:OnPresentationEnd')
-    call a:conn.Send(a:conn.EmacsRex(
-                    \ [{'package': 'SWANK', 'name': 'INIT-PRESENTATIONS'}]),
-                \ function('vlime#SimpleSendCB',
-                    \ [a:conn, v:null, 'vlime#contrib#InitSwankPresentations']))
-endfunction
-
-function! s:OnPresentationStart(conn, msg)
-    let repl_buf = bufnr(vlime#ui#REPLBufName(a:conn))
-    if repl_buf < 0
-        return
-    endif
-
-    let coords = getbufvar(repl_buf, 'vlime_repl_coords', {})
-    let begin_pos = vlime#ui#WithBuffer(repl_buf,
-                \ function('vlime#ui#GetEndOfFileCoord'))
-    let coords[a:msg[1]] = {
-                \ 'begin': begin_pos,
-                \ 'type': 'PRESENTATION',
-                \ 'id': a:msg[1],
-                \ }
-    call setbufvar(repl_buf, 'vlime_repl_coords', coords)
-endfunction
-
-function! s:OnPresentationEnd(conn, msg)
-    let repl_buf = bufnr(vlime#ui#REPLBufName(a:conn))
-    if repl_buf < 0
-        return
-    endif
-
-    let coords = getbufvar(repl_buf, 'vlime_repl_coords', {})
-    let c = get(coords, a:msg[1], v:null)
-    if type(c) == type(v:null)
-        return
-    endif
-
-    let end_pos = vlime#ui#WithBuffer(repl_buf,
-                \ function('vlime#ui#GetEndOfFileCoord'))
-    let c['end'] = end_pos
-    call setbufvar(repl_buf, 'vlime_repl_coords', coords)
 endfunction
