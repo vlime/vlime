@@ -59,7 +59,6 @@ function! vlime#New(...)
                 \ 'SetPackage': function('vlime#SetPackage'),
                 \ 'DescribeSymbol': function('vlime#DescribeSymbol'),
                 \ 'OperatorArgList': function('vlime#OperatorArgList'),
-                \ 'Autodoc': function('vlime#Autodoc'),
                 \ 'SimpleCompletions': function('vlime#SimpleCompletions'),
                 \ 'ReturnString': function('vlime#ReturnString'),
                 \ 'Return': function('vlime#Return'),
@@ -902,29 +901,6 @@ function! vlime#OperatorArgList(operator, ...) dict
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'OPERATOR-ARGLIST'), a:operator, cur_package]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#OperatorArgList']))
-endfunction
-
-""
-" @dict VlimeConnection.Autodoc
-" @usage {raw_form} [margin] [callback]
-" @public
-"
-" Get the arglist description for {raw_form}. {raw_form} should be a value
-" returned by @function(vlime#ui#CurRawForm) or @function(vlime#ToRawForm).
-" See the source of SWANK:AUTODOC for an explanation of the raw forms.
-" [margin], if specified and not v:null, gives the line width to wrap to.
-"
-" This method needs the SWANK-ARGLISTS contrib module. See
-" @function(VlimeConnection.SwankRequire).
-function! vlime#Autodoc(raw_form, ...) dict
-    let margin = get(a:000, 0, v:null)
-    let Callback = get(a:000, 1, v:null)
-    let cmd = (type(margin) == type(v:null)) ?
-                \ [s:SYM('SWANK', 'AUTODOC'), a:raw_form] :
-                \ [s:SYM('SWANK', 'AUTODOC'), a:raw_form,
-                    \ s:KW('PRINT-RIGHT-MARGIN'), margin]
-    call self.Send(self.EmacsRex(cmd),
-                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#Autodoc']))
 endfunction
 
 ""
