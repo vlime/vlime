@@ -61,7 +61,6 @@ function! vlime#New(...)
                 \ 'OperatorArgList': function('vlime#OperatorArgList'),
                 \ 'Autodoc': function('vlime#Autodoc'),
                 \ 'SimpleCompletions': function('vlime#SimpleCompletions'),
-                \ 'FuzzyCompletions': function('vlime#FuzzyCompletions'),
                 \ 'ReturnString': function('vlime#ReturnString'),
                 \ 'Return': function('vlime#Return'),
                 \ 'SwankMacroExpandOne': function('vlime#SwankMacroExpandOne'),
@@ -944,27 +943,6 @@ function! vlime#SimpleCompletions(symbol, ...) dict
     call self.Send(self.EmacsRex(
                     \ [s:SYM('SWANK', 'SIMPLE-COMPLETIONS'), a:symbol, cur_package]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SimpleCompletions']))
-endfunction
-
-""
-" @dict VlimeConnection.FuzzyCompletions
-" @usage {symbol} [callback]
-" @public
-"
-" Get a completion list for {symbol}, using a more clever fuzzy algorithm.
-" {symbol} should be a plain string containing a (partial) symbol name.
-"
-" This method needs the SWANK-FUZZY contrib module. See
-" @function(VlimeConnection.SwankRequire).
-function! vlime#FuzzyCompletions(symbol, ...) dict
-    let Callback = get(a:000, 0, v:null)
-    let cur_package = self.GetCurrentPackage()
-    if type(cur_package) != type(v:null)
-        let cur_package = cur_package[0]
-    endif
-    call self.Send(self.EmacsRex(
-                    \ [s:SYM('SWANK', 'FUZZY-COMPLETIONS'), a:symbol, cur_package]),
-                \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#FuzzyCompletions']))
 endfunction
 
 function! vlime#ReturnString(thread, ttag, str) dict

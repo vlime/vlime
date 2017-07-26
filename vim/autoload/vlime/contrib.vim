@@ -2,6 +2,7 @@ if !exists('g:vlime_contrib_initializers')
     let g:vlime_contrib_initializers = {
                 \ 'SWANK-REPL': function('vlime#contrib#repl#Init'),
                 \ 'SWANK-PRESENTATIONS': function('vlime#contrib#presentations#Init'),
+                \ 'SWANK-FUZZY': function('vlime#contrib#fuzzy#Init'),
                 \ }
 endif
 
