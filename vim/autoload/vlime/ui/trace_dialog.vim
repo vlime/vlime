@@ -15,8 +15,9 @@ function! vlime#ui#trace_dialog#FillTraceDialogBuf(spec_list, trace_count)
     call s:DrawSpecList(a:spec_list, b:vlime_trace_specs_coords)
 
     let b:vlime_trace_entries_header_coords = []
+    let cached_entries = get(b:, 'vlime_trace_cached_entries', {})
     call s:DrawTraceEntryHeader(
-                \ a:trace_count, 0,
+                \ a:trace_count, len(cached_entries),
                 \ b:vlime_trace_entries_header_coords)
 
     setlocal nomodifiable
@@ -212,10 +213,14 @@ function! s:ReportSpecsComplete(trace_buf, conn, result)
 endfunction
 
 function! s:ReportTotalComplete(trace_buf, conn, result)
+    let cached_entries =
+                \ getbufvar(a:trace_buf, 'vlime_trace_cached_entries', {})
+
     let coords = []
     call setbufvar(a:trace_buf, '&modifiable', 1)
     call vlime#ui#WithBuffer(a:trace_buf,
-                \ function('s:DrawTraceEntryHeader', [a:result, 0, coords]))
+                \ function('s:DrawTraceEntryHeader',
+                    \ [a:result, len(cached_entries), coords]))
     call setbufvar(a:trace_buf, '&modifiable', 0)
     call setbufvar(a:trace_buf, 'vlime_trace_entries_header_coords', coords)
 endfunction
@@ -238,6 +243,48 @@ function! s:DialogUntraceComplete(trace_buf, conn, result)
 endfunction
 
 function! s:ReportPartialTreeComplete(trace_buf, conn, result)
+    let [entry_list, remaining, fetch_key] = a:result
+    let entry_list = (type(entry_list) == type(v:null)) ? [] : entry_list
+
+    let cached_entries =
+                \ getbufvar(a:trace_buf, 'vlime_trace_cached_entries', {})
+    let toplevel_entries =
+                \ getbufvar(a:trace_buf, 'vlime_trace_toplevel_entries', [])
+
+    for t_entry in entry_list
+        let [id, parent, name, arg_list, retval_list] = t_entry
+        let entry_obj = {
+                    \ 'id': id,
+                    \ 'parent': parent,
+                    \ 'name': name,
+                    \ 'args': s:ArgListToDict(arg_list),
+                    \ 'retvals': s:ArgListToDict(retval_list),
+                    \ 'children': [],
+                    \ }
+        let parent_obj = (type(parent) == type(v:null)) ?
+                    \ v:null : get(cached_entries, parent, v:null)
+        if type(parent_obj) == type(v:null)
+            call add(toplevel_entries, id)
+        else
+            call add(parent_obj['children'], id)
+        endif
+        let cached_entries[id] = entry_obj
+    endfor
+
+    call setbufvar(a:trace_buf, 'vlime_trace_cached_entries', cached_entries)
+    call setbufvar(a:trace_buf, 'vlime_trace_toplevel_entries', toplevel_entries)
+
+    let coords = []
+    call setbufvar(a:trace_buf, '&modifiable', 1)
+    call vlime#ui#WithBuffer(a:trace_buf,
+                \ function('s:DrawTraceEntryHeader',
+                    \ [len(cached_entries) + remaining,
+                        \ len(cached_entries),
+                        \ coords]))
+    call setbufvar(a:trace_buf, '&modifiable', 0)
+    call setbufvar(a:trace_buf, 'vlime_trace_entries_header_coords', coords)
+
+    " TODO
     echom string(a:result)
 endfunction
 
@@ -247,4 +294,13 @@ function! s:GetFetchKey()
         let s:next_fetch_key = b:vlime_trace_fetch_key + 1
     endif
     return b:vlime_trace_fetch_key
+endfunction
+
+function! s:ArgListToDict(arg_list)
+    let arg_list = (type(a:arg_list) == type(v:null)) ? [] : a:arg_list
+    let args = {}
+    for r in arg_list
+        let args[r[0]] = r[1]
+    endfor
+    return args
 endfunction
