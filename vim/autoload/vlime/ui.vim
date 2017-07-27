@@ -2,6 +2,7 @@ let g:vlime_default_window_settings = {
             \ 'sldb': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
             \ 'repl': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
             \ 'inspector': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
+            \ 'trace': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
             \ 'xref': {'pos': 'botright', 'size': 12, 'vertical': v:false},
             \ 'notes': {'pos': 'botright', 'size': 12, 'vertical': v:false},
             \ 'threads': {'pos': 'botright', 'size': 12, 'vertical': v:false},
@@ -40,6 +41,7 @@ function! vlime#ui#New()
                 \ 'OnIndentationUpdate': function('vlime#ui#OnIndentationUpdate'),
                 \ 'OnInvalidRPC': function('vlime#ui#OnInvalidRPC'),
                 \ 'OnInspect': function('vlime#ui#OnInspect'),
+                \ 'OnTraceDialog': function('vlime#ui#OnTraceDialog'),
                 \ 'OnXRef': function('vlime#ui#OnXRef'),
                 \ 'OnCompilerNotes': function('vlime#ui#OnCompilerNotes'),
                 \ 'OnThreads': function('vlime#ui#OnThreads'),
@@ -223,6 +225,12 @@ function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     call setpos('.', old_cur)
     " Needed for displaying the content of the current buffer correctly
     redraw
+endfunction
+
+function! vlime#ui#OnTraceDialog(conn, spec_list, trace_count)
+    let trace_buf = vlime#ui#trace_dialog#InitTraceDialogBuf(a:conn)
+    call vlime#ui#OpenBufferWithWinSettings(trace_buf, v:false, 'trace')
+    call vlime#ui#trace_dialog#FillTraceDialogBuf(a:spec_list, a:trace_count)
 endfunction
 
 function! vlime#ui#OnXRef(conn, xref_list, orig_win) dict

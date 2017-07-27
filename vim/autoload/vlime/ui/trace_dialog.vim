@@ -1,4 +1,4 @@
-function! vlime#ui#trace_dialog#InitTraceDialogBuffer(conn)
+function! vlime#ui#trace_dialog#InitTraceDialogBuf(conn)
     let buf = bufnr(vlime#ui#TraceDialogBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
@@ -9,42 +9,56 @@ function! vlime#ui#trace_dialog#InitTraceDialogBuffer(conn)
 endfunction
 
 function! vlime#ui#trace_dialog#FillTraceDialogBuf(spec_list, trace_count)
-    let coords = []
-    let specs_line_range = get(b:, 'vlime_trace_specs_line_range', v:null)
     let entries_header_line_range = get(b:, 'vlime_trace_entries_header_line_range', v:null)
 
     setlocal modifiable
 
-    let b:vlime_trace_specs_line_range =
-                \ s:DrawSpecList(a:spec_list, specs_line_range, coords)
+    let b:vlime_trace_specs_coords = []
+    call s:DrawSpecList(a:spec_list, b:vlime_trace_specs_coords)
 
-    let entries_header_line_range = s:ShiftLineRange(
-                \ entries_header_line_range,
-                \ s:CalcLineRangeShift(
-                    \ b:vlime_trace_specs_line_range, specs_line_range))
-
+    let b:vlime_trace_entries_header_coords = []
     let b:vlime_trace_entries_header_line_range =
                 \ s:DrawTraceEntryHeader(
-                    \ a:trace_count, 0, entries_header_line_range, coords)
+                    \ a:trace_count, 0, entries_header_line_range,
+                        \ b:vlime_trace_entries_header_coords)
 
     setlocal nomodifiable
+endfunction
 
-    let b:vlime_trace_coords = coords
+function! vlime#ui#trace_dialog#Select()
+    let coord = s:GetCurCoord()
+
+    if type(coord) == type(v:null)
+        return
+    endif
+
+    if coord['type'] == 'REFRESH-SPECS'
+        call b:vlime_conn.ReportSpecs(
+                    \ function('s:ReportSpecsComplete', [bufnr('%')]))
+    elseif coord['type'] == 'UNTRACE-ALL-SPECS'
+        call b:vlime_conn.DialogUntraceAll(
+                    \ function('s:DialogUntraceAllComplete', [bufnr('%')]))
+    elseif coord['type'] == 'UNTRACE-SPEC'
+        call b:vlime_conn.DialogUntrace(coord['id'],
+                    \ function('s:DialogUntraceComplete', [bufnr('%')]))
+    endif
 endfunction
 
 function! s:InitTraceDialogBuffer()
-    " TODO
+    call vlime#ui#MapBufferKeys('trace')
 endfunction
 
-function! s:DrawSpecList(spec_list, line_range, coords)
-    if type(a:line_range) == type(v:null)
+function! s:DrawSpecList(spec_list, coords)
+    let line_range = get(b:, 'vlime_trace_specs_line_range', v:null)
+    if type(line_range) == type(v:null)
         let first_line = 1
         let last_line = line('$')
     else
-        let [first_line, last_line] = a:line_range
+        let [first_line, last_line] = line_range
     endif
 
-    let title = 'Traced (' . len(a:spec_list) . ')'
+    let spec_list = (type(a:spec_list) == type(v:null)) ? [] : a:spec_list
+    let title = 'Traced (' . len(spec_list) . ')'
     let content = title . "\n" . repeat('=', len(title)) . "\n\n"
     let cur_line = first_line + 3
 
@@ -59,16 +73,31 @@ function! s:DrawSpecList(spec_list, line_range, coords)
     let cur_line += 2
 
     let untrace_button = '[untrace]'
-    for spec in a:spec_list
+    for spec in spec_list
         let untrace_button = s:AddButton(
                     \ '', '[untrace]', 'UNTRACE-SPEC', spec, cur_line, a:coords)
-        let content .= (untrace_button . ' ' . spec['package'] . '::' . spec['name'] . "\n")
+        if type(spec) == v:t_dict
+            let content .= (untrace_button . ' ' . spec['package'] . '::' . spec['name'] . "\n")
+        elseif type(spec) == v:t_list
+            let content .= (untrace_button .
+                            \ ' (' . spec[0]['name'] . ' ' .
+                            \ spec[1]['package'] . '::' . spec[1]['name'] .
+                            \ ")\n")
+        else
+            let content .= (untrace_button . " <UNKNOWN>\n")
+        endif
         let cur_line += 1
     endfor
 
     let content .= "\n"
     let new_lines_count = vlime#ui#ReplaceContent(content, first_line, last_line)
-    return [first_line, first_line + new_lines_count - 1]
+    let b:vlime_trace_specs_line_range = [first_line, first_line + new_lines_count - 1]
+
+    let delta = s:CalcLineRangeShift(b:vlime_trace_specs_line_range, line_range)
+    let b:vlime_trace_entries_header_line_range =
+                \ s:ShiftLineRange(
+                    \ get(b:, 'vlime_trace_entries_header_line_range', v:null),
+                    \ delta)
 endfunction
 
 function! s:DrawTraceEntryHeader(entry_count, cached_entry_count, line_range, coords)
@@ -134,4 +163,52 @@ function! s:ShiftLineRange(line_range, delta)
         return a:line_range
     endif
     return [a:line_range[0] + a:delta, a:line_range[1] + a:delta]
+endfunction
+
+function! s:GetCurCoord()
+    let cur_pos = getcurpos()
+
+    if cur_pos[1] >= b:vlime_trace_specs_line_range[0] &&
+                \ cur_pos[1] <= b:vlime_trace_specs_line_range[1]
+        for c in b:vlime_trace_specs_coords
+            if vlime#ui#MatchCoord(c, cur_pos[1], cur_pos[2])
+                return c
+            endif
+        endfor
+    elseif cur_pos[1] >= b:vlime_trace_entries_header_line_range[0] &&
+                \ cur_pos[1] <= b:vlime_trace_entries_header_line_range[1]
+        for c in b:vlime_trace_entries_header_coords
+            if vlime#ui#MatchCoord(c, cur_pos[1], cur_pos[2])
+                return c
+            endif
+        endfor
+    endif
+
+    return v:null
+endfunction
+
+function! s:ReportSpecsComplete(trace_buf, conn, result)
+    let coords = []
+    call setbufvar(a:trace_buf, '&modifiable', 1)
+    let line_range = vlime#ui#WithBuffer(a:trace_buf,
+                \ function('s:DrawSpecList', [a:result, coords]))
+    call setbufvar(a:trace_buf, '&modifiable', 0)
+    call setbufvar(a:trace_buf, 'vlime_trace_specs_coords', coords)
+endfunction
+
+function! s:DialogUntraceAllComplete(trace_buf, conn, result)
+    if type(a:result) != type(v:null)
+        for r in a:result
+            echom r
+        endfor
+    endif
+
+    call b:vlime_conn.ReportSpecs(
+                \ function('s:ReportSpecsComplete', [a:trace_buf]))
+endfunction
+
+function! s:DialogUntraceComplete(trace_buf, conn, result)
+    echom a:result
+    call b:vlime_conn.ReportSpecs(
+                \ function('s:ReportSpecsComplete', [a:trace_buf]))
 endfunction
