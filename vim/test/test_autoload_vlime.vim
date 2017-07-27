@@ -271,6 +271,19 @@ function! TestMessage(name, expected, reply, ...)
     let conn['Autodoc'] = function('vlime#contrib#arglists#Autodoc')
     let conn['InspectPresentation'] = function('vlime#contrib#presentations#InspectPresentation')
 
+    let conn['ClearTraceTree'] = function('vlime#contrib#trace_dialog#ClearTraceTree')
+    let conn['DialogToggleTrace'] = function('vlime#contrib#trace_dialog#DialogToggleTrace')
+    let conn['DialogTrace'] = function('vlime#contrib#trace_dialog#DialogTrace')
+    let conn['DialogUntrace'] = function('vlime#contrib#trace_dialog#DialogUntrace')
+    let conn['DialogUntraceAll'] = function('vlime#contrib#trace_dialog#DialogUntraceAll')
+    let conn['FindTrace'] = function('vlime#contrib#trace_dialog#FindTrace')
+    let conn['FindTracePart'] = function('vlime#contrib#trace_dialog#FindTracePart')
+    let conn['InspectTracePart'] = function('vlime#contrib#trace_dialog#InspectTracePart')
+    let conn['ReportPartialTree'] = function('vlime#contrib#trace_dialog#ReportPartialTree')
+    let conn['ReportSpecs'] = function('vlime#contrib#trace_dialog#ReportSpecs')
+    let conn['ReportTotal'] = function('vlime#contrib#trace_dialog#ReportTotal')
+    let conn['ReportTraceDetail'] = function('vlime#contrib#trace_dialog#ReportTraceDetail')
+
     let ToCall = function(conn[a:name], a:000, conn)
     let b:vlime_test_dummy_sent_msg = v:null
     call ToCall()
@@ -416,6 +429,65 @@ let b:messages_to_test = [
                 \ s:ExpectedEmacsRex('SWANK', 'INSPECT-PRESENTATION', 1, v:true),
                 \ s:OKReturn(v:null),
                 \ 1, v:true],
+            \ ['ClearTraceTree',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'CLEAR-TRACE-TREE'),
+                \ s:OKReturn(v:null)],
+            \ ['DialogToggleTrace',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-TOGGLE-TRACE',
+                    \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
+                        \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]),
+                \ s:OKReturn(v:null),
+                \ 'DUMMY'],
+            \ ['DialogToggleTrace',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-TOGGLE-TRACE',
+                    \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
+                        \ [{'package': 'COMMON-LISP', 'name': 'SETF'},
+                            \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]]),
+                \ s:OKReturn(v:null),
+                \ ['SETF', 'DUMMY']],
+            \ ['DialogTrace',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-TRACE',
+                    \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
+                        \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]),
+                \ s:OKReturn(v:null),
+                \ 'DUMMY'],
+            \ ['DialogUntrace',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-UNTRACE',
+                    \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
+                        \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]),
+                \ s:OKReturn(v:null),
+                \ 'DUMMY'],
+            \ ['DialogUntraceAll',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-UNTRACE-ALL'),
+                \ s:OKReturn(v:null)],
+            \ ['FindTrace',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'FIND-TRACE', 1),
+                \ s:OKReturn(v:null),
+                \ 1],
+            \ ['FindTracePart',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'FIND-TRACE-PART', 1, 2,
+                    \ {'package': 'KEYWORD', 'name': 'ARG'}),
+                \ s:OKReturn(v:null),
+                \ 1, 2, 'ARG'],
+            \ ['InspectTracePart',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'INSPECT-TRACE-PART', 1, 2,
+                    \ {'package': 'KEYWORD', 'name': 'ARG'}),
+                \ s:OKReturn(v:null),
+                \ 1, 2, 'ARG'],
+            \ ['ReportPartialTree',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'REPORT-PARTIAL-TREE', 1),
+                \ s:OKReturn(v:null),
+                \ 1],
+            \ ['ReportSpecs',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'REPORT-SPECS'),
+                \ s:OKReturn(v:null)],
+            \ ['ReportTotal',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'REPORT-TOTAL'),
+                \ s:OKReturn(v:null)],
+            \ ['ReportTraceDetail',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'REPORT-TRACE-DETAIL', 1),
+                \ s:OKReturn(v:null),
+                \ 1],
             \ ['ListThreads',
                 \ s:ExpectedEmacsRex('SWANK', 'LIST-THREADS'),
                 \ s:OKReturn(v:null)],
