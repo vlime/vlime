@@ -9,18 +9,15 @@ function! vlime#ui#trace_dialog#InitTraceDialogBuf(conn)
 endfunction
 
 function! vlime#ui#trace_dialog#FillTraceDialogBuf(spec_list, trace_count)
-    let entries_header_line_range = get(b:, 'vlime_trace_entries_header_line_range', v:null)
-
     setlocal modifiable
 
     let b:vlime_trace_specs_coords = []
     call s:DrawSpecList(a:spec_list, b:vlime_trace_specs_coords)
 
     let b:vlime_trace_entries_header_coords = []
-    let b:vlime_trace_entries_header_line_range =
-                \ s:DrawTraceEntryHeader(
-                    \ a:trace_count, 0, entries_header_line_range,
-                        \ b:vlime_trace_entries_header_coords)
+    call s:DrawTraceEntryHeader(
+                \ a:trace_count, 0,
+                \ b:vlime_trace_entries_header_coords)
 
     setlocal nomodifiable
 endfunction
@@ -100,12 +97,13 @@ function! s:DrawSpecList(spec_list, coords)
                     \ delta)
 endfunction
 
-function! s:DrawTraceEntryHeader(entry_count, cached_entry_count, line_range, coords)
-    if type(a:line_range) == type(v:null)
+function! s:DrawTraceEntryHeader(entry_count, cached_entry_count, coords)
+    let line_range = get(b:, 'vlime_trace_entries_header_line_range', v:null)
+    if type(line_range) == type(v:null)
         let first_line = line('$')
         let last_line = line('$')
     else
-        let [first_line, last_line] = a:line_range
+        let [first_line, last_line] = line_range
     endif
 
     let title = 'Trace Entries (' . a:cached_entry_count . '/' . a:entry_count . ')'
@@ -131,10 +129,12 @@ function! s:DrawTraceEntryHeader(entry_count, cached_entry_count, line_range, co
 
     let new_lines_count = vlime#ui#ReplaceContent(content, first_line, last_line)
 
-    if type(a:line_range) == type(v:null)
-        return [first_line, first_line + new_lines_count - 2]
+    if type(line_range) == type(v:null)
+        let b:vlime_trace_entries_header_line_range =
+                    \ [first_line, first_line + new_lines_count - 2]
     else
-        return [first_line, first_line + new_lines_count - 1]
+        let b:vlime_trace_entries_header_line_range =
+                    \ [first_line, first_line + new_lines_count - 1]
     endif
 endfunction
 
