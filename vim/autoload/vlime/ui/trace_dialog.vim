@@ -38,6 +38,9 @@ function! vlime#ui#trace_dialog#Select()
     elseif coord['type'] == 'UNTRACE-SPEC'
         call b:vlime_conn.DialogUntrace(coord['id'],
                     \ function('s:DialogUntraceComplete', [bufnr('%')]))
+    elseif coord['type'] == 'REFRESH-TRACE-ENTRY-HEADER'
+        call b:vlime_conn.ReportTotal(
+                    \ function('s:ReportTotalComplete', [bufnr('%')]))
     endif
 endfunction
 
@@ -114,14 +117,18 @@ function! s:DrawTraceEntryHeader(entry_count, cached_entry_count, coords)
                 \ '', '[refresh]',
                 \ 'REFRESH-TRACE-ENTRY-HEADER', v:null, cur_line, a:coords)
     let header_buttons .= ' '
-    let header_buttons = s:AddButton(
-                \ header_buttons, '[fetch next batch]',
-                \ 'FETCH-NEXT-TRACE-ENTRIES-BATCH', v:null, cur_line, a:coords)
-    let header_buttons .= ' '
-    let header_buttons = s:AddButton(
-                \ header_buttons, '[fetch all]',
-                \ 'FETCH-ALL-TRACE-ENTRIES', v:null, cur_line, a:coords)
-    let header_buttons .= ' '
+
+    if a:cached_entry_count != a:entry_count
+        let header_buttons = s:AddButton(
+                    \ header_buttons, '[fetch next batch]',
+                    \ 'FETCH-NEXT-TRACE-ENTRIES-BATCH', v:null, cur_line, a:coords)
+        let header_buttons .= ' '
+        let header_buttons = s:AddButton(
+                    \ header_buttons, '[fetch all]',
+                    \ 'FETCH-ALL-TRACE-ENTRIES', v:null, cur_line, a:coords)
+        let header_buttons .= ' '
+    endif
+
     let header_buttons = s:AddButton(
                 \ header_buttons, '[clear]',
                 \ 'CLEAR-TRACE-ENTRIES', v:null, cur_line, a:coords)
@@ -190,10 +197,19 @@ endfunction
 function! s:ReportSpecsComplete(trace_buf, conn, result)
     let coords = []
     call setbufvar(a:trace_buf, '&modifiable', 1)
-    let line_range = vlime#ui#WithBuffer(a:trace_buf,
+    call vlime#ui#WithBuffer(a:trace_buf,
                 \ function('s:DrawSpecList', [a:result, coords]))
     call setbufvar(a:trace_buf, '&modifiable', 0)
     call setbufvar(a:trace_buf, 'vlime_trace_specs_coords', coords)
+endfunction
+
+function! s:ReportTotalComplete(trace_buf, conn, result)
+    let coords = []
+    call setbufvar(a:trace_buf, '&modifiable', 1)
+    call vlime#ui#WithBuffer(a:trace_buf,
+                \ function('s:DrawTraceEntryHeader', [a:result, 0, coords]))
+    call setbufvar(a:trace_buf, '&modifiable', 0)
+    call setbufvar(a:trace_buf, 'vlime_trace_entries_header_coords', coords)
 endfunction
 
 function! s:DialogUntraceAllComplete(trace_buf, conn, result)
