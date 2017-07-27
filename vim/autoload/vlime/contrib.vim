@@ -4,6 +4,7 @@ if !exists('g:vlime_contrib_initializers')
                 \ 'SWANK-PRESENTATIONS': function('vlime#contrib#presentations#Init'),
                 \ 'SWANK-FUZZY': function('vlime#contrib#fuzzy#Init'),
                 \ 'SWANK-ARGLISTS': function('vlime#contrib#arglists#Init'),
+                \ 'SWANK-TRACE-DIALOG': function('vlime#contrib#trace_dialog#Init'),
                 \ }
 endif
 
