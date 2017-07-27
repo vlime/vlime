@@ -41,6 +41,10 @@ function! vlime#ui#trace_dialog#Select()
     elseif coord['type'] == 'REFRESH-TRACE-ENTRY-HEADER'
         call b:vlime_conn.ReportTotal(
                     \ function('s:ReportTotalComplete', [bufnr('%')]))
+    elseif coord['type'] == 'FETCH-NEXT-TRACE-ENTRIES-BATCH'
+        call b:vlime_conn.ReportPartialTree(
+                    \ s:GetFetchKey(),
+                    \ function('s:ReportPartialTreeComplete', [bufnr('%')]))
     endif
 endfunction
 
@@ -60,7 +64,7 @@ function! s:DrawSpecList(spec_list, coords)
     let spec_list = (type(a:spec_list) == type(v:null)) ? [] : a:spec_list
     let title = 'Traced (' . len(spec_list) . ')'
     let content = title . "\n" . repeat('=', len(title)) . "\n\n"
-    let cur_line = first_line + 3
+    let cur_line = 4
 
     let header_buttons = s:AddButton(
                 \ '', '[refresh]', 'REFRESH-SPECS', v:null, cur_line, a:coords)
@@ -111,7 +115,7 @@ function! s:DrawTraceEntryHeader(entry_count, cached_entry_count, coords)
 
     let title = 'Trace Entries (' . a:cached_entry_count . '/' . a:entry_count . ')'
     let content = title . "\n" . repeat('=', len(title)) . "\n\n"
-    let cur_line = first_line + 3
+    let cur_line = 4
 
     let header_buttons = s:AddButton(
                 \ '', '[refresh]',
@@ -177,15 +181,19 @@ function! s:GetCurCoord()
 
     if cur_pos[1] >= b:vlime_trace_specs_line_range[0] &&
                 \ cur_pos[1] <= b:vlime_trace_specs_line_range[1]
+        let line_delta = b:vlime_trace_specs_line_range[0] - 1
+        let shifted_line = cur_pos[1] - line_delta
         for c in b:vlime_trace_specs_coords
-            if vlime#ui#MatchCoord(c, cur_pos[1], cur_pos[2])
+            if vlime#ui#MatchCoord(c, shifted_line, cur_pos[2])
                 return c
             endif
         endfor
     elseif cur_pos[1] >= b:vlime_trace_entries_header_line_range[0] &&
                 \ cur_pos[1] <= b:vlime_trace_entries_header_line_range[1]
+        let line_delta = b:vlime_trace_entries_header_line_range[0] - 1
+        let shifted_line = cur_pos[1] - line_delta
         for c in b:vlime_trace_entries_header_coords
-            if vlime#ui#MatchCoord(c, cur_pos[1], cur_pos[2])
+            if vlime#ui#MatchCoord(c, shifted_line, cur_pos[2])
                 return c
             endif
         endfor
@@ -227,4 +235,16 @@ function! s:DialogUntraceComplete(trace_buf, conn, result)
     echom a:result
     call b:vlime_conn.ReportSpecs(
                 \ function('s:ReportSpecsComplete', [a:trace_buf]))
+endfunction
+
+function! s:ReportPartialTreeComplete(trace_buf, conn, result)
+    echom string(a:result)
+endfunction
+
+function! s:GetFetchKey()
+    if !exists('b:vlime_trace_fetch_key')
+        let b:vlime_trace_fetch_key = get(s:, 'next_fetch_key', 0)
+        let s:next_fetch_key = b:vlime_trace_fetch_key + 1
+    endif
+    return b:vlime_trace_fetch_key
 endfunction
