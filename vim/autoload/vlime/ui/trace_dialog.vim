@@ -51,6 +51,12 @@ function! vlime#ui#trace_dialog#Select()
     elseif coord['type'] == 'CLEAR-TRACE-ENTRIES'
         call b:vlime_conn.ClearTraceTree(
                     \ function('s:ClearTraceTreeComplete', [bufnr('%')]))
+    elseif coord['type'] == 'TRACE-ENTRY-ARG'
+        " TODO
+        echom string(coord)
+    elseif coord['type'] == 'TRACE-ENTRY-RETVAL'
+        " TODO
+        echom string(coord)
     endif
 endfunction
 
@@ -106,6 +112,10 @@ function! s:DrawSpecList(spec_list, coords)
     let b:vlime_trace_entries_header_line_range =
                 \ s:ShiftLineRange(
                     \ get(b:, 'vlime_trace_entries_header_line_range', v:null),
+                    \ delta)
+    let b:vlime_trace_entries_line_range =
+                \ s:ShiftLineRange(
+                    \ get(b:, 'vlime_trace_entries_line_range', v:null),
                     \ delta)
 endfunction
 
@@ -268,6 +278,16 @@ function! s:GetCurCoord()
         let line_delta = b:vlime_trace_entries_header_line_range[0] - 1
         let shifted_line = cur_pos[1] - line_delta
         for c in b:vlime_trace_entries_header_coords
+            if vlime#ui#MatchCoord(c, shifted_line, cur_pos[2])
+                return c
+            endif
+        endfor
+    elseif exists('b:vlime_trace_entries_line_range') &&
+                \ cur_pos[1] >= b:vlime_trace_entries_line_range[0] &&
+                \ cur_pos[1] <= b:vlime_trace_entries_line_range[1]
+        let line_delta = b:vlime_trace_entries_line_range[0] - 1
+        let shifted_line = cur_pos[1] - line_delta
+        for c in b:vlime_trace_entries_coords
             if vlime#ui#MatchCoord(c, shifted_line, cur_pos[2])
                 return c
             endif
