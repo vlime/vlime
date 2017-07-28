@@ -181,10 +181,13 @@ function! s:DrawTraceEntries(toplevel, cached_entries, coords, ...)
     for tid in a:toplevel
         let entry = a:cached_entries[tid]
 
-        let name_line = s:Indent(
-                    \ entry['id'] . ' ' . repeat('-', s:indent_level_width - 1) . ' ' .
-                        \ s:NameObjToStr(entry['name']) . "\n",
-                    \ cur_level * s:indent_level_width)
+        let connector_char = (acc_content == '') ? ' ' : '`'
+        let str_id = string(entry['id'])
+        let name_line = str_id .
+                    \ s:Indent(
+                        \ connector_char . repeat('-', s:indent_level_width - 1) . ' ' .
+                            \ s:NameObjToStr(entry['name']) . "\n",
+                        \ cur_level * s:indent_level_width - len(str_id) + 1)
         let content .= name_line
         let cur_line += 1
 
@@ -324,20 +327,21 @@ function! s:ReportPartialTreeComplete(trace_buf, conn, result)
 
     for t_entry in entry_list
         let [id, parent, name, arg_list, retval_list] = t_entry
-        let entry_obj = {
-                    \ 'id': id,
-                    \ 'parent': parent,
-                    \ 'name': name,
-                    \ 'args': s:ArgListToDict(arg_list),
-                    \ 'retvals': s:ArgListToDict(retval_list),
-                    \ 'children': [],
-                    \ }
+        let entry_obj = get(cached_entries, id, {'id': id, 'children': []})
+        let entry_obj['parent'] = parent
+        let entry_obj['name'] = name
+        let entry_obj['args'] = s:ArgListToDict(arg_list)
+        let entry_obj['retvals'] = s:ArgListToDict(retval_list)
         let parent_obj = (type(parent) == type(v:null)) ?
                     \ v:null : get(cached_entries, parent, v:null)
         if type(parent_obj) == type(v:null)
-            call add(toplevel_entries, id)
+            if index(toplevel_entries, id) < 0
+                call add(toplevel_entries, id)
+            endif
         else
-            call add(parent_obj['children'], id)
+            if index(parent_obj['children'], id) < 0
+                call add(parent_obj['children'], id)
+            endif
         endif
         let cached_entries[id] = entry_obj
     endfor
