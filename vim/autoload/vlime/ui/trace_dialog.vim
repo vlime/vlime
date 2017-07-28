@@ -1,3 +1,5 @@
+let s:indent_level_width = 2
+
 function! vlime#ui#trace_dialog#InitTraceDialogBuf(conn)
     let buf = bufnr(vlime#ui#TraceDialogBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
@@ -46,10 +48,14 @@ function! vlime#ui#trace_dialog#Select()
         call b:vlime_conn.ReportPartialTree(
                     \ s:GetFetchKey(),
                     \ function('s:ReportPartialTreeComplete', [bufnr('%')]))
+    elseif coord['type'] == 'CLEAR-TRACE-ENTRIES'
+        call b:vlime_conn.ClearTraceTree(
+                    \ function('s:ClearTraceTreeComplete', [bufnr('%')]))
     endif
 endfunction
 
 function! s:InitTraceDialogBuffer()
+    execute 'setlocal shiftwidth=' . s:indent_level_width
     call vlime#ui#MapBufferKeys('trace')
 endfunction
 
@@ -81,21 +87,19 @@ function! s:DrawSpecList(spec_list, coords)
     for spec in spec_list
         let untrace_button = s:AddButton(
                     \ '', '[untrace]', 'UNTRACE-SPEC', spec, cur_line, a:coords)
-        if type(spec) == v:t_dict
-            let content .= (untrace_button . ' ' . spec['package'] . '::' . spec['name'] . "\n")
-        elseif type(spec) == v:t_list
-            let content .= (untrace_button .
-                            \ ' (' . spec[0]['name'] . ' ' .
-                            \ spec[1]['package'] . '::' . spec[1]['name'] .
-                            \ ")\n")
-        else
-            let content .= (untrace_button . " <UNKNOWN>\n")
-        endif
+        let content .= (untrace_button . ' ' . s:NameObjToStr(spec) . "\n")
         let cur_line += 1
     endfor
 
     let content .= "\n"
-    let new_lines_count = vlime#ui#ReplaceContent(content, first_line, last_line)
+
+    let old_cur_pos = getcurpos()
+    try
+        let new_lines_count = vlime#ui#ReplaceContent(content, first_line, last_line)
+    finally
+        call setpos('.', old_cur_pos)
+    endtry
+
     let b:vlime_trace_specs_line_range = [first_line, first_line + new_lines_count - 1]
 
     let delta = s:CalcLineRangeShift(b:vlime_trace_specs_line_range, line_range)
@@ -139,7 +143,12 @@ function! s:DrawTraceEntryHeader(entry_count, cached_entry_count, coords)
                 \ 'CLEAR-TRACE-ENTRIES', v:null, cur_line, a:coords)
     let content .= (header_buttons . "\n\n")
 
-    let new_lines_count = vlime#ui#ReplaceContent(content, first_line, last_line)
+    let old_cur_pos = getcurpos()
+    try
+        let new_lines_count = vlime#ui#ReplaceContent(content, first_line, last_line)
+    finally
+        call setpos('.', old_cur_pos)
+    endtry
 
     if type(line_range) == type(v:null)
         let b:vlime_trace_entries_header_line_range =
@@ -147,6 +156,68 @@ function! s:DrawTraceEntryHeader(entry_count, cached_entry_count, coords)
     else
         let b:vlime_trace_entries_header_line_range =
                     \ [first_line, first_line + new_lines_count - 1]
+    endif
+endfunction
+
+" s:DrawTraceEntries(toplevel, cached_entries, coords[, cur_level[, acc_content[, cur_line]]])
+"
+" This is a recursive function, with "isomeric" return values. The toplevel
+" call returns nothing meaningful, but the nested calls return the constructed
+" text content.
+function! s:DrawTraceEntries(toplevel, cached_entries, coords, ...)
+    let cur_level = get(a:000, 0, 0)
+    let acc_content = get(a:000, 1, '')
+    let cur_line = get(a:000, 2, 1)
+
+    let line_range = get(b:, 'vlime_trace_entries_line_range', v:null)
+    if type(line_range) == type(v:null)
+        let first_line = line('$')
+        let last_line = line('$')
+    else
+        let [first_line, last_line] = line_range
+    endif
+
+    let content = ''
+    for tid in a:toplevel
+        let entry = a:cached_entries[tid]
+
+        let name_line = s:Indent(
+                    \ entry['id'] . ' ' . repeat('-', s:indent_level_width - 1) . ' ' .
+                        \ s:NameObjToStr(entry['name']) . "\n",
+                    \ cur_level * s:indent_level_width)
+        let content .= name_line
+        let cur_line += 1
+
+        let arg_ret_prefix = (len(entry['children']) > 0) ? '|' : ' '
+
+        let [arg_content, cur_line] = s:ConstructTraceEntryArgs(
+                    \ entry['id'], entry['args'], arg_ret_prefix . ' > ',
+                    \ 'TRACE-ENTRY-ARG', cur_level, cur_line, a:coords)
+        let content .= arg_content
+
+        let [ret_content, cur_line] = s:ConstructTraceEntryArgs(
+                    \ entry['id'], entry['retvals'], arg_ret_prefix . ' < ',
+                    \ 'TRACE-ENTRY-RETVAL', cur_level, cur_line, a:coords)
+        let content .= ret_content
+
+        if len(entry['children']) > 0
+            let [content, cur_line] = s:DrawTraceEntries(
+                        \ entry['children'], a:cached_entries,
+                        \ a:coords, cur_level + 1, content, cur_line)
+        endif
+    endfor
+
+    if acc_content == ''
+        let old_cur_pos = getcurpos()
+        try
+            let new_lines_count = vlime#ui#ReplaceContent(content, first_line, last_line)
+        finally
+            call setpos('.', old_cur_pos)
+        endtry
+        let b:vlime_trace_entries_line_range =
+                    \ [first_line, first_line + new_lines_count - 1]
+    else
+        return [acc_content . content, cur_line]
     endif
 endfunction
 
@@ -281,11 +352,38 @@ function! s:ReportPartialTreeComplete(trace_buf, conn, result)
                     \ [len(cached_entries) + remaining,
                         \ len(cached_entries),
                         \ coords]))
-    call setbufvar(a:trace_buf, '&modifiable', 0)
     call setbufvar(a:trace_buf, 'vlime_trace_entries_header_coords', coords)
 
-    " TODO
-    echom string(a:result)
+    let coords = []
+    call vlime#ui#WithBuffer(a:trace_buf,
+                \ function('s:DrawTraceEntries',
+                    \ [toplevel_entries, cached_entries, coords]))
+    call setbufvar(a:trace_buf, '&modifiable', 0)
+    call setbufvar(a:trace_buf, 'vlime_trace_entries_coords', coords)
+endfunction
+
+function! s:ClearTraceTreeComplete(trace_buf, conn, result)
+    call vlime#ui#WithBuffer(a:trace_buf, function('s:ResetTraceEntries'))
+    call b:vlime_conn.ReportTotal(
+                \ function('s:ReportTotalComplete', [a:trace_buf]))
+endfunction
+
+function! s:ResetTraceEntries()
+    silent! unlet b:vlime_trace_fetch_key
+    silent! unlet b:vlime_trace_cached_entries
+    silent! unlet b:vlime_trace_toplevel_entries
+    silent! unlet b:vlime_trace_entries_coords
+
+    let line_range = get(b:, 'vlime_trace_entries_line_range', v:null)
+    silent! unlet b:vlime_trace_entries_line_range
+
+    if type(line_range) != type(v:null)
+        let [first_line, last_line] = line_range
+        setlocal modifiable
+        execute first_line . ',' . last_line . 'delete _'
+        call append(first_line - 1, '')
+        setlocal nomodifiable
+    endif
 endfunction
 
 function! s:GetFetchKey()
@@ -303,4 +401,38 @@ function! s:ArgListToDict(arg_list)
         let args[r[0]] = r[1]
     endfor
     return args
+endfunction
+
+function! s:Indent(str, count)
+    return repeat(' ', a:count) . a:str
+endfunction
+
+function! s:NameObjToStr(name)
+    if type(a:name) == v:t_dict
+        return a:name['package'] . '::' . a:name['name']
+    elseif type(a:name) == v:t_list
+        return '(' . a:name[0]['name'] . ' ' .
+                    \ a:name[1]['package'] . '::' . a:name[1]['name'] . ')'
+    else
+        throw 'NameObjToStr: illegal name: ' . string(name)
+    endif
+endfunction
+
+function! s:ConstructTraceEntryArgs(
+            \ entry_id, arg_dict, prefix, button_type, cur_level, cur_line, coords)
+    let content = ''
+    let cur_line = a:cur_line
+    for i in sort(keys(a:arg_dict), 'n')
+        let line = s:Indent(
+                    \ a:prefix,
+                    \ (a:cur_level + 1) * s:indent_level_width)
+        let line = s:AddButton(
+                    \ line, a:arg_dict[i],
+                    \ a:button_type, [a:entry_id, str2nr(i)],
+                    \ cur_line, a:coords)
+        let line .= "\n"
+        let content .= line
+        let cur_line += 1
+    endfor
+    return [content, cur_line]
 endfunction
