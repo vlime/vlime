@@ -227,7 +227,7 @@ function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     redraw
 endfunction
 
-function! vlime#ui#OnTraceDialog(conn, spec_list, trace_count)
+function! vlime#ui#OnTraceDialog(conn, spec_list, trace_count) dict
     let trace_buf = vlime#ui#trace_dialog#InitTraceDialogBuf(a:conn)
     call vlime#ui#OpenBufferWithWinSettings(trace_buf, v:false, 'trace')
     call vlime#ui#trace_dialog#FillTraceDialogBuf(a:spec_list, a:trace_count)

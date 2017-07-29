@@ -604,6 +604,10 @@ Key mappings avaialble in lisp source files:
             (In visual mode) Evaluate and inspect the current
             selection.
 
+    Invoking The Trace Dialog     *vlime-mappings-invoke-trace-dialog*
+        <LocalLeader>T
+            Show the trace dialog.
+
     Closing Windows                      *vlime-mappings-close-window*
         <LocalLeader>wp
             Close all visible preview windows.

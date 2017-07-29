@@ -61,6 +61,8 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', ['<LocalLeader>IN', '<LocalLeader>In'], ':call vlime#plugin#Inspect()<cr>'],
                     \ ['v', '<LocalLeader>I', ':<c-u>call vlime#plugin#Inspect(vlime#ui#CurSelection())<cr>'],
                     \
+                    \ ['n', '<LocalLeader>T', ':call vlime#plugin#OpenTraceDialog()<cr>'],
+                    \
                     \ ['n', '<LocalLeader>uf', ':call vlime#plugin#UndefineFunction(vlime#ui#CurAtom())<cr>'],
                     \ ['n', '<LocalLeader>us', ':call vlime#plugin#UninternSymbol(vlime#ui#CurAtom())<cr>'],
                     \ ['n', '<LocalLeader>ui', ':<c-u>call vlime#plugin#UndefineUninternWrapper()<cr>'],

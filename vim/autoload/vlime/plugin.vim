@@ -231,6 +231,23 @@ function! vlime#plugin#Inspect(...)
 endfunction
 
 ""
+" @public
+"
+" Show the trace dialog.
+function! vlime#plugin#OpenTraceDialog()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    if index(conn.cb_data['contribs'], 'SWANK-TRACE-DIALOG') < 0
+        call vlime#ui#ErrMsg('SWANK-TRACE-DIALOG is not available.')
+    endif
+
+    call conn.ReportSpecs(function('s:OpenTraceDialogReportComplete', [v:null]))
+endfunction
+
+""
 " @usage [file_name] [policy]
 " @public
 "
@@ -1089,6 +1106,15 @@ function! s:OnListenerEvalComplete(conn, result)
     endif
 
     call s:ResetArgListState()
+endfunction
+
+function! s:OpenTraceDialogReportComplete(specs, conn, result)
+    if type(a:specs) == type(v:null)
+        let new_specs = (type(a:result) == type(v:null)) ? [] : a:result
+        call a:conn.ReportTotal(function('s:OpenTraceDialogReportComplete', [new_specs]))
+    else
+        call a:conn.ui.OnTraceDialog(a:conn, a:specs, a:result)
+    endif
 endfunction
 
 function! s:ShowAsyncResult(conn, result)
