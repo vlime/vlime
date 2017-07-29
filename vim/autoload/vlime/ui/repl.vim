@@ -29,6 +29,11 @@ function! vlime#ui#repl#AppendOutput(repl_buf, str)
 endfunction
 
 function! vlime#ui#repl#InspectCurREPLPresentation()
+    if index(b:vlime_conn.cb_data['contribs'], 'SWANK-PRESENTATIONS') < 0
+        call vlime#ui#ErrMsg('SWANK-PRESENTATIONS is not available.')
+        return
+    endif
+
     let p_coord = s:FindCurCoord(
                 \ getcurpos(), getbufvar('%', 'vlime_repl_coords', {}))
     if type(p_coord) == type(v:null)
