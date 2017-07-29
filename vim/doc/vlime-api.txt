@@ -134,28 +134,6 @@ VlimeConnection.SwankRequire({contrib}, [callback])
   'SWANK-PRESENTATIONS'])" tells Swank to load both SWANK-REPL and
   SWANK-PRESENTATIONS.
 
-VlimeConnection.CreateREPL([coding_system], [callback])
-                                                *VlimeConnection.CreateREPL()*
-
-  Create the REPL thread, and optionally register a [callback] function to
-  handle the result.
-
-  [coding_system] is implementation-dependent. Omit this argument or pass
-  v:null to let the server choose it for you.
-
-  This method needs the SWANK-REPL contrib module. See
-  |VlimeConnection.SwankRequire()|.
-
-VlimeConnection.ListenerEval({expr}, [callback])
-                                              *VlimeConnection.ListenerEval()*
-
-  Evaluate {expr} in the current package and thread, and optionally register a
-  [callback] function to handle the result. {expr} should be a plain string
-  containing the lisp expression to be evaluated.
-
-  This method needs the SWANK-REPL contrib module. See
-  |VlimeConnection.SwankRequire()|.
-
 VlimeConnection.Interrupt({thread})              *VlimeConnection.Interrupt()*
 
   Interrupt {thread}. {thread} should be a numeric thread ID, or {"package":
@@ -277,16 +255,6 @@ VlimeConnection.InspectInFrame({thing}, {frame}, [callback])
   When the debugger is active, evaluate {thing} in the context of {frame}, and
   start inspecting the evaluation result.
 
-VlimeConnection.InspectPresentation({pres_id}, {reset}, [callback])
-                                       *VlimeConnection.InspectPresentation()*
-
-  Start inspecting an object saved by SWANK-PRESENTATIONS. {pres_id} should be
-  a valid ID presented by PRESENTATION-START messages. If {reset} is |TRUE|,
-  the inspector will be reset first.
-
-  This method needs the SWANK-PRESENTATIONS contrib module. See
-  |VlimeConnection.SwankRequire()|.
-
 VlimeConnection.ListThreads([callback])        *VlimeConnection.ListThreads()*
 
   Get a list of running threads.
@@ -332,31 +300,11 @@ VlimeConnection.OperatorArgList({operator}, [callback])
   Get the arglist description for {operator}. {operator} should be a plain
   string containing a symbol name.
 
-VlimeConnection.Autodoc({raw_form}, [margin], [callback])
-                                                   *VlimeConnection.Autodoc()*
-
-  Get the arglist description for {raw_form}. {raw_form} should be a value
-  returned by |vlime#ui#CurRawForm()| or |vlime#ToRawForm()|. See the source
-  of SWANK:AUTODOC for an explanation of the raw forms. [margin], if specified
-  and not v:null, gives the line width to wrap to.
-
-  This method needs the SWANK-ARGLISTS contrib module. See
-  |VlimeConnection.SwankRequire()|.
-
 VlimeConnection.SimpleCompletions({symbol}, [callback])
                                          *VlimeConnection.SimpleCompletions()*
 
   Get a simple completion list for {symbol}. {symbol} should be a plain string
   containing a (partial) symbol name.
-
-VlimeConnection.FuzzyCompletions({symbol}, [callback])
-                                          *VlimeConnection.FuzzyCompletions()*
-
-  Get a completion list for {symbol}, using a more clever fuzzy algorithm.
-  {symbol} should be a plain string containing a (partial) symbol name.
-
-  This method needs the SWANK-FUZZY contrib module. See
-  |VlimeConnection.SwankRequire()|.
 
 VlimeConnection.SwankMacroExpandOne({expr}, [callback])
                                        *VlimeConnection.SwankMacroExpandOne()*
@@ -435,6 +383,160 @@ VlimeConnection.DocumentationSymbol({sym_name}, [callback])
                                        *VlimeConnection.DocumentationSymbol()*
 
   Find the documentation for symbol {sym_name}.
+
+VlimeConnection.Autodoc({raw_form}, [margin], [callback])
+                                                   *VlimeConnection.Autodoc()*
+
+  Get the arglist description for {raw_form}. {raw_form} should be a value
+  returned by |vlime#ui#CurRawForm()| or |vlime#ToRawForm()|. See the source
+  of SWANK:AUTODOC for an explanation of the raw forms. [margin], if specified
+  and not v:null, gives the line width to wrap to.
+
+  This method needs the SWANK-ARGLISTS contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.FuzzyCompletions({symbol}, [callback])
+                                          *VlimeConnection.FuzzyCompletions()*
+
+  Get a completion list for {symbol}, using a more clever fuzzy algorithm.
+  {symbol} should be a plain string containing a (partial) symbol name.
+
+  This method needs the SWANK-FUZZY contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.InspectPresentation({pres_id}, {reset}, [callback])
+                                       *VlimeConnection.InspectPresentation()*
+
+  Start inspecting an object saved by SWANK-PRESENTATIONS. {pres_id} should be
+  a valid ID presented by PRESENTATION-START messages. If {reset} is |TRUE|,
+  the inspector will be reset first.
+
+  This method needs the SWANK-PRESENTATIONS contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.CreateREPL([coding_system], [callback])
+                                                *VlimeConnection.CreateREPL()*
+
+  Create the REPL thread, and optionally register a [callback] function to
+  handle the result.
+
+  [coding_system] is implementation-dependent. Omit this argument or pass
+  v:null to let the server choose it for you.
+
+  This method needs the SWANK-REPL contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.ListenerEval({expr}, [callback])
+                                              *VlimeConnection.ListenerEval()*
+
+  Evaluate {expr} in the current package and thread, and optionally register a
+  [callback] function to handle the result. {expr} should be a plain string
+  containing the lisp expression to be evaluated.
+
+  This method needs the SWANK-REPL contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.ClearTraceTree([callback])  *VlimeConnection.ClearTraceTree()*
+
+  Clear all trace entries in SWANK-TRACE-DIALOG.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.DialogToggleTrace({name}, [callback])
+                                         *VlimeConnection.DialogToggleTrace()*
+
+  Toggle the traced state of a function in SWANK-TRACE-DIALOG. {name} can be a
+  plain string specifying the function name, or ["SETF", <name>] to refer to a
+  SETF function. You can also pass raw JSON objects. See the function
+  "s:TranslateFunctionSpec" for details.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.DialogTrace({name}, [callback])
+                                               *VlimeConnection.DialogTrace()*
+
+  Trace a function in SWANK-TRACE-DIALOG. See
+  |VlimeConnection.DialogToggleTrace()| for the use of {name}.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.DialogUntrace({name}, [callback])
+                                             *VlimeConnection.DialogUntrace()*
+
+  Untrace a function in SWANK-TRACE-DIALOG. See
+  |VlimeConnection.DialogToggleTrace()| for the use of {name}.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.DialogUntraceAll([callback])
+                                          *VlimeConnection.DialogUntraceAll()*
+
+  Untrace all functions in SWANK-TRACE-DIALOG.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.FindTrace({id}, [callback])      *VlimeConnection.FindTrace()*
+
+  Retrieve a trace entry by {id}.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.FindTracePart({id}, {part_id}, {type}, [callback])
+                                             *VlimeConnection.FindTracePart()*
+
+  Retrieve an argument or return value saved in a trace entry. {id} is the
+  trace entry ID. {part_id} is the argument or return value ID. {type} can be
+  "ARG" or "RETVAL".
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.InspectTracePart({id}, {part_id}, {type}, [callback])
+                                          *VlimeConnection.InspectTracePart()*
+
+  Inspect an argument or return value saved in a trace entry. See
+  |VlimeConnection.FindTracePart()| for the use of the arguments.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.ReportPartialTree({key}, [callback])
+                                         *VlimeConnection.ReportPartialTree()*
+
+  Retrieve at most SWANK-TRACE-DIALOG:*TRACES-PER-REPORT* trace entries. {key}
+  should be a uniqe number or string to identify the requesting entity.
+  Subsequent requests should provide the same key.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.ReportSpecs([callback])        *VlimeConnection.ReportSpecs()*
+
+  Retrieve traced function specs from SWANK-TRACE-DIALOG.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.ReportTotal([callback])        *VlimeConnection.ReportTotal()*
+
+  Retrieve the total count of trace entries.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.ReportTraceDetail({id}, [callback])
+                                         *VlimeConnection.ReportTraceDetail()*
+
+  Retrieve the details of a trace entry by {id}.
+
+  This method needs the SWANK-TRACE-DIALOG contrib module. See
+  |VlimeConnection.SwankRequire()|.
 
                                                            *vlime-api.VlimeUI*
 The |vlime-api.VlimeUI| object is a singleton. It's meant to be injected into
@@ -571,6 +673,10 @@ vlime#plugin#Inspect([content])                       *vlime#plugin#Inspect()*
 
   Evaluate [content] and launch the inspector with the evaluation result
   loaded. If [content] is omitted, show an input buffer.
+
+vlime#plugin#OpenTraceDialog()                *vlime#plugin#OpenTraceDialog()*
+
+  Show the trace dialog.
 
 vlime#plugin#CompileFile([file_name], [policy])   *vlime#plugin#CompileFile()*
 
@@ -881,13 +987,17 @@ vlime#ui#CloseWindow({conn}, {win_name})              *vlime#ui#CloseWindow()*
   Close Vlime windows. See |vlime#ui#GetWindowList()| for the use of {conn}
   and {win_name}.
 
-vlime#ui#AppendString({str})                         *vlime#ui#AppendString()*
+vlime#ui#AppendString({str}, [line])                 *vlime#ui#AppendString()*
 
-  Append {str} to the current buffer. Elaborately handle newline characters.
+  Append {str} to [line] in the current buffer. Append to the last line if
+  [line] is omitted. Elaborately handle newline characters.
 
-vlime#ui#ReplaceContent({str})                     *vlime#ui#ReplaceContent()*
+vlime#ui#ReplaceContent({str}, [first_line], [last_line])
+                                                   *vlime#ui#ReplaceContent()*
 
-  Replace the content of the current buffer with {str}.
+  Replace the content of the current buffer, from [first_line] to [last_line]
+  (inclusive), with {str}. If [first_line] is omitted, start from line 1. If
+  [last_line] is omitted, stop at the last line of the current buffer.
 
 vlime#ui#IndentCurLine({indent})                    *vlime#ui#IndentCurLine()*
 
