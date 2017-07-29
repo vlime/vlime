@@ -1237,6 +1237,7 @@ endfunction
 
 " ================== end of methods for vlime connections ==================
 
+" TODO: The server may return multiple values.
 function! vlime#SimpleSendCB(conn, Callback, caller, chan, msg) abort
     call s:CheckReturnStatus(a:msg, a:caller)
     call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])
