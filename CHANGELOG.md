@@ -1,4 +1,5 @@
 * master
+    * The trace dialog.
     * Colorful special buffers.
     * The AUTODOC feature `:help g:vlime_enable_autodoc`.
     * API documentation `:help vlime-api-intro`.
