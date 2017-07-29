@@ -124,6 +124,8 @@ if !exists('g:vlime_default_mappings')
                 \
                 \ 'trace': [
                     \ ['n', ['<cr>', '<space>'], ':call vlime#ui#trace_dialog#Select()<cr>'],
+                    \ ['n', 'i', ':call vlime#ui#trace_dialog#Select("inspect")<cr>'],
+                    \ ['n', 's', ':call vlime#ui#trace_dialog#Select("to_repl")<cr>'],
                 \ ],
                 \
                 \ 'xref': [

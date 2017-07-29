@@ -25,39 +25,58 @@ function! vlime#ui#trace_dialog#FillTraceDialogBuf(spec_list, trace_count)
     setlocal nomodifiable
 endfunction
 
-function! vlime#ui#trace_dialog#Select()
+" vlime#ui#trace_dialog#Select([action])
+function! vlime#ui#trace_dialog#Select(...)
+    let action = get(a:000, 0, 'button')
+
     let coord = s:GetCurCoord()
 
     if type(coord) == type(v:null)
         return
     endif
 
-    if coord['type'] == 'REFRESH-SPECS'
-        call b:vlime_conn.ReportSpecs(
-                    \ function('s:ReportSpecsComplete', [bufnr('%')]))
-    elseif coord['type'] == 'UNTRACE-ALL-SPECS'
-        call b:vlime_conn.DialogUntraceAll(
-                    \ function('s:DialogUntraceAllComplete', [bufnr('%')]))
-    elseif coord['type'] == 'UNTRACE-SPEC'
-        call b:vlime_conn.DialogUntrace(coord['id'],
-                    \ function('s:DialogUntraceComplete', [bufnr('%')]))
-    elseif coord['type'] == 'REFRESH-TRACE-ENTRY-HEADER'
-        call b:vlime_conn.ReportTotal(
-                    \ function('s:ReportTotalComplete', [bufnr('%')]))
-    elseif coord['type'] == 'FETCH-NEXT-TRACE-ENTRIES-BATCH'
-        call b:vlime_conn.ReportPartialTree(
-                    \ s:GetFetchKey(),
-                    \ function('s:ReportPartialTreeComplete', [bufnr('%')]))
-    elseif coord['type'] == 'CLEAR-TRACE-ENTRIES'
-        call b:vlime_conn.ClearTraceTree(
-                    \ function('s:ClearTraceTreeComplete', [bufnr('%')]))
-    elseif coord['type'] == 'TRACE-ENTRY-ARG'
-        " TODO
-        echom string(coord)
-    elseif coord['type'] == 'TRACE-ENTRY-RETVAL'
-        " TODO
-        echom string(coord)
+    if action == 'button'
+        if coord['type'] == 'REFRESH-SPECS'
+            call b:vlime_conn.ReportSpecs(
+                        \ function('s:ReportSpecsComplete', [bufnr('%')]))
+        elseif coord['type'] == 'UNTRACE-ALL-SPECS'
+            call b:vlime_conn.DialogUntraceAll(
+                        \ function('s:DialogUntraceAllComplete', [bufnr('%')]))
+        elseif coord['type'] == 'UNTRACE-SPEC'
+            call b:vlime_conn.DialogUntrace(coord['id'],
+                        \ function('s:DialogUntraceComplete', [bufnr('%')]))
+        elseif coord['type'] == 'REFRESH-TRACE-ENTRY-HEADER'
+            call b:vlime_conn.ReportTotal(
+                        \ function('s:ReportTotalComplete', [bufnr('%')]))
+        elseif coord['type'] == 'FETCH-NEXT-TRACE-ENTRIES-BATCH'
+            call b:vlime_conn.ReportPartialTree(
+                        \ s:GetFetchKey(),
+                        \ function('s:ReportPartialTreeComplete', [bufnr('%')]))
+        elseif coord['type'] == 'CLEAR-TRACE-ENTRIES'
+            call b:vlime_conn.ClearTraceTree(
+                        \ function('s:ClearTraceTreeComplete', [bufnr('%')]))
+        endif
+
+    elseif coord['type'] == 'TRACE-ENTRY-ARG' || coord['type'] == 'TRACE-ENTRY-RETVAL'
+        if action == 'inspect'
+            let part_type = (coord['type'] == 'TRACE-ENTRY-ARG') ? 'ARG' : 'RETVAL'
+            call b:vlime_conn.InspectTracePart(
+                        \ coord['id'][0], coord['id'][1], part_type,
+                        \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
+        elseif action == 'to_repl'
+            let part_type = (coord['type'] == 'TRACE-ENTRY-ARG') ? ':arg' : ':retval'
+            call b:vlime_conn.ui.OnWriteString(b:vlime_conn,
+                        \ "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+            let args_str = join([coord['id'][0], coord['id'][1], part_type])
+            call b:vlime_conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                        \ function(b:vlime_conn.ListenerEval,
+                            \ ['(nth-value 0 (swank-trace-dialog:find-trace-part ' . args_str . '))']))
+        endif
     endif
+endfunction
+
+function! vlime#ui#trace_dialog#NextField(forward)
+    " TODO
 endfunction
 
 function! s:InitTraceDialogBuffer()
