@@ -188,7 +188,9 @@ function! s:DrawTraceEntryHeader(entry_count, cached_entry_count, coords)
     endif
 endfunction
 
-" s:DrawTraceEntries(toplevel, cached_entries, coords[, cur_level[, acc_content[, cur_line]]])
+" s:DrawTraceEntries(
+"     toplevel, cached_entries,
+"     coords[, cur_level[, acc_content[, cur_line[, line_prefix[, id_width]]]])
 "
 " This is a recursive function, with "isomeric" return values. The toplevel
 " call returns nothing meaningful, but the nested calls return the constructed
@@ -197,6 +199,20 @@ function! s:DrawTraceEntries(toplevel, cached_entries, coords, ...)
     let cur_level = get(a:000, 0, 0)
     let acc_content = get(a:000, 1, '')
     let cur_line = get(a:000, 2, 1)
+    let line_prefix = get(a:000, 3, '')
+    let id_width = get(a:000, 4, v:null)
+
+    if type(id_width) == type(v:null)
+        let sorted_keys = sort(keys(a:cached_entries), 'N')
+        if len(sorted_keys) > 0
+            let id_width = len(sorted_keys[-1])
+        else
+            let id_width = 0
+        endif
+    endif
+
+    let extra_prefix = repeat(' ', s:indent_level_width - 1) . '|'
+    let next_line_prefix = line_prefix . extra_prefix
 
     let line_range = get(b:, 'vlime_trace_entries_line_range', v:null)
     if type(line_range) == type(v:null)
@@ -210,32 +226,40 @@ function! s:DrawTraceEntries(toplevel, cached_entries, coords, ...)
     for tid in a:toplevel
         let entry = a:cached_entries[tid]
 
+        if tid == a:toplevel[-1]
+            let line_prefix = line_prefix[:-2] . ' '
+            let next_line_prefix = line_prefix . extra_prefix
+        endif
+
         let connector_char = (acc_content == '') ? ' ' : '`'
         let str_id = string(entry['id'])
-        let name_line = str_id .
-                    \ s:Indent(
-                        \ connector_char . repeat('-', s:indent_level_width - 1) . ' ' .
-                            \ s:NameObjToStr(entry['name']) . "\n",
-                        \ cur_level * s:indent_level_width - len(str_id) + 1)
+        let name_line = s:AlignTraceID(entry['id'], id_width) . line_prefix .
+                    \ connector_char . repeat('-', s:indent_level_width - 1) . ' ' .
+                    \ s:NameObjToStr(entry['name']) . "\n"
         let content .= name_line
         let cur_line += 1
 
-        let arg_ret_prefix = (len(entry['children']) > 0) ? '|' : ' '
+        if len(entry['children']) > 0
+            let arg_ret_prefix = repeat(' ', id_width) . next_line_prefix
+        else
+            let arg_ret_prefix = repeat(' ', id_width) . next_line_prefix[:-2] . ' '
+        endif
 
         let [arg_content, cur_line] = s:ConstructTraceEntryArgs(
                     \ entry['id'], entry['args'], arg_ret_prefix . ' > ',
-                    \ 'TRACE-ENTRY-ARG', cur_level, cur_line, a:coords)
+                    \ 'TRACE-ENTRY-ARG', cur_line, a:coords)
         let content .= arg_content
 
         let [ret_content, cur_line] = s:ConstructTraceEntryArgs(
                     \ entry['id'], entry['retvals'], arg_ret_prefix . ' < ',
-                    \ 'TRACE-ENTRY-RETVAL', cur_level, cur_line, a:coords)
+                    \ 'TRACE-ENTRY-RETVAL', cur_line, a:coords)
         let content .= ret_content
 
         if len(entry['children']) > 0
             let [content, cur_line] = s:DrawTraceEntries(
                         \ entry['children'], a:cached_entries,
-                        \ a:coords, cur_level + 1, content, cur_line)
+                        \ a:coords, cur_level + 1, content,
+                        \ cur_line, next_line_prefix, id_width)
         endif
     endfor
 
@@ -465,13 +489,11 @@ function! s:NameObjToStr(name)
 endfunction
 
 function! s:ConstructTraceEntryArgs(
-            \ entry_id, arg_dict, prefix, button_type, cur_level, cur_line, coords)
+            \ entry_id, arg_dict, prefix, button_type, cur_line, coords)
     let content = ''
     let cur_line = a:cur_line
-    for i in sort(keys(a:arg_dict), 'n')
-        let line = s:Indent(
-                    \ a:prefix,
-                    \ (a:cur_level + 1) * s:indent_level_width)
+    for i in sort(keys(a:arg_dict), 'N')
+        let line = a:prefix
         let line = s:AddButton(
                     \ line, a:arg_dict[i],
                     \ a:button_type, [a:entry_id, str2nr(i)],
@@ -481,4 +503,9 @@ function! s:ConstructTraceEntryArgs(
         let cur_line += 1
     endfor
     return [content, cur_line]
+endfunction
+
+function! s:AlignTraceID(id, width)
+    let str_id = string(a:id)
+    return repeat(' ', a:width - len(str_id)) . str_id
 endfunction
