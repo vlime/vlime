@@ -226,7 +226,7 @@ function! s:DrawTraceEntries(toplevel, cached_entries, coords, ...)
     for tid in a:toplevel
         let entry = a:cached_entries[tid]
 
-        if tid == a:toplevel[-1]
+        if tid == a:toplevel[-1] && len(line_prefix) > 0
             let line_prefix = line_prefix[:-2] . ' '
             let next_line_prefix = line_prefix . extra_prefix
         endif
