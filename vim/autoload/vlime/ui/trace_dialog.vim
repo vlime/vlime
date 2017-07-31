@@ -25,6 +25,11 @@ function! vlime#ui#trace_dialog#FillTraceDialogBuf(spec_list, trace_count)
     setlocal nomodifiable
 endfunction
 
+function! vlime#ui#trace_dialog#RefreshSpecs()
+    call b:vlime_conn.ReportSpecs(
+                \ function('s:ReportSpecsComplete', [bufnr('%')]))
+endfunction
+
 " vlime#ui#trace_dialog#Select([action])
 function! vlime#ui#trace_dialog#Select(...)
     let action = get(a:000, 0, 'button')
@@ -37,8 +42,7 @@ function! vlime#ui#trace_dialog#Select(...)
 
     if action == 'button'
         if coord['type'] == 'REFRESH-SPECS'
-            call b:vlime_conn.ReportSpecs(
-                        \ function('s:ReportSpecsComplete', [bufnr('%')]))
+            call vlime#ui#trace_dialog#RefreshSpecs()
         elseif coord['type'] == 'UNTRACE-ALL-SPECS'
             call b:vlime_conn.DialogUntraceAll(
                         \ function('s:DialogUntraceAllComplete', [bufnr('%')]))

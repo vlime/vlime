@@ -61,7 +61,9 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', ['<LocalLeader>IN', '<LocalLeader>In'], ':call vlime#plugin#Inspect()<cr>'],
                     \ ['v', '<LocalLeader>I', ':<c-u>call vlime#plugin#Inspect(vlime#ui#CurSelection())<cr>'],
                     \
-                    \ ['n', '<LocalLeader>T', ':call vlime#plugin#OpenTraceDialog()<cr>'],
+                    \ ['n', '<LocalLeader>TD', ':call vlime#plugin#OpenTraceDialog()<cr>'],
+                    \ ['n', ['<LocalLeader>TI', '<LocalLeader>Ti'], ':call vlime#plugin#DialogToggleTrace()<cr>'],
+                    \ ['n', ['<LocalLeader>TT', '<LocalLeader>Tt'], ':call vlime#plugin#DialogToggleTrace(vlime#ui#CurAtom())<cr>'],
                     \
                     \ ['n', '<LocalLeader>uf', ':call vlime#plugin#UndefineFunction(vlime#ui#CurAtom())<cr>'],
                     \ ['n', '<LocalLeader>us', ':call vlime#plugin#UninternSymbol(vlime#ui#CurAtom())<cr>'],
@@ -126,6 +128,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', ['<cr>', '<space>'], ':call vlime#ui#trace_dialog#Select()<cr>'],
                     \ ['n', 'i', ':call vlime#ui#trace_dialog#Select("inspect")<cr>'],
                     \ ['n', 's', ':call vlime#ui#trace_dialog#Select("to_repl")<cr>'],
+                    \ ['n', 'R', ':call vlime#plugin#OpenTraceDialog()<cr>'],
                     \ ['n', ['<c-n>', '<tab>'], ':call vlime#ui#trace_dialog#NextField(v:true)<cr>'],
                     \ ['n', '<c-p>', ':call vlime#ui#trace_dialog#NextField(v:false)<cr>'],
                 \ ],

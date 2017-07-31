@@ -231,6 +231,35 @@ function! vlime#plugin#Inspect(...)
 endfunction
 
 ""
+" @usage [func]
+" @public
+"
+" Toggle the traced state of [func]. [func] should be a string specifying a
+" plain function name, or in the form "(setf <name>)", to trace a
+" setf-expander. If [func] is omitted, show an input buffer.
+"
+" This function needs the SWANK-TRACE-DIALOG contrib module. See
+" |g:vlime_contribs| and @function(vlime#plugin#SwankRequire).
+function! vlime#plugin#DialogToggleTrace(...)
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    if index(conn.cb_data['contribs'], 'SWANK-TRACE-DIALOG') < 0
+        call vlime#ui#ErrMsg('SWANK-TRACE-DIALOG is not available.')
+        return
+    endif
+
+    call vlime#ui#input#MaybeInput(
+                \ get(a:000, 0, v:null),
+                \ function('s:DialogToggleTraceInputComplete', [conn]),
+                \ 'Toggle tracing: ',
+                \ v:null,
+                \ conn)
+endfunction
+
+""
 " @public
 "
 " Show the trace dialog.
@@ -1117,6 +1146,22 @@ function! s:OpenTraceDialogReportComplete(specs, conn, result)
     endif
 endfunction
 
+function! s:OnDialogToggleTraceComplete(conn, result)
+    let trace_visible = v:false
+    let trace_buffer_name = vlime#ui#TraceDialogBufName(a:conn)
+    let trace_bufnr = bufnr(trace_buffer_name)
+    if trace_bufnr >= 0
+        let trace_visible = len(win_findbuf(trace_bufnr)) > 0
+    endif
+
+    if trace_visible
+        call vlime#ui#WithBuffer(trace_bufnr,
+                    \ function('vlime#ui#trace_dialog#RefreshSpecs'))
+    endif
+
+    echom a:result
+endfunction
+
 function! s:ShowAsyncResult(conn, result)
     call vlime#ui#ShowPreview(a:conn, a:result, v:false)
 endfunction
@@ -1188,6 +1233,52 @@ function! s:UninternSymbolInputComplete(conn, sym)
         call a:conn.UninternSymbol(sym_name, sym_pkg,
                     \ function('s:OnUninternSymbolComplete'))
     endif
+endfunction
+
+function! s:DialogToggleTraceInputComplete(conn, func_spec)
+    let [raw_form, _parsed_len, complete] = vlime#ToRawForm(a:func_spec)
+    if !complete
+        call vlime#ui#ErrMsg('Invalid function specifier: ' . string(a:func_spec))
+        return
+    endif
+
+    let name = v:null
+    if len(raw_form) == 2 && toupper(raw_form[0]) == 'SETF'
+        let name = raw_form[1]
+    elseif len(raw_form) == 0
+        let name = a:func_spec
+    endif
+
+    if type(name) == type(v:null)
+        call vlime#ui#ErrMsg('Invalid function specifier: ' . string(a:func_spec))
+        return
+    endif
+
+    let matched = matchlist(name,
+                \ '\m^\s*\(\(|\?\)\([^|:[:space:]]\+\)\2\)::\?\(\(|\?\)\([^|:[:space:]]\+\)\5\)\s*$')
+    if len(matched) > 0
+        let package = matched[3]
+        if matched[2] == ''
+            let package = toupper(package)
+        endif
+
+        let func_name = matched[6]
+        if matched[5] == ''
+            let func_name = toupper(func_name)
+        endif
+
+        let r_func_spec = vlime#SYM(package, func_name)
+    else
+        let r_func_spec = toupper(name)
+    endif
+
+    if len(raw_form) == 2
+        let op = (type(r_func_spec) == v:t_string) ? 'SETF' : vlime#CL('SETF')
+        let r_func_spec = [op, r_func_spec]
+    endif
+
+    call a:conn.DialogToggleTrace(r_func_spec,
+                \ function('s:OnDialogToggleTraceComplete'))
 endfunction
 
 function! s:CleanUpNullBufConnections()

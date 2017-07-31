@@ -32,6 +32,8 @@ CONTENTS                                              *vlime-contents*
             4.3.7 Server Output Buffer Mappings ................
                   ........................ |vlime-mappings-server|
             4.3.8 Input Buffer Mappings ... |vlime-mappings-input|
+            4.3.9 Trace Dialog Mappings ........................
+                  .................. |vlime-mappings-trace-dialog|
     5. Configuration .............................. |vlime-config|
     6. API ..................................... |vlime-api-intro|
     7. License ................................... |vlime-license|
@@ -605,8 +607,15 @@ Key mappings avaialble in lisp source files:
             selection.
 
     Invoking The Trace Dialog     *vlime-mappings-invoke-trace-dialog*
-        <LocalLeader>T
+        <LocalLeader>TD
             Show the trace dialog.
+        <LocalLeader>TT
+            Toggle the traced state of the function name under the
+            cursor.
+        <LocalLeader>TI
+            Show an input buffer, and prompt for the name of the
+            function to be traced. See |vlime-input-buffer|. You can
+            also trace setf expanders by specifying "(setf <name>)".
 
     Closing Windows                      *vlime-mappings-close-window*
         <LocalLeader>wp
@@ -801,6 +810,28 @@ Key mappings avaialble in the input buffer:
         Show the previous item in input history.
     <c-n>
         Show the next item in input history.
+
+......................................................................
+4.3.9 Trace Dialog Mappings              *vlime-mappings-trace-dialog*
+
+Key mappings avaialble in the trace dialog:
+
+    <CR>
+        Activate the interactable field/button under the cursor.
+    <Space>
+        Same as <CR>.
+    s
+        Send the value of the field under the cursor to the REPL.
+    i
+        Inspect the value of the field under the cursor.
+    <Tab>
+        Select the next interactable field/button.
+    CTRL-n
+        Same as <Tab>.
+    CTRL-p
+        Select the previous interactable field/button.
+    R
+        Refresh the trace dialog.
 
 ======================================================================
 5. Configuration                                        *vlime-config*
