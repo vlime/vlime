@@ -76,7 +76,68 @@ function! vlime#ui#trace_dialog#Select(...)
 endfunction
 
 function! vlime#ui#trace_dialog#NextField(forward)
-    " TODO
+    let coord_groups = [
+                \ [get(b:, 'vlime_trace_specs_line_range', v:null),
+                    \ sort(copy(get(b:, 'vlime_trace_specs_coords', [])),
+                        \ function('s:CoordSorter', [a:forward]))],
+                \ [get(b:, 'vlime_trace_entries_header_line_range', v:null),
+                    \ sort(copy(get(b:, 'vlime_trace_entries_header_coords', [])),
+                        \ function('s:CoordSorter', [a:forward]))],
+                \ [get(b:, 'vlime_trace_entries_line_range', v:null),
+                    \ sort(copy(get(b:, 'vlime_trace_entries_coords', [])),
+                        \ function('s:CoordSorter', [a:forward]))]]
+
+    if !a:forward
+        let coord_groups = reverse(coord_groups)
+    endif
+
+    let cur_pos = getcurpos()
+    let next_coord = v:null
+    let next_line_range = v:null
+    for [line_range, sorted_coords] in coord_groups
+        if type(line_range) == type(v:null)
+            continue
+        endif
+
+        let shifted_line = cur_pos[1] - line_range[0] + 1
+        for c in sorted_coords
+            if a:forward
+                if c['begin'][0] > shifted_line
+                    let next_coord = c
+                    let next_line_range = line_range
+                    break
+                elseif c['begin'][0] == shifted_line && c['begin'][1] > cur_pos[2]
+                    let next_coord = c
+                    let next_line_range = line_range
+                    break
+                endif
+            else
+                if c['begin'][0] < shifted_line
+                    let next_coord = c
+                    let next_line_range = line_range
+                    break
+                elseif c['begin'][0] == shifted_line && c['begin'][1] < cur_pos[2]
+                    let next_coord = c
+                    let next_line_range = line_range
+                    break
+                endif
+            endif
+        endfor
+
+        if type(next_coord) != type(v:null)
+            break
+        endif
+    endfor
+
+    if type(next_coord) == type(v:null)
+        let non_empty_groups = filter(coord_groups, {idx, val -> len(val[1]) > 0})
+        let next_coord = non_empty_groups[0][1][0]
+        let next_line_range = non_empty_groups[0][0]
+    endif
+
+    let next_line = next_coord['begin'][0] + next_line_range[0] - 1
+    let next_col = next_coord['begin'][1]
+    call setpos('.', [0, next_line, next_col, 0, next_col])
 endfunction
 
 function! s:InitTraceDialogBuffer()
@@ -508,4 +569,20 @@ endfunction
 function! s:AlignTraceID(id, width)
     let str_id = string(a:id)
     return repeat(' ', a:width - len(str_id)) . str_id
+endfunction
+
+function! s:CoordSorter(direction, c1, c2)
+    if a:c1['begin'][0] > a:c2['begin'][0]
+        return a:direction ? 1 : -1
+    elseif a:c1['begin'][0] == a:c2['begin'][0]
+        if a:c1['begin'][1] > a:c2['begin'][1]
+            return a:direction ? 1 : -1
+        elseif a:c1['begin'][1] == a:c2['begin'][1]
+            return 0
+        else
+            return a:direction ? -1 : 1
+        endif
+    else
+        return a:direction ? -1 : 1
+    endif
 endfunction

@@ -126,6 +126,8 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', ['<cr>', '<space>'], ':call vlime#ui#trace_dialog#Select()<cr>'],
                     \ ['n', 'i', ':call vlime#ui#trace_dialog#Select("inspect")<cr>'],
                     \ ['n', 's', ':call vlime#ui#trace_dialog#Select("to_repl")<cr>'],
+                    \ ['n', ['<c-n>', '<tab>'], ':call vlime#ui#trace_dialog#NextField(v:true)<cr>'],
+                    \ ['n', '<c-p>', ':call vlime#ui#trace_dialog#NextField(v:false)<cr>'],
                 \ ],
                 \
                 \ 'xref': [
