@@ -17,6 +17,7 @@ CONTENTS                                              *vlime-contents*
         3.9 Managing Threads ................. |vlime-thread-list|
         3.10 Remote Servers ................ |vlime-remote-server|
         3.11 Input Buffers .................. |vlime-input-buffer|
+        3.12 Trace Dialog ................... |vlime-trace-dialog|
     4. Mappings ................................. |vlime-mappings|
         4.1 Remap Keys .................... |vlime-mappings-remap|
         4.2 Key Conflicts ................... |vlime-key-conflict|
@@ -362,6 +363,23 @@ your |vimrc|:
 "Vlime_input" is the filetype set by Vlime to identify input buffers.
 See |vlime-buffer-types| for a full list of available filetypes.
 
+----------------------------------------------------------------------
+3.12 Trace Dialog                                 *vlime-trace-dialog*
+
+Vlime can trace functions and show the results in a dedicated window
+for you. It's called the trace dialog, named after the similar
+component in SLIME. One can use
+|vlime-mappings-invoke-trace-dialog-TD| to have it open.
+
+The trace dialog will show two kinds of info: a list of traced
+functions, and the trace results. It also contains multiple
+interactable fields and buttons. You can navigate through these
+fields/buttons by pressing <Tab>, and interact with them using <CR>.
+
+For more available operations for the trace dialog, see
+|vlime-mappings-trace-dialog|, and
+|vlime-mappings-invoke-trace-dialog|.
+
 ======================================================================
 4. Mappings                                           *vlime-mappings*
 
@@ -607,15 +625,21 @@ Key mappings avaialble in lisp source files:
             selection.
 
     Invoking The Trace Dialog     *vlime-mappings-invoke-trace-dialog*
-        <LocalLeader>TD
+        <LocalLeader>TD        *vlime-mappings-invoke-trace-dialog-TD*
             Show the trace dialog.
+        <LocalLeader>Td
+            Same as <LocalLeader>TD
         <LocalLeader>TT
             Toggle the traced state of the function name under the
             cursor.
+        <LocalLeader>Tt
+            Same as <LocalLeader>TT
         <LocalLeader>TI
             Show an input buffer, and prompt for the name of the
             function to be traced. See |vlime-input-buffer|. You can
             also trace setf expanders by specifying "(setf <name>)".
+        <LocalLeader>Ti
+            Same as <LocalLeader>TI
 
     Closing Windows                      *vlime-mappings-close-window*
         <LocalLeader>wp

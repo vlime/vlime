@@ -61,7 +61,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', ['<LocalLeader>IN', '<LocalLeader>In'], ':call vlime#plugin#Inspect()<cr>'],
                     \ ['v', '<LocalLeader>I', ':<c-u>call vlime#plugin#Inspect(vlime#ui#CurSelection())<cr>'],
                     \
-                    \ ['n', '<LocalLeader>TD', ':call vlime#plugin#OpenTraceDialog()<cr>'],
+                    \ ['n', ['<LocalLeader>TD', '<LocalLeader>Td'], ':call vlime#plugin#OpenTraceDialog()<cr>'],
                     \ ['n', ['<LocalLeader>TI', '<LocalLeader>Ti'], ':call vlime#plugin#DialogToggleTrace()<cr>'],
                     \ ['n', ['<LocalLeader>TT', '<LocalLeader>Tt'], ':call vlime#plugin#DialogToggleTrace(vlime#ui#CurAtom())<cr>'],
                     \
