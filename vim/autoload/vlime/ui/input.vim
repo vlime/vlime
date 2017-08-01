@@ -1,4 +1,5 @@
 function! vlime#ui#input#FromBuffer(conn, prompt, init_val, complete_cb)
+    let orig_win = win_getid()
     let buf = vlime#ui#OpenBufferWithWinSettings(
                 \ vlime#ui#InputBufName(a:conn, a:prompt), v:true, 'input')
     call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
@@ -19,6 +20,7 @@ function! vlime#ui#input#FromBuffer(conn, prompt, init_val, complete_cb)
     augroup end
 
     call setbufvar(buf, 'vlime_input_complete_cb', a:complete_cb)
+    call setbufvar(buf, 'vlime_input_orig_win', orig_win)
     nnoremap <buffer> <silent> <cr> :call vlime#ui#input#FromBufferComplete()<cr>
     call vlime#ui#MapBufferKeys('input')
 endfunction
@@ -64,7 +66,10 @@ endfunction
 function! vlime#ui#input#FromBufferComplete()
     " Should always be called in the input buffer
     let input_buf = bufnr('%')
+
     let Callback = getbufvar(input_buf, 'vlime_input_complete_cb', v:null)
+    let orig_win = getbufvar(input_buf, 'vlime_input_orig_win', v:null)
+
     if type(Callback) == type(v:null)
         return
     endif
@@ -74,6 +79,10 @@ function! vlime#ui#input#FromBufferComplete()
     endif
     call Callback()
     execute 'bdelete!' input_buf
+
+    if type(orig_win) != type(v:null)
+        call win_gotoid(orig_win)
+    endif
 endfunction
 
 function! vlime#ui#input#SaveHistory(text)
