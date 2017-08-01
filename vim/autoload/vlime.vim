@@ -1409,16 +1409,16 @@ function! vlime#ToRawForm(expr)
             let delimiter = v:true
         elseif ch == '"' || ch == '|'
             try
-                let [str, delta] = s:read_raw_form_string(a:expr[idx:], ch)
-            catch 'read_raw_form_string:.\+'
+                let [str, delta] = s:ReadRawFormString(a:expr[idx:], ch)
+            catch 'ReadRawFormString:.\+'
                 let str = ''
                 let delta = len(a:expr) - idx
             endtry
             let cur_token .= join([ch, escape(str, ch . '\'), ch], '')
         elseif ch == '#'
             try
-                let [str, delta] = s:read_raw_form_sharp(a:expr[idx:])
-            catch 'read_raw_form_sharp:.\+'
+                let [str, delta] = s:ReadRawFormSharp(a:expr[idx:])
+            catch 'ReadRawFormSharp:.\+'
                 let str = ''
                 let delta = len(a:expr) - idx
             endtry
@@ -1436,7 +1436,7 @@ function! vlime#ToRawForm(expr)
             endif
         elseif ch == ';'
             let delimiter = v:true
-            let delta = s:read_raw_form_semi_colon(a:expr[idx:])
+            let delta = s:ReadRawFormSemiColon(a:expr[idx:])
         else
             let cur_token .= ch
         endif
@@ -1617,7 +1617,7 @@ function! s:TransformCompilerPolicy(policy)
     endif
 endfunction
 
-function! s:read_raw_form_string(expr, mark)
+function! s:ReadRawFormString(expr, mark)
     if a:expr[0] == a:mark
         let str = []
         let idx = 1
@@ -1628,7 +1628,7 @@ function! s:read_raw_form_string(expr, mark)
                 if idx < len(a:expr)
                     let ch = a:expr[idx]
                 else
-                    throw 'read_raw_form_string: early eof'
+                    throw 'ReadRawFormString: early eof'
                 endif
             elseif ch == a:mark
                 return [join(str, ''), idx + 1]
@@ -1638,13 +1638,13 @@ function! s:read_raw_form_string(expr, mark)
             let idx += 1
         endwhile
 
-        throw 'read_raw_form_string: unterminated string'
+        throw 'ReadRawFormString: unterminated string'
     else
         return ['', 0]
     endif
 endfunction
 
-function! s:read_raw_form_sharp(expr)
+function! s:ReadRawFormSharp(expr)
     if a:expr[0] == '#'
         if len(a:expr) <= 1
             return [a:expr, len(a:expr)]
@@ -1652,7 +1652,7 @@ function! s:read_raw_form_sharp(expr)
             return ['', 1]
         elseif a:expr[1] == '\'
             if len(a:expr) < 3
-                throw 'read_raw_form_sharp: early eof'
+                throw 'ReadRawFormSharp: early eof'
             else
                 return [a:expr[0:2], 3]
             endif
@@ -1668,7 +1668,7 @@ function! s:read_raw_form_sharp(expr)
     endif
 endfunction
 
-function! s:read_raw_form_semi_colon(expr)
+function! s:ReadRawFormSemiColon(expr)
     if a:expr[0] == ';'
         let idx = 1
         while idx < len(a:expr) && a:expr[idx] != "\n"
