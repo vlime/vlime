@@ -2,7 +2,7 @@ if exists('b:current_syntax')
     finish
 endif
 
-syntax region vlime_inspectorObject start=/\m#</ end=/\m>/ contains=vlime_inspectorObject
+syntax region vlime_inspectorObject start=/\m#</ end=/\m>/ contains=vlime_inspectorObject,vlime_inspectorString
 syntax region vlime_inspectorString start=/\m"/ skip=/\m\\\\\|\\"/ end=/\m"/
 syntax match vlime_inspectorNumber "-\=\(\.\d\+\|\d\+\(\.\d*\)\=\)\([dDeEfFlL][-+]\=\d\+\)\="
 syntax match vlime_inspectorNumber "-\=\(\d\+/\d\+\)"

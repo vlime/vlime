@@ -2,7 +2,7 @@ if exists('b:current_syntax')
     finish
 endif
 
-syntax region vlime_traceObject start=/\m#</ end=/\m>/ contains=vlime_traceObject
+syntax region vlime_traceObject start=/\m#</ end=/\m>/ contains=vlime_traceObject,vlime_traceString
 syntax region vlime_traceString start=/\m"/ skip=/\m\\\\\|\\"/ end=/\m"/
 syntax match vlime_traceNumber "-\=\(\.\d\+\|\d\+\(\.\d*\)\=\)\([dDeEfFlL][-+]\=\d\+\)\="
 syntax match vlime_traceNumber "-\=\(\d\+/\d\+\)"
