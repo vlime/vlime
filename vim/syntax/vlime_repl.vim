@@ -6,7 +6,7 @@ syntax region vlime_replComment start=/\m\([^\\]\@<=;\)\|\(^;\)/ end=/\m$/ conta
 syntax match vlime_replConditionSummary /\m\(\s\|^\)\@<=caught \d\+ .\+ conditions*\(\s\|$\)\@=/
 syntax match vlime_replWarning /\m\(\s\|^\)\@<=\(\(WARNING\)\|\(STYLE-WARNING\)\):\(\s\|$\)\@=/
 syntax match vlime_replError /\m\(\s\|^\)\@<=ERROR:\(\s\|$\)\@=/
-syntax region vlime_replObject start=/\m#</ end=/\m>/ contains=vlime_replObject
+syntax region vlime_replObject start=/\m#</ end=/\m>/ contains=vlime_replObject,vlime_replString
 syntax region vlime_replString start=/\m"/ skip=/\m\\\\\|\\"/ end=/\m"/
 syntax match vlime_replNumber "-\=\(\.\d\+\|\d\+\(\.\d*\)\=\)\([dDeEfFlL][-+]\=\d\+\)\="
 syntax match vlime_replNumber "-\=\(\d\+/\d\+\)"
