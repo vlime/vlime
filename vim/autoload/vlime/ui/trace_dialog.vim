@@ -55,7 +55,11 @@ function! vlime#ui#trace_dialog#Select(...)
         elseif coord['type'] == 'FETCH-NEXT-TRACE-ENTRIES-BATCH'
             call b:vlime_conn.ReportPartialTree(
                         \ s:GetFetchKey(),
-                        \ function('s:ReportPartialTreeComplete', [bufnr('%')]))
+                        \ function('s:ReportPartialTreeComplete', [bufnr('%'), v:false]))
+        elseif coord['type'] == 'FETCH-ALL-TRACE-ENTRIES'
+            call b:vlime_conn.ReportPartialTree(
+                        \ s:GetFetchKey(),
+                        \ function('s:ReportPartialTreeComplete', [bufnr('%'), v:true]))
         elseif coord['type'] == 'CLEAR-TRACE-ENTRIES'
             call b:vlime_conn.ClearTraceTree(
                         \ function('s:ClearTraceTreeComplete', [bufnr('%')]))
@@ -444,7 +448,7 @@ function! s:DialogUntraceComplete(trace_buf, conn, result)
                 \ function('s:ReportSpecsComplete', [a:trace_buf]))
 endfunction
 
-function! s:ReportPartialTreeComplete(trace_buf, conn, result)
+function! s:ReportPartialTreeComplete(trace_buf, fetch_all, conn, result)
     let [entry_list, remaining, fetch_key] = a:result
     let entry_list = (type(entry_list) == type(v:null)) ? [] : entry_list
 
@@ -477,21 +481,27 @@ function! s:ReportPartialTreeComplete(trace_buf, conn, result)
     call setbufvar(a:trace_buf, 'vlime_trace_cached_entries', cached_entries)
     call setbufvar(a:trace_buf, 'vlime_trace_toplevel_entries', toplevel_entries)
 
-    let coords = []
-    call setbufvar(a:trace_buf, '&modifiable', 1)
-    call vlime#ui#WithBuffer(a:trace_buf,
-                \ function('s:DrawTraceEntryHeader',
-                    \ [len(cached_entries) + remaining,
-                        \ len(cached_entries),
-                        \ coords]))
-    call setbufvar(a:trace_buf, 'vlime_trace_entries_header_coords', coords)
+    if a:fetch_all && remaining > 0
+        call a:conn.ReportPartialTree(
+                    \ fetch_key,
+                    \ function('s:ReportPartialTreeComplete', [a:trace_buf, a:fetch_all]))
+    else
+        let coords = []
+        call setbufvar(a:trace_buf, '&modifiable', 1)
+        call vlime#ui#WithBuffer(a:trace_buf,
+                    \ function('s:DrawTraceEntryHeader',
+                        \ [len(cached_entries) + remaining,
+                            \ len(cached_entries),
+                            \ coords]))
+        call setbufvar(a:trace_buf, 'vlime_trace_entries_header_coords', coords)
 
-    let coords = []
-    call vlime#ui#WithBuffer(a:trace_buf,
-                \ function('s:DrawTraceEntries',
-                    \ [toplevel_entries, cached_entries, coords]))
-    call setbufvar(a:trace_buf, '&modifiable', 0)
-    call setbufvar(a:trace_buf, 'vlime_trace_entries_coords', coords)
+        let coords = []
+        call vlime#ui#WithBuffer(a:trace_buf,
+                    \ function('s:DrawTraceEntries',
+                        \ [toplevel_entries, cached_entries, coords]))
+        call setbufvar(a:trace_buf, '&modifiable', 0)
+        call setbufvar(a:trace_buf, 'vlime_trace_entries_coords', coords)
+    endif
 endfunction
 
 function! s:ClearTraceTreeComplete(trace_buf, conn, result)
