@@ -138,7 +138,8 @@ function! vlime#ui#trace_dialog#NextField(forward)
     endfor
 
     if type(next_coord) == type(v:null)
-        let non_empty_groups = filter(coord_groups, {idx, val -> len(val[1]) > 0})
+        let non_empty_groups = filter(copy(coord_groups),
+                    \ {idx, val -> len(val[1]) > 0})
         let next_coord = non_empty_groups[0][1][0]
         let next_line_range = non_empty_groups[0][0]
     endif

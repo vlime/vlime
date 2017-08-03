@@ -430,7 +430,7 @@ endfunction
 function! vlime#SwankRequire(contrib, ...) dict
     let Callback = get(a:000, 0, v:null)
     if type(a:contrib) == v:t_list
-        let required = [s:CL('QUOTE'), map(a:contrib, {k, v -> s:KW(v)})]
+        let required = [s:CL('QUOTE'), map(copy(a:contrib), {k, v -> s:KW(v)})]
     else
         let required = s:KW(a:contrib)
     endif

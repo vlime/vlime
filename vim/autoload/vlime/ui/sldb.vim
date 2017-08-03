@@ -403,7 +403,9 @@ function! s:FindSourceCB(edit_cmd, win_to_go, force_open, frame, conn, msg)
         return
     endif
 
-    let options = map(locals, {idx, lc -> string(idx + 1) . '. ' . vlime#PListToDict(lc)['NAME']})
+    let options = map(copy(locals),
+                \ {idx, lc ->
+                    \ string(idx + 1) . '. ' . vlime#PListToDict(lc)['NAME']})
     echohl Question
     echom 'Which variable?'
     echohl None
