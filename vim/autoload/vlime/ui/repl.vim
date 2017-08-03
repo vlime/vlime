@@ -56,7 +56,7 @@ function! vlime#ui#repl#YankCurREPLPresentation()
 
     if p_coord['type'] == 'PRESENTATION'
         let @" = '(swank:lookup-presented-object ' . p_coord['id'] . ')'
-        echom 'Presented object yanked.'
+        echom 'Presented object ' . p_coord['id'] . ' yanked.'
     endif
 endfunction
 
