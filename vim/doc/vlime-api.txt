@@ -674,6 +674,15 @@ vlime#plugin#Inspect([content])                       *vlime#plugin#Inspect()*
   Evaluate [content] and launch the inspector with the evaluation result
   loaded. If [content] is omitted, show an input buffer.
 
+vlime#plugin#DialogToggleTrace([func])      *vlime#plugin#DialogToggleTrace()*
+
+  Toggle the traced state of [func]. [func] should be a string specifying a
+  plain function name, or in the form "(setf <name>)", to trace a
+  setf-expander. If [func] is omitted, show an input buffer.
+
+  This function needs the SWANK-TRACE-DIALOG contrib module. See
+  |g:vlime_contribs| and |vlime#plugin#SwankRequire()|.
+
 vlime#plugin#OpenTraceDialog()                *vlime#plugin#OpenTraceDialog()*
 
   Show the trace dialog.
