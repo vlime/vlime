@@ -1,4 +1,4 @@
-* master
+* v0.4.0
     * The trace dialog `:help vlime-trace-dialog`.
     * Colorful special buffers.
     * The AUTODOC feature `:help g:vlime_enable_autodoc`.

@@ -3,7 +3,7 @@
   :description "Asynchronous Vim <-> Swank interface (SBCL backend)"
   :author "Kay Z. <l04m33@gmail.com>"
   :license "MIT"
-  :version "0.3.0"
+  :version "0.4.0"
   :depends-on (#:vlime
                #:sb-bsd-sockets
                #:sb-introspect
