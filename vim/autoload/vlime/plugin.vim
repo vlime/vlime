@@ -849,11 +849,14 @@ function! vlime#plugin#VlimeKey(key)
 endfunction
 
 ""
+" @usage [shift_width]
 " @public
 "
 " Calculate the indent size for the current line, in number of <space>
-" characters.
-function! vlime#plugin#CalcCurIndent()
+" characters. [shift_width] is the size for one indent level, defaults to 2 if
+" omitted.
+function! vlime#plugin#CalcCurIndent(...)
+    let shift_width = get(a:000, 0, 2)
     let line_no = line('.')
 
     let conn = vlime#connection#Get(v:true)
@@ -892,8 +895,11 @@ function! vlime#plugin#CalcCurIndent()
 
     let indent_info = get(conn.cb_data, 'indent_info', {})
     if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
-        if vlime#ui#CurArgPos([s_line, s_col]) >= (indent_info[op][0] + 1)
-            return vs_col + 1
+        let arg_pos = vlime#ui#CurArgPos([s_line, s_col])
+        if arg_pos >= (indent_info[op][0] + 1)
+            return vs_col + shift_width - 1
+        elseif arg_pos > 0
+            return vs_col + shift_width * 2 - 1
         else
             return lispindent(line_no)
         endif
