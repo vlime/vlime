@@ -1,3 +1,6 @@
+* master
+    * Better and customizable auto indent `:help vlime-auto-indent`.
+
 * v0.4.0
     * The trace dialog `:help vlime-trace-dialog`.
     * Colorful special buffers.
