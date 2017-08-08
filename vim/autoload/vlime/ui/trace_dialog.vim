@@ -149,8 +149,39 @@ function! vlime#ui#trace_dialog#NextField(forward)
     call setpos('.', [0, next_line, next_col, 0, next_col])
 endfunction
 
+let s:trace_entry_fold_pattern = '^\(\s*\d*[[:space:]|]\+\)\(\(`-\)\|\( >\)\|\( <\)\)'
+
+" vlime#ui#trace_dialog#CalcFoldLevel([line_nr])
+function! vlime#ui#trace_dialog#CalcFoldLevel(...)
+    let line_nr = get(a:000, 0, v:lnum)
+
+    let line = getline(line_nr)
+    let matched = matchlist(line, s:trace_entry_fold_pattern)
+    if len(matched) > 0
+        return len(matched[1])
+    else
+        return 0
+    endif
+endfunction
+
+" vlime#ui#trace_dialog#BuildFoldText([fold_start])
+function! vlime#ui#trace_dialog#BuildFoldText(...)
+    let fold_start = get(a:000, 0, v:foldstart)
+
+    let s_line = getline(fold_start)
+    let matched = matchlist(s_line, s:trace_entry_fold_pattern)
+    if len(matched) > 0
+        return matched[1] . ' '
+    else
+        return '...'
+    endif
+endfunction
+
 function! s:InitTraceDialogBuffer()
     execute 'setlocal shiftwidth=' . s:indent_level_width
+    setlocal foldtext=vlime#ui#trace_dialog#BuildFoldText(v:foldstart)
+    setlocal foldexpr=vlime#ui#trace_dialog#CalcFoldLevel(v:lnum)
+    setlocal foldmethod=expr
     call vlime#ui#MapBufferKeys('trace')
 endfunction
 
