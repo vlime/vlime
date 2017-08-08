@@ -562,11 +562,12 @@ endfunction
 
 function! s:GetFetchKey()
     if !exists('b:vlime_trace_fetch_key')
-        let b:vlime_trace_fetch_key = get(s:, 'next_fetch_key', 0)
-        let s:next_fetch_key = b:vlime_trace_fetch_key + 1
+        let fetch_key = get(s:, 'next_fetch_key', 0)
+        let s:next_fetch_key = fetch_key + 1
         if s:next_fetch_key > 65535
             let s:next_fetch_key = 0
         endif
+        let b:vlime_trace_fetch_key = getpid() . '_' . fetch_key
     endif
     return b:vlime_trace_fetch_key
 endfunction
