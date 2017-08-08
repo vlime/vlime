@@ -109,6 +109,8 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>I', ':call vlime#ui#repl#InspectCurREPLPresentation()<cr>'],
                     \ ['n', '<LocalLeader>y', ':call vlime#ui#repl#YankCurREPLPresentation()<cr>'],
                     \ ['n', '<LocalLeader>C', ':call vlime#ui#repl#ClearREPLBuffer()<cr>'],
+                    \ ['n', ['<c-n>', '<tab>'], ':call vlime#ui#repl#NextField(v:true)<cr>'],
+                    \ ['n', '<c-p>', ':call vlime#ui#repl#NextField(v:false)<cr>'],
                 \ ],
                 \
                 \ 'inspector': [

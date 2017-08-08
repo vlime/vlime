@@ -35,7 +35,7 @@ function! vlime#ui#repl#InspectCurREPLPresentation()
     endif
 
     let p_coord = s:FindCurCoord(
-                \ getcurpos(), getbufvar('%', 'vlime_repl_coords', {}))
+                \ getcurpos(), getbufvar('%', 'vlime_repl_coord_list', {}))
     if type(p_coord) == type(v:null)
         return
     endif
@@ -49,7 +49,7 @@ endfunction
 
 function! vlime#ui#repl#YankCurREPLPresentation()
     let p_coord = s:FindCurCoord(
-                \ getcurpos(), getbufvar('%', 'vlime_repl_coords', {}))
+                \ getcurpos(), getbufvar('%', 'vlime_repl_coord_list', {}))
     if type(p_coord) == type(v:null)
         return
     endif
@@ -66,8 +66,49 @@ function! vlime#ui#repl#ClearREPLBuffer()
     if exists('b:vlime_repl_coords')
         unlet b:vlime_repl_coords
     endif
+    if exists('b:vlime_repl_coord_list')
+        unlet b:vlime_repl_coord_list
+    endif
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable
+endfunction
+
+function! vlime#ui#repl#NextField(forward)
+    if !exists('b:vlime_repl_coord_list') || len(b:vlime_repl_coord_list) <= 0
+        return
+    endif
+
+    let cur_pos = getcurpos()
+    let sorted_coords = sort(copy(b:vlime_repl_coord_list),
+                \ function('s:CoordSorter', [a:forward]))
+    let next_coord = v:null
+    for c in sorted_coords
+        if a:forward
+            if c['begin'][0] > cur_pos[1]
+                let next_coord = c
+                break
+            elseif c['begin'][0] == cur_pos[1] && c['begin'][1] > cur_pos[2]
+                let next_coord = c
+                break
+            endif
+        else
+            if c['begin'][0] < cur_pos[1]
+                let next_coord = c
+                break
+            elseif c['begin'][0] == cur_pos[1] && c['begin'][1] < cur_pos[2]
+                let next_coord = c
+                break
+            endif
+        endif
+    endfor
+
+    if type(next_coord) == type(v:null)
+        let next_coord = sorted_coords[0]
+    endif
+
+    call setpos('.', [0, next_coord['begin'][0],
+                    \ next_coord['begin'][1], 0,
+                    \ next_coord['begin'][1]])
 endfunction
 
 function! s:ShowREPLBanner(conn)
@@ -84,14 +125,19 @@ function! s:ShowREPLBanner(conn)
 endfunction
 
 function! s:FindCurCoord(cur_pos, coords)
-    for k in keys(a:coords)
-        let c_list = a:coords[k]
-        for c in c_list
-            if vlime#ui#MatchCoord(c, a:cur_pos[1], a:cur_pos[2])
-                return c
-            endif
-        endfor
-    endfor
+    if len(a:coords) <= 0
+        return v:null
+    endif
+
+    " Coords at the end of the list are more likely to get chosen.
+    let idx = len(a:coords) - 1
+    while idx >= 0
+        if vlime#ui#MatchCoord(a:coords[idx], a:cur_pos[1], a:cur_pos[2])
+            return a:coords[idx]
+        endif
+        let idx -= 1
+    endwhile
+
     return v:null
 endfunction
 
@@ -101,4 +147,20 @@ function! s:InitREPLBuf()
     setlocal nomodifiable
 
     call vlime#ui#MapBufferKeys('repl')
+endfunction
+
+function! s:CoordSorter(direction, c1, c2)
+    if a:c1['begin'][0] > a:c2['begin'][0]
+        return a:direction ? 1 : -1
+    elseif a:c1['begin'][0] == a:c2['begin'][0]
+        if a:c1['begin'][1] > a:c2['begin'][1]
+            return a:direction ? 1 : -1
+        elseif a:c1['begin'][1] == a:c2['begin'][1]
+            return 0
+        else
+            return a:direction ? -1 : 1
+        endif
+    else
+        return a:direction ? -1 : 1
+    endif
 endfunction

@@ -72,4 +72,8 @@ function! s:OnPresentationEnd(conn, msg)
     let end_pos = vlime#ui#WithBuffer(repl_buf,
                 \ function('vlime#ui#GetEndOfFileCoord'))
     let c_pending['end'] = end_pos
+
+    let coords_list = getbufvar(repl_buf, 'vlime_repl_coord_list', [])
+    call add(coords_list, c_pending)
+    call setbufvar(repl_buf, 'vlime_repl_coord_list', coords_list)
 endfunction
