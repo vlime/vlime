@@ -941,7 +941,10 @@ function! vlime#plugin#CalcCurIndent(...)
     endif
 
     let a_count = v:null
-    if type(conn) != type(v:null)
+    if exists('g:vlime_indent_keywords')
+        let a_count = get(g:vlime_indent_keywords, op, v:null)
+    endif
+    if type(a_count) == type(v:null) && type(conn) != type(v:null)
         let indent_info = get(conn.cb_data, 'indent_info', {})
         if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
             let a_count = indent_info[op][0]
@@ -951,7 +954,7 @@ function! vlime#plugin#CalcCurIndent(...)
         let a_count = get(g:vlime_default_indent_keywords, op, v:null)
     endif
 
-    if type(a_count) == type(v:null)
+    if type(a_count) == type(v:null) || a_count < 0
         return lispindent(line_no)
     else
         let old_cur = getcurpos()
