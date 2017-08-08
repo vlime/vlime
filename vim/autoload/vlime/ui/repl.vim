@@ -85,10 +85,12 @@ endfunction
 
 function! s:FindCurCoord(cur_pos, coords)
     for k in keys(a:coords)
-        let c = a:coords[k]
-        if vlime#ui#MatchCoord(c, a:cur_pos[1], a:cur_pos[2])
-            return c
-        endif
+        let c_list = a:coords[k]
+        for c in c_list
+            if vlime#ui#MatchCoord(c, a:cur_pos[1], a:cur_pos[2])
+                return c
+            endif
+        endfor
     endfor
     return v:null
 endfunction

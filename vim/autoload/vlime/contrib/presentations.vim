@@ -39,11 +39,13 @@ function! s:OnPresentationStart(conn, msg)
     let coords = getbufvar(repl_buf, 'vlime_repl_coords', {})
     let begin_pos = vlime#ui#WithBuffer(repl_buf,
                 \ function('vlime#ui#GetEndOfFileCoord'))
-    let coords[a:msg[1]] = {
+    let c_list = get(coords, a:msg[1], [])
+    call add(c_list, {
                 \ 'begin': begin_pos,
                 \ 'type': 'PRESENTATION',
                 \ 'id': a:msg[1],
-                \ }
+                \ })
+    let coords[a:msg[1]] = c_list
     call setbufvar(repl_buf, 'vlime_repl_coords', coords)
 endfunction
 
@@ -54,13 +56,20 @@ function! s:OnPresentationEnd(conn, msg)
     endif
 
     let coords = getbufvar(repl_buf, 'vlime_repl_coords', {})
-    let c = get(coords, a:msg[1], v:null)
-    if type(c) == type(v:null)
+    let c_list = get(coords, a:msg[1], [])
+    let c_pending = v:null
+    for c in c_list
+        if type(get(c, 'end', v:null)) == type(v:null)
+            let c_pending = c
+            break
+        endif
+    endfor
+
+    if type(c_pending) == type(v:null)
         return
     endif
 
     let end_pos = vlime#ui#WithBuffer(repl_buf,
                 \ function('vlime#ui#GetEndOfFileCoord'))
-    let c['end'] = end_pos
-    call setbufvar(repl_buf, 'vlime_repl_coords', coords)
+    let c_pending['end'] = end_pos
 endfunction
