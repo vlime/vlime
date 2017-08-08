@@ -35,7 +35,7 @@ function! vlime#ui#repl#InspectCurREPLPresentation()
     endif
 
     let p_coord = s:FindCurCoord(
-                \ getcurpos(), getbufvar('%', 'vlime_repl_coord_list', {}))
+                \ getcurpos(), getbufvar('%', 'vlime_repl_coords', {}))
     if type(p_coord) == type(v:null)
         return
     endif
@@ -49,7 +49,7 @@ endfunction
 
 function! vlime#ui#repl#YankCurREPLPresentation()
     let p_coord = s:FindCurCoord(
-                \ getcurpos(), getbufvar('%', 'vlime_repl_coord_list', {}))
+                \ getcurpos(), getbufvar('%', 'vlime_repl_coords', {}))
     if type(p_coord) == type(v:null)
         return
     endif
@@ -63,23 +63,23 @@ endfunction
 function! vlime#ui#repl#ClearREPLBuffer()
     setlocal modifiable
     1,$delete _
+    if exists('b:vlime_repl_pending_coords')
+        unlet b:vlime_repl_pending_coords
+    endif
     if exists('b:vlime_repl_coords')
         unlet b:vlime_repl_coords
-    endif
-    if exists('b:vlime_repl_coord_list')
-        unlet b:vlime_repl_coord_list
     endif
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable
 endfunction
 
 function! vlime#ui#repl#NextField(forward)
-    if !exists('b:vlime_repl_coord_list') || len(b:vlime_repl_coord_list) <= 0
+    if !exists('b:vlime_repl_coords') || len(b:vlime_repl_coords) <= 0
         return
     endif
 
     let cur_pos = getcurpos()
-    let sorted_coords = sort(copy(b:vlime_repl_coord_list),
+    let sorted_coords = sort(copy(b:vlime_repl_coords),
                 \ function('s:CoordSorter', [a:forward]))
     let next_coord = v:null
     for c in sorted_coords
