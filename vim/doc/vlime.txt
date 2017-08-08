@@ -203,6 +203,23 @@ space and tab characters. Which to use is determined by the
 To adjust mis-indented lines, press <Tab> at the start of those lines
 in insert mode, or use |=| command.
 
+Vlime has a set of indent rules that are similar to the ones SLIME
+used. Multi-line expressions are generally indented by the width of
+two space characters, regardless of the value of |shiftwidth|. Macros
+and special operators with "&BODY" arguments are treated specially, in
+that all the arguments before "&BODY" will be indented one more level.
+For example, MULTIPLE-VALUE-BIND has two arguments before "&BODY", so
+a call to it will be indented this way:
+
+    (multiple-value-bind
+        (val exist-p)
+        (gethash "key" hash-table)
+      (do-something)
+      (do-other-thing))
+
+You can control how an operator and its arguments are indented using
+|g:vlime_indent_keywords|.
+
 ----------------------------------------------------------------------
 3.4 REPL                                                  *vlime-repl*
 
@@ -1013,6 +1030,38 @@ g:vlime_window_settings                      *g:vlime_window_settings*
     Vlime will try to use default values when any of these parameters
     are missing. See the value of g:vlime_default_window_settings for
     the default values.
+
+g:vlime_indent_keywords                      *g:vlime_indent_keywords*
+    A |dict| specifying indent rules for operators. The keys should be
+    operator names in lowercase, and the values should be the number
+    of arguments before "&BODY", or other numbers that you prefer.
+    Also see |vlime-auto-indent|. For example,
+
+        let g:vlime_indent_keywords = {"dummy-op": 1}
+
+    Will cause a DUMMY-OP expression to be indented this way:
+
+        (dummy-op
+            expr1
+          expr2
+          expr3
+          ...)
+
+    And
+
+        let g:vlime_indent_keywords = {"dummy-op": 2}
+
+    Will cause the same expression to be indented this way:
+
+        (dummy-op
+            expr1
+            expr2
+          expr3
+          ...)
+
+    To see the default operator indent settings,
+
+        :echo g:vlime_default_indent_keywords
 
 g:vlime_input_history_limit              *g:vlime_input_history_limit*
     An integer to specify how many input history items to store. A
