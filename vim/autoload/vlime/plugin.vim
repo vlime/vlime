@@ -848,6 +848,56 @@ function! vlime#plugin#VlimeKey(key)
     return ''
 endfunction
 
+if !exists('g:vlime_default_indent_keywords')
+    let g:vlime_default_indent_keywords = {
+                \ 'defun': 2,
+                \ 'defmacro': 2,
+                \ 'defgeneric': 2,
+                \ 'defmethod': 2,
+                \ 'deftype': 2,
+                \ 'lambda': 1,
+                \ 'if': 1,
+                \ 'unless': 1,
+                \ 'when': 1,
+                \ 'case': 1,
+                \ 'ecase': 1,
+                \ 'typecase': 1,
+                \ 'etypecase': 1,
+                \ 'eval-when': 1,
+                \ 'let': 1,
+                \ 'let*': 1,
+                \ 'flet': 1,
+                \ 'labels': 1,
+                \ 'macrolet': 1,
+                \ 'symbol-macrolet': 1,
+                \ 'do': 2,
+                \ 'do*': 2,
+                \ 'do-all-symbols': 1,
+                \ 'do-external-symbols': 1,
+                \ 'do-symbols': 1,
+                \ 'dolist': 1,
+                \ 'dotimes': 1,
+                \ 'destructuring-bind': 2,
+                \ 'multiple-value-bind': 2,
+                \ 'prog1': 1,
+                \ 'progv': 2,
+                \ 'with-input-from-string': 1,
+                \ 'with-output-to-string': 1,
+                \ 'with-open-file': 1,
+                \ 'with-open-stream': 1,
+                \ 'with-package-iterator': 1,
+                \ 'unwind-protect': 1,
+                \ 'handler-bind': 1,
+                \ 'handler-case': 1,
+                \ 'restart-bind': 1,
+                \ 'restart-case': 1,
+                \ 'with-simple-restart': 1,
+                \ 'with-slots': 2,
+                \ 'with-accessors': 2,
+                \ 'print-unreadable-object': 1,
+                \ }
+endif
+
 ""
 " @usage [shift_width]
 " @public
@@ -860,9 +910,6 @@ function! vlime#plugin#CalcCurIndent(...)
     let line_no = line('.')
 
     let conn = vlime#connection#Get(v:true)
-    if type(conn) == type(v:null)
-        return lispindent(line_no)
-    endif
 
     let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
     if s_line <= 0 || s_col <= 0
@@ -886,25 +933,46 @@ function! vlime#plugin#CalcCurIndent(...)
     let op_pkg = toupper(s:NormalizeIdentifierForIndentInfo(matches[2]))
     let op = tolower(s:NormalizeIdentifierForIndentInfo(matches[3]))
 
-    if len(op_pkg) == 0
+    if len(op_pkg) == 0 && type(conn) != type(v:null)
         let op_pkg = conn.GetCurrentPackage()
         if type(op_pkg) == v:t_list
             let op_pkg = op_pkg[0]
         endif
     endif
 
-    let indent_info = get(conn.cb_data, 'indent_info', {})
-    if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
-        let arg_pos = vlime#ui#CurArgPos([s_line, s_col])
-        if arg_pos >= (indent_info[op][0] + 1)
+    let a_count = v:null
+    if type(conn) != type(v:null)
+        let indent_info = get(conn.cb_data, 'indent_info', {})
+        if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
+            let a_count = indent_info[op][0]
+        endif
+    endif
+    if type(a_count) == type(v:null)
+        let a_count = get(g:vlime_default_indent_keywords, op, v:null)
+    endif
+
+    if type(a_count) == type(v:null)
+        return lispindent(line_no)
+    else
+        let old_cur = getcurpos()
+        try
+            " A hack to ensure we counted the arg pos right.
+            call search('[^[:space:]]', 'zcW', old_cur[1])
+            let arg_pos = vlime#ui#CurArgPos([s_line, s_col])
+        finally
+            " The 'indentexpr' will restore the cursor position afterwards,
+            " but we always restore it specifically, to make this function
+            " available in other contexts.
+            call setpos('.', old_cur)
+        endtry
+
+        if arg_pos > a_count
             return vs_col + shift_width - 1
         elseif arg_pos > 0
             return vs_col + shift_width * 2 - 1
         else
             return lispindent(line_no)
         endif
-    else
-        return lispindent(line_no)
     endif
 endfunction
 
