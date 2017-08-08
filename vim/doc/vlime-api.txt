@@ -807,10 +807,11 @@ vlime#plugin#CompleteFunc({findstart}, {base})   *vlime#plugin#CompleteFunc()*
   |completefunc|. It is asynchronous, and will NOT return the completion list
   immediately.
 
-vlime#plugin#CalcCurIndent()                    *vlime#plugin#CalcCurIndent()*
+vlime#plugin#CalcCurIndent([shift_width])       *vlime#plugin#CalcCurIndent()*
 
   Calculate the indent size for the current line, in number of <space>
-  characters.
+  characters. [shift_width] is the size for one indent level, defaults to 2 if
+  omitted.
 
 vlime#plugin#Setup([force])                             *vlime#plugin#Setup()*
 
