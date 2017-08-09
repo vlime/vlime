@@ -81,27 +81,8 @@ function! vlime#ui#repl#NextField(forward)
     let cur_pos = getcurpos()
     let sorted_coords = sort(copy(b:vlime_repl_coords),
                 \ function('vlime#ui#CoordSorter', [a:forward]))
-    let next_coord = v:null
-    for c in sorted_coords
-        if a:forward
-            if c['begin'][0] > cur_pos[1]
-                let next_coord = c
-                break
-            elseif c['begin'][0] == cur_pos[1] && c['begin'][1] > cur_pos[2]
-                let next_coord = c
-                break
-            endif
-        else
-            if c['begin'][0] < cur_pos[1]
-                let next_coord = c
-                break
-            elseif c['begin'][0] == cur_pos[1] && c['begin'][1] < cur_pos[2]
-                let next_coord = c
-                break
-            endif
-        endif
-    endfor
-
+    let next_coord = vlime#ui#FindNextCoord(
+                \ cur_pos[1:2], sorted_coords, a:forward)
     if type(next_coord) == type(v:null)
         let next_coord = sorted_coords[0]
     endif

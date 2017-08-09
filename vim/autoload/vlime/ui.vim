@@ -1137,6 +1137,30 @@ function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
     return v:false
 endfunction
 
+" vlime#ui#FindNextCoord(cur_pos, sorted_coords[, forward])
+function! vlime#ui#FindNextCoord(cur_pos, sorted_coords, ...)
+    let forward = get(a:000, 0, v:true)
+
+    let next_coord = v:null
+    for c in a:sorted_coords
+        if forward
+            if c['begin'][0] > a:cur_pos[0]
+                return c
+            elseif c['begin'][0] == a:cur_pos[0] && c['begin'][1] > a:cur_pos[1]
+                return c
+            endif
+        else
+            if c['begin'][0] < a:cur_pos[0]
+                return c
+            elseif c['begin'][0] == a:cur_pos[0] && c['begin'][1] < a:cur_pos[1]
+                return c
+            endif
+        endif
+    endfor
+
+    return v:null
+endfunction
+
 function! vlime#ui#CoordSorter(direction, c1, c2)
     if a:c1['begin'][0] > a:c2['begin'][0]
         return a:direction ? 1 : -1

@@ -108,31 +108,10 @@ function! vlime#ui#trace_dialog#NextField(forward)
         endif
 
         let shifted_line = cur_pos[1] - line_range[0] + 1
-        for c in sorted_coords
-            if a:forward
-                if c['begin'][0] > shifted_line
-                    let next_coord = c
-                    let next_line_range = line_range
-                    break
-                elseif c['begin'][0] == shifted_line && c['begin'][1] > cur_pos[2]
-                    let next_coord = c
-                    let next_line_range = line_range
-                    break
-                endif
-            else
-                if c['begin'][0] < shifted_line
-                    let next_coord = c
-                    let next_line_range = line_range
-                    break
-                elseif c['begin'][0] == shifted_line && c['begin'][1] < cur_pos[2]
-                    let next_coord = c
-                    let next_line_range = line_range
-                    break
-                endif
-            endif
-        endfor
-
+        let next_coord = vlime#ui#FindNextCoord(
+                    \ [shifted_line, cur_pos[2]], sorted_coords, a:forward)
         if type(next_coord) != type(v:null)
+            let next_line_range = line_range
             break
         endif
     endfor
