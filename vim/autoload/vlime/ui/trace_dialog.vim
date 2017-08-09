@@ -158,7 +158,9 @@ function! vlime#ui#trace_dialog#CalcFoldLevel(...)
     let line = getline(line_nr)
     let matched = matchlist(line, s:trace_entry_fold_pattern)
     if len(matched) > 0
-        return len(matched[1])
+        let id_width = exists('b:vlime_trace_max_id') ?
+                    \ len(string(b:vlime_trace_max_id)) : 0
+        return (len(matched[1]) - id_width) / 2
     else
         return 0
     endif
@@ -488,6 +490,7 @@ function! s:ReportPartialTreeComplete(trace_buf, fetch_all, conn, result)
                 \ getbufvar(a:trace_buf, 'vlime_trace_cached_entries', {})
     let toplevel_entries =
                 \ getbufvar(a:trace_buf, 'vlime_trace_toplevel_entries', [])
+    let max_id = getbufvar(a:trace_buf, 'vlime_trace_max_id', 0)
 
     for t_entry in entry_list
         let [id, parent, name, arg_list, retval_list] = t_entry
@@ -508,10 +511,15 @@ function! s:ReportPartialTreeComplete(trace_buf, fetch_all, conn, result)
             endif
         endif
         let cached_entries[id] = entry_obj
+
+        if id > max_id
+            let max_id = id
+        endif
     endfor
 
     call setbufvar(a:trace_buf, 'vlime_trace_cached_entries', cached_entries)
     call setbufvar(a:trace_buf, 'vlime_trace_toplevel_entries', toplevel_entries)
+    call setbufvar(a:trace_buf, 'vlime_trace_max_id', max_id)
 
     if a:fetch_all && remaining > 0
         call a:conn.ReportPartialTree(
@@ -546,6 +554,7 @@ function! s:ResetTraceEntries()
     silent! unlet b:vlime_trace_fetch_key
     silent! unlet b:vlime_trace_cached_entries
     silent! unlet b:vlime_trace_toplevel_entries
+    silent! unlet b:vlime_trace_max_id
     silent! unlet b:vlime_trace_entries_coords
 
     let line_range = get(b:, 'vlime_trace_entries_line_range', v:null)
