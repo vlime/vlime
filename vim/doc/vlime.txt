@@ -393,6 +393,9 @@ functions, and the trace results. It also contains multiple
 interactable fields and buttons. You can navigate through these
 fields/buttons by pressing <Tab>, and interact with them using <CR>.
 
+Nested trace entries are folded by default. Use standard
+|fold-commands| to handle the |folds|.
+
 For more available operations for the trace dialog, see
 |vlime-mappings-trace-dialog|, and
 |vlime-mappings-invoke-trace-dialog|.
