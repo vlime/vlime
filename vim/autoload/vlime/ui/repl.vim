@@ -80,7 +80,7 @@ function! vlime#ui#repl#NextField(forward)
 
     let cur_pos = getcurpos()
     let sorted_coords = sort(copy(b:vlime_repl_coords),
-                \ function('s:CoordSorter', [a:forward]))
+                \ function('vlime#ui#CoordSorter', [a:forward]))
     let next_coord = v:null
     for c in sorted_coords
         if a:forward
@@ -147,20 +147,4 @@ function! s:InitREPLBuf()
     setlocal nomodifiable
 
     call vlime#ui#MapBufferKeys('repl')
-endfunction
-
-function! s:CoordSorter(direction, c1, c2)
-    if a:c1['begin'][0] > a:c2['begin'][0]
-        return a:direction ? 1 : -1
-    elseif a:c1['begin'][0] == a:c2['begin'][0]
-        if a:c1['begin'][1] > a:c2['begin'][1]
-            return a:direction ? 1 : -1
-        elseif a:c1['begin'][1] == a:c2['begin'][1]
-            return 0
-        else
-            return a:direction ? -1 : 1
-        endif
-    else
-        return a:direction ? -1 : 1
-    endif
 endfunction

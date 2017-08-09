@@ -1137,6 +1137,22 @@ function! vlime#ui#MatchCoord(coord, cur_line, cur_col)
     return v:false
 endfunction
 
+function! vlime#ui#CoordSorter(direction, c1, c2)
+    if a:c1['begin'][0] > a:c2['begin'][0]
+        return a:direction ? 1 : -1
+    elseif a:c1['begin'][0] == a:c2['begin'][0]
+        if a:c1['begin'][1] > a:c2['begin'][1]
+            return a:direction ? 1 : -1
+        elseif a:c1['begin'][1] == a:c2['begin'][1]
+            return 0
+        else
+            return a:direction ? -1 : 1
+        endif
+    else
+        return a:direction ? -1 : 1
+    endif
+endfunction
+
 ""
 " @usage {file_path} {byte_pos} [snippet] [edit_cmd] [force_open]
 " @public

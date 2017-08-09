@@ -87,13 +87,13 @@ function! vlime#ui#trace_dialog#NextField(forward)
     let coord_groups = [
                 \ [get(b:, 'vlime_trace_specs_line_range', v:null),
                     \ sort(copy(get(b:, 'vlime_trace_specs_coords', [])),
-                        \ function('s:CoordSorter', [a:forward]))],
+                        \ function('vlime#ui#CoordSorter', [a:forward]))],
                 \ [get(b:, 'vlime_trace_entries_header_line_range', v:null),
                     \ sort(copy(get(b:, 'vlime_trace_entries_header_coords', [])),
-                        \ function('s:CoordSorter', [a:forward]))],
+                        \ function('vlime#ui#CoordSorter', [a:forward]))],
                 \ [get(b:, 'vlime_trace_entries_line_range', v:null),
                     \ sort(copy(get(b:, 'vlime_trace_entries_coords', [])),
-                        \ function('s:CoordSorter', [a:forward]))]]
+                        \ function('vlime#ui#CoordSorter', [a:forward]))]]
 
     if !a:forward
         let coord_groups = reverse(coord_groups)
@@ -625,20 +625,4 @@ endfunction
 function! s:AlignTraceID(id, width)
     let str_id = string(a:id)
     return repeat(' ', a:width - len(str_id)) . str_id
-endfunction
-
-function! s:CoordSorter(direction, c1, c2)
-    if a:c1['begin'][0] > a:c2['begin'][0]
-        return a:direction ? 1 : -1
-    elseif a:c1['begin'][0] == a:c2['begin'][0]
-        if a:c1['begin'][1] > a:c2['begin'][1]
-            return a:direction ? 1 : -1
-        elseif a:c1['begin'][1] == a:c2['begin'][1]
-            return 0
-        else
-            return a:direction ? -1 : 1
-        endif
-    else
-        return a:direction ? -1 : 1
-    endif
 endfunction

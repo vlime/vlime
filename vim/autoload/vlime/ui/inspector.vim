@@ -205,7 +205,7 @@ function! vlime#ui#inspector#NextField(forward)
 
     let cur_pos = getcurpos()
     let sorted_coords = sort(copy(b:vlime_inspector_coords),
-                \ function('s:CoordSorter', [a:forward]))
+                \ function('vlime#ui#CoordSorter', [a:forward]))
     let next_coord = v:null
     for c in sorted_coords
         if a:forward
@@ -291,22 +291,6 @@ function! s:FindSourceCB(edit_cmd, win_to_go, force_open, conn, msg)
         call vlime#ui#ErrMsg(a:msg[1])
     else
         call vlime#ui#ErrMsg('No source available.')
-    endif
-endfunction
-
-function! s:CoordSorter(direction, c1, c2)
-    if a:c1['begin'][0] > a:c2['begin'][0]
-        return a:direction ? 1 : -1
-    elseif a:c1['begin'][0] == a:c2['begin'][0]
-        if a:c1['begin'][1] > a:c2['begin'][1]
-            return a:direction ? 1 : -1
-        elseif a:c1['begin'][1] == a:c2['begin'][1]
-            return 0
-        else
-            return a:direction ? -1 : 1
-        endif
-    else
-        return a:direction ? -1 : 1
     endif
 endfunction
 
