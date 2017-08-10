@@ -720,11 +720,12 @@ vlime#plugin#SetPackage([pkg])                     *vlime#plugin#SetPackage()*
   Bind a Common Lisp package [pkg] to the current buffer. If [pkg] is omitted,
   show an input buffer.
 
-vlime#plugin#SwankRequire({contribs})            *vlime#plugin#SwankRequire()*
+vlime#plugin#SwankRequire({contribs}, [do_init]) *vlime#plugin#SwankRequire()*
 
   Require Swank contrib modules. {contribs} should be a plain string or a list
   of strings. Each string is a contrib module name. These names are
-  case-sensitive. Normally you should use uppercase.
+  case-sensitive. Normally you should use uppercase. If [do_init] is present
+  and |FALSE|, suppress initialization for newly loaded contrib modules.
 
 vlime#plugin#ShowOperatorArgList([op])    *vlime#plugin#ShowOperatorArgList()*
 
