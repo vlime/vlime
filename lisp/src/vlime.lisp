@@ -42,8 +42,8 @@
                   (port 0)
                   port-file
                   (start-swank t)
-                  (swank-interface #(127 0 0 1))
-                  (swank-port 0))
+                  (swank-interface #(127 0 0 1) swank-interface-p)
+                  (swank-port 0 swank-port-p))
   (when (not backend)
     (let ((preferred-style (dyn-call "SWANK/BACKEND" "PREFERRED-COMMUNICATION-STYLE")))
       (case preferred-style
@@ -106,6 +106,11 @@
         (:vlime-patched
           (try-to-load :vlime-patched)
           (dyn-call "VLIME-PATCHED" "PATCH-SWANK")
+          ;; SWANK-INTERFACE and SWANK-PORT are ignored in this case.
+          (when (or swank-interface-p swank-port-p)
+            (warn "SWANK-INTERFACE and SWANK-PORT are ignored when using the VLIME-PATCHED backend."))
+          (setf swank-interface interface
+                swank-port port)
           (start-swank-server
             #'(lambda (port)
                 (format t "Server created: (~a ~a)~%" swank-interface port)
