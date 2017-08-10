@@ -144,8 +144,8 @@ function! vlime#plugin#ConnectREPL(...)
                 \ function(conn.ConnectionInfo, [v:true]),
                 \ function('s:OnConnectionInfoComplete'),
                 \ function(conn.SwankRequire, [contribs]),
-                \ function('s:OnSwankRequireComplete'),
-                \ function('vlime#contrib#CallInitializers', [conn]),
+                \ function('s:OnSwankRequireComplete', [v:false]),
+                \ function('vlime#contrib#CallInitializers', [conn, v:null]),
                 \ function('s:OnCallInitializersComplete'))
     return conn
 endfunction
@@ -400,17 +400,21 @@ function! vlime#plugin#SetPackage(...)
 endfunction
 
 ""
+" @usage {contribs} [do_init]
 " @public
 "
 " Require Swank contrib modules. {contribs} should be a plain string or a list
 " of strings. Each string is a contrib module name. These names are
-" case-sensitive. Normally you should use uppercase.
-function! vlime#plugin#SwankRequire(contribs)
+" case-sensitive. Normally you should use uppercase. If [do_init] is present
+" and |FALSE|, suppress initialization for newly loaded contrib modules.
+function! vlime#plugin#SwankRequire(contribs, ...)
+    let do_init = get(a:000, 0, v:true)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
-    call conn.SwankRequire(a:contribs, function('s:OnSwankRequireComplete'))
+    call conn.SwankRequire(a:contribs,
+                \ function('s:OnSwankRequireComplete', [do_init]))
 endfunction
 
 ""
@@ -1034,9 +1038,26 @@ function! s:OnCallInitializersComplete(conn)
     echom a:conn.cb_data['name'] . ' established.'
 endfunction
 
-function! s:OnSwankRequireComplete(conn, result)
-    let a:conn.cb_data['contribs'] =
-                \ (type(a:result) == v:t_list) ? a:result : []
+function! s:OnSwankRequireComplete(do_init, conn, result)
+    let new_contribs = (type(a:result) == type(v:null)) ? [] : a:result
+    let old_contribs = get(a:conn.cb_data, 'contribs', [])
+    let a:conn.cb_data['contribs'] = new_contribs
+
+    if a:do_init
+        let added = []
+        for co in new_contribs
+            if index(old_contribs, co) < 0
+                call add(added, co)
+            endif
+        endfor
+
+        call vlime#contrib#CallInitializers(a:conn, added,
+                    \ function('s:OnSwankRequireCallInitializersComplete', [added]))
+    endif
+endfunction
+
+function! s:OnSwankRequireCallInitializersComplete(added, conn)
+    echom 'Loaded contrib modules: ' . string(a:added)
 endfunction
 
 function! s:OnConnectionInfoComplete(conn, result)

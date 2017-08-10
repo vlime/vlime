@@ -24,7 +24,7 @@ function! TestCallInitializers()
     let b:vlime_test_dummy_contrib_initializer_called = v:false
     let b:vlime_test_dummy_user_contrib_initializer_called = v:false
     let b:vlime_test_dummy_initializers_cb_called = v:false
-    call vlime#contrib#CallInitializers(conn, function('s:DummyInitializersCB'))
+    call vlime#contrib#CallInitializers(conn, v:null, function('s:DummyInitializersCB'))
     call assert_true(b:vlime_test_dummy_contrib_initializer_called)
     call assert_false(b:vlime_test_dummy_user_contrib_initializer_called)
     call assert_true(b:vlime_test_dummy_initializers_cb_called)
@@ -32,7 +32,7 @@ function! TestCallInitializers()
     call remove(g:vlime_contrib_initializers, 'DUMMY-CONTRIB')
     let b:vlime_test_dummy_contrib_initializer_called = v:false
     let b:vlime_test_dummy_user_contrib_initializer_called = v:false
-    call vlime#contrib#CallInitializers(conn, function('s:DummyInitializersCB'))
+    call vlime#contrib#CallInitializers(conn, v:null, function('s:DummyInitializersCB'))
     call assert_false(b:vlime_test_dummy_contrib_initializer_called)
     call assert_true(b:vlime_test_dummy_user_contrib_initializer_called)
 

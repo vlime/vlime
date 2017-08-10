@@ -9,11 +9,15 @@ if !exists('g:vlime_contrib_initializers')
                 \ }
 endif
 
-" vlime#contrib#CallInitializers(conn[, callback])
+" vlime#contrib#CallInitializers(conn[, contribs[, callback]])
 function! vlime#contrib#CallInitializers(conn, ...)
-    let Callback = get(a:000, 0, v:null)
+    let contribs = get(a:000, 0, v:null)
+    let Callback = get(a:000, 1, v:null)
 
-    let contribs = get(a:conn.cb_data, 'contribs', [])
+    if type(contribs) == type(v:null)
+        let contribs = get(a:conn.cb_data, 'contribs', [])
+    endif
+
     for c in contribs
         let InitFunc = get(g:vlime_contrib_initializers, c, v:null)
         if type(InitFunc) != v:t_func && exists('g:vlime_user_contrib_initializers')
