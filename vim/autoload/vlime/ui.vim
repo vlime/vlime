@@ -1050,38 +1050,50 @@ function! vlime#ui#CurArgPos(...)
 
     let cur_pos = getcurpos()
     let paren_count = 0
-    let delimiter = v:false
+    let last_type = ''
 
     for ln in range(s_line, cur_pos[1])
         let line = getline(ln)
-        let idx = (ln == s_line) ? (s_col - 1) : 0
-        let end_idx = (ln == cur_pos[1]) ? cur_pos[2] : len(line)
+        let start_idx = (ln == s_line) ? (s_col - 1) : 0
+        let end_idx = (ln == cur_pos[1]) ?
+                    \ min([cur_pos[2], len(line)]) : len(line)
 
-        while idx < end_idx
-            let ch = line[idx]
-            if ch == ' ' || ch == "\<tab>"
-                let delimiter = v:true
+        let idx = start_idx
+        while idx < end_idx + 1
+            if idx < end_idx
+                let ch = line[idx]
+            elseif idx < len(line)
+                break
             else
-                if delimiter
-                    let delimiter = v:false
-                    if paren_count == 1
-                        let arg_pos += 1
-                    endif
-                endif
+                let ch = "\n"
+            endif
 
-                if ch == '('
-                    let delimiter = v:true
-                    let paren_count += 1
-                elseif ch == ')'
-                    let delimiter = v:true
-                    let paren_count -= 1
+            if ch == ' ' || ch == "\<tab>" || ch == "\n"
+                if last_type != 's' && paren_count == 1
+                    let arg_pos += 1
                 endif
+                let last_type = 's'
+            elseif ch == '('
+                let paren_count += 1
+                if last_type == 'i' && paren_count == 1
+                    let arg_pos += 1
+                endif
+                let last_type = '('
+            elseif ch == ')'
+                let paren_count -= 1
+                let last_type = ')'
+            else
+                " identifiers
+                if last_type != 's' && last_type != 'i' && paren_count == 1
+                    let arg_pos += 1
+                endif
+                let last_type = 'i'
             endif
 
             let idx += 1
         endwhile
 
-        let delimiter = v:true
+        let last_type = 's'
     endfor
 
     return arg_pos

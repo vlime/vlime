@@ -957,18 +957,7 @@ function! vlime#plugin#CalcCurIndent(...)
     if type(a_count) == type(v:null) || a_count < 0
         return lispindent(line_no)
     else
-        let old_cur = getcurpos()
-        try
-            " A hack to ensure we counted the arg pos right.
-            call search('[^[:space:]]', 'zcW', old_cur[1])
-            let arg_pos = vlime#ui#CurArgPos([s_line, s_col])
-        finally
-            " The 'indentexpr' will restore the cursor position afterwards,
-            " but we always restore it specifically, to make this function
-            " available in other contexts.
-            call setpos('.', old_cur)
-        endtry
-
+        let arg_pos = vlime#ui#CurArgPos([s_line, s_col])
         if arg_pos > a_count
             return vs_col + shift_width - 1
         elseif arg_pos > 0
