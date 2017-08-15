@@ -1232,6 +1232,8 @@ function! vlime#OnServerEvent(chan, msg) dict
     let Handler = get(self.server_event_handlers, msg_type['name'], v:null)
     if type(Handler) == v:t_func
         call Handler(self, a:msg)
+    elseif get(g:, '_vlime_debug', v:false)
+        echom 'Unknown server event: ' . string(a:msg)
     endif
 endfunction
 
