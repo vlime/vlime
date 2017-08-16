@@ -451,6 +451,9 @@ VlimeConnection.CreateMREPL([chan_id], [callback])
   number identifying the local channel. Use a automatically generated ID if
   [chan_id] is omitted or v:null.
 
+  This method needs the SWANK-MREPL contrib module. See
+  |VlimeConnection.SwankRequire()|.
+
 VlimeConnection.InspectPresentation({pres_id}, {reset}, [callback])
                                        *VlimeConnection.InspectPresentation()*
 
@@ -698,6 +701,12 @@ vlime#plugin#ConnectREPL([host], [port], [remote_prefix], [timeout], [name])
   SFTP (see |vlime-remote-server|). [timeout] is the time to wait for the
   connection to be made, in milliseconds. [name] gives the new connection a
   name. Omit this argument to use an automatically generated name.
+
+vlime#plugin#CreateMREPL()                        *vlime#plugin#CreateMREPL()*
+
+  Create a new REPL thread using SWANK-MREPL. This function needs the
+  SWANK-MREPL contrib module. See |g:vlime_contribs| and
+  |vlime#plugin#SwankRequire()|.
 
 vlime#plugin#SelectCurConnection()        *vlime#plugin#SelectCurConnection()*
 

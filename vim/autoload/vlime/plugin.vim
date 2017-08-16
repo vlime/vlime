@@ -150,9 +150,20 @@ function! vlime#plugin#ConnectREPL(...)
     return conn
 endfunction
 
+""
+" @public
+"
+" Create a new REPL thread using SWANK-MREPL. This function needs the
+" SWANK-MREPL contrib module. See |g:vlime_contribs| and
+" @function(vlime#plugin#SwankRequire).
 function! vlime#plugin#CreateMREPL()
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
+        return
+    endif
+
+    if !s:ConnHasContrib(conn, 'SWANK-MREPL')
+        call vlime#ui#ErrMsg('The SWANK-MREPL contrib module is not available')
         return
     endif
 

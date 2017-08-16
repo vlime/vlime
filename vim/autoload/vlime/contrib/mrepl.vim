@@ -6,6 +6,9 @@
 " Create an REPL listener using SWANK-MREPL. [chan_id] should be a unique
 " number identifying the local channel. Use a automatically generated ID if
 " [chan_id] is omitted or v:null.
+"
+" This method needs the SWANK-MREPL contrib module. See
+" @function(VlimeConnection.SwankRequire).
 function! vlime#contrib#mrepl#CreateMREPL(...) dict
     let chan_id = get(a:000, 0, v:null)
     let Callback = get(a:000, 1, v:null)
@@ -35,6 +38,7 @@ function! s:CreateMREPL_CB(conn, Callback, local_chan, chan, msg)
         throw v:exception
     endtry
     let [chan_id, thread_id, pkg_name, pkg_prompt] = a:msg[1][1]
+    let a:local_chan['mrepl']['peer'] = chan_id
     let a:local_chan['mrepl']['prompt'] = [pkg_name, pkg_prompt]
     call a:conn.MakeRemoteChannel(chan_id, thread_id)
     call vlime#TryToCall(a:Callback, [a:conn, a:msg[1][1]])
