@@ -37,6 +37,9 @@ function! vlime#New(...)
                 \ 'channel': v:null,
                 \ 'remote_prefix': '',
                 \ 'ping_tag': 1,
+                \ 'next_local_channel_id': 1,
+                \ 'local_channels': {},
+                \ 'remote_channels': {},
                 \ 'ui': ui,
                 \ 'Connect': function('vlime#Connect'),
                 \ 'IsConnected': function('vlime#IsConnected'),
@@ -51,6 +54,11 @@ function! vlime#New(...)
                 \ 'SetCurrentThread': function('vlime#SetCurrentThread'),
                 \ 'WithPackage': function('vlime#WithPackage'),
                 \ 'WithThread': function('vlime#WithThread'),
+                \ 'MakeLocalChannel': function('vlime#MakeLocalChannel'),
+                \ 'RemoveLocalChannel': function('vlime#RemoveLocalChannel'),
+                \ 'MakeRemoteChannel': function('vlime#MakeRemoteChannel'),
+                \ 'RemoveRemoteChannel': function('vlime#RemoveRemoteChannel'),
+                \ 'EmacsChannelSend': function('vlime#EmacsChannelSend'),
                 \ 'EmacsRex': function('vlime#EmacsRex'),
                 \ 'Ping': function('vlime#Ping'),
                 \ 'Pong': function('vlime#Pong'),
@@ -115,6 +123,7 @@ function! vlime#New(...)
                     \ 'INDENTATION-UPDATE': function('vlime#OnIndentationUpdate'),
                     \ 'INVALID-RPC': function('vlime#OnInvalidRPC'),
                     \ 'INSPECT': function('vlime#OnInspect'),
+                    \ 'CHANNEL-SEND': function('vlime#OnChannelSend'),
                     \ }
                 \ }
     return obj
@@ -330,6 +339,99 @@ function! vlime#WithPackage(package, Func) dict
     finally
         call self.SetCurrentPackage(old_package)
     endtry
+endfunction
+
+""
+" @dict VlimeConnection.MakeLocalChannel
+" @usage [chan_id] [callback]
+" @public
+"
+" Create a local channel (in the sense of SLIME channels). [chan_id], if
+" provided and not v:null, should be be a unique integer to identify the new
+" channel. A new ID will be generated if [chan_id] is omitted or v:null.
+" [callback] is a function responsible for handling the messages directed to
+" this very channel. It should have such a signature:
+"
+"   SomeCallbackFunction(<conn>, <chan>, <msg>)
+"
+" <conn> is a @dict(VlimeConnection) object. <chan> is the channel object in
+" question, and <msg> is the channel message received from the server.
+function! vlime#MakeLocalChannel(...) dict
+    let chan_id = get(a:000, 0, v:null)
+    let Callback = get(a:000, 1, v:null)
+
+    if type(chan_id) == type(v:null)
+        let chan_id = self['next_local_channel_id']
+        let self['next_local_channel_id'] += 1
+    endif
+
+    if has_key(self['local_channels'], chan_id)
+        throw 'vlime#MakeLocalChannel: channel ' . chan_id . ' already exists'
+    endif
+
+    let chan_obj = {
+                \ 'id': chan_id,
+                \ 'callback': Callback,
+                \ }
+    let self['local_channels'][chan_id] = chan_obj
+    return chan_obj
+endfunction
+
+""
+" @dict VlimeConnection.RemoveLocalChannel
+" @public
+"
+" Remove a local channel with the ID {chan_id}.
+function! vlime#RemoveLocalChannel(chan_id) dict
+    call remove(self['local_channels'], a:chan_id)
+endfunction
+
+""
+" @dict VlimeConnection.MakeRemoteChannel
+" @usage {chan_id} [thread]
+" @public
+"
+" Save the info for a remote channel (in the sense of SLIME channels).
+" {chan_id} should be an ID assigned by the server, and [thread] the thread
+" this channel is directed to.
+function! vlime#MakeRemoteChannel(chan_id, ...) dict
+    let thread = get(a:000, 0, v:null)
+
+    if has_key(self['remote_channels'], a:chan_id)
+        throw 'vlime#MakeRemoteChannel: channel ' . a:chan_id . ' already exists'
+    endif
+
+    let chan_obj = {
+                \ 'id': a:chan_id,
+                \ 'thread': thread,
+                \ }
+    let self['remote_channels'][a:chan_id] = chan_obj
+    return chan_obj
+endfunction
+
+""
+" @dict VlimeConnection.RemoveRemoteChannel
+" @public
+"
+" Remove a remote channel with the ID {chan_id}
+function! vlime#RemoveRemoteChannel(chan_id) dict
+    call remove(self['remote_channels'], a:chan_id)
+endfunction
+
+""
+" @dict VlimeConnection.EmacsChannelSend
+" @public
+"
+" Construct an :EMACS-CHANNEL-SEND message. {chan_id} should be the destination
+" remote channel ID, and {msg} is the message to be sent. Note that, despite
+" the word "Send" in its name, this function WILL NOT send the constructed
+" message. You still need to call @function(VlimeConnection.Send) for that.
+function! vlime#EmacsChannelSend(chan_id, msg) dict
+    if !has_key(self['remote_channels'], a:chan_id)
+        throw 'vlime#EmacsChannelSend: channel ' . a:chan_id . ' does not exist'
+    else
+        return [s:KW('EMACS-CHANNEL-SEND'), a:chan_id, a:msg]
+    endif
 endfunction
 
 ""
@@ -1225,6 +1327,22 @@ function! vlime#OnInspect(conn, msg)
     endif
 endfunction
 
+function! vlime#OnChannelSend(conn, msg)
+    let [_msg_type, chan_id, msg_body] = a:msg
+    let chan_obj = get(a:conn['local_channels'], chan_id, v:null)
+    if type(chan_obj) != type(v:null)
+        if type(chan_obj['callback']) != type(v:null)
+            let CB = function(chan_obj['callback'],
+                        \ [a:conn, chan_obj, msg_body])
+            call CB()
+        elseif get(g:, '_vlime_debug', v:false)
+            echom 'Unhandled message: ' . string(a:msg)
+        endif
+    elseif get(g:, '_vlime_debug', v:false)
+        echom 'Unknown channel: ' . string(a:msg)
+    endif
+endfunction
+
 " ------------------ end of server event handlers ------------------
 
 function! vlime#OnServerEvent(chan, msg) dict
@@ -1239,7 +1357,6 @@ endfunction
 
 " ================== end of methods for vlime connections ==================
 
-" TODO: The server may return multiple values.
 function! vlime#SimpleSendCB(conn, Callback, caller, chan, msg) abort
     call s:CheckReturnStatus(a:msg, a:caller)
     call s:TryToCall(a:Callback, [a:conn, a:msg[1][1]])

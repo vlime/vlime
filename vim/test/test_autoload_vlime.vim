@@ -231,6 +231,42 @@ function! TestMemoize()
     unlet b:dummy_cache
 endfunction
 
+function! s:DummyChannelCB(chan_obj, msg)
+endfunction
+
+function! TestMakeLocalChannel()
+    let conn = vlime#New()
+    let chan_obj = conn.MakeLocalChannel(v:null, function('s:DummyChannelCB'))
+    call assert_equal(v:t_number, type(chan_obj['id']))
+    call assert_equal(v:t_func, type(chan_obj['callback']))
+    call assert_equal(chan_obj, conn['local_channels'][chan_obj['id']])
+
+    let chan_obj2 = conn.MakeLocalChannel(v:null, function('s:DummyChannelCB'))
+    call assert_notequal(chan_obj['id'], chan_obj2['id'])
+
+    try
+        call conn.MakeLocalChannel(chan_obj['id'], function('s:DummyChannelCB'))
+        call assert_false(v:true, 'MakeLocalChannel did not fail')
+    catch
+        call assert_match('^[^:]\+: channel \d\+ already exists', v:exception)
+    endtry
+endfunction
+
+function! TestMakeRemoteChannel()
+    let conn = vlime#New()
+    let chan_obj = conn.MakeRemoteChannel(1, 2)
+    call assert_equal(1, chan_obj['id'])
+    call assert_equal(2, chan_obj['thread'])
+    call assert_equal(chan_obj, conn['remote_channels'][1])
+
+    try
+        let chan_obj2 = conn.MakeRemoteChannel(1, 3)
+        call assert_false(v:true, 'MakeRemoteChannel did not fail')
+    catch
+        call assert_match('^[^:]\+: channel 1 already exists', v:exception)
+    endtry
+endfunction
+
 function! s:SYM(package, name)
     return {'name': a:name, 'package': a:package}
 endfunction
@@ -284,6 +320,8 @@ function! TestMessage(name, expected, reply, ...)
     let conn['ReportTotal'] = function('vlime#contrib#trace_dialog#ReportTotal')
     let conn['ReportTraceDetail'] = function('vlime#contrib#trace_dialog#ReportTraceDetail')
 
+    let conn['CreateMREPL'] = function('vlime#contrib#mrepl#CreateMREPL')
+
     let ToCall = function(conn[a:name], a:000, conn)
     let b:vlime_test_dummy_sent_msg = v:null
     call ToCall()
@@ -307,6 +345,8 @@ call TestEmacsRex()
 call TestOnServerEvent()
 call TestToRawForm()
 call TestMemoize()
+call TestMakeLocalChannel()
+call TestMakeRemoteChannel()
 
 " [msg_name, expected, dummy_reply, args...]
 let b:messages_to_test = [
@@ -332,6 +372,10 @@ let b:messages_to_test = [
                 \ s:ExpectedEmacsRex('SWANK-REPL', 'CREATE-REPL', v:null, s:KW('CODING-SYSTEM'), 'UTF-8'),
                 \ s:OKReturn(['COMMON-LISP-USER', 'CL-USER']),
                 \ 'UTF-8'],
+            \ ['CreateMREPL',
+                \ s:ExpectedEmacsRex('SWANK-MREPL', 'CREATE-MREPL', 1),
+                \ s:OKReturn([1, 2, 'COMMON-LISP-USER', 'CL-USER']),
+                \ 1],
             \ ['ListenerEval',
                 \ s:ExpectedEmacsRex('SWANK-REPL', 'LISTENER-EVAL', 'expression'),
                 \ s:OKReturn(['COMMON-LISP-USER', 'CL-USER']),

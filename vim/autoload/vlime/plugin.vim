@@ -150,6 +150,15 @@ function! vlime#plugin#ConnectREPL(...)
     return conn
 endfunction
 
+function! vlime#plugin#CreateMREPL()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    call conn.CreateMREPL()
+endfunction
+
 ""
 " @public
 "

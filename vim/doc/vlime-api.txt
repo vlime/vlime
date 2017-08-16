@@ -101,6 +101,46 @@ VlimeConnection.WithPackage({package}, {Func}) *VlimeConnection.WithPackage()*
   Call {Func} with {package} set as the current package. The current package
   will be reset once this method returns.
 
+VlimeConnection.MakeLocalChannel([chan_id], [callback])
+                                          *VlimeConnection.MakeLocalChannel()*
+
+  Create a local channel (in the sense of SLIME channels). [chan_id], if
+  provided and not v:null, should be be a unique integer to identify the new
+  channel. A new ID will be generated if [chan_id] is omitted or v:null.
+  [callback] is a function responsible for handling the messages directed to
+  this very channel. It should have such a signature:
+
+    SomeCallbackFunction(<conn>, <chan>, <msg>)
+
+  <conn> is a |vlime-api.VlimeConnection| object. <chan> is the channel object
+  in question, and <msg> is the channel message received from the server.
+
+VlimeConnection.RemoveLocalChannel({chan_id})
+                                        *VlimeConnection.RemoveLocalChannel()*
+
+  Remove a local channel with the ID {chan_id}.
+
+VlimeConnection.MakeRemoteChannel({chan_id}, [thread])
+                                         *VlimeConnection.MakeRemoteChannel()*
+
+  Save the info for a remote channel (in the sense of SLIME channels).
+  {chan_id} should be an ID assigned by the server, and [thread] the thread
+  this channel is directed to.
+
+VlimeConnection.RemoveRemoteChannel({chan_id})
+                                       *VlimeConnection.RemoveRemoteChannel()*
+
+  Remove a remote channel with the ID {chan_id}
+
+VlimeConnection.EmacsChannelSend({chan_id}, {msg})
+                                          *VlimeConnection.EmacsChannelSend()*
+
+  Construct an :EMACS-CHANNEL-SEND message. {chan_id} should be the
+  destination remote channel ID, and {msg} is the message to be sent. Note
+  that, despite the word "Send" in its name, this function WILL NOT send the
+  constructed message. You still need to call |VlimeConnection.Send()| for
+  that.
+
 VlimeConnection.EmacsRex({cmd})                   *VlimeConnection.EmacsRex()*
 
   Construct an :EMACS-REX message, with the current package and the current
@@ -403,6 +443,13 @@ VlimeConnection.FuzzyCompletions({symbol}, [callback])
 
   This method needs the SWANK-FUZZY contrib module. See
   |VlimeConnection.SwankRequire()|.
+
+VlimeConnection.CreateMREPL([chan_id], [callback])
+                                               *VlimeConnection.CreateMREPL()*
+
+  Create an REPL listener using SWANK-MREPL. [chan_id] should be a unique
+  number identifying the local channel. Use a automatically generated ID if
+  [chan_id] is omitted or v:null.
 
 VlimeConnection.InspectPresentation({pres_id}, {reset}, [callback])
                                        *VlimeConnection.InspectPresentation()*
