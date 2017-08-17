@@ -113,7 +113,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<c-p>', ':call vlime#ui#repl#NextField(v:false)<cr>'],
                 \ ],
                 \ 'mrepl': [
-                    \ ['i', '<cr>', '<cr><c-r>=vlime#ui#mrepl#Submit()<cr>'],
+                    \ ['i', '<cr>', '<c-r>=vlime#ui#mrepl#Submit()<cr>'],
                 \ ],
                 \
                 \ 'inspector': [

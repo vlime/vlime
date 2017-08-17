@@ -36,12 +36,17 @@ endfunction
 
 function! vlime#ui#mrepl#Submit()
     let read_mode = b:vlime_mrepl_channel['mrepl']['mode']
+    let insert_newline = v:true
+
     if read_mode == 'EVAL'
         let prompt = vlime#contrib#mrepl#BuildPrompt(b:vlime_mrepl_channel)
         let old_pos = getcurpos()
         try
             normal! G$
             let eof_pos = getcurpos()
+            if (old_pos[0] < eof_pos[0]) || (old_pos[0] == eof_pos[0] && old_pos[1] <= eof_pos[1])
+                let insert_newline = v:false
+            endif
             let last_prompt_pos = searchpos('\V' . prompt, 'bcenW')
         finally
             call setpos('.', old_pos)
@@ -51,9 +56,6 @@ function! vlime#ui#mrepl#Submit()
         let to_send = vlime#ui#GetText(last_prompt_pos, eof_pos[1:2])
     elseif read_mode == 'READ'
         let last_line = getline('$')
-        if len(last_line) <= 0
-            let last_line = getline(line('$') - 1)
-        endif
         let to_send = last_line . "\n"
     endif
 
@@ -62,5 +64,5 @@ function! vlime#ui#mrepl#Submit()
                 \ [vlime#KW('PROCESS'), to_send])
     call b:vlime_conn.Send(msg)
 
-    return ''
+    return insert_newline ? "\<CR>" : "\<Esc>GA\<CR>"
 endfunction
