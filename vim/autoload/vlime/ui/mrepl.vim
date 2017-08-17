@@ -27,7 +27,10 @@ function! s:ShowPromptOrResult(content)
 endfunction
 
 function! s:InitMREPLBuf()
+    " Excessive indentation may mess up the prompt and the result strings.
+    setlocal noautoindent
     setlocal nocindent
+    setlocal nosmartindent
     call vlime#ui#MapBufferKeys('mrepl')
 endfunction
 
