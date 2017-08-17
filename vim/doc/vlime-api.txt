@@ -120,12 +120,11 @@ VlimeConnection.RemoveLocalChannel({chan_id})
 
   Remove a local channel with the ID {chan_id}.
 
-VlimeConnection.MakeRemoteChannel({chan_id}, [thread])
+VlimeConnection.MakeRemoteChannel({chan_id})
                                          *VlimeConnection.MakeRemoteChannel()*
 
   Save the info for a remote channel (in the sense of SLIME channels).
-  {chan_id} should be an ID assigned by the server, and [thread] the thread
-  this channel is directed to.
+  {chan_id} should be an ID assigned by the server.
 
 VlimeConnection.RemoveRemoteChannel({chan_id})
                                        *VlimeConnection.RemoveRemoteChannel()*
