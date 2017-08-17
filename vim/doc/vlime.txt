@@ -441,6 +441,7 @@ Vlime uses these filetypes to distiguish different buffers:
     vlime_arglist   The arglist buffer.
     vlime_input     The input buffer.
     vlime_trace     The trace dialog buffer.
+    vlime_mrepl     The MREPL buffer.
 
 You can remap any Vlime key mapping in these buffers. See the source
 code (autoload/vlime/ui/mapping.vim) for all default mappings.
@@ -1017,6 +1018,7 @@ g:vlime_window_settings                      *g:vlime_window_settings*
         "input"     The input buffer window.
         "server"    The server output window.
         "trace"     The trace dialog window.
+        "mrepl"     The MREPL window.
 
     Legal values for the parameters:
 
