@@ -21,7 +21,7 @@ endfunction
 function! vlime#contrib#mrepl#OnMREPLWriteResult(conn, chan_obj, result) dict
     let mrepl_buf = vlime#ui#mrepl#InitMREPLBuf(a:conn, a:chan_obj)
     call s:EnsureBufferOpen(mrepl_buf, 'mrepl')
-    call vlime#ui#repl#AppendOutput(mrepl_buf, a:result)
+    call vlime#ui#mrepl#ShowResult(mrepl_buf, a:result)
 endfunction
 
 function! vlime#contrib#mrepl#OnMREPLWriteString(conn, chan_obj, content) dict
@@ -33,8 +33,16 @@ endfunction
 function! vlime#contrib#mrepl#OnMREPLPrompt(conn, chan_obj) dict
     let mrepl_buf = vlime#ui#mrepl#InitMREPLBuf(a:conn, a:chan_obj)
     call s:EnsureBufferOpen(mrepl_buf, 'mrepl')
-    let prompt = a:chan_obj['mrepl']['prompt'][1] . '> '
-    call vlime#ui#repl#AppendOutput(mrepl_buf, prompt)
+    let prompt = vlime#contrib#mrepl#BuildPrompt(a:chan_obj)
+    call vlime#ui#mrepl#ShowPrompt(mrepl_buf, prompt)
+    if bufnr('%') == mrepl_buf
+        normal! G
+        call feedkeys("\<End>", 'n')
+    endif
+endfunction
+
+function! vlime#contrib#mrepl#BuildPrompt(chan_obj)
+    return a:chan_obj['mrepl']['prompt'][1] . '> '
 endfunction
 
 function! vlime#contrib#mrepl#Init(conn)

@@ -112,6 +112,9 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', ['<c-n>', '<tab>'], ':call vlime#ui#repl#NextField(v:true)<cr>'],
                     \ ['n', '<c-p>', ':call vlime#ui#repl#NextField(v:false)<cr>'],
                 \ ],
+                \ 'mrepl': [
+                    \ ['i', '<cr>', '<cr><c-r>=vlime#ui#mrepl#Submit()<cr>'],
+                \ ],
                 \
                 \ 'inspector': [
                     \ ['n', ['<cr>', '<space>'], ':call vlime#ui#inspector#InspectorSelect()<cr>'],
