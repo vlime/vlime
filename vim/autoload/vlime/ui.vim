@@ -1,6 +1,7 @@
 let g:vlime_default_window_settings = {
             \ 'sldb': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
             \ 'repl': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
+            \ 'mrepl': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
             \ 'inspector': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
             \ 'trace': {'pos': 'botright', 'size': v:null, 'vertical': v:false},
             \ 'xref': {'pos': 'botright', 'size': 12, 'vertical': v:false},
@@ -1339,6 +1340,11 @@ endfunction
 
 function! vlime#ui#REPLBufName(conn)
     return join(['vlime', 'repl', a:conn.cb_data.name],
+                \ g:vlime_buf_name_sep)
+endfunction
+
+function! vlime#ui#MREPLBufName(conn, chan_obj)
+    return join(['vlime', 'mrepl ' . a:chan_obj['id'], a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 

@@ -167,7 +167,7 @@ function! vlime#plugin#CreateMREPL()
         return
     endif
 
-    call conn.CreateMREPL()
+    call conn.CreateMREPL(v:null, function('s:OnCreateMREPLComplete'))
 endfunction
 
 ""
@@ -1267,6 +1267,17 @@ function! s:OnDialogToggleTraceComplete(conn, result)
     endif
 
     echom a:result
+endfunction
+
+function! s:OnCreateMREPLComplete(conn, result)
+    let chan_id = a:result[0]
+    let remote_chan = a:conn['remote_channels'][chan_id]
+    let local_chan = a:conn['local_channels'][remote_chan['mrepl']['peer']]
+    call a:conn.ui.OnMREPLPrompt(a:conn, local_chan)
+    let mrepl_winnr = bufwinnr(vlime#ui#MREPLBufName(a:conn, local_chan))
+    if mrepl_winnr >= 0
+        execute mrepl_winnr . 'wincmd w'
+    endif
 endfunction
 
 function! s:ShowAsyncResult(conn, result)

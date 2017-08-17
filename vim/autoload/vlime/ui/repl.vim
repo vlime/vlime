@@ -10,22 +10,27 @@ endfunction
 
 function! vlime#ui#repl#AppendOutput(repl_buf, str)
     let repl_winnr = bufwinnr(a:repl_buf)
+    let old_modifiable = getbufvar(a:repl_buf, '&modifiable')
+
     call setbufvar(a:repl_buf, '&modifiable', 1)
-    if repl_winnr > 0
-        " If the REPL buffer is visible, move to that window to enable
-        " automatic scrolling
-        let old_win_id = win_getid()
-        try
-            execute repl_winnr . 'wincmd w'
-            call vlime#ui#AppendString(a:str)
-        finally
-            call win_gotoid(old_win_id)
-        endtry
-    else
-        call vlime#ui#WithBuffer(a:repl_buf,
-                    \ function('vlime#ui#AppendString', [a:str]))
-    endif
-    call setbufvar(a:repl_buf, '&modifiable', 0)
+    try
+        if repl_winnr > 0
+            " If the REPL buffer is visible, move to that window to enable
+            " automatic scrolling
+            let old_win_id = win_getid()
+            try
+                execute repl_winnr . 'wincmd w'
+                call vlime#ui#AppendString(a:str)
+            finally
+                call win_gotoid(old_win_id)
+            endtry
+        else
+            call vlime#ui#WithBuffer(a:repl_buf,
+                        \ function('vlime#ui#AppendString', [a:str]))
+        endif
+    finally
+        call setbufvar(a:repl_buf, '&modifiable', old_modifiable)
+    endtry
 endfunction
 
 function! vlime#ui#repl#InspectCurREPLPresentation()

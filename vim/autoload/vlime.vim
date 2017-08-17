@@ -388,23 +388,17 @@ endfunction
 
 ""
 " @dict VlimeConnection.MakeRemoteChannel
-" @usage {chan_id} [thread]
+" @usage {chan_id}
 " @public
 "
 " Save the info for a remote channel (in the sense of SLIME channels).
-" {chan_id} should be an ID assigned by the server, and [thread] the thread
-" this channel is directed to.
+" {chan_id} should be an ID assigned by the server.
 function! vlime#MakeRemoteChannel(chan_id, ...) dict
-    let thread = get(a:000, 0, v:null)
-
     if has_key(self['remote_channels'], a:chan_id)
         throw 'vlime#MakeRemoteChannel: channel ' . a:chan_id . ' already exists'
     endif
 
-    let chan_obj = {
-                \ 'id': a:chan_id,
-                \ 'thread': thread,
-                \ }
+    let chan_obj = {'id': a:chan_id}
     let self['remote_channels'][a:chan_id] = chan_obj
     return chan_obj
 endfunction
