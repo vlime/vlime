@@ -117,6 +117,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['i', '<cr>', '<c-r>=vlime#ui#mrepl#Submit()<cr>'],
                     \ ['i', '<c-j>', '<cr><c-r>=vlime#plugin#VlimeKey("cr")<cr>'],
                     \ ['i', '<tab>', '<c-r>=vlime#plugin#VlimeKey("tab")<cr>'],
+                    \ ['i', '<c-c>', '<c-r>=vlime#ui#mrepl#Interrupt()<cr>'],
                     \ ['n', '<LocalLeader>C', ':call vlime#ui#mrepl#Clear()<cr>'],
                     \ ['n', '<LocalLeader>D', ':call vlime#ui#mrepl#Disconnect()<cr>'],
                 \ ],

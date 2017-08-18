@@ -86,8 +86,8 @@ function! vlime#ui#mrepl#Clear()
 endfunction
 
 function! vlime#ui#mrepl#Disconnect()
-    let local_chan = b:vlime_mrepl_channel
-    let remote_chan = b:vlime_conn['remote_channels'][local_chan['mrepl']['peer']]
+    let remote_chan_id = b:vlime_mrepl_channel['mrepl']['peer']
+    let remote_chan = b:vlime_conn['remote_channels'][remote_chan_id]
     let remote_thread = remote_chan['mrepl']['thread']
     let cmd = [vlime#KW('EMACS-REX'),
                 \ [vlime#SYM('SWANK/BACKEND', 'KILL-THREAD'),
@@ -98,6 +98,13 @@ function! vlime#ui#mrepl#Disconnect()
                     \ [b:vlime_conn,
                         \ function('s:KillThreadComplete', [bufnr('%')]),
                         \ 'vlime#ui#mrepl#Disconnect']))
+endfunction
+
+function! vlime#ui#mrepl#Interrupt()
+    let remote_chan_id = b:vlime_mrepl_channel['mrepl']['peer']
+    let remote_chan = b:vlime_conn['remote_channels'][remote_chan_id]
+    call b:vlime_conn.Interrupt(remote_chan['mrepl']['thread'])
+    return ''
 endfunction
 
 function! s:KillThreadComplete(mrepl_buf, conn, _result)

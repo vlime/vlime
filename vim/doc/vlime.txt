@@ -921,9 +921,11 @@ Key mappings avaialble in the MREPL buffer:
         (In insert mode) Submit the text snippet between the last
         prompt and EOF to the REPL.
     CTRL-j
-        Insert a newline.
+        (In insert mode) Insert a newline.
     <Tab>
-        Trigger omni-completion.
+        (In insert mode) Trigger omni-completion.
+    CTRL-c
+        (In insert mode) Interrupt the MREPL thread.
     <LocalLeader>C
         Clear the MREPL buffer.
     <LocalLeader>D
