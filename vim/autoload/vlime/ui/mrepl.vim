@@ -85,6 +85,29 @@ function! vlime#ui#mrepl#Clear()
     call vlime#ui#mrepl#ShowPrompt(bufnr('%'), prompt)
 endfunction
 
+function! vlime#ui#mrepl#Disconnect()
+    let local_chan = b:vlime_mrepl_channel
+    let remote_chan = b:vlime_conn['remote_channels'][local_chan['mrepl']['peer']]
+    let remote_thread = remote_chan['mrepl']['thread']
+    let cmd = [vlime#KW('EMACS-REX'),
+                \ [vlime#SYM('SWANK/BACKEND', 'KILL-THREAD'),
+                    \ [vlime#SYM('SWANK/BACKEND', 'FIND-THREAD'), remote_thread]],
+                \ v:null, v:true]
+    call b:vlime_conn.Send(cmd,
+                \ function('vlime#SimpleSendCB',
+                    \ [b:vlime_conn,
+                        \ function('s:KillThreadComplete', [bufnr('%')]),
+                        \ 'vlime#ui#mrepl#Disconnect']))
+endfunction
+
+function! s:KillThreadComplete(mrepl_buf, conn, _result)
+    let local_chan = getbufvar(a:mrepl_buf, 'vlime_mrepl_channel')
+    execute 'bunload!' a:mrepl_buf
+
+    call a:conn.RemoveRemoteChannel(local_chan['mrepl']['peer'])
+    call a:conn.RemoveLocalChannel(local_chan['id'])
+endfunction
+
 function! s:ShowBanner(conn, chan_obj)
     let banner = 'MREPL - SWANK'
     if has_key(a:conn.cb_data, 'version')
