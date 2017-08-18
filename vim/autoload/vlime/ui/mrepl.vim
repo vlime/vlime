@@ -4,7 +4,8 @@ function! vlime#ui#mrepl#InitMREPLBuf(conn, chan_obj)
         call vlime#ui#SetVlimeBufferOpts(mrepl_buf, a:conn)
         call setbufvar(mrepl_buf, 'vlime_mrepl_channel', a:chan_obj)
         call setbufvar(mrepl_buf, '&filetype', 'vlime_mrepl')
-        call vlime#ui#WithBuffer(mrepl_buf, function('s:InitMREPLBuf'))
+        call vlime#ui#WithBuffer(mrepl_buf,
+                    \ function('s:InitMREPLBuf', [a:conn, a:chan_obj]))
     endif
     return mrepl_buf
 endfunction
@@ -26,11 +27,13 @@ function! s:ShowPromptOrResult(content)
     endif
 endfunction
 
-function! s:InitMREPLBuf()
+function! s:InitMREPLBuf(conn, chan_obj)
     " Excessive indentation may mess up the prompt and the result strings.
     setlocal noautoindent
     setlocal nocindent
     setlocal nosmartindent
+
+    call s:ShowBanner(a:conn, a:chan_obj)
     call vlime#ui#MapBufferKeys('mrepl')
 endfunction
 
@@ -65,4 +68,20 @@ function! vlime#ui#mrepl#Submit()
     call b:vlime_conn.Send(msg)
 
     return insert_newline ? "\<CR>" : "\<Esc>GA\<CR>"
+endfunction
+
+function! s:ShowBanner(conn, chan_obj)
+    let banner = 'MREPL - SWANK'
+    if has_key(a:conn.cb_data, 'version')
+        let banner .= ' version ' . a:conn.cb_data['version']
+    endif
+    if has_key(a:conn.cb_data, 'pid')
+        let banner .= ', pid ' . a:conn.cb_data['pid']
+    endif
+    let remote_chan_id = a:chan_obj['mrepl']['peer']
+    let remote_chan_obj = a:conn['remote_channels'][remote_chan_id]
+    let banner .= ', thread ' . remote_chan_obj['mrepl']['thread']
+    let banner_len = len(banner)
+    let banner .= ("\n" . repeat('=', banner_len) . "\n")
+    call vlime#ui#AppendString(banner)
 endfunction

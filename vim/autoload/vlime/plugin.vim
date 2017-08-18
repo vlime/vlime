@@ -1277,6 +1277,7 @@ function! s:OnCreateMREPLComplete(conn, result)
     let mrepl_winnr = bufwinnr(vlime#ui#MREPLBufName(a:conn, local_chan))
     if mrepl_winnr >= 0
         execute mrepl_winnr . 'wincmd w'
+        normal! G$
     endif
 endfunction
 
