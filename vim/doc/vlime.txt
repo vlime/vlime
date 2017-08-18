@@ -18,6 +18,7 @@ CONTENTS                                              *vlime-contents*
         3.10 Remote Servers ................ |vlime-remote-server|
         3.11 Input Buffers .................. |vlime-input-buffer|
         3.12 Trace Dialog ................... |vlime-trace-dialog|
+        3.13 Multiple REPLs ........................ |vlime-mrepl|
     4. Mappings ................................. |vlime-mappings|
         4.1 Remap Keys .................... |vlime-mappings-remap|
         4.2 Key Conflicts ................... |vlime-key-conflict|
@@ -35,6 +36,7 @@ CONTENTS                                              *vlime-contents*
             4.3.8 Input Buffer Mappings ... |vlime-mappings-input|
             4.3.9 Trace Dialog Mappings ........................
                   .................. |vlime-mappings-trace-dialog|
+            4.3.10 MREPL buffer Mappings .. |vlime-mappings-mrepl|
     5. Configuration .............................. |vlime-config|
     6. API ..................................... |vlime-api-intro|
     7. License ................................... |vlime-license|
@@ -383,6 +385,9 @@ See |vlime-buffer-types| for a full list of available filetypes.
 ----------------------------------------------------------------------
 3.12 Trace Dialog                                 *vlime-trace-dialog*
 
+Note: This feature needs the SWANK-TRACE-DIALOG contrib module. See
+      |g:vlime_contribs| and |vlime#plugin#SwankRequire()|.
+
 Vlime can trace functions and show the results in a dedicated window
 for you. It's called the trace dialog, named after the similar
 component in SLIME. One can use
@@ -399,6 +404,28 @@ Nested trace entries are folded by default. Use standard
 For more available operations for the trace dialog, see
 |vlime-mappings-trace-dialog|, and
 |vlime-mappings-invoke-trace-dialog|.
+
+----------------------------------------------------------------------
+3.13 Multiple REPLs                                      *vlime-mrepl*
+
+Note: This feature needs the SWANK-MREPL contrib module. See
+      |g:vlime_contribs| and |vlime#plugin#SwankRequire()|. And it
+      works best on CL implementations with multithreading support.
+
+Vlime usually creates a single REPL upon connection. If this REPL were
+blocked by a time-consuming operation, the server may seem
+unresponsive. The multiple REPL support may come in handy in this
+case.
+
+One can call |vlime#plugin#CreateMREPL()| to spawn a new REPL, and
+open an "mrepl" command line buffer automatically. Just enter |Insert|
+mode and use it as you may use any other REPL prompts. But note that
+the command line is somewhat fragile, in that it is implemented by
+simply extracting the text between the last prompt string and EOF.
+Modifying text outside this range may cause unexpected bahavior.
+
+See |vlime-mappings-mrepl| for all available operations in the MREPL
+buffer.
 
 ======================================================================
 4. Mappings                                           *vlime-mappings*
@@ -712,6 +739,12 @@ Key mappings avaialble in the REPL buffer:
         meaningless in other contexts.
     <LocalLeader>C
         Clear the REPL buffer.
+    <Tab>
+        Move the cursor to the next prensented object.
+    CTRL-n
+        Same as <Tab>.
+    CTRL-p
+        Move the cursor to the previous presented object.
 
 ......................................................................
 4.3.3 Debugger Mappings                      *vlime-mappings-debugger*
@@ -852,9 +885,9 @@ Key mappings avaialble in the server output buffer:
 
 Key mappings avaialble in the input buffer:
 
-    <c-p>
+    CTRL-p
         Show the previous item in input history.
-    <c-n>
+    CTRL-n
         Show the next item in input history.
 
 ......................................................................
@@ -878,6 +911,23 @@ Key mappings avaialble in the trace dialog:
         Select the previous interactable field/button.
     R
         Refresh the trace dialog.
+
+......................................................................
+4.3.10 MREPL Buffer Mappings                    *vlime-mappings-mrepl*
+
+Key mappings avaialble in the MREPL buffer:
+
+    <CR>
+        (In insert mode) Submit the text snippet between the last
+        prompt and EOF to the REPL.
+    CTRL-j
+        Insert a newline.
+    <Tab>
+        Trigger omni-completion.
+    <LocalLeader>C
+        Clear the MREPL buffer.
+    <LocalLeader>D
+        Disconnect from this REPL.
 
 ======================================================================
 5. Configuration                                        *vlime-config*
@@ -1127,10 +1177,51 @@ g:vlime_contribs                                    *g:vlime_contribs*
     "SWANK-PRESENTATIONS", "SWANK-FANCY-INSPECTOR", "SWANK-C-P-C",
     "SWANK-ARGLISTS", "SWANK-REPL", "SWANK-FUZZY"]
 
+    Some contrib modules will just work once they are loaded, but
+    others may need specialized support on the client side. Vlime
+    elaborately supports these contribs by providing conforming client
+    code:
+
+        SWANK-ARGLISTS
+            Show a fancy arglist. See |g:vlime_enable_autodoc|.
+
+        SWANK-FUZZY
+            Enable fuzzy search in completions. See
+            |vlime-completions|.
+
+        SWANK-MREPL
+            Support for multiple REPLs. See |vlime-mrepl|.
+
+        SWANK-PRESENTATION-STREAMS
+            Enable presentations on the standard output stream, and
+            other similar streams, so that you can use
+            |vlime-mappings-repl-y| and similar mappings on printed
+            objects.
+
+        SWANK-PRESENTATIONS
+            Turn evaluation results in the REPL into presentations,
+            so that you can use |vlime-mappings-repl-y| and similar
+            mappings on the results.
+
+        SWANK-REPL
+            The default REPL implementation.
+
+        SWANK-TRACE-DIALOG
+            Interactively trace functions, and view the trace results.
+            See |vlime-trace-dialog|.
+
+    Please consult the SLIME documentation for detailed descriptions
+    for these modules.
+
+    Alternatively, you can call |vlime#plugin#SwankRequire()| to load
+    contrib modules.
+
 g:vlime_user_contrib_initializers  *g:vlime_user_contrib_initializers*
-    A |dict| of user contrib initializers. If your Swank contrib module
-    needs special initialization, add an initializer function here.
-    See autoload/vlime/contrib.vim for examples. Default: {}
+    A |dict| of |Funcref|s for initializing user contrib modules. The
+    keys should be contrib module names (usually in uppercase). If
+    your Swank contrib module needs special initialization, add an
+    initializer function here. See autoload/vlime/contrib.vim for
+    examples. Default: {}
 
 g:vlime_enable_autodoc                        *g:vlime_enable_autodoc*
     A boolean value specifying whether to enable the autodoc feature
