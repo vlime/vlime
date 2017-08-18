@@ -113,7 +113,11 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<c-p>', ':call vlime#ui#repl#NextField(v:false)<cr>'],
                 \ ],
                 \ 'mrepl': [
+                    \ ['i', '<space>', '<space><c-r>=vlime#plugin#VlimeKey("space")<cr>'],
                     \ ['i', '<cr>', '<c-r>=vlime#ui#mrepl#Submit()<cr>'],
+                    \ ['i', '<c-j>', '<cr><c-r>=vlime#plugin#VlimeKey("cr")<cr>'],
+                    \ ['i', '<tab>', '<c-r>=vlime#plugin#VlimeKey("tab")<cr>'],
+                    \ ['n', '<LocalLeader>C', ':call vlime#ui#mrepl#Clear()<cr>'],
                 \ ],
                 \
                 \ 'inspector': [

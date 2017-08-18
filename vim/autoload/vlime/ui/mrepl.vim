@@ -12,6 +12,10 @@ endfunction
 
 function! vlime#ui#mrepl#ShowPrompt(buf, prompt)
     call vlime#ui#WithBuffer(a:buf, function('s:ShowPromptOrResult', [a:prompt]))
+    if bufnr('%') == a:buf
+        normal! G
+        call feedkeys("\<End>", 'n')
+    endif
 endfunction
 
 function! vlime#ui#mrepl#ShowResult(buf, result)
@@ -32,6 +36,10 @@ function! s:InitMREPLBuf(conn, chan_obj)
     setlocal noautoindent
     setlocal nocindent
     setlocal nosmartindent
+    setlocal iskeyword=@,48-57,_,192-255,+,-,*,/,%,<,=,>,:,$,?,!,@-@,94
+    setlocal omnifunc=vlime#plugin#CompleteFunc
+    " TODO: Use another indentexpr that dosn't search past the last prompt
+    setlocal indentexpr=vlime#plugin#CalcCurIndent()
 
     call s:ShowBanner(a:conn, a:chan_obj)
     call vlime#ui#MapBufferKeys('mrepl')
@@ -68,6 +76,13 @@ function! vlime#ui#mrepl#Submit()
     call b:vlime_conn.Send(msg)
 
     return insert_newline ? "\<CR>" : "\<Esc>GA\<CR>"
+endfunction
+
+function! vlime#ui#mrepl#Clear()
+    1,$delete _
+    call s:ShowBanner(b:vlime_conn, b:vlime_mrepl_channel)
+    let prompt = vlime#contrib#mrepl#BuildPrompt(b:vlime_mrepl_channel)
+    call vlime#ui#mrepl#ShowPrompt(bufnr('%'), prompt)
 endfunction
 
 function! s:ShowBanner(conn, chan_obj)

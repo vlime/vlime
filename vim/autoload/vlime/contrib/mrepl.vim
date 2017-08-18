@@ -35,10 +35,6 @@ function! vlime#contrib#mrepl#OnMREPLPrompt(conn, chan_obj) dict
     call s:EnsureBufferOpen(mrepl_buf, 'mrepl')
     let prompt = vlime#contrib#mrepl#BuildPrompt(a:chan_obj)
     call vlime#ui#mrepl#ShowPrompt(mrepl_buf, prompt)
-    if bufnr('%') == mrepl_buf
-        normal! G
-        call feedkeys("\<End>", 'n')
-    endif
 endfunction
 
 function! vlime#contrib#mrepl#BuildPrompt(chan_obj)
