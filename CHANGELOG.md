@@ -1,4 +1,5 @@
 * master
+    * SWANK-MREPL support `:help vlime-mrepl`.
     * Better and customizable auto indent `:help vlime-auto-indent`.
 
 * v0.4.0
