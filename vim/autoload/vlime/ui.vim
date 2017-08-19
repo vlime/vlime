@@ -40,6 +40,7 @@ function! vlime#ui#New()
                 \ 'OnReadString': function('vlime#ui#OnReadString'),
                 \ 'OnReadFromMiniBuffer': function('vlime#ui#OnReadFromMiniBuffer'),
                 \ 'OnIndentationUpdate': function('vlime#ui#OnIndentationUpdate'),
+                \ 'OnNewFeatures': function('vlime#ui#OnNewFeatures'),
                 \ 'OnInvalidRPC': function('vlime#ui#OnInvalidRPC'),
                 \ 'OnInspect': function('vlime#ui#OnInspect'),
                 \ 'OnTraceDialog': function('vlime#ui#OnTraceDialog'),
@@ -203,6 +204,11 @@ function! vlime#ui#OnIndentationUpdate(conn, indent_info) dict
     for i in a:indent_info
         let a:conn.cb_data['indent_info'][i[0]] = [i[1], i[2]]
     endfor
+endfunction
+
+function! vlime#ui#OnNewFeatures(conn, new_features)
+    let new_features = (type(a:new_features) == type(v:null)) ? [] : a:new_features
+    let a:conn.cb_data['features'] = new_features
 endfunction
 
 function! vlime#ui#OnInvalidRPC(conn, rpc_id, err_msg) dict

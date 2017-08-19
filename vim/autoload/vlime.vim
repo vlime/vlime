@@ -121,6 +121,7 @@ function! vlime#New(...)
                     \ 'READ-STRING': function('vlime#OnReadString'),
                     \ 'READ-FROM-MINIBUFFER': function('vlime#OnReadFromMiniBuffer'),
                     \ 'INDENTATION-UPDATE': function('vlime#OnIndentationUpdate'),
+                    \ 'NEW-FEATURES': function('vlime#OnNewFeatures'),
                     \ 'INVALID-RPC': function('vlime#OnInvalidRPC'),
                     \ 'INSPECT': function('vlime#OnInspect'),
                     \ 'CHANNEL-SEND': function('vlime#OnChannelSend'),
@@ -1304,6 +1305,13 @@ function! vlime#OnIndentationUpdate(conn, msg)
     if type(a:conn.ui) != type(v:null)
         let [_msg_type, indent_info] = a:msg
         call a:conn.ui.OnIndentationUpdate(a:conn, indent_info)
+    endif
+endfunction
+
+function! vlime#OnNewFeatures(conn, msg)
+    if type(a:conn.ui) != type(v:null)
+        let [_msg_type, new_features] = a:msg
+        call a:conn.ui.OnNewFeatures(a:conn, new_features)
     endif
 endfunction
 

@@ -1083,6 +1083,11 @@ endfunction
 function! s:OnConnectionInfoComplete(conn, result)
     let a:conn.cb_data['version'] = get(a:result, 'VERSION', '<unkown version>')
     let a:conn.cb_data['pid'] = get(a:result, 'PID', '<unknown pid>')
+    let features = get(a:result, 'FEATURES', [])
+    if type(features) == type(v:null)
+        let features = []
+    endif
+    let a:conn.cb_data['features'] = copy(features)
 endfunction
 
 function! s:OnFuzzyCompletionsComplete(col, cur_pos, conn, result)
