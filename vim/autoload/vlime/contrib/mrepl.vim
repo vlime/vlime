@@ -91,11 +91,18 @@ function! s:OnSetReadMode(conn, chan_obj, msg)
     let a:chan_obj['mrepl']['mode'] = a:msg[1]['name']
 endfunction
 
+function! s:OnEvaluationAborted(conn, chan_obj, msg)
+    if type(a:conn.ui) != type(v:null)
+        call a:conn.ui.OnMREPLWriteResult(a:conn, a:chan_obj, '; Evaluation aborted')
+    endif
+endfunction
+
 let s:channel_event_handlers = {
             \ 'WRITE-RESULT': function('s:OnWriteResult'),
             \ 'WRITE-STRING': function('s:OnWriteString'),
             \ 'PROMPT': function('s:OnPrompt'),
             \ 'SET-READ-MODE': function('s:OnSetReadMode'),
+            \ 'EVALUATION-ABORTED': function('s:OnEvaluationAborted'),
             \ }
 
 function! s:MREPL_ChannelCB(conn, chan_obj, msg)
