@@ -577,8 +577,20 @@ function! s:NameObjToStr(name)
     if type(a:name) == v:t_dict
         return a:name['package'] . '::' . a:name['name']
     elseif type(a:name) == v:t_list
-        return '(' . a:name[0]['name'] . ' ' .
-                    \ a:name[1]['package'] . '::' . a:name[1]['name'] . ')'
+        let name_type = a:name[0]
+        if name_type['package'] == 'KEYWORD'
+            let name_type = ':' . name_type['name']
+        elseif name_type['package'] == 'COMMON-LISP'
+            let name_type = name_type['name']
+        else
+            let name_type = name_type['package'] . '::' . name_type['name']
+        endif
+
+        let name_list = [name_type]
+        for rest_name in a:name[1:]
+            call add(name_list, s:NameObjToStr(rest_name))
+        endfor
+        return '(' . join(name_list) . ')'
     else
         throw 'NameObjToStr: illegal name: ' . string(name)
     endif
