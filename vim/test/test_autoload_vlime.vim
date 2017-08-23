@@ -254,13 +254,12 @@ endfunction
 
 function! TestMakeRemoteChannel()
     let conn = vlime#New()
-    let chan_obj = conn.MakeRemoteChannel(1, 2)
+    let chan_obj = conn.MakeRemoteChannel(1)
     call assert_equal(1, chan_obj['id'])
-    call assert_equal(2, chan_obj['thread'])
     call assert_equal(chan_obj, conn['remote_channels'][1])
 
     try
-        let chan_obj2 = conn.MakeRemoteChannel(1, 3)
+        let chan_obj2 = conn.MakeRemoteChannel(1)
         call assert_false(v:true, 'MakeRemoteChannel did not fail')
     catch
         call assert_match('^[^:]\+: channel 1 already exists', v:exception)
@@ -478,29 +477,45 @@ let b:messages_to_test = [
                 \ s:OKReturn(v:null)],
             \ ['DialogToggleTrace',
                 \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-TOGGLE-TRACE',
-                    \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
-                        \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]),
+                    \ [{'package': 'SWANK', 'name': 'FROM-STRING'}, 'dummy']),
                 \ s:OKReturn(v:null),
-                \ 'DUMMY'],
+                \ 'dummy'],
+            \ ['DialogToggleTrace',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-TOGGLE-TRACE',
+                    \ [{'package': 'SWANK', 'name': 'FROM-STRING'}, '(setf dummy)']),
+                \ s:OKReturn(v:null),
+                \ '(setf dummy)'],
             \ ['DialogToggleTrace',
                 \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-TOGGLE-TRACE',
                     \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
-                        \ [{'package': 'COMMON-LISP', 'name': 'SETF'},
-                            \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]]),
+                        \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]),
                 \ s:OKReturn(v:null),
-                \ ['SETF', 'DUMMY']],
+                \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
+                    \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]],
+            \ ['DialogTrace',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-TRACE',
+                    \ [{'package': 'SWANK', 'name': 'FROM-STRING'}, 'dummy']),
+                \ s:OKReturn(v:null),
+                \ 'dummy'],
             \ ['DialogTrace',
                 \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-TRACE',
                     \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
                         \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]),
                 \ s:OKReturn(v:null),
-                \ 'DUMMY'],
+                \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
+                    \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]],
+            \ ['DialogUntrace',
+                \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-UNTRACE',
+                    \ [{'package': 'SWANK', 'name': 'FROM-STRING'}, 'dummy']),
+                \ s:OKReturn(v:null),
+                \ 'dummy'],
             \ ['DialogUntrace',
                 \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-UNTRACE',
                     \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
                         \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]),
                 \ s:OKReturn(v:null),
-                \ 'DUMMY'],
+                \ [{'package': 'COMMON-LISP', 'name': 'QUOTE'},
+                    \ {'package': 'COMMON-LISP-USER', 'name': 'DUMMY'}]],
             \ ['DialogUntraceAll',
                 \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'DIALOG-UNTRACE-ALL'),
                 \ s:OKReturn(v:null)],
