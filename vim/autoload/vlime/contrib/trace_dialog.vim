@@ -21,9 +21,8 @@ endfunction
 " @public
 "
 " Toggle the traced state of a function in SWANK-TRACE-DIALOG. {name} can be a
-" plain string specifying the function name, or ["SETF", <name>] to refer to a
-" SETF function. You can also pass raw JSON objects. See the function
-" "s:TranslateFunctionSpec" for details.
+" plain string specifying the function name, or "(setf <name>)" to refer to a
+" SETF function. You can also pass raw JSON objects.
 "
 " This method needs the SWANK-TRACE-DIALOG contrib module. See
 " @function(VlimeConnection.SwankRequire).
@@ -31,7 +30,7 @@ function! vlime#contrib#trace_dialog#DialogToggleTrace(name, ...) dict
     let Callback = get(a:000, 0, v:null)
     call self.Send(self.EmacsRex(
                     \ [vlime#SYM('SWANK-TRACE-DIALOG', 'DIALOG-TOGGLE-TRACE'),
-                        \ s:TranslateFunctionSpec(a:name, self)]),
+                        \ s:TranslateFunctionSpec(a:name)]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#contrib#trace_dialog#DialogToggleTrace']))
 endfunction
@@ -51,7 +50,7 @@ function! vlime#contrib#trace_dialog#DialogTrace(name, ...) dict
     let pkg = s:GetCurrentPackage(self)
     call self.Send(self.EmacsRex(
                     \ [vlime#SYM('SWANK-TRACE-DIALOG', 'DIALOG-TRACE'),
-                        \ s:TranslateFunctionSpec(a:name, self)]),
+                        \ s:TranslateFunctionSpec(a:name)]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#contrib#trace_dialog#DialogTrace']))
 endfunction
@@ -71,7 +70,7 @@ function! vlime#contrib#trace_dialog#DialogUntrace(name, ...) dict
     let pkg = s:GetCurrentPackage(self)
     call self.Send(self.EmacsRex(
                     \ [vlime#SYM('SWANK-TRACE-DIALOG', 'DIALOG-UNTRACE'),
-                        \ s:TranslateFunctionSpec(a:name, self)]),
+                        \ s:TranslateFunctionSpec(a:name)]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#contrib#trace_dialog#DialogUntrace']))
 endfunction
@@ -234,22 +233,11 @@ function! vlime#contrib#trace_dialog#Init(conn)
     let a:conn['ReportTraceDetail'] = function('vlime#contrib#trace_dialog#ReportTraceDetail')
 endfunction
 
-function! s:TranslateFunctionSpec(spec, conn)
+function! s:TranslateFunctionSpec(spec)
     if type(a:spec) == v:t_string
-        return [vlime#CL('QUOTE'), vlime#SYM(s:GetCurrentPackage(a:conn), a:spec)]
-    elseif type(a:spec) == v:t_list &&
-                \ len(a:spec) == 2 &&
-                \ type(a:spec[0]) == v:t_string &&
-                \ a:spec[0] == 'SETF'
-        return [vlime#CL('QUOTE'),
-                    \ [vlime#CL(a:spec[0]),
-                        \ vlime#SYM(s:GetCurrentPackage(a:conn), a:spec[1])]]
-    elseif type(a:spec) == v:t_dict ||
-                \ (type(a:spec) == v:t_list &&
-                    \ len(a:spec) == 2 &&
-                    \ type(a:spec[0]) == v:t_dict &&
-                    \ a:spec[0]['name'] == 'SETF')
-        return [vlime#CL('QUOTE'), a:spec]
+        return [vlime#SYM('SWANK', 'FROM-STRING'), a:spec]
+    else
+        return a:spec
     endif
 endfunction
 

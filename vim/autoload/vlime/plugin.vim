@@ -1360,48 +1360,7 @@ function! s:UninternSymbolInputComplete(conn, sym)
 endfunction
 
 function! s:DialogToggleTraceInputComplete(conn, func_spec)
-    let [raw_form, _parsed_len, complete] = vlime#ToRawForm(a:func_spec)
-    if !complete
-        call vlime#ui#ErrMsg('Invalid function specifier: ' . string(a:func_spec))
-        return
-    endif
-
-    let name = v:null
-    if len(raw_form) == 2 && toupper(raw_form[0]) == 'SETF'
-        let name = raw_form[1]
-    elseif len(raw_form) == 0
-        let name = a:func_spec
-    endif
-
-    if type(name) == type(v:null)
-        call vlime#ui#ErrMsg('Invalid function specifier: ' . string(a:func_spec))
-        return
-    endif
-
-    let matched = matchlist(name,
-                \ '\m^\s*\(\(|\?\)\([^|:[:space:]]\+\)\2\)::\?\(\(|\?\)\([^|:[:space:]]\+\)\5\)\s*$')
-    if len(matched) > 0
-        let package = matched[3]
-        if matched[2] == ''
-            let package = toupper(package)
-        endif
-
-        let func_name = matched[6]
-        if matched[5] == ''
-            let func_name = toupper(func_name)
-        endif
-
-        let r_func_spec = vlime#SYM(package, func_name)
-    else
-        let r_func_spec = toupper(name)
-    endif
-
-    if len(raw_form) == 2
-        let op = (type(r_func_spec) == v:t_string) ? 'SETF' : vlime#CL('SETF')
-        let r_func_spec = [op, r_func_spec]
-    endif
-
-    call a:conn.DialogToggleTrace(r_func_spec,
+    call a:conn.DialogToggleTrace(a:func_spec,
                 \ function('s:OnDialogToggleTraceComplete'))
 endfunction
 
