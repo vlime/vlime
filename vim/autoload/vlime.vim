@@ -394,7 +394,7 @@ endfunction
 "
 " Save the info for a remote channel (in the sense of SLIME channels).
 " {chan_id} should be an ID assigned by the server.
-function! vlime#MakeRemoteChannel(chan_id, ...) dict
+function! vlime#MakeRemoteChannel(chan_id) dict
     if has_key(self['remote_channels'], a:chan_id)
         throw 'vlime#MakeRemoteChannel: channel ' . a:chan_id . ' already exists'
     endif
