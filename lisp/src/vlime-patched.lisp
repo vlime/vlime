@@ -53,7 +53,21 @@
       (write-sequence bin-line stream)
       (finish-output stream))))
 
+;; This function essentially reads a VLIME-RAW-MSG. Currently messages of this
+;; type are only used for ".slime-secret" authentication.
+(defun read-packet (stream)
+  (let* ((bin-line (read-binary-line stream))
+         (line (swank/backend:utf8-to-string bin-line))
+         (json (yason:parse line)))
+    (let ((form
+            (swank/rpc::read-form
+              (swank/rpc::prin1-to-string-for-emacs
+                (json-to-form json) swank::*swank-io-package*)
+              swank::*swank-io-package*)))
+      (nth 1 (nth 1 form)))))
+
 (defun patch-swank ()
   (setf (symbol-function 'swank/rpc:read-message) (symbol-function 'read-message)
-        (symbol-function 'swank/rpc:write-message) (symbol-function 'write-message))
+        (symbol-function 'swank/rpc:write-message) (symbol-function 'write-message)
+        (symbol-function 'swank/rpc:read-packet) (symbol-function 'read-packet))
   (values))
