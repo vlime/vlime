@@ -140,6 +140,7 @@ function! vlime#plugin#ConnectREPL(...)
                     \ 'SWANK-C-P-C', 'SWANK-ARGLISTS', 'SWANK-REPL',
                     \ 'SWANK-FUZZY']
 
+    call s:MaybeSendSecret(conn)
     call vlime#ChainCallbacks(
                 \ function(conn.ConnectionInfo, [v:true]),
                 \ function('s:OnConnectionInfoComplete'),
@@ -1423,5 +1424,22 @@ function! s:GetArgListWinWidth()
         return winwidth(arglist_win_nr)
     else
         return v:null
+    endif
+endfunction
+
+function! s:MaybeSendSecret(conn)
+    if exists('g:vlime_secret_file')
+        let secret_file = g:vlime_secret_file
+    else
+        let script_path = expand('<sfile>:p')
+        let script_dir = fnamemodify(script_path, ':h')
+        let path_sep = script_path[len(script_dir)]
+        let secret_file = join([$HOME, '.slime-secret'], path_sep)
+    endif
+
+    if filereadable(secret_file)
+        let content = readfile(secret_file, '', 1)
+        let secret = len(content) > 0 ? content[0] : ''
+        call a:conn.Send([vlime#KW('VLIME-RAW-MSG'), secret])
     endif
 endfunction
