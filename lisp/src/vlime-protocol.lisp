@@ -168,10 +168,10 @@
          (full-line (concatenate
                       'string encoded (format nil "~c~c" #\return #\linefeed))))
     (ecase return-type
-          (:octets
-            (swank/backend:string-to-utf8 full-line))
-          (:string
-            full-line))))
+      (:octets
+        (swank/backend:string-to-utf8 full-line))
+      (:string
+        full-line))))
 
 
 (defun parse-line (data read-buffer)
