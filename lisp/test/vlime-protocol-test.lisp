@@ -9,7 +9,7 @@
 (in-package #:vlime-protocol-test)
 
 
-(plan 27)
+(plan 28)
 
 (ok
   (equal (parse-form "(simple form)")
@@ -104,6 +104,13 @@
                               :string)
          "00002C(:emacs-rex (swank:connection-info) nil t 1)")
   "msg-client-to-swank - simple message")
+
+(ok
+  (equal (msg-client-to-swank "[1, [{\"name\":\"VLIME-RAW-MSG\", \"package\":\"KEYWORD\"},
+                                    \"This-is-a-raw-message\"]]"
+                              :string)
+         "000015This-is-a-raw-message")
+  "msg-client-to-swank - raw message")
 
 (let ((msg (msg-swank-to-client "(:return (:ok 42) 1)" :string))
       (cr-lf (format nil "~c~c" #\return #\linefeed)))

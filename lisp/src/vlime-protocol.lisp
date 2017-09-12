@@ -54,6 +54,12 @@
        (eql (car (nth 1 form)) :emacs-rex)))
 
 
+(defun client-raw-msg-p (form)
+  (and (listp form)
+       (listp (nth 1 form))
+       (eql (car (nth 1 form)) :vlime-raw-msg)))
+
+
 (defun remove-client-seq (form)
   (nth 1 form))
 
@@ -120,6 +126,8 @@
   (cond
     ((client-emacs-rex-p form)
      (write-form (seq-client-to-swank form)))
+    ((client-raw-msg-p form)
+     (nth 1 (nth 1 form)))
     (t
      (write-form (remove-client-seq form)))))
 
