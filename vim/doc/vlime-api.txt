@@ -496,9 +496,8 @@ VlimeConnection.DialogToggleTrace({name}, [callback])
                                          *VlimeConnection.DialogToggleTrace()*
 
   Toggle the traced state of a function in SWANK-TRACE-DIALOG. {name} can be a
-  plain string specifying the function name, or ["SETF", <name>] to refer to a
-  SETF function. You can also pass raw JSON objects. See the function
-  "s:TranslateFunctionSpec" for details.
+  plain string specifying the function name, or "(setf <name>)" to refer to a
+  SETF function. You can also pass raw JSON objects.
 
   This method needs the SWANK-TRACE-DIALOG contrib module. See
   |VlimeConnection.SwankRequire()|.
