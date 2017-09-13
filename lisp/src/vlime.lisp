@@ -8,7 +8,7 @@
 (in-package #:vlime)
 
 
-(defgeneric start-server (backend host port swank-host swank-port))
+(defgeneric start-server (backend host port swank-host swank-port dont-close))
 
 
 (define-condition quicklisp-not-found-error (error)
@@ -43,7 +43,8 @@
                   port-file
                   (start-swank t)
                   (swank-interface #(127 0 0 1) swank-interface-p)
-                  (swank-port 0 swank-port-p))
+                  (swank-port 0 swank-port-p)
+                  (dont-close t))
   (when (not backend)
     (let ((preferred-style (dyn-call "SWANK/BACKEND" "PREFERRED-COMMUNICATION-STYLE")))
       (case preferred-style
@@ -77,7 +78,10 @@
                          swank-interface
                          #(127 0 0 1))))
                  (multiple-value-bind (server local-name)
-                                      (start-server backend interface port to-connect swank-port)
+                                      (start-server backend
+                                                    interface port
+                                                    to-connect swank-port
+                                                    dont-close)
                    (declare (ignore server))
                    (announce-vlime-port (nth 1 local-name)))))
              (start-swank-server (announce-port)
@@ -90,7 +94,7 @@
                            (format nil "~{~a~^.~}"
                                    (loop for b across swank-interface collect b)))
                      (dyn-call "SWANK" "SETUP-SERVER"
-                               swank-port announce-port swank-comm-style t nil))
+                               swank-port announce-port swank-comm-style dont-close nil))
                    (setf (symbol-value (find-symbol "*LOOPBACK-INTERFACE*" "SWANK")) swank-loopback)))))
       (ecase backend
         (:vlime-usocket
