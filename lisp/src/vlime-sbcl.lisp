@@ -78,10 +78,14 @@
 
 (defmethod start-server ((backend (eql :sbcl)) host port swank-host swank-port)
   (vom:config t :info)
-  (setf vlime-connection:*connections* (make-hash-table))
-  (setf aio-sbcl:*fd-map* (make-hash-table))
-  (setf aio-sbcl:*static-buffer* (make-array 4096 :element-type '(unsigned-byte 8)))
-  (setf vlime-sbcl::*read-buffer-map* (make-hash-table))
+  (unless vlime-connection:*connections*
+    (setf vlime-connection:*connections* (make-hash-table)))
+  (unless aio-sbcl:*fd-map*
+    (setf aio-sbcl:*fd-map* (make-hash-table)))
+  (unless aio-sbcl:*static-buffer*
+    (setf aio-sbcl:*static-buffer* (make-array 4096 :element-type '(unsigned-byte 8))))
+  (unless vlime-sbcl::*read-buffer-map*
+    (setf vlime-sbcl::*read-buffer-map* (make-hash-table)))
 
   (let* ((server (aio-sbcl:tcp-server
                    host port

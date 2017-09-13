@@ -15,6 +15,7 @@
            #:aio-fd
            #:aio-fd-fd
            #:aio-fd-socket
+           #:aio-fd-parent
            #:aio-fd-write-buffer
            #:aio-fd-read-handle
            #:aio-fd-write-handle
@@ -63,6 +64,10 @@
      :initarg :socket
      :initform nil
      :accessor aio-fd-socket)
+   (parent
+     :initarg :parent
+     :initform nil
+     :accessor aio-fd-parent)
    (write-buffer
      :initarg :write-buffer
      :initform nil
@@ -325,6 +330,7 @@
                (make-instance 'aio-fd
                               :fd client-fd
                               :socket client-socket
+                              :parent afd
                               :read-cb client-read-cb
                               :write-cb client-write-cb
                               :error-cb client-error-cb)))
