@@ -1,4 +1,5 @@
 * master
+    * Show quick references for Vlime buffers `:help vlime-mappings`.
     * .slime-secret support `:help vlime-slime-secret`.
     * SWANK-MREPL support `:help vlime-mrepl`.
     * Better and customizable auto indent `:help vlime-auto-indent`.

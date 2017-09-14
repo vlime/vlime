@@ -492,6 +492,10 @@ adding this line to your |vimrc| file, to use the comma instead:
 
     let maplocalleader = ","
 
+You can type "<LocalLeader>?" (without the quote marks) in most of
+Vlime buffers, including Common Lisp source files, to see a quick
+reference for the exact mappings defined in those buffers.
+
 ----------------------------------------------------------------------
 4.1 Remap Keys                                  *vlime-mappings-remap*
 
