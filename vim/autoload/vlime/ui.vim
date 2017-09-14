@@ -1644,6 +1644,10 @@ function! s:InString(cur_pos)
 endfunction
 
 function! s:ExpandLeader(key)
-    let local_leader = exists('maplocalleader') ? maplocalleader : '\'
+    let default_leader = '\'
+    let local_leader = get(g:, 'maplocalleader', default_leader)
+    if len(local_leader) <= 0
+        let local_leader = default_leader
+    endif
     return substitute(a:key, '\c<LocalLeader>', local_leader, 'g')
 endfunction
