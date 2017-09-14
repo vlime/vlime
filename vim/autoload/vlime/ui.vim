@@ -1249,7 +1249,7 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
             if bufnr(a:file_path) > 0
                 try
                     normal! m'
-                    execute edit_cmd ('#' . a:file_path)
+                    execute edit_cmd '#' . a:file_path
                 catch /^Vim\%((\a\+)\)\=:E37/  " No write since last change
                     " Vim will raise E37 when editing the same buffer with
                     " unsaved changes. Double-check it IS the same buffer.
