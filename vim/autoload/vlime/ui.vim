@@ -1450,25 +1450,34 @@ function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
             let map_cmd = a:mode . 'noremap'
             execute map_cmd flags kk a:cmd
         endfor
+        return copy(key_list)
     else
         if !hasmapto(a:cmd, a:mode)
+            let keys_mapped = []
             for kk in key_list
                 if len(maparg(kk, a:mode)) <= 0
                     let map_cmd = a:mode . 'noremap'
                     execute map_cmd flags kk a:cmd
+                    call add(keys_mapped, kk)
                 else
                     call s:LogSkippedKey(log, a:mode, kk, a:cmd,
                                 \ 'Key already mapped.')
                 endif
             endfor
+            return keys_mapped
         else
             for kk in key_list
                 call s:LogSkippedKey(log, a:mode, kk, a:cmd,
                             \ 'Command already mapped.')
             endfor
+            return []
         endif
     endif
 endfunction
+
+if !exists('g:vlime_key_descriptions')
+    let g:vlime_key_descriptions = {}
+endif
 
 ""
 " @usage {buf_type} [force]
@@ -1483,9 +1492,49 @@ function! vlime#ui#MapBufferKeys(buf_type, ...)
     if type(force) == type(v:null)
         let force = exists('g:vlime_force_default_keys') ? g:vlime_force_default_keys : v:false
     endif
-    for [mode, key, cmd] in vlime#ui#mapping#GetBufferMappings(a:buf_type)
-        call vlime#ui#EnsureKeyMapped(mode, key, cmd, force, a:buf_type)
+
+    let build_key_desc = !has_key(g:vlime_key_descriptions, a:buf_type)
+
+    if build_key_desc
+        let key_descriptions = []
+    endif
+
+    for [mode, key, cmd, desc] in vlime#ui#mapping#GetBufferMappings(a:buf_type)
+        let keys_mapped = vlime#ui#EnsureKeyMapped(mode, key, cmd, force, a:buf_type)
+        if build_key_desc
+            for kk in keys_mapped
+                call add(key_descriptions, [mode, s:ExpandLeader(kk), desc])
+            endfor
+        endif
     endfor
+
+    if build_key_desc
+        let g:vlime_key_descriptions[a:buf_type] = key_descriptions
+    endif
+endfunction
+
+function! vlime#ui#BuildKeyDescriptions(buf_type)
+    let key_desc = get(g:vlime_key_descriptions, a:buf_type, v:null)
+    if type(key_desc) != type(v:null) && len(key_desc) > 0
+        let max_key_len = 3
+        for dd in key_desc
+            if len(dd[1]) > max_key_len
+                let max_key_len = len(dd[1])
+            endif
+        endfor
+
+        let content = 'MODE  ' . vlime#ui#Pad('KEY', '', max_key_len + 1) . 'DESCRIPTION' . "\n"
+        for [mode, key, desc] in key_desc
+            let content .= vlime#ui#Pad(mode, '', 5) . vlime#ui#Pad(key, '', max_key_len + 1) . desc . "\n"
+        endfor
+        return content
+    else
+        return '<No Vlime mapping defined for ' . a:buf_type . '>'
+    endif
+endfunction
+
+function! vlime#ui#ShowQuickRef(buf_type)
+    call vlime#ui#ShowPreview(v:null, vlime#ui#BuildKeyDescriptions(a:buf_type), v:false)
 endfunction
 
 ""
@@ -1592,4 +1641,9 @@ function! s:InString(cur_pos)
             call setpos('.', old_pos)
         endtry
     endif
+endfunction
+
+function! s:ExpandLeader(key)
+    let local_leader = exists('maplocalleader') ? maplocalleader : '\'
+    return substitute(a:key, '\c<LocalLeader>', local_leader, 'g')
 endfunction
