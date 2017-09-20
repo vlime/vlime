@@ -185,79 +185,93 @@ function! vlime#plugin#SelectCurConnection()
 endfunction
 
 ""
-" @usage [content]
+" @usage [content] [edit]
 " @public
 "
 " Evaluate [content] in the REPL and show the result in the REPL buffer. If
-" [content] is omitted, show an input buffer.
+" [content] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 function! vlime#plugin#SendToREPL(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [content, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ content,
                 \ function('s:SendToREPLInputComplete', [conn]),
                 \ 'Send to REPL: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
 ""
-" @usage [content] [policy]
+" @usage [content] [policy] [edit]
 " @public
 "
 " Compile [content], with the specified [policy], and show the result in the
-" REPL buffer. If [content] is omitted or v:null, show an input buffer. If
-" [policy] is omitted, try to use |g:vlime_compiler_policy|. Open the compiler
-" notes window when there are warnings or errors etc.
+" REPL buffer. If [content] is omitted or v:null, or [edit] is present and
+" |TRUE|, show an input buffer. If [policy] is omitted, try to use
+" |g:vlime_compiler_policy|. Open the compiler notes window when there are
+" warnings or errors etc.
 function! vlime#plugin#Compile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
-    let content = get(a:000, 0, v:null)
+    let [content, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 2, v:false),
+                    \ get(a:000, 0, v:null))
     let policy = get(a:000, 1, v:null)
     let win = win_getid()
     call vlime#ui#input#MaybeInput(
                 \ content,
                 \ function('s:CompileInputComplete', [conn, win, policy]),
                 \ 'Compile: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
 ""
-" @usage [content]
+" @usage [content] [edit]
 " @public
 "
 " Evaluate [content] and launch the inspector with the evaluation result
-" loaded. If [content] is omitted, show an input buffer.
+" loaded. If [content] is omitted, or [edit] is present and |TRUE|, show an
+" input buffer.
 function! vlime#plugin#Inspect(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [content, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ content,
                 \ { str ->
                     \ conn.InitInspector(str,
                         \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})},
                 \ 'Inspect: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
 ""
-" @usage [func]
+" @usage [func] [edit]
 " @public
 "
 " Toggle the traced state of [func]. [func] should be a string specifying a
 " plain function name, or in the form "(setf <name>)", to trace a
-" setf-expander. If [func] is omitted, show an input buffer.
+" setf-expander. If [func] is omitted, or [edit] is present and |TRUE|, show an
+" input buffer.
 "
 " This function needs the SWANK-TRACE-DIALOG contrib module. See
 " |g:vlime_contribs| and @function(vlime#plugin#SwankRequire).
@@ -272,11 +286,15 @@ function! vlime#plugin#DialogToggleTrace(...)
         return
     endif
 
+    let [content, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ content,
                 \ function('s:DialogToggleTraceInputComplete', [conn]),
                 \ 'Toggle tracing: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
@@ -298,37 +316,45 @@ function! vlime#plugin#OpenTraceDialog()
 endfunction
 
 ""
-" @usage [file_name] [policy]
+" @usage [file_name] [policy] [edit]
 " @public
 "
 " Compile a file named [file_name], with the specified [policy], and show the
-" result in the REPL buffer. If [file_name] is omitted or v:null, prompt for
-" the file name. If [policy] is omitted, try to use |g:vlime_compiler_policy|.
-" Open the compiler notes window when there are warnings or errors etc.
+" result in the REPL buffer. If [file_name] is omitted or v:null, or [edit] is
+" present and |TRUE|, prompt for the file name. If [policy] is omitted, try to
+" use |g:vlime_compiler_policy|. Open the compiler notes window when there are
+" warnings or errors etc.
 function! vlime#plugin#CompileFile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
-    let file_name = get(a:000, 0, v:null)
+    let [file_name, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 2, v:false),
+                    \ get(a:000, 0, v:null))
+    if type(default) == type(v:null)
+        let default = ''
+    endif
     let policy = get(a:000, 1, v:null)
     let win = win_getid()
     call vlime#ui#input#MaybeInput(
                 \ file_name,
                 \ function('s:CompileFileInputComplete', [conn, win, policy]),
                 \ 'Compile file: ',
-                \ '',
+                \ default,
                 \ v:null,
                 \ 'file')
 endfunction
 
 ""
-" @usage [expr] [type]
+" @usage [expr] [type] [edit]
 " @public
 "
 " Perform macro expansion on [expr] and show the result in the preview window.
-" If [expr] is omitted or v:null, show an input buffer.
+" If [expr] is omitted or v:null, or [edit] is present and |TRUE|, show an
+" input buffer.
 "
 " [type] specifies the type of expansion to perform. It can be "expand",
 " "one", or "all". When it's omitted or "expand", repeatedly expand [expr]
@@ -341,7 +367,10 @@ function! vlime#plugin#ExpandMacro(...)
         return
     endif
 
-    let expr = get(a:000, 0, v:null)
+    let [expr, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 2, v:false),
+                    \ get(a:000, 0, v:null))
     let type = get(a:000, 1, v:null)
 
     if type(type) == type(v:null) || type == 'expand'
@@ -352,48 +381,59 @@ function! vlime#plugin#ExpandMacro(...)
         let CB = { e -> conn.SwankMacroExpandOne(e, function('s:ShowAsyncResult'))}
     endif
 
-    call vlime#ui#input#MaybeInput(expr, CB, 'Expand macro: ', v:null, conn)
+    call vlime#ui#input#MaybeInput(expr, CB, 'Expand macro: ', default, conn)
 endfunction
 
 ""
-" @usage [content]
+" @usage [content] [edit]
 " @public
 "
 " Compile and disassemble [content]. Show the result in the preview window. If
-" [content] is omitted, show an input buffer.
+" [content] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 function! vlime#plugin#DisassembleForm(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [content, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ content,
                 \ { expr ->
                     \ conn.DisassembleForm(expr, function('s:ShowAsyncResult'))},
                 \ 'Disassemble: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
 ""
-" @usage [file_name]
+" @usage [file_name] [edit]
 " @public
 "
-" Load a file named [file_name]. If [file_name] is omitted, prompt for the
-" file name.
+" Load a file named [file_name]. If [file_name] is omitted, or [edit] is
+" present and |TRUE|, prompt for the file name.
 function! vlime#plugin#LoadFile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [file_name, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
+    if type(default) == type(v:null)
+        let default = ''
+    endif
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ file_name,
                 \ { fname ->
                     \ conn.LoadFile(fname, function('s:OnLoadFileComplete', [fname]))},
                 \ 'Load file: ',
-                \ '',
+                \ default,
                 \ v:null,
                 \ 'file')
 endfunction
@@ -439,23 +479,27 @@ function! vlime#plugin#SwankRequire(contribs, ...)
 endfunction
 
 ""
-" @usage [op]
+" @usage [op] [edit]
 " @public
 "
 " Show the arglist description for operator [op] in the arglist window. If
-" [op] is omitted, show an input buffer.
+" [op] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 function! vlime#plugin#ShowOperatorArgList(...)
     let conn = vlime#connection#Get(v:true)
     if type(conn) == type(v:null)
         return
     endif
 
+    let [operator, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ operator,
                 \ { op ->
                     \ conn.OperatorArgList(op, function('s:OnOperatorArgListComplete', [op]))},
                 \ 'Arglist for operator: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
@@ -501,47 +545,54 @@ function! vlime#plugin#CurAutodoc()
 endfunction
 
 ""
-" @usage [symbol]
+" @usage [symbol] [edit]
 " @public
 "
 " Show a description for [symbol] in the preview window. If [symbol] is
-" omitted, show an input buffer.
+" omitted, or [edit] is present and |TRUE|, show an input buffer.
 function! vlime#plugin#DescribeSymbol(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [symbol, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ symbol,
                 \ { sym ->
                     \ conn.DescribeSymbol(sym, function('s:ShowAsyncResult'))},
                 \ 'Describe symbol: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
 ""
-" @usage {ref_type} [sym]
+" @usage {ref_type} [sym] [edit]
 " @public
 "
 " Lookup cross references for [sym], and show the results in the xref window.
-" If [sym] is omitted, show an input buffer. See
-" @function(VlimeConnection.XRef) for possible values for {ref_type}.
+" If [sym] is omitted, or [edit] is present and |TRUE|, show an input buffer.
+" See @function(VlimeConnection.XRef) for possible values for {ref_type}.
 function! vlime#plugin#XRefSymbol(ref_type, ...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
-    let sym = get(a:000, 0, v:null)
+    let [sym, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     let win = win_getid()
     call vlime#ui#input#MaybeInput(
                 \ sym,
                 \ { s ->
                     \ conn.XRef(a:ref_type, s, function('s:OnXRefComplete', [win]))},
                 \ 'XRef symbol: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
@@ -592,90 +643,105 @@ function! vlime#plugin#XRefSymbolWrapper()
 endfunction
 
 ""
-" @usage [sym]
+" @usage [sym] [edit]
 " @public
 "
 " Find the definition for [sym], and show the results in the xref window. If
-" [sym] is omitted, show an input buffer.
+" [sym] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 function! vlime#plugin#FindDefinition(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
-    let sym = get(a:000, 0, v:null)
+    let [sym, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     let win = win_getid()
     call vlime#ui#input#MaybeInput(
                 \ sym,
                 \ { s ->
                     \ conn.FindDefinitionsForEmacs(s, function('s:OnXRefComplete', [win]))},
                 \ 'Definition of symbol: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
 ""
-" @usage [pattern]
+" @usage [pattern] [edit]
 " @public
 "
 " Apropos search for [pattern]. Show the results in the preview window. If
-" [pattern] is omitted, show an input buffer.
+" [pattern] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 function! vlime#plugin#AproposList(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [pattern, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ pattern,
                 \ { pattern ->
                     \ conn.AproposListForEmacs(
                         \ pattern, v:false, v:false, v:null,
                         \ function('s:OnAproposListComplete'))},
                 \ 'Apropos search: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
 ""
-" @usage [symbol]
+" @usage [symbol] [edit]
 " @public
 "
 " Show the documentation for [symbol] in the preview window. If [symbol] is
-" omitted, show an input buffer.
+" omitted, or [edit] is present and |TRUE|, show an input buffer.
 function! vlime#plugin#DocumentationSymbol(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [symbol, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ symbol,
                 \ { sym ->
                     \ conn.DocumentationSymbol(sym, function('s:ShowAsyncResult'))},
                 \ 'Documentation for symbol: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
 ""
-" @usage [sym]
+" @usage [sym] [edit]
 " @public
 "
 " Set a breakpoint at entry to a function with the name [sym]. If [sym] is
-" omitted, show an input buffer.
+" omitted, or [edit] is present and |TRUE|, show an input buffer.
 function! vlime#plugin#SetBreakpoint(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [symbol, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ symbol,
                 \ { sym ->
                     \ conn.SLDBBreak(sym, function('s:OnSLDBBreakComplete'))},
                 \ 'Set breakpoint at function: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
@@ -693,42 +759,51 @@ function! vlime#plugin#ListThreads()
 endfunction
 
 ""
-" @usage [sym]
+" @usage [sym] [edit]
 " @public
 "
-" Undefine a function with the name [sym]. If [sym] is omitted, show an input
-" buffer.
+" Undefine a function with the name [sym]. If [sym] is omitted, or [edit] is
+" present and |TRUE|, show an input buffer.
 function! vlime#plugin#UndefineFunction(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [symbol, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ symbol,
                 \ { sym ->
                     \ conn.UndefineFunction(sym, function('s:OnUndefineFunctionComplete'))},
                 \ 'Undefine function: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
 ""
-" @usage [sym]
+" @usage [sym] [edit]
 " @public
 "
-" Unintern a symbol [sym]. If [sym] is omitted, show an input buffer.
+" Unintern a symbol [sym]. If [sym] is omitted, or [edit] is present and
+" |TRUE|, show an input buffer.
 function! vlime#plugin#UninternSymbol(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
         return
     endif
 
+    let [symbol, default] =
+                \ s:InputCheckEditFlag(
+                    \ get(a:000, 1, v:false),
+                    \ get(a:000, 0, v:null))
     call vlime#ui#input#MaybeInput(
-                \ get(a:000, 0, v:null),
+                \ symbol,
                 \ function('s:UninternSymbolInputComplete', [conn]),
                 \ 'Unintern symbol: ',
-                \ v:null,
+                \ default,
                 \ conn)
 endfunction
 
@@ -1007,6 +1082,13 @@ function! vlime#plugin#Setup(...)
         return
     endif
     let b:vlime_setup = v:true
+
+    if exists('g:vlime_overlay') &&
+                \ type(g:vlime_overlay) == v:t_string &&
+                \ len(g:vlime_overlay) > 0
+        let OverlayInitCB = function('vlime#overlay#' . g:vlime_overlay . '#Init')
+        call OverlayInitCB()
+    endif
 
     setlocal omnifunc=vlime#plugin#CompleteFunc
     setlocal indentexpr=vlime#plugin#CalcCurIndent()
@@ -1442,4 +1524,8 @@ function! s:MaybeSendSecret(conn)
         let secret = len(content) > 0 ? content[0] : ''
         call a:conn.Send([vlime#KW('VLIME-RAW-MSG'), secret])
     endif
+endfunction
+
+function! s:InputCheckEditFlag(edit, text)
+    return a:edit ? [v:null, a:text] : [a:text, v:null]
 endfunction
