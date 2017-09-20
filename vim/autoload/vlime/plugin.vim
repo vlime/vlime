@@ -339,7 +339,7 @@ function! vlime#plugin#CompileFile(...)
         let default = ''
     endif
     let policy = get(a:000, 1, v:null)
-    let load = get(a:000, 2, v:null)
+    let load = get(a:000, 2, v:true)
     let win = win_getid()
     call vlime#ui#input#MaybeInput(
                 \ file_name,
