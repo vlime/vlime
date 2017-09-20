@@ -316,14 +316,15 @@ function! vlime#plugin#OpenTraceDialog()
 endfunction
 
 ""
-" @usage [file_name] [policy] [edit]
+" @usage [file_name] [policy] [load] [edit]
 " @public
 "
 " Compile a file named [file_name], with the specified [policy], and show the
 " result in the REPL buffer. If [file_name] is omitted or v:null, or [edit] is
 " present and |TRUE|, prompt for the file name. If [policy] is omitted, try to
-" use |g:vlime_compiler_policy|. Open the compiler notes window when there are
-" warnings or errors etc.
+" use |g:vlime_compiler_policy|. If [load] is present and |FALSE|, do not load
+" the compiled file after successful compilation. Open the compiler notes
+" window when there are warnings or errors etc.
 function! vlime#plugin#CompileFile(...)
     let conn = vlime#connection#Get()
     if type(conn) == type(v:null)
@@ -332,16 +333,17 @@ function! vlime#plugin#CompileFile(...)
 
     let [file_name, default] =
                 \ s:InputCheckEditFlag(
-                    \ get(a:000, 2, v:false),
+                    \ get(a:000, 3, v:false),
                     \ get(a:000, 0, v:null))
     if type(default) == type(v:null)
         let default = ''
     endif
     let policy = get(a:000, 1, v:null)
+    let load = get(a:000, 2, v:null)
     let win = win_getid()
     call vlime#ui#input#MaybeInput(
                 \ file_name,
-                \ function('s:CompileFileInputComplete', [conn, win, policy]),
+                \ function('s:CompileFileInputComplete', [conn, win, policy, load]),
                 \ 'Compile file: ',
                 \ default,
                 \ v:null,
@@ -1412,7 +1414,7 @@ function! s:CompileInputComplete(conn, win, policy, content)
     endif
 endfunction
 
-function! s:CompileFileInputComplete(conn, win, policy, file_name)
+function! s:CompileFileInputComplete(conn, win, policy, load, file_name)
     if type(a:policy) != type(v:null)
         let policy = a:policy
     elseif exists('g:vlime_compiler_policy')
@@ -1422,7 +1424,7 @@ function! s:CompileFileInputComplete(conn, win, policy, file_name)
     endif
 
     call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call a:conn.CompileFileForEmacs(a:file_name, v:true, policy,
+    call a:conn.CompileFileForEmacs(a:file_name, a:load, policy,
                 \ function('s:OnCompilationComplete', [a:win]))
 endfunction
 
