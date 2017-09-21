@@ -711,28 +711,32 @@ vlime#plugin#SelectCurConnection()        *vlime#plugin#SelectCurConnection()*
   Show a menu to let you choose a connection, and bind this connection to the
   current buffer.
 
-vlime#plugin#SendToREPL([content])                 *vlime#plugin#SendToREPL()*
+vlime#plugin#SendToREPL([content], [edit])         *vlime#plugin#SendToREPL()*
 
   Evaluate [content] in the REPL and show the result in the REPL buffer. If
-  [content] is omitted, show an input buffer.
+  [content] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 
-vlime#plugin#Compile([content], [policy])             *vlime#plugin#Compile()*
+vlime#plugin#Compile([content], [policy], [edit])     *vlime#plugin#Compile()*
 
   Compile [content], with the specified [policy], and show the result in the
-  REPL buffer. If [content] is omitted or v:null, show an input buffer. If
-  [policy] is omitted, try to use |g:vlime_compiler_policy|. Open the compiler
-  notes window when there are warnings or errors etc.
+  REPL buffer. If [content] is omitted or v:null, or [edit] is present and
+  |TRUE|, show an input buffer. If [policy] is omitted, try to use
+  |g:vlime_compiler_policy|. Open the compiler notes window when there are
+  warnings or errors etc.
 
-vlime#plugin#Inspect([content])                       *vlime#plugin#Inspect()*
+vlime#plugin#Inspect([content], [edit])               *vlime#plugin#Inspect()*
 
   Evaluate [content] and launch the inspector with the evaluation result
-  loaded. If [content] is omitted, show an input buffer.
+  loaded. If [content] is omitted, or [edit] is present and |TRUE|, show an
+  input buffer.
 
-vlime#plugin#DialogToggleTrace([func])      *vlime#plugin#DialogToggleTrace()*
+vlime#plugin#DialogToggleTrace([func], [edit])
+                                            *vlime#plugin#DialogToggleTrace()*
 
   Toggle the traced state of [func]. [func] should be a string specifying a
   plain function name, or in the form "(setf <name>)", to trace a
-  setf-expander. If [func] is omitted, show an input buffer.
+  setf-expander. If [func] is omitted, or [edit] is present and |TRUE|, show
+  an input buffer.
 
   This function needs the SWANK-TRACE-DIALOG contrib module. See
   |g:vlime_contribs| and |vlime#plugin#SwankRequire()|.
@@ -741,17 +745,21 @@ vlime#plugin#OpenTraceDialog()                *vlime#plugin#OpenTraceDialog()*
 
   Show the trace dialog.
 
-vlime#plugin#CompileFile([file_name], [policy])   *vlime#plugin#CompileFile()*
+vlime#plugin#CompileFile([file_name], [policy], [load], [edit])
+                                                  *vlime#plugin#CompileFile()*
 
   Compile a file named [file_name], with the specified [policy], and show the
-  result in the REPL buffer. If [file_name] is omitted or v:null, prompt for
-  the file name. If [policy] is omitted, try to use |g:vlime_compiler_policy|.
-  Open the compiler notes window when there are warnings or errors etc.
+  result in the REPL buffer. If [file_name] is omitted or v:null, or [edit] is
+  present and |TRUE|, prompt for the file name. If [policy] is omitted, try to
+  use |g:vlime_compiler_policy|. If [load] is present and |FALSE|, do not load
+  the compiled file after successful compilation. Open the compiler notes
+  window when there are warnings or errors etc.
 
-vlime#plugin#ExpandMacro([expr], [type])          *vlime#plugin#ExpandMacro()*
+vlime#plugin#ExpandMacro([expr], [type], [edit])  *vlime#plugin#ExpandMacro()*
 
   Perform macro expansion on [expr] and show the result in the preview window.
-  If [expr] is omitted or v:null, show an input buffer.
+  If [expr] is omitted or v:null, or [edit] is present and |TRUE|, show an
+  input buffer.
 
   [type] specifies the type of expansion to perform. It can be "expand",
   "one", or "all". When it's omitted or "expand", repeatedly expand [expr]
@@ -759,15 +767,16 @@ vlime#plugin#ExpandMacro([expr], [type])          *vlime#plugin#ExpandMacro()*
   expand once. And "all" means to recursively expand all macros contained in
   [expr].
 
-vlime#plugin#DisassembleForm([content])       *vlime#plugin#DisassembleForm()*
+vlime#plugin#DisassembleForm([content], [edit])
+                                              *vlime#plugin#DisassembleForm()*
 
   Compile and disassemble [content]. Show the result in the preview window. If
-  [content] is omitted, show an input buffer.
+  [content] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 
-vlime#plugin#LoadFile([file_name])                   *vlime#plugin#LoadFile()*
+vlime#plugin#LoadFile([file_name], [edit])           *vlime#plugin#LoadFile()*
 
-  Load a file named [file_name]. If [file_name] is omitted, prompt for the
-  file name.
+  Load a file named [file_name]. If [file_name] is omitted, or [edit] is
+  present and |TRUE|, prompt for the file name.
 
 vlime#plugin#SetPackage([pkg])                     *vlime#plugin#SetPackage()*
 
@@ -781,10 +790,11 @@ vlime#plugin#SwankRequire({contribs}, [do_init]) *vlime#plugin#SwankRequire()*
   case-sensitive. Normally you should use uppercase. If [do_init] is present
   and |FALSE|, suppress initialization for newly loaded contrib modules.
 
-vlime#plugin#ShowOperatorArgList([op])    *vlime#plugin#ShowOperatorArgList()*
+vlime#plugin#ShowOperatorArgList([op], [edit])
+                                          *vlime#plugin#ShowOperatorArgList()*
 
   Show the arglist description for operator [op] in the arglist window. If
-  [op] is omitted, show an input buffer.
+  [op] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 
 vlime#plugin#CurAutodoc()                          *vlime#plugin#CurAutodoc()*
 
@@ -792,16 +802,16 @@ vlime#plugin#CurAutodoc()                          *vlime#plugin#CurAutodoc()*
   in the arglist window. If the SWANK-ARGLISTS contrib module is available,
   the current argument will be marked in the arglist.
 
-vlime#plugin#DescribeSymbol([symbol])          *vlime#plugin#DescribeSymbol()*
+vlime#plugin#DescribeSymbol([symbol], [edit])  *vlime#plugin#DescribeSymbol()*
 
   Show a description for [symbol] in the preview window. If [symbol] is
-  omitted, show an input buffer.
+  omitted, or [edit] is present and |TRUE|, show an input buffer.
 
-vlime#plugin#XRefSymbol({ref_type}, [sym])         *vlime#plugin#XRefSymbol()*
+vlime#plugin#XRefSymbol({ref_type}, [sym], [edit]) *vlime#plugin#XRefSymbol()*
 
   Lookup cross references for [sym], and show the results in the xref window.
-  If [sym] is omitted, show an input buffer. See |VlimeConnection.XRef()| for
-  possible values for {ref_type}.
+  If [sym] is omitted, or [edit] is present and |TRUE|, show an input buffer.
+  See |VlimeConnection.XRef()| for possible values for {ref_type}.
 
 vlime#plugin#XRefSymbolWrapper()            *vlime#plugin#XRefSymbolWrapper()*
 
@@ -809,39 +819,40 @@ vlime#plugin#XRefSymbolWrapper()            *vlime#plugin#XRefSymbolWrapper()*
   |vlime#plugin#FindDefinition()|. Pick the type of cross reference
   interactively.
 
-vlime#plugin#FindDefinition([sym])             *vlime#plugin#FindDefinition()*
+vlime#plugin#FindDefinition([sym], [edit])     *vlime#plugin#FindDefinition()*
 
   Find the definition for [sym], and show the results in the xref window. If
-  [sym] is omitted, show an input buffer.
+  [sym] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 
-vlime#plugin#AproposList([pattern])               *vlime#plugin#AproposList()*
+vlime#plugin#AproposList([pattern], [edit])       *vlime#plugin#AproposList()*
 
   Apropos search for [pattern]. Show the results in the preview window. If
-  [pattern] is omitted, show an input buffer.
+  [pattern] is omitted, or [edit] is present and |TRUE|, show an input buffer.
 
-vlime#plugin#DocumentationSymbol([symbol])
+vlime#plugin#DocumentationSymbol([symbol], [edit])
                                           *vlime#plugin#DocumentationSymbol()*
 
   Show the documentation for [symbol] in the preview window. If [symbol] is
-  omitted, show an input buffer.
+  omitted, or [edit] is present and |TRUE|, show an input buffer.
 
-vlime#plugin#SetBreakpoint([sym])               *vlime#plugin#SetBreakpoint()*
+vlime#plugin#SetBreakpoint([sym], [edit])       *vlime#plugin#SetBreakpoint()*
 
   Set a breakpoint at entry to a function with the name [sym]. If [sym] is
-  omitted, show an input buffer.
+  omitted, or [edit] is present and |TRUE|, show an input buffer.
 
 vlime#plugin#ListThreads()                        *vlime#plugin#ListThreads()*
 
   Show the thread list window.
 
-vlime#plugin#UndefineFunction([sym])         *vlime#plugin#UndefineFunction()*
+vlime#plugin#UndefineFunction([sym], [edit]) *vlime#plugin#UndefineFunction()*
 
-  Undefine a function with the name [sym]. If [sym] is omitted, show an input
-  buffer.
+  Undefine a function with the name [sym]. If [sym] is omitted, or [edit] is
+  present and |TRUE|, show an input buffer.
 
-vlime#plugin#UninternSymbol([sym])             *vlime#plugin#UninternSymbol()*
+vlime#plugin#UninternSymbol([sym], [edit])     *vlime#plugin#UninternSymbol()*
 
-  Unintern a symbol [sym]. If [sym] is omitted, show an input buffer.
+  Unintern a symbol [sym]. If [sym] is omitted, or [edit] is present and
+  |TRUE|, show an input buffer.
 
 vlime#plugin#UndefineUninternWrapper()
                                       *vlime#plugin#UndefineUninternWrapper()*
