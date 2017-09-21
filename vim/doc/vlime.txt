@@ -37,6 +37,7 @@ CONTENTS                                              *vlime-contents*
             4.3.9 Trace Dialog Mappings ........................
                   .................. |vlime-mappings-trace-dialog|
             4.3.10 MREPL buffer Mappings .. |vlime-mappings-mrepl|
+        4.4 Overlays ................... |vlime-mappings-overlays|
     5. Configuration .............................. |vlime-config|
     6. API ..................................... |vlime-api-intro|
     7. License ................................... |vlime-license|
@@ -990,6 +991,33 @@ Key mappings avaialble in the MREPL buffer:
     <LocalLeader>D
         Disconnect from this REPL.
 
+----------------------------------------------------------------------
+4.4 Overlays                                 *vlime-mappings-overlays*
+
+Vlime has a huge set of key mappings, which was mostly defined to the
+author's liking. It's sometimes desirable to provide a full different
+set of mappings to suit one's specific needs. Vlime provides Overlays
+for this.
+
+An overlay is basically a hook into Vlime's initialization process.
+One can redefine all the default mappings, and even create new
+behavior in an overlay. Use |g:vlime_overlay| to specify which overlay
+to use.
+
+                                                *vlime-mappings-slimv*
+Currently Vlime has only one overlay built-in, which mimics the
+behavior of Slimv. It provides most of Slimv's default mappings, and
+recognizes the g:slimv_leader and g:slimv_keybindings options. Please
+consult the Slimv manual for explanations of these options and the
+default key mappings. Note that there are still differences in
+mappings and behavior, you may optionally check the quick reference
+by typing ",?" (without the quote marks) in a Common Lisp source file
+buffer, to confirm what features are mapped.
+
+To use the Slimv overlay, add this to your vimrc:
+
+    let g:vlime_overlay = "slimv"
+
 ======================================================================
 5. Configuration                                        *vlime-config*
 
@@ -1300,6 +1328,10 @@ g:vlime_autodoc_max_lines                  *g:vlime_autodoc_max_lines*
     A positive integer specifying how many lines to search, when
     determining the arglist for the autodoc feature. Setting this to a
     smaller value may improve performance. Default: 50
+
+g:vlime_overlay                                      *g:vlime_overlay*
+    A |string| specifying which overlay to use. See
+    |vlime-mappings-overlays| for an explanation of overlays.
 
 g:vlime_buf_name_sep                            *g:vlime_buf_name_sep*
     A |string| used as the separator between segments of Vlime special
