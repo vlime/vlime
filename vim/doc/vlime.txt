@@ -1330,8 +1330,10 @@ g:vlime_autodoc_max_lines                  *g:vlime_autodoc_max_lines*
     smaller value may improve performance. Default: 50
 
 g:vlime_overlay                                      *g:vlime_overlay*
-    A |string| specifying which overlay to use. See
-    |vlime-mappings-overlays| for an explanation of overlays.
+    A |string| specifying which overlay to use. Set it to an empty
+    string or |unlet| this variable to disable overlays. See
+    |vlime-mappings-overlays| for an explanation of overlays. Default:
+    ""
 
 g:vlime_buf_name_sep                            *g:vlime_buf_name_sep*
     A |string| used as the separator between segments of Vlime special
