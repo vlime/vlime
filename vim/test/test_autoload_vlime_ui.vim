@@ -368,6 +368,13 @@ function! TestSurroundingOperator()
 
         call setpos('.', [0, line('$'), 17, 0])
         call assert_equal('cons', vlime#ui#SurroundingOperator())
+
+        call append(line('$'), '((a b) (c d))')
+        call setpos('.', [0, line('$'), 2, 0])
+        call assert_equal('', vlime#ui#SurroundingOperator())
+
+        call setpos('.', [0, line('$'), 8, 0])
+        call assert_equal('', vlime#ui#SurroundingOperator())
     finally
         call CleanupDummyBuffer()
     endtry
@@ -428,6 +435,16 @@ function! TestCurArgPosForIndent()
 
         call setpos('.', [0, line('$'), 16, 0])
         call assert_equal(3, vlime#ui#CurArgPos())
+
+        call append(line('$'), '((aa bb) (cc dd) ee)')
+        call setpos('.', [0, line('$'), 2, 0])
+        call assert_equal(0, vlime#ui#CurArgPos())
+
+        call setpos('.', [0, line('$'), 10, 0])
+        call assert_equal(1, vlime#ui#CurArgPos())
+
+        call setpos('.', [0, line('$'), 18, 0])
+        call assert_equal(2, vlime#ui#CurArgPos())
     finally
         call CleanupDummyBuffer()
     endtry
