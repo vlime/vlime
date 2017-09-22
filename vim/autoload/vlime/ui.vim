@@ -1076,22 +1076,25 @@ function! vlime#ui#CurArgPos(...)
             endif
 
             if ch == ' ' || ch == "\<tab>" || ch == "\n"
-                if last_type != 's' && paren_count == 1
+                if last_type != 's' && last_type != ')' && paren_count == 1
                     let arg_pos += 1
                 endif
                 let last_type = 's'
             elseif ch == '('
                 let paren_count += 1
-                if last_type != 's' && paren_count == 2
+                if last_type == '(' && paren_count == 2
                     let arg_pos += 1
                 endif
                 let last_type = '('
             elseif ch == ')'
                 let paren_count -= 1
+                if paren_count == 1
+                    let arg_pos += 1
+                endif
                 let last_type = ')'
             else
                 " identifiers
-                if last_type != 's' && last_type != 'i' && paren_count == 1
+                if last_type != 's' && last_type != ')' && last_type != 'i' && paren_count == 1
                     let arg_pos += 1
                 endif
                 let last_type = 'i'
