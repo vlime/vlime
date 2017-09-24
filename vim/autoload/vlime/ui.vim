@@ -543,6 +543,28 @@ function! vlime#ui#SurroundingOperator()
     return ''
 endfunction
 
+function! vlime#ui#ParseOuterOperators(max_count)
+    let stack = []
+    let old_cur_pos = getcurpos()
+    try
+        while len(stack) < a:max_count
+            let [p_line, p_col] = searchpairpos('(', '', ')', 'bnW')
+            if p_line <= 0 || p_col <= 0
+                break
+            endif
+            let cur_pos = vlime#ui#CurArgPos([p_line, p_col])
+
+            call setpos('.', [0, p_line, p_col, 0])
+            let cur_op = vlime#ui#CurOperator()
+            call add(stack, [cur_op, cur_pos, [p_line, p_col]])
+        endwhile
+    finally
+        call setpos('.', old_cur_pos)
+    endtry
+
+    return stack
+endfunction
+
 ""
 " @usage [return_pos]
 " @public

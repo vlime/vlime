@@ -1013,12 +1013,16 @@ function! vlime#plugin#CalcCurIndent(...)
 
     let conn = vlime#connection#Get(v:true)
 
-    let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
-    if s_line <= 0 || s_col <= 0
+    " The deepest special forms this function can handle are FLET/LABELS,
+    " which are of depth 3, thus the magic number "3" here.
+    let op_list = vlime#ui#ParseOuterOperators(3)
+    if len(op_list) <= 0
         return lispindent(line_no)
     endif
 
-    let s_op = vlime#ui#SurroundingOperator()
+    let s_op = op_list[0][0]
+    let [s_line, s_col] = op_list[0][2]
+
     let old_cur = getcurpos()
     try
         call setpos('.', [0, s_line, s_col, 0])
@@ -1032,26 +1036,35 @@ function! vlime#plugin#CalcCurIndent(...)
         return lispindent(line_no)
     endif
 
-    let op_pkg = toupper(s:NormalizeIdentifierForIndentInfo(matches[2]))
+    let a_count = v:null
+
+    " 1. Special forms such as FLET
+    let a_count = s:IndentCheckSpecialForms(op_list)
+
     let op = tolower(s:NormalizeIdentifierForIndentInfo(matches[3]))
 
-    if len(op_pkg) == 0 && type(conn) != type(v:null)
-        let op_pkg = conn.GetCurrentPackage()
-        if type(op_pkg) == v:t_list
-            let op_pkg = op_pkg[0]
-        endif
-    endif
-
-    let a_count = v:null
-    if exists('g:vlime_indent_keywords')
+    " 2. User defined indent keywords
+    if type(a_count) == type(v:null) && exists('g:vlime_indent_keywords')
         let a_count = get(g:vlime_indent_keywords, op, v:null)
     endif
+
+    " 3. Swank-provided indent keywords
     if type(a_count) == type(v:null) && type(conn) != type(v:null)
+        let op_pkg = toupper(s:NormalizeIdentifierForIndentInfo(matches[2]))
+        if len(op_pkg) == 0 && type(conn) != type(v:null)
+            let op_pkg = conn.GetCurrentPackage()
+            if type(op_pkg) == v:t_list
+                let op_pkg = op_pkg[0]
+            endif
+        endif
+
         let indent_info = get(conn.cb_data, 'indent_info', {})
         if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
             let a_count = indent_info[op][0]
         endif
     endif
+
+    " 4. Default indent keywords
     if type(a_count) == type(v:null)
         let a_count = get(g:vlime_default_indent_keywords, op, v:null)
     endif
@@ -1059,7 +1072,7 @@ function! vlime#plugin#CalcCurIndent(...)
     if type(a_count) == type(v:null) || a_count < 0
         return lispindent(line_no)
     else
-        let arg_pos = vlime#ui#CurArgPos([s_line, s_col])
+        let arg_pos = op_list[0][1]
         if arg_pos > a_count
             return vs_col + shift_width - 1
         elseif arg_pos > 0
@@ -1530,4 +1543,24 @@ endfunction
 
 function! s:InputCheckEditFlag(edit, text)
     return a:edit ? [v:null, a:text] : [a:text, v:null]
+endfunction
+
+let s:local_func_op_list = ['flet', 'labels', 'macrolet']
+
+function! s:IndentCheckSpecialForms(op_list)
+    if len(a:op_list) >= 3 &&
+                \ a:op_list[1][0] == '' &&
+                \ index(s:local_func_op_list, a:op_list[2][0], 0, v:true) >= 0 &&
+                \ a:op_list[2][1] == 1
+        " function definitions in FLET etc.
+        return 1
+    elseif len(a:op_list) >= 2 &&
+                \ tolower(a:op_list[0][0]) == ':method' &&
+                \ tolower(a:op_list[1][0]) == 'defgeneric' &&
+                \ tolower(a:op_list[1][1]) >= 3
+        " method definitions in DEFGENERIC
+        return 1
+    else
+        return v:null
+    endif
 endfunction
