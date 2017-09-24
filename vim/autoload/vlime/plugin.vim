@@ -1570,7 +1570,7 @@ function! s:IndentCheckSpecialForms(op_list)
                 \ tolower(a:op_list[1][0]) == 'handler-case' &&
                 \ a:op_list[1][1] >= 2
         " condition clauses in HANDLER-CASE
-        return 0
+        return 1
     elseif len(a:op_list) >= 2 &&
                 \ tolower(a:op_list[1][0]) == 'cond' &&
                 \ len(a:op_list[0][0]) > 0 &&
