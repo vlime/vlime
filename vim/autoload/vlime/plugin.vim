@@ -1020,9 +1020,7 @@ function! vlime#plugin#CalcCurIndent(...)
         return lispindent(line_no)
     endif
 
-    let s_op = op_list[0][0]
     let [s_line, s_col] = op_list[0][2]
-
     let old_cur = getcurpos()
     try
         call setpos('.', [0, s_line, s_col, 0])
@@ -1031,17 +1029,19 @@ function! vlime#plugin#CalcCurIndent(...)
         call setpos('.', old_cur)
     endtry
 
-    let matches = matchlist(s_op, '\(\([^:|]\+\||[^|]\+|\):\{1,2}\)\?\([^:|]\+\||[^|]\+|\)$')
-    if len(matches) == 0
-        return lispindent(line_no)
-    endif
-
     let a_count = v:null
 
     " 1. Special forms such as FLET
     let a_count = s:IndentCheckSpecialForms(op_list)
 
-    let op = tolower(s:NormalizeIdentifierForIndentInfo(matches[3]))
+    if type(a_count) == type(v:null)
+        let matches = matchlist(op_list[0][0],
+                    \ '\(\([^:|]\+\||[^|]\+|\):\{1,2}\)\?\([^:|]\+\||[^|]\+|\)$')
+        if len(matches) == 0
+            return lispindent(line_no)
+        endif
+        let op = tolower(s:NormalizeIdentifierForIndentInfo(matches[3]))
+    endif
 
     " 2. User defined indent keywords
     if type(a_count) == type(v:null) && exists('g:vlime_indent_keywords')
@@ -1069,9 +1069,11 @@ function! vlime#plugin#CalcCurIndent(...)
         let a_count = get(g:vlime_default_indent_keywords, op, v:null)
     endif
 
-    if type(a_count) == type(v:null) || a_count < 0
-        return lispindent(line_no)
-    else
+    if type(a_count) == v:t_number
+        if a_count < 0
+            return lispindent(line_no)
+        endif
+
         let arg_pos = op_list[0][1]
         if arg_pos > a_count
             return vs_col + shift_width - 1
@@ -1080,6 +1082,10 @@ function! vlime#plugin#CalcCurIndent(...)
         else
             return lispindent(line_no)
         endif
+    elseif type(a_count) == v:t_list
+        return vs_col + a_count[1] - 1
+    else
+        return lispindent(line_no)
     endif
 endfunction
 
@@ -1557,9 +1563,20 @@ function! s:IndentCheckSpecialForms(op_list)
     elseif len(a:op_list) >= 2 &&
                 \ tolower(a:op_list[0][0]) == ':method' &&
                 \ tolower(a:op_list[1][0]) == 'defgeneric' &&
-                \ tolower(a:op_list[1][1]) >= 3
+                \ a:op_list[1][1] >= 3
         " method definitions in DEFGENERIC
         return 1
+    elseif len(a:op_list) >= 2 &&
+                \ tolower(a:op_list[1][0]) == 'handler-case' &&
+                \ a:op_list[1][1] >= 2
+        " condition clauses in HANDLER-CASE
+        return 0
+    elseif len(a:op_list) >= 2 &&
+                \ tolower(a:op_list[1][0]) == 'cond' &&
+                \ len(a:op_list[0][0]) > 0 &&
+                \ a:op_list[0][1] == 1
+        " COND clauses with atomic test forms, such as (t ...)
+        return ['rel', 1]
     else
         return v:null
     endif
