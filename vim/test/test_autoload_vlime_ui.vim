@@ -345,6 +345,10 @@ function! TestCurOperator()
 
         call setpos('.', [0, line('$'), 15, 0])
         call assert_equal('list', vlime#ui#CurOperator())
+
+        call append(line('$'), '((aa bb) cc')
+        call setpos('.', [0, line('$'), 11, 0])
+        call assert_equal('', vlime#ui#CurOperator())
     finally
         call CleanupDummyBuffer()
     endtry
