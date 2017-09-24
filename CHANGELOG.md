@@ -1,4 +1,5 @@
 * master
+    * Overlays, and Slimv-like key mappings `:help vlime-mappings-overlays`
     * Show quick references for Vlime buffers `:help vlime-mappings`.
     * .slime-secret support `:help vlime-slime-secret`.
     * SWANK-MREPL support `:help vlime-mrepl`.
