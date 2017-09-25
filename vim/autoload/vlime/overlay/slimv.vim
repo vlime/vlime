@@ -504,3 +504,6 @@ function! SlimvEval(data)
         call vlime#overlay#slimv#SendToREPL(expr)
     endfor
 endfunction
+
+nnoremap <F2> :<C-U>let g:my_slimv_eval_form=vlime#overlay#slimv#CurTopExprOrAtom() \| call vlime#overlay#slimv#SendToREPL(g:my_slimv_eval_form)<CR>
+nnoremap <F3> :<C-U>call vlime#overlay#slimv#SendToREPL(vlime#overlay#slimv#CurTopExprOrAtom()) \| call vlime#overlay#slimv#SendToREPL(g:my_slimv_eval_form)<CR>
