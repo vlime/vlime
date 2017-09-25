@@ -497,3 +497,10 @@ function! s:DialogUntraceAllComplete(conn, result)
         endfor
     endif
 endfunction
+
+
+function! SlimvEval(data)
+    for expr in a:data
+        call vlime#overlay#slimv#SendToREPL(expr)
+    endfor
+endfunction
