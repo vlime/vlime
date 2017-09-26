@@ -586,7 +586,7 @@ specified otherwise.
 ......................................................................
 4.3.1 CL Source File Mappings                  *vlime-mappings-source*
 
-Key mappings avaialble in lisp source files:
+Key mappings available in lisp source files:
 
     Connection Management                        *vlime-mappings-conn*
         <LocalLeader>cc                       *vlime-mappings-conn-cc*
