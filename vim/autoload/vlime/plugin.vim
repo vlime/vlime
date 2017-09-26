@@ -1020,14 +1020,7 @@ function! vlime#plugin#CalcCurIndent(...)
         return lispindent(line_no)
     endif
 
-    let [s_line, s_col] = op_list[0][2]
-    let old_cur = getcurpos()
-    try
-        call setpos('.', [0, s_line, s_col, 0])
-        let vs_col = virtcol('.')
-    finally
-        call setpos('.', old_cur)
-    endtry
+    let vs_col = virtcol(op_list[0][2])
 
     let a_count = v:null
 
