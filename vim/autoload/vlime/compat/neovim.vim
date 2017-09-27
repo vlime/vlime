@@ -71,8 +71,9 @@ function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback)
 endfunction
 
 
-function! vlime#compat#neovim#job_start(cmd, buf_name)
-    let buf = bufnr(a:buf_name, v:true)
+function! vlime#compat#neovim#job_start(cmd, opts)
+    let buf_name = a:opts['buf_name']
+    let buf = bufnr(buf_name, v:true)
     call setbufvar(buf, '&buftype', 'nofile')
     call setbufvar(buf, '&bufhidden', 'hide')
     call setbufvar(buf, '&swapfile', 0)
@@ -85,8 +86,8 @@ function! vlime#compat#neovim#job_start(cmd, buf_name)
     let job_obj = {
                 \ 'on_stdout': function('s:JobInputCB'),
                 \ 'on_stderr': function('s:JobInputCB'),
-                \ 'out_name': a:buf_name,
-                \ 'err_name': a:buf_name,
+                \ 'out_name': buf_name,
+                \ 'err_name': buf_name,
                 \ 'out_buf': buf,
                 \ 'err_buf': buf,
                 \ }

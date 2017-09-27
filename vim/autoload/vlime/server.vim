@@ -31,7 +31,9 @@ function! vlime#server#New(...)
 
     let server_job = vlime#compat#job_start(
                 \ vlime#server#BuildServerCommand(),
-                \ vlime#ui#ServerBufName(server_name))
+                \ {
+                    \ 'buf_name': vlime#ui#ServerBufName(server_name)
+                \ })
     if vlime#compat#job_status(server_job) != 'run'
         throw 'vlime#server#New: failed to start server job'
     endif
