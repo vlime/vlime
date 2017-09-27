@@ -18,16 +18,20 @@ let s:cur_src_path = resolve(expand('<sfile>:p'))
 let s:vlime_home = fnamemodify(s:cur_src_path, ':h:h:h:h')
 let s:path_sep = s:cur_src_path[len(s:vlime_home)]
 
-" vlime#server#New([auto_connect[, name]])
+" vlime#server#New([auto_connect[, use_terminal[, name]]])
 function! vlime#server#New(...)
     let auto_connect = get(a:000, 0, v:true)
-    let name = get(a:000, 1, v:null)
+    let use_terminal = get(a:000, 1, v:false)
+    let name = get(a:000, 2, v:null)
 
     if type(name) != type(v:null)
         let server_name = name
     else
         let server_name = 'Vlime Server ' . g:vlime_next_server_id
     endif
+    let server_buf_name = vlime#ui#ServerBufName(server_name)
+    let dummy_server_buf = vlime#ui#OpenBufferWithWinSettings(server_buf_name, v:true, 'server')
+    call vlime#ui#SetVlimeBufferOpts(dummy_server_buf, v:null)
 
     let server_obj = {
                 \ 'id': g:vlime_next_server_id,
@@ -37,11 +41,14 @@ function! vlime#server#New(...)
     let server_job = vlime#compat#job_start(
                 \ vlime#server#BuildServerCommand(),
                 \ {
-                    \ 'buf_name': vlime#ui#ServerBufName(server_name),
+                    \ 'buf_name': server_buf_name,
                     \ 'callback': function('s:ServerOutputCB', [server_obj, auto_connect]),
                     \ 'exit_cb': function('s:ServerExitCB', [server_obj]),
+                    \ 'use_terminal': use_terminal,
                 \ })
     if vlime#compat#job_status(server_job) != 'run'
+        call vlime#ui#WithBuffer(dummy_server_buf,
+                    \ {-> s:AppendToServerBuf('Failed to start server.')})
         throw 'vlime#server#New: failed to start server job'
     endif
 
@@ -49,12 +56,10 @@ function! vlime#server#New(...)
     let g:vlime_servers[g:vlime_next_server_id] = server_obj
     let g:vlime_next_server_id += 1
 
-    let lisp_buf = vlime#compat#job_getbufnr(server_job)
-    call setbufvar(lisp_buf, '&filetype', 'vlime_server')
-    call vlime#ui#OpenBufferWithWinSettings(lisp_buf, v:false, 'server')
-
-    call vlime#ui#MapBufferKeys('server')
-    call setbufvar(lisp_buf, 'vlime_server', server_obj)
+    let server_buf = vlime#compat#job_getbufnr(server_job)
+    call vlime#ui#WithBuffer(server_buf, function('vlime#ui#MapBufferKeys', ['server']))
+    call setbufvar(server_buf, '&filetype', 'vlime_server')
+    call setbufvar(server_buf, 'vlime_server', server_obj)
 
     return server_obj
 endfunction
@@ -83,7 +88,13 @@ function! vlime#server#Show(server)
     let server_id = s:NormalizeServerID(a:server)
     let r_server = g:vlime_servers[server_id]
     let buf = vlime#compat#job_getbufnr(r_server['job'])
-    call vlime#ui#OpenBuffer(buf, v:false, 'botright')
+    call vlime#ui#OpenBufferWithWinSettings(buf, v:false, 'server')
+    " XXX: split/vsplit commands in Vim doesn't work properly when opening
+    "      terminal buffers. This is a hack for switching to the correct
+    "      terminal buffer.
+    if !has('nvim')
+        execute 'buffer' buf
+    endif
 endfunction
 
 function! vlime#server#Select()
@@ -251,4 +262,10 @@ function! s:ServerExitCB(server_obj, exit_status)
         call vlime#connection#Close(conn_dict[conn_id])
     endfor
     let a:server_obj['connections'] = {}
+endfunction
+
+function! s:AppendToServerBuf(content)
+    setlocal modifiable
+    call vlime#ui#AppendString(a:content)
+    setlocal nomodifiable
 endfunction

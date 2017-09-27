@@ -75,30 +75,42 @@ function! vlime#compat#neovim#job_start(cmd, opts)
     let buf_name = a:opts['buf_name']
     let Callback = a:opts['callback']
     let ExitCB = a:opts['exit_cb']
+    let use_terminal = a:opts['use_terminal']
 
-    let buf = bufnr(buf_name, v:true)
-    call setbufvar(buf, '&buftype', 'nofile')
-    call setbufvar(buf, '&bufhidden', 'hide')
-    call setbufvar(buf, '&swapfile', 0)
-    call setbufvar(buf, '&buflisted', 1)
+    if use_terminal
+        let job_obj = {
+                    \ 'on_stdout': function('s:JobOutputCB', [Callback]),
+                    \ 'on_stderr': function('s:JobOutputCB', [Callback]),
+                    \ 'on_exit': function('s:JobExitCB', [ExitCB]),
+                    \ 'use_terminal': v:true,
+                    \ }
+        let job_id = termopen(a:cmd, job_obj)
+        let job_obj['job_id'] = job_id
+        let job_obj['out_buf'] = bufnr('%')
+        return job_obj
+    else
+        let buf = bufnr(buf_name, v:true)
+        call setbufvar(buf, '&buftype', 'nofile')
+        call setbufvar(buf, '&bufhidden', 'hide')
+        call setbufvar(buf, '&swapfile', 0)
+        call setbufvar(buf, '&buflisted', 1)
+        call setbufvar(buf, '&modifiable', 0)
 
-    call vlime#ui#WithBuffer(buf, { -> append(0, 'Reading from channel output...')})
+        let job_obj = {
+                    \ 'on_stdout': function('s:JobOutputCB', [Callback]),
+                    \ 'on_stderr': function('s:JobOutputCB', [Callback]),
+                    \ 'on_exit': function('s:JobExitCB', [ExitCB]),
+                    \ 'out_name': buf_name,
+                    \ 'err_name': buf_name,
+                    \ 'out_buf': buf,
+                    \ 'err_buf': buf,
+                    \ 'use_terminal': v:false,
+                    \ }
 
-    call setbufvar(buf, '&modifiable', 0)
-
-    let job_obj = {
-                \ 'on_stdout': function('s:JobOutputCB', [Callback]),
-                \ 'on_stderr': function('s:JobOutputCB', [Callback]),
-                \ 'on_exit': function('s:JobExitCB', [ExitCB]),
-                \ 'out_name': buf_name,
-                \ 'err_name': buf_name,
-                \ 'out_buf': buf,
-                \ 'err_buf': buf,
-                \ }
-
-    let job_id = jobstart(a:cmd, job_obj)
-    let job_obj['job_id'] = job_id
-    return job_obj
+        let job_id = jobstart(a:cmd, job_obj)
+        let job_obj['job_id'] = job_id
+        return job_obj
+    endif
 endfunction
 
 function! vlime#compat#neovim#job_stop(job)
@@ -170,8 +182,10 @@ function! s:JobOutputCB(user_cb, job_id, data, source) dict
     let ToCall = function(a:user_cb, [a:data])
     call ToCall()
 
-    let buf = (a:source == 'stdout') ? self.out_buf : self.err_buf
-    call vlime#ui#WithBuffer(buf, function('s:AppendToJobBuffer', [a:data]))
+    if !self.use_terminal
+        let buf = (a:source == 'stdout') ? self.out_buf : self.err_buf
+        call vlime#ui#WithBuffer(buf, function('s:AppendToJobBuffer', [a:data]))
+    endif
 endfunction
 
 function! s:JobExitCB(user_exit_cb, job_id, exit_status, source) dict
