@@ -29,20 +29,22 @@ function! vlime#server#New(...)
         let server_name = 'Vlime Server ' . g:vlime_next_server_id
     endif
 
+    let server_obj = {
+                \ 'id': g:vlime_next_server_id,
+                \ 'name': server_name,
+                \ }
+
     let server_job = vlime#compat#job_start(
                 \ vlime#server#BuildServerCommand(),
                 \ {
-                    \ 'buf_name': vlime#ui#ServerBufName(server_name)
+                    \ 'buf_name': vlime#ui#ServerBufName(server_name),
+                    \ 'callback': function('s:ServerOutputCB', [server_obj, auto_connect]),
                 \ })
     if vlime#compat#job_status(server_job) != 'run'
         throw 'vlime#server#New: failed to start server job'
     endif
 
-    let server_obj = {
-                \ 'id': g:vlime_next_server_id,
-                \ 'name': server_name,
-                \ 'job': server_job,
-                \ }
+    let server_obj['job'] = server_job
     let g:vlime_servers[g:vlime_next_server_id] = server_obj
     let g:vlime_next_server_id += 1
 
@@ -51,11 +53,6 @@ function! vlime#server#New(...)
     call vlime#ui#OpenBufferWithWinSettings(lisp_buf, v:false, 'server')
 
     call vlime#ui#MapBufferKeys('server')
-
-    let server_obj['timer'] = timer_start(g:vlime_cl_wait_interval,
-                \ function('s:CheckServerPort',
-                    \ [server_obj, lisp_buf, auto_connect]),
-                \ {'repeat': -1})
     call setbufvar(lisp_buf, 'vlime_server', server_obj)
 
     return server_obj
@@ -133,13 +130,7 @@ function! vlime#server#ConnectToCurServer()
     if vlime#compat#job_status(b:vlime_server['job']) == 'run'
         let port = get(b:vlime_server, 'port', v:null)
         if type(port) == type(v:null)
-            " the server is not ready yet, search for the port again
-            let port = s:MatchServerCreatedPort()
-            if type(port) == type(v:null)
-                call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not ready.')
-            else
-                let b:vlime_server['port'] = port
-            endif
+            call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not ready.')
         endif
     else
         call vlime#ui#ErrMsg(b:vlime_server['name'] . ' is not running.')
@@ -217,40 +208,6 @@ function! s:MatchServerCreatedPort()
     endif
 endfunction
 
-function! s:CheckServerPort(server, lisp_buf, auto_connect, timer)
-    let port = vlime#ui#WithBuffer(a:lisp_buf,
-                \ function('s:MatchServerCreatedPort'))
-    if type(port) == type(v:null)
-        let timer_count = get(a:server, 'port_timer_count', 1)
-        if timer_count >= s:CalcServerCheckTimesLimit()
-            call timer_stop(a:timer)
-            if get(a:server, 'timer', -1) == a:timer
-                call remove(a:server, 'timer')
-            endif
-            call vlime#ui#ErrMsg('vlime#server#New: failed to wait for ' .
-                        \ a:server['name'] . '. Please inspect server output.')
-        else
-            let a:server['port_timer_count'] = timer_count + 1
-        endif
-    else
-        call timer_stop(a:timer)
-        if get(a:server, 'timer', -1) == a:timer
-            call remove(a:server, 'timer')
-        endif
-        let a:server['port'] = port
-        echom 'Vlime server listening on port ' . port
-
-        if a:auto_connect
-            let auto_conn = vlime#plugin#ConnectREPL('127.0.0.1', port)
-            if type(auto_conn) != type(v:null)
-                let auto_conn.cb_data['server'] = a:server
-                let a:server['connections'] =
-                            \ {auto_conn.cb_data['id']: auto_conn}
-            endif
-        endif
-    endif
-endfunction
-
 function! s:CheckServerStopped(server, timer)
     if vlime#compat#job_status(a:server['job']) == 'run'
         let timer_count = get(a:server, 'stop_timer_count', 1)
@@ -301,4 +258,31 @@ function! s:CalcServerCheckTimesLimit()
         let times_limit += 1
     endif
     return times_limit
+endfunction
+
+function! s:ServerOutputCB(server_obj, auto_connect, data)
+    if get(a:server_obj, 'port', 0) > 0
+        " TODO: unregister this callback
+        return
+    endif
+
+    for line in a:data
+        let matched = matchlist(line, 'Server created: (#([[:digit:][:blank:]]\+)\s\+\(\d\+\))')
+        if len(matched) > 0
+            let port = str2nr(matched[1])
+            let a:server_obj['port'] = port
+            echom 'Vlime server listening on port ' . port
+
+            if a:auto_connect
+                let auto_conn = vlime#plugin#ConnectREPL('127.0.0.1', port)
+                if type(auto_conn) != type(v:null)
+                    let auto_conn.cb_data['server'] = a:server_obj
+                    let a:server_obj['connections'] =
+                                \ {auto_conn.cb_data['id']: auto_conn}
+                endif
+            endif
+
+            break
+        endif
+    endfor
 endfunction

@@ -73,6 +73,8 @@ endfunction
 
 function! vlime#compat#neovim#job_start(cmd, opts)
     let buf_name = a:opts['buf_name']
+    let Callback = a:opts['callback']
+
     let buf = bufnr(buf_name, v:true)
     call setbufvar(buf, '&buftype', 'nofile')
     call setbufvar(buf, '&bufhidden', 'hide')
@@ -84,8 +86,8 @@ function! vlime#compat#neovim#job_start(cmd, opts)
     call setbufvar(buf, '&modifiable', 0)
 
     let job_obj = {
-                \ 'on_stdout': function('s:JobInputCB'),
-                \ 'on_stderr': function('s:JobInputCB'),
+                \ 'on_stdout': function('s:JobOutputCB', [Callback]),
+                \ 'on_stderr': function('s:JobOutputCB', [Callback]),
                 \ 'out_name': buf_name,
                 \ 'err_name': buf_name,
                 \ 'out_buf': buf,
@@ -162,7 +164,10 @@ function! s:IncMsgID(chan)
     endif
 endfunction
 
-function! s:JobInputCB(job_id, data, source) dict
+function! s:JobOutputCB(user_cb, job_id, data, source) dict
+    let ToCall = function(a:user_cb, [a:data])
+    call ToCall()
+
     let buf = (a:source == 'stdout') ? self.out_buf : self.err_buf
     call vlime#ui#WithBuffer(buf, function('s:AppendToJobBuffer', [a:data]))
 endfunction
