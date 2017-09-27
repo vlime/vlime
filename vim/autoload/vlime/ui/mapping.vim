@@ -24,7 +24,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', '<LocalLeader>cR', ':call vlime#plugin#RenameCurConnection()<cr>',
                         \ 'Rename the current connection.'],
                     \
-                    \ ['n', '<LocalLeader>rr', ':call vlime#server#New()<cr>',
+                    \ ['n', '<LocalLeader>rr', ':call vlime#server#New(v:true, get(g:, "vlime_cl_use_terminal", v:false))<cr>',
                         \ 'Run a new server and connect to it.'],
                     \ ['n', '<LocalLeader>rv', ':call vlime#plugin#ShowSelectedServer()<cr>',
                         \ 'View the console output of a server.'],

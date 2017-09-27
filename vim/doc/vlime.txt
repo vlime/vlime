@@ -1088,6 +1088,15 @@ Note: If you use symlinks on Windows systems to point to Vlime, it may
                           \ "--eval", a:vlime_eval]
           endfunction
 
+g:vlime_cl_use_terminal                      *g:vlime_cl_use_terminal*
+    When starting a server via |vlime-mappings-invoke-server-rr|, and
+    if this flag is |TRUE|, Vlime will use a terminal emulator
+    built-in to Vim (or Neovim) to show the server output, so you can
+    interact with the Common Lisp process directly. If this flag is
+    set to |FALSE|, a plain buffer will be used, and no input to the
+    Common Lisp process will be allowed. See |terminal|. Default:
+    v:false
+
 g:vlime_cl_wait_time                            *g:vlime_cl_wait_time*
     DEPRECATED: Vlime now uses async callbacks to handle server
     start-up/tear-down events. Setting this option has no effect at
