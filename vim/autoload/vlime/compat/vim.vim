@@ -48,6 +48,7 @@ endfunction
 function! vlime#compat#vim#job_start(cmd, opts)
     let buf_name = a:opts['buf_name']
     let Callback = a:opts['callback']
+    let ExitCB = a:opts['exit_cb']
     let job_opts = {
                 \ 'in_io': 'pipe',
                 \ 'out_io': 'buffer',
@@ -61,6 +62,7 @@ function! vlime#compat#vim#job_start(cmd, opts)
                 \ 'err_modifiable': 0,
                 \ 'out_cb': function('s:JobOutputCB', [Callback]),
                 \ 'err_cb': function('s:JobOutputCB', [Callback]),
+                \ 'exit_cb': function('s:JobExitCB', [ExitCB]),
                 \ }
     return job_start(a:cmd, job_opts)
 endfunction
@@ -79,5 +81,10 @@ endfunction
 
 function! s:JobOutputCB(user_cb, chan, data)
     let ToCall = function(a:user_cb, [[a:data]])
+    call ToCall()
+endfunction
+
+function! s:JobExitCB(user_exit_cb, job, exit_status)
+    let ToCall = function(a:user_exit_cb, [a:exit_status])
     call ToCall()
 endfunction

@@ -106,12 +106,7 @@ If you have sbcl in your $PATH, Vlime can start a server for you:
 
 Note: If it's your first time running the server, Vlime will try to
       install it's dependencies via Quicklisp. This may take some
-      time, and Vlime may timeout and show a message:
-
-          vlime#server#New: failed to wait for Vlime Server 1 ...
-
-      In this case, you can use |vlime-mappings-server-c| to connect
-      to this server manually when it's ready.
+      time.
 
 See |vlime-mappings-invoke-server| for more operations on Vlime
 servers, and |vlime-mappings-server| for operations available in the
@@ -1094,6 +1089,10 @@ Note: If you use symlinks on Windows systems to point to Vlime, it may
           endfunction
 
 g:vlime_cl_wait_time                            *g:vlime_cl_wait_time*
+    DEPRECATED: Vlime now uses async callbacks to handle server
+    start-up/tear-down events. Setting this option has no effect at
+    all.
+
     An integer specifying the time Vlime should wait when starting a
     server via |vlime-mappings-invoke-server-rr|, or stopping a server
     via |vlime-mappings-invoke-server-rs|, in seconds. Default: 10

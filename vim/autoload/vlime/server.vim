@@ -39,6 +39,7 @@ function! vlime#server#New(...)
                 \ {
                     \ 'buf_name': vlime#ui#ServerBufName(server_name),
                     \ 'callback': function('s:ServerOutputCB', [server_obj, auto_connect]),
+                    \ 'exit_cb': function('s:ServerExitCB', [server_obj]),
                 \ })
     if vlime#compat#job_status(server_job) != 'run'
         throw 'vlime#server#New: failed to start server job'
@@ -62,16 +63,8 @@ function! vlime#server#Stop(server)
     let server_id = s:NormalizeServerID(a:server)
     let r_server = g:vlime_servers[server_id]
 
-    let timer = get(r_server, 'timer', v:null)
-    if type(timer) != type(v:null)
-        call timer_stop(timer)
-    endif
     if !vlime#compat#job_stop(r_server['job'])
         call vlime#ui#ErrMsg('vlime#server#Stop: failed to stop ' . r_server['name'])
-    else
-        let r_server['timer'] = timer_start(g:vlime_cl_wait_interval,
-                    \ function('s:CheckServerStopped', [r_server]),
-                    \ {'repeat': -1})
     endif
 endfunction
 
@@ -208,35 +201,6 @@ function! s:MatchServerCreatedPort()
     endif
 endfunction
 
-function! s:CheckServerStopped(server, timer)
-    if vlime#compat#job_status(a:server['job']) == 'run'
-        let timer_count = get(a:server, 'stop_timer_count', 1)
-        if timer_count >= s:CalcServerCheckTimesLimit()
-            if get(a:server, 'timer', -1) == a:timer
-                call remove(a:server, 'timer')
-            endif
-            call timer_stop(a:timer)
-            call vlime#ui#ErrMsg('vlime#server#Stop: failed to stop ' .
-                        \ a:server['name'])
-        else
-            let a:server['stop_timer_count'] = timer_count + 1
-        endif
-    else
-        if get(a:server, 'timer', -1) == a:timer
-            call remove(a:server, 'timer')
-        endif
-        call timer_stop(a:timer)
-        call remove(g:vlime_servers, a:server['id'])
-        echom a:server['name'] . ' stopped.'
-
-        let conn_dict = get(a:server, 'connections', {})
-        for conn_id in keys(conn_dict)
-            call vlime#connection#Close(conn_dict[conn_id])
-        endfor
-        let a:server['connections'] = {}
-    endif
-endfunction
-
 function! s:NormalizeServerID(id)
     if type(a:id) == v:t_dict
         return a:id['id']
@@ -249,15 +213,6 @@ function! s:RenameBuffer(new_name)
     " Use silent! to supress the 'Cannot rename swapfile' message on Windows
     silent! 0file
     silent! execute 'file' escape(a:new_name, ' |\''"')
-endfunction
-
-function! s:CalcServerCheckTimesLimit()
-    let wait_time_ms = g:vlime_cl_wait_time * 1000
-    let times_limit = wait_time_ms / g:vlime_cl_wait_interval
-    if wait_time_ms % g:vlime_cl_wait_interval > 0
-        let times_limit += 1
-    endif
-    return times_limit
 endfunction
 
 function! s:ServerOutputCB(server_obj, auto_connect, data)
@@ -285,4 +240,15 @@ function! s:ServerOutputCB(server_obj, auto_connect, data)
             break
         endif
     endfor
+endfunction
+
+function! s:ServerExitCB(server_obj, exit_status)
+    call remove(g:vlime_servers, a:server_obj['id'])
+    echom a:server_obj['name'] . ' stopped.'
+
+    let conn_dict = get(a:server_obj, 'connections', {})
+    for conn_id in keys(conn_dict)
+        call vlime#connection#Close(conn_dict[conn_id])
+    endfor
+    let a:server_obj['connections'] = {}
 endfunction
