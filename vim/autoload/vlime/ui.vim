@@ -1084,11 +1084,20 @@ function! vlime#ui#CurArgPos(...)
     for ln in range(s_line, cur_pos[1])
         let line = getline(ln)
         let start_idx = (ln == s_line) ? (s_col - 1) : 0
-        let end_idx = (ln == cur_pos[1]) ?
-                    \ min([cur_pos[2], len(line)]) : len(line)
+        if ln == cur_pos[1]
+            let end_idx = min([cur_pos[2], len(line)])
+            if cur_pos[2] > len(line)
+                let end_itr = end_idx + 1
+            else
+                let end_itr = end_idx
+            endif
+        else
+            let end_idx = len(line)
+            let end_itr = end_idx + 1
+        endif
 
         let idx = start_idx
-        while idx < end_idx + 1
+        while idx < end_itr
             if idx < end_idx
                 let ch = line[idx]
             elseif idx < len(line)

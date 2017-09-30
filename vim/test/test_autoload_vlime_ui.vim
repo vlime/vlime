@@ -453,6 +453,10 @@ function! TestCurArgPosForIndent()
         call append(line('$'), "(aa bb '(cc dd) ee)")
         call setpos('.', [0, line('$'), 9, 0])
         call assert_equal(2, vlime#ui#CurArgPos())
+
+        call append(line('$'), ["(aa", "  bb)"])
+        call setpos('.', [0, line('$') - 1, 3, 0])
+        call assert_equal(0, vlime#ui#CurArgPos())
     finally
         call CleanupDummyBuffer()
     endtry
