@@ -488,6 +488,11 @@ adding this line to your |vimrc| file, to use the comma instead:
 
     let maplocalleader = ","
 
+Or, if you don't want to change your |<LocalLeader>|, set
+|g:vlime_leader| instead:
+
+    let g:vlime_leader = ","
+
 You can type "<LocalLeader>?" (without the quote marks) in most of
 Vlime buffers, including Common Lisp source files, to see a quick
 reference for the exact mappings defined in those buffers.
@@ -1022,6 +1027,13 @@ Vlime:
 g:vlime_force_default_keys                *g:vlime_force_default_keys*
     A boolean flag to tell Vlime to always use the default key
     mappings. See |vlime-key-conflict|. Default: v:false
+
+g:vlime_leader                                        *g:vlime_leader*
+    A |string| to override the leader key used in Vlime key mappings.
+    This supersedes |maplocalleader|. Please use key notations for
+    special keys, as described in |key-notation|. For example, setting
+    this variable to "<Space>" would instruct Vlime to use the space
+    key as the leader. Default: "<LocalLeader>"
 
 g:vlime_cl_impl                                      *g:vlime_cl_impl*
     A |string| to designate the CL implementation to use when starting
