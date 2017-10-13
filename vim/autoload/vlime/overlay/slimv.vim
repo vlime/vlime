@@ -38,7 +38,20 @@ function! vlime#overlay#slimv#UntraceAll()
     call conn.DialogUntraceAll(function('s:DialogUntraceAllComplete'))
 endfunction
 
-let s:slimv_leader = get(g:, 'slimv_leader', ',')
+if exists('mapleader')
+    let s:special_leader_keys = [
+                \ ['<', '<lt>'],
+                \ ["\<space>", '<space>'],
+                \ ["\<tab>", '<tab>'],
+                \ ]
+    let s:slimv_leader = mapleader
+    for [s:skey, s:srepr] in s:special_leader_keys
+        let s:slimv_leader = substitute(s:slimv_leader, s:skey, s:srepr, 'g')
+    endfor
+else
+    let s:slimv_leader = ','
+endif
+let s:slimv_leader = get(g:, 'slimv_leader', s:slimv_leader)
 let s:slimv_keybindings = get(g:, 'slimv_keybindings', 1)
 if s:slimv_keybindings == 1
     let s:slimv_src_mappings = [
