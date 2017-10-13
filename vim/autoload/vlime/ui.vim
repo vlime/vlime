@@ -1677,11 +1677,39 @@ function! s:InString(cur_pos)
     endif
 endfunction
 
+let s:special_leader_keys = [
+            \ ['<', '<lt>'],
+            \ ["\<space>", '<space>'],
+            \ ["\<tab>", '<tab>'],
+            \ ]
+
+function! s:ExpandSpecialLeaderKeys(leader)
+    let res = a:leader
+    for [key, repr] in s:special_leader_keys
+        let res = substitute(res, key, repr, 'g')
+    endfor
+    return res
+endfunction
+
+let s:default_leader = '\'
+
+let s:leader = get(g:, 'mapleader', s:default_leader)
+if len(s:leader) <= 0
+    let s:leader = s:default_leader
+endif
+let s:leader = s:ExpandSpecialLeaderKeys(s:leader)
+
+let s:local_leader = get(g:, 'maplocalleader', s:default_leader)
+if len(s:local_leader) <= 0
+    let s:local_leader = s:default_leader
+endif
+let s:local_leader = s:ExpandSpecialLeaderKeys(s:local_leader)
+
 function! s:ExpandLeader(key)
-    let default_leader = '\'
-    let local_leader = get(g:, 'maplocalleader', default_leader)
-    if len(local_leader) <= 0
-        let local_leader = default_leader
-    endif
-    return substitute(a:key, '\c<LocalLeader>', local_leader, 'g')
+    let to_expand = [['\c<Leader>', s:leader], ['\c<LocalLeader>', s:local_leader]]
+    let res = a:key
+    for [repr, lkey] in to_expand
+        let res = substitute(res, repr, lkey, 'g')
+    endfor
+    return res
 endfunction
