@@ -1,4 +1,5 @@
 * master
+    * A separate setting for the leader key `:help g:vlime_leader`.
     * Use built-in terminal emulators to launch servers `:help g:vlime_cl_use_terminal`.
     * Overlays, and Slimv-like key mappings `:help vlime-mappings-overlays`.
     * Show quick references for Vlime buffers `:help vlime-mappings`.

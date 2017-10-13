@@ -1033,7 +1033,8 @@ g:vlime_leader                                        *g:vlime_leader*
     This supersedes |maplocalleader|. Please use key notations for
     special keys, as described in |key-notation|. For example, setting
     this variable to "<Space>" would instruct Vlime to use the space
-    key as the leader. Default: "<LocalLeader>"
+    key as the leader. Also see |vlime-mappings|. Default:
+    "<LocalLeader>"
 
 g:vlime_cl_impl                                      *g:vlime_cl_impl*
     A |string| to designate the CL implementation to use when starting
