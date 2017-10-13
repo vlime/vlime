@@ -140,3 +140,10 @@ l04m33(at)gmail.com if you have any suggestions for improving Vlime.
 
 See `:help vlime-tests` for a how-to on setting up and running the
 tests for development.
+
+Sponsor
+=======
+
+<a target='_blank' rel='nofollow' href='https://app.codesponsor.io/link/EFJRj73XqnJXrjmRNJd9gKeU/l04m33/vlime'>
+  <img alt='Sponsor' width='888' height='68' src='https://app.codesponsor.io/embed/EFJRj73XqnJXrjmRNJd9gKeU/l04m33/vlime.svg' />
+</a>
