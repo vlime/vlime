@@ -137,14 +137,15 @@
 
 (defmethod start-server ((backend (eql :usocket)) host port swank-host swank-port dont-close)
   (vom:config t :info)
-  (let ((server-socket
-          (usocket:socket-listen host port
-                                 :reuse-address t
-                                 :backlog 128
-                                 :element-type '(unsigned-byte 8))))
+  (let* ((server-socket
+           (usocket:socket-listen host port
+                                  :reuse-address t
+                                  :backlog 128
+                                  :element-type '(unsigned-byte 8)))
+         (local-name (multiple-value-list (usocket:get-local-name server-socket))))
     (values
       (swank/backend:spawn
         #'(lambda ()
             (vlime-usocket::server-listener server-socket swank-host swank-port dont-close))
-        :name (format nil "Vlime Server Listener ~a ~a" host port))
-      (multiple-value-list (usocket:get-local-name server-socket)))))
+        :name (format nil "Vlime Server Listener ~a ~a" (first local-name) (second local-name)))
+      local-name)))
