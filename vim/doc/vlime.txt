@@ -1120,9 +1120,9 @@ g:vlime_cl_wait_time                            *g:vlime_cl_wait_time*
     via |vlime-mappings-invoke-server-rs|, in seconds. Default: 10
 
 g:vlime_address                                      *g:vlime_address*
-    A |list| specifying the address of a Vlime server. This address
-    will be used in the |vlime-mappings-conn-cc| command. Default:
-    ["127.0.0.1", 7002]
+    A |list| specifying the default address of the Vlime server. This
+    address will be used as the default host and port values in the
+    |vlime-mappings-conn-cc| command. Default: ["127.0.0.1", 7002]
 
 g:vlime_connect_timeout                      *g:vlime_connect_timeout*
     An integer specifying the time to wait when connecting to the

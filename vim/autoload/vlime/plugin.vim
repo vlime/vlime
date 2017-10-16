@@ -99,8 +99,9 @@ endfunction
 " Connect to a server, and return a connection object (see
 " @dict(VlimeConnection)).
 "
-" [host] and [port] specify the server to connect to. This function will use
-" the value in |g:vlime_address| if they are omitted.
+" [host] and [port] specify the server to connect to. If they are omitted,
+" prompt for these values, using the values in |g:vlime_address| as the
+" default.
 " [remote_prefix], if specified, is an SFTP URL prefix, to tell Vlime to open
 " remote files via SFTP (see |vlime-remote-server|).
 " [timeout] is the time to wait for the connection to be made, in
@@ -113,11 +114,28 @@ function! vlime#plugin#ConnectREPL(...)
     let def_timeout = exists('g:vlime_connect_timeout') ?
                 \ g:vlime_connect_timeout : v:null
 
-    let host = get(a:000, 0, def_host)
-    let port = get(a:000, 1, def_port)
+    let host = get(a:000, 0, v:null)
+    let port = get(a:000, 1, v:null)
     let remote_prefix = get(a:000, 2, '')
     let timeout = get(a:000, 3, def_timeout)
     let name = get(a:000, 4, v:null)
+
+    if type(host) == type(v:null)
+        let host = input('Host: ', def_host)
+        if len(host) <= 0
+            call vlime#ui#ErrMsg('Canceled.')
+            return
+        endif
+    endif
+
+    if type(port) == type(v:null)
+        let port = input('Port: ', def_port)
+        if len(port) <= 0
+            call vlime#ui#ErrMsg('Canceled.')
+            return
+        endif
+        let port = str2nr(port)
+    endif
 
     if type(name) == type(v:null)
         let conn = vlime#connection#New()
