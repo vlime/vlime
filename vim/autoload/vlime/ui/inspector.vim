@@ -60,8 +60,20 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
     if exists('b:vlime_inspector_coords_match')
         call vlime#ui#MatchDeleteList(b:vlime_inspector_coords_match)
     endif
+
+    let action_coords = []
+    let value_coords = []
+    for co in coords
+        if co['type'] == 'VALUE'
+            call add(value_coords, co)
+        else
+            call add(action_coords, co)
+        endif
+    endfor
+
     let b:vlime_inspector_coords_match =
-                \ vlime#ui#MatchAddCoords('vlime_inspectorCoord', coords)
+                \ vlime#ui#MatchAddCoords('vlime_inspectorAction', action_coords) +
+                \ vlime#ui#MatchAddCoords('vlime_inspectorValue', value_coords)
 
     augroup VlimeInspectorLeaveAu
         autocmd!
