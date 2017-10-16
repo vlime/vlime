@@ -1230,6 +1230,50 @@ function! vlime#ui#CoordSorter(direction, c1, c2)
     endif
 endfunction
 
+function! vlime#ui#CoordsToMatchPos(coords)
+    let pos_list = []
+    for co in a:coords
+        if co['begin'][0] == co['end'][0]
+            let line = co['begin'][0]
+            let col = co['begin'][1]
+            let len = co['end'][1] - co['begin'][1] + 1
+            call add(pos_list, [line, col, len])
+        else
+            for line in range(co['begin'][0], co['end'][0])
+                if line == co['begin'][0]
+                    let col = co['begin'][1]
+                    let len = len(getline(line)) - col + 1
+                    call add(pos_list, [line, col, len])
+                elseif line == co['end'][0]
+                    let col = 1
+                    let len = co['end'][1]
+                    call add(pos_list, [line, col, len])
+                else
+                    call add(pos_list, line)
+                endif
+            endfor
+        endif
+    endfor
+
+    return pos_list
+endfunction
+
+function! vlime#ui#MatchAddCoords(group, coords)
+    let pos_list = vlime#ui#CoordsToMatchPos(a:coords)
+    let match_list = []
+    let stride = 8
+    for i in range(0, len(pos_list) - 1, stride)
+        call add(match_list, matchaddpos(a:group, pos_list[i:i+stride-1]))
+    endfor
+    return match_list
+endfunction
+
+function! vlime#ui#MatchDeleteList(match_list)
+    for m in a:match_list
+        call matchdelete(m)
+    endfor
+endfunction
+
 ""
 " @usage {file_path} {byte_pos} [snippet] [edit_cmd] [force_open]
 " @public

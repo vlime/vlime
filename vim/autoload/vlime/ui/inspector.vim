@@ -57,6 +57,11 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
     setlocal nomodifiable
 
     let b:vlime_inspector_coords = coords
+    if exists('b:vlime_inspector_coords_match')
+        call vlime#ui#MatchDeleteList(b:vlime_inspector_coords_match)
+    endif
+    let b:vlime_inspector_coords_match =
+                \ vlime#ui#MatchAddCoords('vlime_inspectorCoord', coords)
 
     augroup VlimeInspectorLeaveAu
         autocmd!
@@ -101,8 +106,13 @@ function! vlime#ui#inspector#ResetInspectorBuffer(bufnr)
     " Clear the content instead of unloading the buffer, to preserve the
     " syntax highlighting settings
     call setbufvar(a:bufnr, 'vlime_inspector_coords', [])
+    let coords_match = getbufvar(a:bufnr, 'vlime_inspector_coords_match', [])
+    call setbufvar(a:bufnr, 'vlime_inspector_coords_match', [])
     call setbufvar(a:bufnr, '&modifiable', 1)
-    call vlime#ui#WithBuffer(a:bufnr, {-> vlime#ui#ReplaceContent('')})
+    call vlime#ui#WithBuffer(a:bufnr,
+                \ {->
+                    \ vlime#ui#ReplaceContent('') &&
+                    \ vlime#ui#MatchDeleteList(coords_match)})
     call setbufvar(a:bufnr, '&modifiable', 0)
 
     " This function is called in an autocmd in this particular augroup we are
