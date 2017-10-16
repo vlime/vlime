@@ -1192,9 +1192,15 @@ g:vlime_window_settings                      *g:vlime_window_settings*
         "vertical":
             v:true or v:false.
 
+                                     *g:vlime_default_window_settings*
     Vlime will try to use default values when any of these parameters
     are missing. See the value of g:vlime_default_window_settings for
-    the default values.
+    the defaults. This variable uses the same format as
+    |g:vlime_window_settings|. For example, to see the default
+    settings for the debugger window, run this in Vim after Vlime was
+    loaded:
+
+        :echo g:vlime_default_window_settings["sldb"]
 
 g:vlime_indent_keywords                      *g:vlime_indent_keywords*
     A |dict| specifying indent rules for operators. The keys should be
