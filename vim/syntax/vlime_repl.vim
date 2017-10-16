@@ -20,5 +20,6 @@ hi def link vlime_replComment Comment
 hi def link vlime_replConditionSummary WarningMsg
 hi def link vlime_replWarning WarningMsg
 hi def link vlime_replError ErrorMsg
+hi def link vlime_replCoord Constant
 
 let b:current_syntax = 'vlime_repl'

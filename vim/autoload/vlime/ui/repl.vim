@@ -74,6 +74,10 @@ function! vlime#ui#repl#ClearREPLBuffer()
     if exists('b:vlime_repl_coords')
         unlet b:vlime_repl_coords
     endif
+    if exists('b:vlime_repl_coords_match')
+        call vlime#ui#MatchDeleteList(b:vlime_repl_coords_match)
+        unlet b:vlime_repl_coords_match
+    endif
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable
 endfunction

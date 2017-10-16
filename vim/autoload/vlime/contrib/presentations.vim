@@ -37,8 +37,12 @@ function! s:OnPresentationStart(conn, msg)
     endif
 
     let coords = getbufvar(repl_buf, 'vlime_repl_pending_coords', {})
-    let begin_pos = vlime#ui#WithBuffer(repl_buf,
-                \ function('vlime#ui#GetEndOfFileCoord'))
+    let [begin_pos, last_len] =
+                \ vlime#ui#WithBuffer(repl_buf,
+                    \ {-> [vlime#ui#GetEndOfFileCoord(), len(getline('$'))]})
+    if last_len > 0
+        let begin_pos[1] += 1
+    endif
     let c_list = get(coords, a:msg[1], [])
     call add(c_list, {
                 \ 'begin': begin_pos,
@@ -83,4 +87,9 @@ function! s:OnPresentationEnd(conn, msg)
     let coords_list = getbufvar(repl_buf, 'vlime_repl_coords', [])
     call add(coords_list, c_pending)
     call setbufvar(repl_buf, 'vlime_repl_coords', coords_list)
+
+    let match_list = vlime#ui#WithBuffer(
+                \ repl_buf, {-> vlime#ui#MatchAddCoords('vlime_replCoord', [c_pending])})
+    let full_match_list = getbufvar(repl_buf, 'vlime_repl_coords_match', [])
+    call setbufvar(repl_buf, 'vlime_repl_coords_match', full_match_list + match_list)
 endfunction
