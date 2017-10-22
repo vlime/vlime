@@ -1601,7 +1601,7 @@ function! vlime#ui#EnsureKeyMapped(mode, key, cmd, ...)
         if !hasmapto(a:cmd, a:mode)
             let keys_mapped = []
             for kk in key_list
-                if len(maparg(kk, a:mode)) <= 0
+                if len(maparg(kk, a:mode)) <= 0 " HERE
                     let map_cmd = a:mode . 'noremap'
                     execute map_cmd flags kk a:cmd
                     call add(keys_mapped, kk)
