@@ -2,7 +2,6 @@ function! vlime#ui#repl#InitREPLBuf(conn)
     let repl_buf = bufnr(vlime#ui#REPLBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(repl_buf)
         call vlime#ui#SetVlimeBufferOpts(repl_buf, a:conn)
-        call setbufvar(repl_buf, '&filetype', 'vlime_repl')
         call vlime#ui#WithBuffer(repl_buf, function('s:InitREPLBuf'))
     endif
     return repl_buf
@@ -132,6 +131,8 @@ function! s:FindCurCoord(cur_pos, coords)
 endfunction
 
 function! s:InitREPLBuf()
+    setlocal filetype=vlime_repl
+
     setlocal modifiable
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable

@@ -2,7 +2,6 @@ function! vlime#ui#sldb#InitSLDBBuf(ui, conn, thread, level, frames)
     let buf = bufnr(vlime#ui#SLDBBufName(a:conn, a:thread), v:true)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
-        call setbufvar(buf, '&filetype', 'vlime_sldb')
         call vlime#ui#WithBuffer(buf, function('s:InitSLDBBuf'))
     endif
     call setbufvar(buf, 'vlime_sldb_level', a:level)
@@ -421,6 +420,7 @@ function! s:FindSourceCB(edit_cmd, win_to_go, force_open, frame, conn, msg)
 endfunction
 
 function! s:InitSLDBBuf()
+    setlocal filetype=vlime_sldb
     call vlime#ui#MapBufferKeys('sldb')
 endfunction
 
