@@ -11,6 +11,6 @@ hi def link vlime_inspectorObject Constant
 hi def link vlime_inspectorString String
 hi def link vlime_inspectorNumber Number
 hi def link vlime_inspectorAction Function
-hi def link vlime_inspectorValue Constant
+hi def link vlime_inspectorValue  Constant
 
 let b:current_syntax = 'vlime_inspector'
