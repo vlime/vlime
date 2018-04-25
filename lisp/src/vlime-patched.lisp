@@ -45,7 +45,8 @@
     (if (eql (car message) :return)
       (setf json (seq-swank-to-client json))
       (setf json (list 0 json)))
-    (let* ((encoded (with-output-to-string (json-out)
+    (let* ((yason::*char-replacements* *yason-char-replacements*)
+           (encoded (with-output-to-string (json-out)
                       (yason:encode json json-out)))
            (full-line (concatenate
                         'string encoded (format nil "~c~c" #\return #\linefeed)))

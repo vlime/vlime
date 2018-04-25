@@ -22,6 +22,14 @@
 
 (defparameter +swank-msg-len-size+ 6)
 
+(defparameter *yason-char-replacements*
+  (alexandria:plist-hash-table
+    (list* #\Nul "<NUL>"
+           (alexandria:hash-table-plist
+             yason::*char-replacements*)))
+  "Handling of NUL would need special code; see ':help json_encode' for details.
+  So we just patch NULs out.")
+
 
 (defun parse-form (input-str)
   (with-standard-io-syntax
@@ -163,6 +171,7 @@
 
   (let* ((form (parse-form msg))
          (json (normalize-swank-form form))
+         (yason::*char-replacements* *yason-char-replacements*)
          (encoded (with-output-to-string (json-out)
                     (yason:encode json json-out)))
          (full-line (concatenate
