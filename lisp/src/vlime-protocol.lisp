@@ -25,6 +25,7 @@
 (defparameter *yason-char-replacements*
   (alexandria:plist-hash-table
     (list* #\Nul "<NUL>"
+           #\Esc "<Esc>"
            (alexandria:hash-table-plist
              yason::*char-replacements*)))
   "Handling of NUL would need special code; see ':help json_encode' for details.
