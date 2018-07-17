@@ -945,9 +945,9 @@ Key mappings avaialble in the server output buffer:
 
 Key mappings avaialble in the input buffer:
 
-    CTRL-p
+    CTRL-p or Shift-Tab
         Show the previous item in input history.
-    CTRL-n
+    CTRL-n or Tab
         Show the next item in input history.
 
 ......................................................................
