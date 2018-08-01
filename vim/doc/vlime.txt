@@ -809,7 +809,7 @@ Key mappings avaialble in the REPL buffer:
 ......................................................................
 4.3.3 Debugger Mappings                      *vlime-mappings-debugger*
 
-Key mappings avaialble in the debugger:
+Key mappings available in the debugger:
 
     <CR>
         Choose a restart.
