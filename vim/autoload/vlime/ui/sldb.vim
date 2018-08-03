@@ -398,7 +398,7 @@ function! s:ShowFrameSourceLocationCB(frame, line, conn, result)
     endif
 
     " The position is likely the byte position, so not actually useful for gF
-    let content = "\tFile: " . a:result[1][1] . " " . a:result[2][1] . "\n"
+    let content = "\n\tFile: " . a:result[1][1] . " " . a:result[2][1] . "\n"
 
     if type(a:result[3]) != type(v:null)
         let snippet_lines = split(a:result[3][1], "\n")
