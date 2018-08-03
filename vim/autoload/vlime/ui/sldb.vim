@@ -36,7 +36,7 @@ function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
         let r = a:restarts[ri]
         let idx_str = vlime#ui#Pad(string(ri), '.', max_digits)
         let restart_line = s:FormatRestartLine(r, max_name_len, has_star)
-        let restarts_str .= ('  ' . idx_str . restart_line . "\n")
+        let restarts_str .= ('  R ' . idx_str . restart_line . "\n")
         let ri += 1
     endwhile
     let restarts_str .= "\n"
@@ -46,7 +46,7 @@ function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
     let max_digits = len(string(len(a:frames) - 1))
     for f in a:frames
         let idx_str = vlime#ui#Pad(string(f[0]), '.', max_digits)
-        let frames_str .= ('  ' . idx_str . f[1] . "\n")
+        let frames_str .= ('  F ' . idx_str . f[1] . "\n")
     endfor
     call vlime#ui#AppendString(frames_str)
 
@@ -57,10 +57,16 @@ function! vlime#ui#sldb#ChooseCurRestart()
     let nth = s:MatchRestart()
     if nth >= 0
         call b:vlime_conn.InvokeNthRestartForEmacs(b:vlime_sldb_level, nth)
+    else
+        let [fn, pos] = s:MatchFile()
+        if fn
+            call vlime#ui#sldb#OpenFrameSource()
+        endif
     endif
 endfunction
 
 function! vlime#ui#sldb#ShowFrameDetails()
+    let line = line('.')
     let nth = s:MatchFrame()
     if nth < 0
         let nth = 0
@@ -70,15 +76,15 @@ function! vlime#ui#sldb#ShowFrameDetails()
 
     call vlime#ChainCallbacks(
                 \ function(b:vlime_conn.FrameLocalsAndCatchTags, [nth]),
-                \ function('s:ShowFrameLocalsCB', [nth, restartable]),
+                \ function('s:ShowFrameLocalsCB', [nth, restartable, line]),
                 \ function(b:vlime_conn.FrameSourceLocation, [nth]),
-                \ function('s:ShowFrameSourceLocationCB', [nth, v:true]))
+                \ function('s:ShowFrameSourceLocationCB', [nth, line]))
 endfunction
 
 " vlime#ui#sldb#OpenFrameSource([edit_cmd])
 function! vlime#ui#sldb#OpenFrameSource(...)
     let edit_cmd = get(a:000, 0, 'hide edit')
-    let nth = s:MatchFrame()
+    let nth = s:MatchFrame(v:true)
     if nth < 0
         let nth = 0
     endif
@@ -143,17 +149,25 @@ function! vlime#ui#sldb#InspectCurCondition()
 endfunction
 
 function! vlime#ui#sldb#InspectInCurFrame()
-    let nth = s:MatchFrame()
+    let varname = s:MatchVarName()
+    let nth = s:MatchFrame(v:true)
     if nth < 0
-        let nth = 0
+        return
     endif
 
     let thread = b:vlime_conn.GetCurrentThread()
-    call vlime#ui#input#FromBuffer(
-                \ b:vlime_conn, 'Inspect in frame (evaluated):',
-                \ v:null,
-                \ function('s:InspectInCurFrameInputComplete',
-                    \ [nth, thread]))
+    if len(varname) > 0
+        call b:vlime_conn.WithThread(thread,
+                    \ function(b:vlime_conn.InspectInFrame,
+                        \ [varname, nth,
+                            \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)}]))
+    else
+        call vlime#ui#input#FromBuffer(
+                    \ b:vlime_conn, 'Inspect in frame (evaluated):',
+                    \ v:null,
+                    \ function('s:InspectInCurFrameInputComplete',
+                        \ [nth, thread]))
+    endif
 endfunction
 
 function! s:InspectInCurFrameInputComplete(frame, thread)
@@ -297,27 +311,55 @@ function! s:FormatRestartLine(r, max_name_len, has_star)
     return spc . a:r[0] . pad . '- ' . a:r[1]
 endfunction
 
+function! s:MatchVarName()
+    let line = getline('.')
+    let matches = matchlist(line, '\v^\t  ([^:]+):\s+')
+    return (len(matches) > 0) ? matches[1] : ""
+endfunction
+
+function! s:MatchFile()
+    let line = getline('.')
+    let matches = matchlist(line, '\v^\tFile:\s+(.*) ([0-9]+)$')
+    return (len(matches) > 0) ? matches[1:2] : []
+endfunction
+
 function! s:MatchRestart()
     let line = getline('.')
     let matches = matchlist(line,
-                \ '^\s*\([0-9]\+\)\.\s\+\*\?[A-Z\-]\+\s\+-\s.\+$')
+                \ '\v^  R\s+([0-9]+)\.\s+\*?[A-Z\-]+\s+-\s.+$')
     return (len(matches) > 0) ? (matches[1] + 0) : -1
 endfunction
 
-function! s:MatchFrame()
+function! s:MatchFrame_string(line)
+    let matches = matchlist(a:line, '\v^  F\s+([0-9]+)\.\s')
+    return (len(matches) > 0) ? (matches[1] + 0) : -1
+endfunction
+
+function! s:MatchFrame(...)
+    let srchBackwards = get(a:000, 0, v:false)
+
     let line = getline('.')
-    let matches = matchlist(line, '^\s*\([0-9]\+\)\.\s\+(.\+)$')
-    return (len(matches) > 0) ? (matches[1] + 0) : -1
+    let fnd = s:MatchFrame_string(line)
+    if (fnd > 0) || (! srchBackwards)
+        return fnd
+    endif
+
+    " First line with no tab in front
+    let lnr = search('\v^[^\t]', 'bnWz')
+    if lnr == 0
+        return -1
+    endif
+
+    let line = getline(lnr)
+    return s:MatchFrame_string(line)
 endfunction
 
-function! s:ShowFrameLocalsCB(frame, restartable, conn, result)
-    let content = 'Frame: ' . a:frame
-    let restartable_str = a:restartable ? ' (Restartable)' : ' (Not restartable)'
-    let content .= (restartable_str . "\n")
+function! s:ShowFrameLocalsCB(frame, restartable, line, conn, result)
+    let content = "\n"
 
     let locals = a:result[0]
     if type(locals) != type(v:null)
-        let content .= "\nLocals:\n"
+        let content .= "\tLocals:\n"
         let rlocals = []
         let max_name_len = 0
         for lc in locals
@@ -328,48 +370,50 @@ function! s:ShowFrameLocalsCB(frame, restartable, conn, result)
             endif
         endfor
         for rlc in rlocals
-            let content .= '  '     " Indentation
+            let content .= "\t  "     " Indentation
             let content .= vlime#ui#Pad(rlc['NAME'], ':', max_name_len)
             let content .= (rlc['VALUE'] . "\n")
         endfor
     endif
     let catch_tags = a:result[1]
     if type(catch_tags) != type(v:null)
-        let content .= "\nCatch tags:\n"
+        let content .= "\tCatch tags:\n"
         for ct in catch_tags
-            let content .= '  ' . ct . "\n"
+            let content .= "\t  " . ct . "\n"
         endfor
     endif
-    call vlime#ui#ShowPreview(a:conn, content, v:false)
+    let thread = b:vlime_conn.GetCurrentThread()
+    "call b:vlime_conn.WithThread(thread, {-> ???
+    let buf = bufnr(vlime#ui#SLDBBufName(a:conn, thread), v:true)
+    setlocal modifiable
+    call vlime#ui#WithBuffer(buf,
+                \ {-> vlime#ui#AppendString(content, a:line) })
+    setlocal nomodifiable
+    "call vlime#ui#ShowPreview(a:conn, content, v:false)
 endfunction
 
-function! s:ShowFrameSourceLocationCB(frame, append, conn, result)
+function! s:ShowFrameSourceLocationCB(frame, line, conn, result)
     if a:result[0]['name'] != 'LOCATION'
         call vlime#ui#ErrMsg(a:result[1])
         return
     endif
 
-    if a:append
-        let content = ''
-    else
-        let content = 'Frame: ' . a:frame . "\n"
-    endif
-    let content .= "\nLocation:\n"
-    let content .= '  File: ' . a:result[1][1] . "\n"
-    let content .= '  Position: ' . a:result[2][1] . "\n"
+    " The position is likely the byte position, so not actually useful for gF
+    let content = "\tFile: " . a:result[1][1] . " " . a:result[2][1] . "\n"
 
     if type(a:result[3]) != type(v:null)
         let snippet_lines = split(a:result[3][1], "\n")
-        let snippet = join(map(snippet_lines, '"    " . v:val'), "\n")
-        let content .= "  Snippet:\n" . snippet . "\n"
+        let snippet = join(map(snippet_lines, '"\t  " . v:val'), "\n")
+        let content .= "\tSnippet:\n" . snippet . "\n"
     endif
 
-    if a:append
-        call vlime#ui#ShowPreview(a:conn, content, v:true)
-    else
-        call vlime#ui#ShowPreview(a:conn, content, v:false)
-    endif
-endfunction
+    let thread = b:vlime_conn.GetCurrentThread()
+    let buf = bufnr(vlime#ui#SLDBBufName(a:conn, thread), v:true)
+    setlocal modifiable
+    call vlime#ui#WithBuffer(buf,
+                \ {-> vlime#ui#AppendString(content, a:line) })
+    setlocal nomodifiable
+    endfunction
 
 function! s:OpenFrameSourceCB(edit_cmd, win_to_go, force_open, conn, result)
     try
