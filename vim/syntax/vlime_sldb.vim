@@ -8,8 +8,8 @@ syntax match vlime_sldbSection /\m^Frames:$/
 syntax match vlime_sldbRestart /\m\(^\s*\d\+\.\s\+\)\@<=[^[:space:]]\+\(\s\+-\)\@=/
 syntax match vlime_sldbNumber "-\=\(\.\d\+\|\d\+\(\.\d*\)\=\)\([dDeEfFlL][-+]\=\d\+\)\="
 syntax match vlime_sldbNumber "-\=\(\d\+/\d\+\)"
-syntax region vlime_sldbString start=/\m"/ skip=/\m\\\\\|\\"/ end=/\m"/
-syntax region vlime_sldbObject start=/\m#</ end=/\m>/ contains=vlime_sldbObject,vlime_sldbString
+syntax region vlime_sldbString start=/\m"/ skip=/\m\\\\\|\\"/ end=/\m"\|$)/
+syntax region vlime_sldbObject start=/\m#</ end=/\m>/ end=/$/me=e-1 contains=vlime_sldbObject,vlime_sldbString
 
 hi def link vlime_sldbSection Comment
 hi def link vlime_sldbRestart Operator
