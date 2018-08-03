@@ -389,7 +389,6 @@ function! s:ShowFrameLocalsCB(frame, restartable, line, conn, result)
     call vlime#ui#WithBuffer(buf,
                 \ {-> vlime#ui#AppendString(content, a:line) })
     setlocal nomodifiable
-    "call vlime#ui#ShowPreview(a:conn, content, v:false)
 endfunction
 
 function! s:ShowFrameSourceLocationCB(frame, line, conn, result)
