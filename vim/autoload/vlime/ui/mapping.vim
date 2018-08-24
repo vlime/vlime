@@ -37,6 +37,8 @@ if !exists('g:vlime_default_mappings')
                         \ 'Stop a server.'],
                     \ ['n', s:vlime_leader.'rR', ':call vlime#plugin#RenameSelectedServer()<cr>',
                         \ 'Rename a server.'],
+                    \ ['n', s:vlime_leader.'rc', ':call vlime#ui#repl#ClearREPLBuffer()<cr>',
+                        \ 'Clear the REPL buffer.'],
                     \
                     \ ['n', s:vlime_leader.'ss', ':call vlime#plugin#SendToREPL(vlime#ui#CurExprOrAtom())<cr>',
                         \ 'Send the expression/atom under the cursor to the REPL.'],

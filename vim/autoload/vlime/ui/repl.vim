@@ -65,6 +65,14 @@ function! vlime#ui#repl#YankCurREPLPresentation()
 endfunction
 
 function! vlime#ui#repl#ClearREPLBuffer()
+    let conn = vlime#connection#Get()
+    if type(conn) != type(v:null)
+        let repl_buf = bufnr(vlime#ui#REPLBufName(conn), v:true)
+        call vlime#ui#WithBuffer(repl_buf, function("s:ClearREPLBuffer_inBuffer"))
+    endif
+endfunction
+
+function! s:ClearREPLBuffer_inBuffer()
     setlocal modifiable
     1,$delete _
     if exists('b:vlime_repl_pending_coords')
