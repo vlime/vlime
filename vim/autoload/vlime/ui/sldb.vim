@@ -57,28 +57,35 @@ function! vlime#ui#sldb#ChooseCurRestart()
     let nth = s:MatchRestart()
     if nth >= 0
         call b:vlime_conn.InvokeNthRestartForEmacs(b:vlime_sldb_level, nth)
-    else
-        let [fn, pos] = s:MatchFile()
-        if fn
-            call vlime#ui#sldb#OpenFrameSource()
-        endif
+        return
+    endif
+
+    let frame = vlime#ui#sldb#ShowFrameDetails()
+    if frame > 0
+        return
+    endif
+
+    let [fn, pos] = s:MatchFile()
+    if len(fn) > 0
+        call vlime#ui#sldb#OpenFrameSource()
     endif
 endfunction
 
 function! vlime#ui#sldb#ShowFrameDetails()
-    let line = line('.')
     let nth = s:MatchFrame()
     if nth < 0
-        let nth = 0
+        return -1
     endif
     let frame = b:vlime_sldb_frames[nth]
     let restartable = s:FrameRestartable(frame)
+    let line = line('.')
 
     call vlime#ChainCallbacks(
                 \ function(b:vlime_conn.FrameLocalsAndCatchTags, [nth]),
                 \ function('s:ShowFrameLocalsCB', [nth, restartable, line]),
                 \ function(b:vlime_conn.FrameSourceLocation, [nth]),
                 \ function('s:ShowFrameSourceLocationCB', [nth, line]))
+    return 1
 endfunction
 
 " vlime#ui#sldb#OpenFrameSource([edit_cmd])
@@ -313,14 +320,14 @@ endfunction
 
 function! s:MatchVarName()
     let line = getline('.')
-    let matches = matchlist(line, '\v^\t  ([^:]+):\s+')
+    let matches = matchlist(line, '\v^\t  ([^ ]+):\s+')
     return (len(matches) > 0) ? matches[1] : ""
 endfunction
 
 function! s:MatchFile()
     let line = getline('.')
     let matches = matchlist(line, '\v^\tFile:\s+(.*) ([0-9]+)$')
-    return (len(matches) > 0) ? matches[1:2] : []
+    return (len(matches) > 0) ? matches[1:2] : [0, 0]
 endfunction
 
 function! s:MatchRestart()
