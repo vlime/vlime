@@ -113,6 +113,8 @@ if !exists('g:vlime_default_mappings')
                         \ 'Evaluate the top-level expression under the cursor, and inspect the result.'],
                     \ ['n', [s:vlime_leader.'IA', s:vlime_leader.'Ia'], ':call vlime#plugin#Inspect(vlime#ui#CurAtom())<cr>',
                         \ 'Evaluate the atom under the cursor, and inspect the result.'],
+                    \ ['n', [s:vlime_leader.'IS', s:vlime_leader.'Is'], ':call vlime#plugin#Inspect(vlime#ui#CurSymbol())<cr>',
+                        \ 'Inspect the symbol under the cursor.'],
                     \ ['n', [s:vlime_leader.'IN', s:vlime_leader.'In'], ':call vlime#plugin#Inspect()<cr>',
                         \ 'Evaluate a snippet, and inspect the result.'],
                     \ ['v', s:vlime_leader.'I', ':<c-u>call vlime#plugin#Inspect(vlime#ui#CurSelection())<cr>',

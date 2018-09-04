@@ -315,6 +315,13 @@ function! vlime#ui#CurAtom()
     endtry
 endfunction
 
+function! vlime#ui#CurSymbol()
+    let sym = vlime#ui#CurAtom()
+    if len(sym) > 0
+        return "'" . sym
+    endif
+endfunction
+
 ""
 " @usage [return_pos]
 " @public
