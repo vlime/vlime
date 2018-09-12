@@ -60,6 +60,7 @@ function! vlime#server#New(...)
     call vlime#ui#WithBuffer(server_buf, function('vlime#ui#MapBufferKeys', ['server']))
     call setbufvar(server_buf, '&filetype', 'vlime_server')
     call setbufvar(server_buf, 'vlime_server', server_obj)
+    hide
 
     return server_obj
 endfunction
