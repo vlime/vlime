@@ -1277,7 +1277,10 @@ endfunction
 
 function! vlime#ui#MatchDeleteList(match_list)
     for m in a:match_list
-        call matchdelete(m)
+        try
+            call matchdelete(m)
+		catch /^Vim\%((\a\+)\)\=:E803/
+        endtry
     endfor
 endfunction
 
