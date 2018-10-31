@@ -1805,3 +1805,15 @@ function! vlime#DummyCB(conn, result)
     echom '---------------------------'
     echom string(a:result)
 endfunction
+
+function! vlime#KeywordList2Dict(input)
+    if type(a:input) == v:t_list
+        let dct = {}
+        for el in a:input
+            if type(el[0]) == v:t_dict && el[0]["package"] == 'KEYWORD'
+                let dct[ el[0]["name"] ] = el[1]
+            endif
+        endfor
+        return dct
+    endif
+endfunction

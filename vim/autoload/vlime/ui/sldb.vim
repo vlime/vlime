@@ -403,12 +403,14 @@ function! s:ShowFrameSourceLocationCB(frame, line, conn, result)
         call vlime#ui#ErrMsg(a:result[1])
         return
     endif
+    let r = vlime#KeywordList2Dict(a:result[1:])
 
     " The position is likely the byte position, so not actually useful for gF
-    let content = "\n\tFile: " . a:result[1][1] . " " . a:result[2][1] . "\n"
+    let content = "\n\tFile: " . r["FILE"] . " " . r["POSITION"] . "\n"
 
-    if type(a:result[3]) != type(v:null)
-        let snippet_lines = split(a:result[3][1], "\n")
+    let snippet = r["SNIPPET"]
+    if snippet != type(v:null)
+        let snippet_lines = split(snippet, "\n")
         let snippet = join(map(snippet_lines, '"\t  " . v:val'), "\n")
         let content .= "\tSnippet:\n" . snippet . "\n"
     endif
