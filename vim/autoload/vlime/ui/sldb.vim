@@ -72,6 +72,7 @@ function! vlime#ui#sldb#ChooseCurRestart()
 endfunction
 
 function! vlime#ui#sldb#ShowFrameDetails()
+    " TODO: remember which frames have been expanded
     let nth = s:MatchFrame()
     if nth < 0
         return -1
