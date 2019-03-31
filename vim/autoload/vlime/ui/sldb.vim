@@ -155,7 +155,7 @@ function! vlime#ui#sldb#InspectCurCondition()
                 \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
 endfunction
 
-function! vlime#ui#sldb#InspectInCurFrame()
+function! vlime#ui#sldb#InspectVarInCurFrame()
     let varname = s:MatchVarName()
     let nth = s:MatchFrame(v:true)
     if nth < 0
@@ -163,10 +163,11 @@ function! vlime#ui#sldb#InspectInCurFrame()
     endif
 
     let thread = b:vlime_conn.GetCurrentThread()
-    if len(varname) > 0
+    let var_num = s:MatchVarIndex() 
+    if len(varname) > 0 && var_num >= 0
         call b:vlime_conn.WithThread(thread,
-                    \ function(b:vlime_conn.InspectInFrame,
-                        \ [varname, nth,
+                    \ function(b:vlime_conn.InspectFrameVar,
+                        \ [var_num, nth,
                             \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)}]))
     else
         call vlime#ui#input#FromBuffer(
@@ -316,6 +317,12 @@ function! s:FormatRestartLine(r, max_name_len, has_star)
     endif
     let pad = repeat(' ', a:max_name_len + 1 - len(a:r[0][start:]))
     return spc . a:r[0] . pad . '- ' . a:r[1]
+endfunction
+
+function! s:MatchVarIndex()
+    let loc = search('\v^\tLocals:$', 'bnWz')
+    let this = line('.')
+    return this - loc - 1
 endfunction
 
 function! s:MatchVarName()
