@@ -410,16 +410,32 @@ function! s:ShowFrameSourceLocationCB(frame, line, conn, result)
         call vlime#ui#ErrMsg(a:result[1])
         return
     endif
-    let r = vlime#KeywordList2Dict(a:result[1:])
+    let snippet = ""
+    let content = ""
 
-    " The position is likely the byte position, so not actually useful for gF
-    let content = "\n\tFile: " . r["FILE"] . " " . r["POSITION"] . "\n"
+    if type(a:result[1]) == v:t_list
+        let r = vlime#KeywordList2Dict(a:result[1:])
 
-    let snippet = r["SNIPPET"]
+        if has_key(r, "SNIPPET") 
+            let snippet = r["SNIPPET"]
+        endif
+        if has_key(r, "SOURCE-FORM") 
+            let snippet = r["SOURCE-FORM"]
+        endif
+
+        if has_key(r, "FILE") && has_key(r, "POSITION") 
+        " The position is likely the byte position, so not actually useful for gF
+            let content = "\n\tFile: " . r["FILE"] . " " . r["POSITION"] . "\n"
+        endif
+    else
+        let content = "\n\tPosition: " . a:result[1] . "\n"
+        let snippet = v:null
+    endif
+
     if snippet != type(v:null)
         let snippet_lines = split(snippet, "\n")
         let snippet = join(map(snippet_lines, '"\t  " . v:val'), "\n")
-        let content .= "\tSnippet:\n" . snippet . "\n"
+        let content .= "\n\tSnippet:\n" . snippet . "\n"
     endif
 
     let thread = b:vlime_conn.GetCurrentThread()
