@@ -1485,61 +1485,66 @@ if !exists('g:vlime_buf_name_sep')
     let g:vlime_buf_name_sep = ' | '
 endif
 
+if !exists('g:vlime_buf_name_prefix')
+    let g:vlime_buf_name_prefix = '/vlime '
+endif
+
+
 function! vlime#ui#SLDBBufName(conn, thread)
-    return join(['vlime', 'sldb', a:conn.cb_data.name, a:thread],
+    return join([g:vlime_buf_name_prefix, 'sldb', a:conn.cb_data.name, a:thread],
                 \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#REPLBufName(conn)
-    return join(['vlime', 'repl', a:conn.cb_data.name],
+    return join([g:vlime_buf_name_prefix, 'repl', a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#MREPLBufName(conn, chan_obj)
-    return join(['vlime', 'mrepl ' . a:chan_obj['id'], a:conn.cb_data.name],
+    return join([g:vlime_buf_name_prefix, 'mrepl ' . a:chan_obj['id'], a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#PreviewBufName()
-    return join(['vlime', 'preview'], g:vlime_buf_name_sep)
+    return join([g:vlime_buf_name_prefix, 'preview'], g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#ArgListBufName()
-    return join(['vlime', 'arglist'], g:vlime_buf_name_sep)
+    return join([g:vlime_buf_name_prefix, 'arglist'], g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#InspectorBufName(conn)
-    return join(['vlime', 'inspect', a:conn.cb_data.name],
+    return join([g:vlime_buf_name_prefix, 'inspect', a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#TraceDialogBufName(conn)
-    return join(['vlime', 'trace', a:conn.cb_data.name],
+    return join([g:vlime_buf_name_prefix, 'trace', a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#InputBufName(conn, prompt)
-    return join(['vlime', 'input', a:conn.cb_data.name, a:prompt],
+    return join([g:vlime_buf_name_prefix, 'input', a:conn.cb_data.name, a:prompt],
                 \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#XRefBufName(conn)
-    return join(['vlime', 'xref', a:conn.cb_data.name],
+    return join([g:vlime_buf_name_prefix, 'xref', a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#CompilerNotesBufName(conn)
-    return join(['vlime', 'notes', a:conn.cb_data.name],
+    return join([g:vlime_buf_name_prefix, 'notes', a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#ThreadsBufName(conn)
-    return join(['vlime', 'threads', a:conn.cb_data.name],
+    return join([g:vlime_buf_name_prefix, 'threads', a:conn.cb_data.name],
                 \ g:vlime_buf_name_sep)
 endfunction
 
 function! vlime#ui#ServerBufName(server_name)
-    return join(['vlime', 'server', a:server_name],
+    return join([g:vlime_buf_name_prefix, 'server', a:server_name],
                 \ g:vlime_buf_name_sep)
 endfunction
 
