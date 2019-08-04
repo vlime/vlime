@@ -1040,6 +1040,13 @@ function! vlime#plugin#CalcCurIndent(...)
 
     let vs_col = virtcol(op_list[0][2])
 
+    " 0. Quoted list
+    for item in op_list
+      if item[0] == 'quote'
+        return vs_col
+      endif
+    endfor
+
     let a_count = v:null
 
     " 1. Special forms such as FLET

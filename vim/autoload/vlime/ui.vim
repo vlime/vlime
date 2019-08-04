@@ -555,7 +555,11 @@ function! vlime#ui#ParseOuterOperators(max_count)
             let cur_pos = vlime#ui#CurArgPos([p_line, p_col])
 
             call setpos('.', [0, p_line, p_col, 0])
-            let cur_op = vlime#ui#CurOperator()
+            if matchstr(getline('.'), '\%' . (col('.')-1) . 'c.') == "'"
+              let cur_op = 'quote'
+            else
+              let cur_op = vlime#ui#CurOperator()
+            endif
             call add(stack, [cur_op, cur_pos, [p_line, p_col]])
         endwhile
     finally
