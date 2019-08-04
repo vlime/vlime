@@ -976,7 +976,7 @@ if !exists('g:vlime_default_indent_keywords')
                 \ 'defmethod': 2,
                 \ 'deftype': 2,
                 \ 'lambda': 1,
-                \ 'if': 1,
+                \ 'if': 3,
                 \ 'unless': 1,
                 \ 'when': 1,
                 \ 'case': 1,
