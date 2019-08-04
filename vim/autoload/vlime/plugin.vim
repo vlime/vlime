@@ -1047,9 +1047,17 @@ function! vlime#plugin#CalcCurIndent(...)
       endif
     endfor
 
+    " 1. lambda-list in DEFUN/DEFGENERIC/DEFMETHOD
+    if len(op_list) >= 2 &&
+          \ index(['defun', 'defgeneric', 'defmethod'], tolower(op_list[1][0])) >= 0 &&
+          \ op_list[0][2][0] == op_list[1][2][0]
+      " lambda-list in DEFUN/DEFGENERIC/DEFMETHOD
+      return vs_col
+    endif
+
     let a_count = v:null
 
-    " 1. Special forms such as FLET
+    " 2. Special forms such as FLET
     let a_count = s:IndentCheckSpecialForms(op_list)
 
     if type(a_count) == type(v:null)
@@ -1061,12 +1069,12 @@ function! vlime#plugin#CalcCurIndent(...)
         let op = tolower(s:NormalizeIdentifierForIndentInfo(matches[3]))
     endif
 
-    " 2. User defined indent keywords
+    " 3. User defined indent keywords
     if type(a_count) == type(v:null) && exists('g:vlime_indent_keywords')
         let a_count = get(g:vlime_indent_keywords, op, v:null)
     endif
 
-    " 3. Swank-provided indent keywords
+    " 4. Swank-provided indent keywords
     if type(a_count) == type(v:null) && type(conn) != type(v:null)
         let op_pkg = toupper(s:NormalizeIdentifierForIndentInfo(matches[2]))
         if len(op_pkg) == 0 && type(conn) != type(v:null)
@@ -1086,7 +1094,7 @@ function! vlime#plugin#CalcCurIndent(...)
         endif
     endif
 
-    " 4. Default indent keywords
+    " 5. Default indent keywords
     if type(a_count) == type(v:null)
         let a_count = get(g:vlime_default_indent_keywords, op, v:null)
     endif
