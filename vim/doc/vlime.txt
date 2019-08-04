@@ -1239,53 +1239,6 @@ g:vlime_input_history_limit              *g:vlime_input_history_limit*
     non-positive value disables input history. See
     |vlime-input-buffer|. Default: 200
 
-g:vlime_neovim_connector                    *g:vlime_neovim_connector*
-    For Neovim only. A |string| to designate the connector program to
-    use. Default: "ncat"
-
-    There were no support for non-messagepack socket connections when
-    Vlime was ported to Neovim, so Vlime needs a separate program to
-    help it connect to the server. This program should be a netcat
-    clone, i.e. it should be able to relay socket data to
-    stdin/stdout. Ncat (https://nmap.org/ncat/) is the recommended
-    default. If you have it in your $PATH, things should just work out
-    of box.
-
-    To use another program instead, define a function named
-    "VlimeBuildConnectorCommandFor_<prgm>" that returns the command
-    line, and set g:vlime_neovim_connector accordingly. For example,
-    to use nc6:
-
-        let g:vlime_neovim_connector = "nc6"
-        function! VlimeBuildConnectorCommandFor_nc6(host, port, timeout)
-            if type(a:timeout) == type(v:null)
-                return ['nc6', a:host, string(a:port)]
-            else
-                return ['nc6', '-w', string(a:timeout / 1000.0), a:host, string(a:port)]
-            endif
-        endfunction
-
-    Or, if you don't care about the timeout setting:
-
-        function! VlimeBuildConnectorCommandFor_nc6(host, port)
-            return ['nc6', a:host, string(a:port)]
-        endfunction
-
-    You can restart Neovim and call
-    vlime#connection#BuildConnectorCommand() to see whether the new
-    command is OK:
-
-        :echo vlime#connection#BuildConnectorCommand('127.0.0.1', 7002, 5000)
-
-    Or without the timeout:
-
-        :echo vlime#connection#BuildConnectorCommand('127.0.0.1', 7002)
-
-Note: Vlime may move on to Neovim's new raw socket API when it's
-      ready. The variable g:vlime_neovim_connector and
-      vlime#connection#BuildConnectorCommand() may eventually be
-      deprecated.
-
 g:vlime_contribs                                    *g:vlime_contribs*
     A |list| of Swank contribs to load when initializing a Vlime
     connection. Note that the names are case-sensitive. Please use
