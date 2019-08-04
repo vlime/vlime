@@ -1104,8 +1104,12 @@ function! vlime#plugin#CalcCurIndent(...)
         endif
 
         let indent_info = get(conn.cb_data, 'indent_info', {})
-        if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
+        if has_key(indent_info, op)
+          if index(indent_info[op][1], op_pkg) >= 0
             let a_count = indent_info[op][0]
+          else " Set it anyway in case that 'op_pkg' is a nickname
+            let a_count = indent_info[op][0]
+          endif
         endif
     endif
 
