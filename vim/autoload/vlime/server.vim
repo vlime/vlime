@@ -18,11 +18,12 @@ let s:cur_src_path = resolve(expand('<sfile>:p'))
 let s:vlime_home = fnamemodify(s:cur_src_path, ':h:h:h:h')
 let s:path_sep = s:cur_src_path[len(s:vlime_home)]
 
-" vlime#server#New([auto_connect[, use_terminal[, name]]])
+" vlime#server#New([auto_connect[, use_terminal[, name[, cl_impl]]]])
 function! vlime#server#New(...)
     let auto_connect = get(a:000, 0, v:true)
     let use_terminal = get(a:000, 1, v:false)
     let name = get(a:000, 2, v:null)
+    let cl_impl = get(a:000, 3, v:null)
 
     if type(name) != type(v:null)
         let server_name = name
@@ -39,7 +40,7 @@ function! vlime#server#New(...)
                 \ }
 
     let server_job = vlime#compat#job_start(
-                \ vlime#server#BuildServerCommand(),
+                \ vlime#server#BuildServerCommand(cl_impl),
                 \ {
                     \ 'buf_name': server_buf_name,
                     \ 'callback': function('s:ServerOutputCB', [server_obj, auto_connect]),
@@ -175,8 +176,12 @@ function! vlime#server#BuildServerCommandFor_ccl(vlime_loader, vlime_eval)
     return ['ccl', '--load', a:vlime_loader, '--eval', a:vlime_eval]
 endfunction
 
-function! vlime#server#BuildServerCommand()
-    let cl_impl = exists('g:vlime_cl_impl') ? g:vlime_cl_impl : 'sbcl'
+function! vlime#server#BuildServerCommand(cl_impl)
+    if type(a:cl_impl) == type(v:null)
+        let cl_impl = exists('g:vlime_cl_impl') ? g:vlime_cl_impl : 'sbcl'
+    else
+        let cl_impl = a:cl_impl
+    endif
     let vlime_loader = join([s:vlime_home, 'lisp', 'load-vlime.lisp'], s:path_sep)
 
     let user_func_name = 'VlimeBuildServerCommandFor_' . cl_impl
