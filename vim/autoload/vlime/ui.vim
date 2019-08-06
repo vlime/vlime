@@ -766,18 +766,14 @@ function! vlime#ui#OpenBuffer(name, create, show, ...)
                     if vertical
                         let split_cmd = join(['vertical', split_cmd])
                     endif
+                    if type(initial_size) != type(v:null)
+                        let split_cmd = initial_size . split_cmd
+                    endif
                     " Use silent! to suppress the 'Illegal file name' message
                     " and E303: Unable to open swap file...
                     silent! execute a:show split_cmd
                 else
                     silent! execute 'split #' . buf
-                endif
-                if type(initial_size) != type(v:null)
-                    let resize_cmd = join(['resize', initial_size])
-                    if vertical
-                        let resize_cmd = join(['vertical', resize_cmd])
-                    endif
-                    execute resize_cmd
                 endif
             else
                 execute win_nr . 'wincmd w'
