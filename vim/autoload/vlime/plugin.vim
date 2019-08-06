@@ -1047,9 +1047,9 @@ function! vlime#plugin#CalcCurIndent(...)
       endif
     endfor
 
-    " 1. lambda-list in DEFUN/DEFGENERIC/DEFMETHOD
+    " 1. lambda-list in DEFUN/DEFGENERIC/DEFMETHOD/DEFMACRO
     if len(op_list) >= 2 &&
-          \ index(['defun', 'defgeneric', 'defmethod'], tolower(op_list[1][0])) >= 0 &&
+          \ index(['defun', 'defgeneric', 'defmethod', 'defmacro'], tolower(op_list[1][0])) >= 0 &&
           \ op_list[0][2][0] == op_list[1][2][0]
       " lambda-list in DEFUN/DEFGENERIC/DEFMETHOD
       return vs_col
