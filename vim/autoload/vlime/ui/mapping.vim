@@ -31,10 +31,14 @@ if !exists('g:vlime_default_mappings')
                     \
                     \ ['n', s:vlime_leader.'rr', ':call vlime#server#New(v:true, get(g:, "vlime_cl_use_terminal", v:false))<cr>',
                         \ 'Run a new server and connect to it.'],
-                    \ ['n', s:vlime_leader.'rv', ':call vlime#plugin#ShowSelectedServer()<cr>',
-                        \ 'View the console output of a server.'],
-                    \ ['n', s:vlime_leader.'rs', ':call vlime#plugin#StopSelectedServer()<cr>',
-                        \ 'Stop a server.'],
+                    \ ['n', s:vlime_leader.'rv', ':call vlime#plugin#ShowCurrentServer()<cr>',
+                        \ 'View the console output of the current server.'],
+                    \ ['n', s:vlime_leader.'rV', ':call vlime#plugin#ShowSelectedServer()<cr>',
+                        \ 'Show a list of Vlime servers and view the console output of the chosen one.'],
+                    \ ['n', s:vlime_leader.'rs', ':call vlime#plugin#StopCurrentServer()<cr>',
+                        \ 'Stop the current server.'],
+                    \ ['n', s:vlime_leader.'rS', ':call vlime#plugin#StopSelectedServer()<cr>',
+                        \ 'Show a list of Vlime servers and stop the chosen one.'],
                     \ ['n', s:vlime_leader.'rR', ':call vlime#plugin#RenameSelectedServer()<cr>',
                         \ 'Rename a server.'],
                     \

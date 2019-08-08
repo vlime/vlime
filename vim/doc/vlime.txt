@@ -605,9 +605,13 @@ Key mappings available in lisp source files:
             Run a new Vlime server and connect to it. To customize the
             server, see |g:vlime_cl_impl|.
         <LocalLeader>rv
-            View the console output of a server.
+            View the console output of the current server.
+        <LocalLeader>rV
+            Show a list of Vlime servers and view the console output of the chosen one.
         <LocalLeader>rs              *vlime-mappings-invoke-server-rs*
-            Stop a server.
+            Stop the current server.
+        <LocalLeader>rS
+            Show a list of Vlime servers and stop the chosen one.
         <LocalLeader>rR
             Rename a server.
 

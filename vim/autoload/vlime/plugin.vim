@@ -48,7 +48,24 @@ endfunction
 ""
 " @public
 "
-" Show the output buffer for a server started by Vlime.
+" View the console output of the current server.
+function! vlime#plugin#ShowCurrentServer()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == type(v:null)
+        return
+    endif
+    call vlime#server#Show(server)
+endfunction
+
+""
+" @public
+"
+" Show a list of Vlime servers and view the console output of the chosen one.
 function! vlime#plugin#ShowSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
@@ -60,7 +77,24 @@ endfunction
 ""
 " @public
 "
-" Stop a server started by Vlime.
+" Stop the current server.
+function! vlime#plugin#StopCurrentServer()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == type(v:null)
+        return
+    endif
+    call vlime#server#Stop(server)
+endfunction
+
+""
+" @public
+"
+" Show a list of Vlime servers and stop the chosen one.
 function! vlime#plugin#StopSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
