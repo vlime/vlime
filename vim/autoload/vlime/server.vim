@@ -75,6 +75,9 @@ function! vlime#server#Stop(server)
     if !vlime#compat#job_stop(r_server['job'])
         call vlime#ui#ErrMsg('vlime#server#Stop: failed to stop ' . r_server['name'])
     endif
+
+    let buf = vlime#compat#job_getbufnr(r_server['job'])
+    call vlime#ui#CloseBuffer(buf)
 endfunction
 
 function! vlime#server#Rename(server, new_name)
