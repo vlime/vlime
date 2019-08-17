@@ -1049,6 +1049,7 @@ if !exists('g:vlime_default_indent_keywords')
                 \ 'with-slots': 2,
                 \ 'with-accessors': 2,
                 \ 'print-unreadable-object': 1,
+                \ 'block': 1,
                 \ }
 endif
 
