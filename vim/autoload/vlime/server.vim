@@ -77,7 +77,7 @@ function! vlime#server#Stop(server)
     endif
 
     let buf = vlime#compat#job_getbufnr(r_server['job'])
-    vlime#ui#CloseBuffer(buf)
+    call vlime#ui#CloseBuffer(buf)
 endfunction
 
 function! vlime#server#Rename(server, new_name)
