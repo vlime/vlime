@@ -89,7 +89,7 @@ function! vlime#connection#Get(...) abort
                 \ (type(b:vlime_conn) != type(v:null) &&
                     \ !b:vlime_conn.IsConnected()) ||
                 \ (type(b:vlime_conn) == type(v:null) && !quiet)
-        if len(g:vlime_connections) == 1 && !exists('b:vlime_conn')
+        if len(g:vlime_connections)
             let b:vlime_conn = g:vlime_connections[keys(g:vlime_connections)[0]]
         else
             let conn = vlime#connection#Select(quiet)
