@@ -41,6 +41,8 @@ if !exists('g:vlime_default_mappings')
                         \ 'Show a list of Vlime servers and stop the chosen one.'],
                     \ ['n', s:vlime_leader.'rR', ':call vlime#plugin#RenameSelectedServer()<cr>',
                         \ 'Rename a server.'],
+                    \ ['n', s:vlime_leader.'rt', ':call vlime#plugin#RestartCurrentServer()<cr>',
+                        \ 'Restart a server.'],
                     \
                     \ ['n', s:vlime_leader.'ss', ':call vlime#plugin#SendToREPL(vlime#ui#CurExprOrAtom())<cr>',
                         \ 'Send the expression/atom under the cursor to the REPL.'],

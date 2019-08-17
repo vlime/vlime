@@ -37,6 +37,9 @@ function! vlime#server#New(...)
     let server_obj = {
                 \ 'id': g:vlime_next_server_id,
                 \ 'name': server_name,
+                \ 'auto_connect': auto_connect,
+                \ 'use_terminal': use_terminal,
+                \ 'cl_impl': cl_impl,
                 \ }
 
     let server_job = vlime#compat#job_start(

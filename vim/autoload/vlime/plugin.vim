@@ -91,6 +91,24 @@ function! vlime#plugin#StopCurrentServer()
     call vlime#server#Stop(server)
 endfunction
 
+function! vlime#plugin#RestartCurrentServer()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == type(v:null)
+        return
+    endif
+    call vlime#server#Stop(server)
+    let auto_connect = get(server, 'auto_connect', v:null)
+    let use_terminal = get(server, 'use_terminal', v:null)
+    let name = get(server, 'name', v:null)
+    let cl_impl = get(server, 'cl_impl', v:null)
+    call vlime#server#New(auto_connect, use_terminal, name, cl_impl)
+endfunction
+
 ""
 " @public
 "
