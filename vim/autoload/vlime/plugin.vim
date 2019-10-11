@@ -229,6 +229,13 @@ function! vlime#plugin#ConnectREPL(...)
     return conn
 endfunction
 
+function! vlime#plugin#UpdateIndentInfo()
+    let conn = vlime#connection#Get()
+    call vlime#ChainCallbacks(
+                \ function(conn.ConnectionInfo, [v:true]),
+                \ function('s:OnConnectionInfoComplete'))
+endfunction
+
 ""
 " @public
 "
@@ -1371,6 +1378,7 @@ endfunction
 
 function! s:OnLoadFileComplete(fname, conn, result)
     echom 'Loaded: ' . a:fname
+    " status in REPL!
     call s:ResetArgListState()
 endfunction
 
