@@ -48,7 +48,24 @@ endfunction
 ""
 " @public
 "
-" Show the output buffer for a server started by Vlime.
+" View the console output of the current server.
+function! vlime#plugin#ShowCurrentServer()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == type(v:null)
+        return
+    endif
+    call vlime#server#Show(server)
+endfunction
+
+""
+" @public
+"
+" Show a list of Vlime servers and view the console output of the chosen one.
 function! vlime#plugin#ShowSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
@@ -60,7 +77,42 @@ endfunction
 ""
 " @public
 "
-" Stop a server started by Vlime.
+" Stop the current server.
+function! vlime#plugin#StopCurrentServer()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == type(v:null)
+        return
+    endif
+    call vlime#server#Stop(server)
+endfunction
+
+function! vlime#plugin#RestartCurrentServer()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == type(v:null)
+        return
+    endif
+    call vlime#server#Stop(server)
+    let auto_connect = get(server, 'auto_connect', v:null)
+    let use_terminal = get(server, 'use_terminal', v:null)
+    let name = get(server, 'name', v:null)
+    let cl_impl = get(server, 'cl_impl', v:null)
+    call vlime#server#New(auto_connect, use_terminal, name, cl_impl)
+endfunction
+
+""
+" @public
+"
+" Show a list of Vlime servers and stop the chosen one.
 function! vlime#plugin#StopSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
@@ -976,7 +1028,7 @@ if !exists('g:vlime_default_indent_keywords')
                 \ 'defmethod': 2,
                 \ 'deftype': 2,
                 \ 'lambda': 1,
-                \ 'if': 1,
+                \ 'if': 3,
                 \ 'unless': 1,
                 \ 'when': 1,
                 \ 'case': 1,
@@ -1015,6 +1067,7 @@ if !exists('g:vlime_default_indent_keywords')
                 \ 'with-slots': 2,
                 \ 'with-accessors': 2,
                 \ 'print-unreadable-object': 1,
+                \ 'block': 1,
                 \ }
 endif
 
@@ -1070,8 +1123,12 @@ function! vlime#plugin#CalcCurIndent(...)
         endif
 
         let indent_info = get(conn.cb_data, 'indent_info', {})
-        if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
+        if has_key(indent_info, op)
+          if index(indent_info[op][1], op_pkg) >= 0
             let a_count = indent_info[op][0]
+          else " Set it anyway in case that 'op_pkg' is a nickname
+            let a_count = indent_info[op][0]
+          endif
         endif
     endif
 
