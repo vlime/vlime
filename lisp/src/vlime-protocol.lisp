@@ -86,6 +86,10 @@
     (reverse acc)))
 
 
+(defvar *json-cache* (make-hash-table :test #'eq
+                                      :synchronized t
+                                      :weakness :key-or-value))
+
 (defun form-to-json (form)
   (cond
     ((listp form)
@@ -95,12 +99,14 @@
      ; thus saving some space
      form)
     ((symbolp form)
-     (let ((sym-obj (make-hash-table :test #'equal))
-           (sym-name (symbol-name form))
-           (sym-package (package-name (symbol-package form))))
-       (setf (gethash "name" sym-obj) sym-name)
-       (setf (gethash "package" sym-obj) sym-package)
-       sym-obj))
+     (alexandria:ensure-gethash form 
+                                *json-cache*
+                                (let ((sym-obj (make-hash-table :test #'equal))
+                                      (sym-name (symbol-name form))
+                                      (sym-package (package-name (symbol-package form))))
+                                  (setf (gethash "name" sym-obj) sym-name)
+                                  (setf (gethash "package" sym-obj) sym-package)
+                                  sym-obj)))
     (t
      ; Numbers & strings
      form)))
