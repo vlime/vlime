@@ -1001,6 +1001,9 @@ function! vlime#plugin#VlimeKey(key)
             endif
         endif
     elseif key == 'tab'
+        if s:isInString()
+            return "\<tab>"
+        endif
         let line = getline('.')
         let spaces = vlime#ui#CalcLeadingSpaces(line, v:true)
         let col = virtcol('.')
@@ -1077,6 +1080,11 @@ endif
 function! vlime#plugin#CalcCurIndent(...)
     let shift_width = get(a:000, 0, 2)
     let line_no = line('.')
+
+    " Don't indent inside a string
+    if s:isInString()
+        return 0
+    end
 
     let conn = vlime#connection#Get(v:true)
 
@@ -1646,3 +1654,11 @@ function! s:IndentCheckSpecialForms(op_list)
         return v:null
     endif
 endfunction
+
+function! s:isInString()
+    if !exists("*synstack")
+        return v:false
+    endif
+    let syntax = map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+    return index(syntax, 'lispString') >= 0
+endfunc
