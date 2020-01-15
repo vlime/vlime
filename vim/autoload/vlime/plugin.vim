@@ -1006,11 +1006,7 @@ function! vlime#plugin#VlimeKey(key)
         let col = virtcol('.')
         if col <= spaces + 1
             let indent = vlime#plugin#CalcCurIndent()
-            if spaces < indent
-                call vlime#ui#IndentCurLine(indent)
-            else
-                return ''
-            endif
+            call vlime#ui#IndentCurLine(indent)
         else
             return "\<c-x>\<c-o>"
         endif
