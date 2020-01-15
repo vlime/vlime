@@ -1620,6 +1620,7 @@ function! s:InputCheckEditFlag(edit, text)
 endfunction
 
 let s:local_func_op_list = ['flet', 'labels', 'macrolet']
+let s:handler_macro_op_list = ['handler-case', 'restart-case']
 
 function! s:IndentCheckSpecialForms(op_list)
     if len(a:op_list) >= 3 &&
@@ -1635,9 +1636,9 @@ function! s:IndentCheckSpecialForms(op_list)
         " method definitions in DEFGENERIC
         return 1
     elseif len(a:op_list) >= 2 &&
-                \ tolower(a:op_list[1][0]) == 'handler-case' &&
+                \ index(s:handler_macro_op_list, a:op_list[1][0], 0, v:true) >= 0 &&
                 \ a:op_list[1][1] >= 2
-        " condition clauses in HANDLER-CASE
+        " condition clauses in HANDLER-CASE etc.
         return 1
     elseif len(a:op_list) >= 2 &&
                 \ tolower(a:op_list[1][0]) == 'cond' &&
