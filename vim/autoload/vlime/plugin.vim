@@ -1161,6 +1161,10 @@ function! vlime#plugin#CalcCurIndent(...)
                 \ op !~ '^definition' &&
                 \ op !~ '^definier'
         return 2
+    elseif op =~ '^with-' ||
+                \ op =~ '^without-' ||
+                \ op =~ '^do-'
+        return 2
     else
         return lispindent(line_no)
     endif
