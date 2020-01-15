@@ -1156,6 +1156,11 @@ function! vlime#plugin#CalcCurIndent(...)
         endif
     elseif type(a_count) == v:t_list
         return vs_col + a_count[1] - 1
+    elseif op =~ '^def' &&
+                \ op !~ '^default' &&
+                \ op !~ '^definition' &&
+                \ op !~ '^definier'
+        return 2
     else
         return lispindent(line_no)
     endif
