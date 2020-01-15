@@ -1009,7 +1009,7 @@ function! vlime#plugin#VlimeKey(key)
             if spaces < indent
                 call vlime#ui#IndentCurLine(indent)
             else
-                return "\<tab>"
+                return ''
             endif
         else
             return "\<c-x>\<c-o>"
