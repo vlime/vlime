@@ -6,23 +6,19 @@ function! vlime#compat#neovim#ch_open(host, port, callback, timeout)
     let chan_obj = {
                 \ 'hostname': a:host,
                 \ 'port': a:port,
-                \ 'on_stdout': function('s:ChanInputCB'),
+                \ 'on_data': function('s:ChanInputCB'),
                 \ 'next_msg_id': 1,
                 \ 'msg_callbacks': {},
                 \ }
     if type(a:callback) != type(v:null)
         let chan_obj['chan_callback'] = a:callback
     endif
-    if type(a:timeout) != type(v:null)
-        let connector_cmd = vlime#connection#BuildConnectorCommand(a:host, a:port, a:timeout)
-    else
-        let connector_cmd = vlime#connection#BuildConnectorCommand(a:host, a:port)
-    endif
 
-    let job_id = jobstart(connector_cmd, chan_obj)
-    let chan_obj['job_id'] = job_id
+    let ch_id = sockconnect('tcp', a:host . ':' . a:port, chan_obj)
+    let chan_obj['ch_id'] = ch_id
+    let chan_obj['is_connected'] = v:true
 
-    " XXX: There should be a better way to wait for ncat
+    " XXX: There should be a better way to wait for the channel is ready
     let waittime = (type(a:timeout) != type(v:null)) ? (a:timeout + 500) : 500
     execute 'sleep' waittime 'm'
 
@@ -30,13 +26,7 @@ function! vlime#compat#neovim#ch_open(host, port, callback, timeout)
 endfunction
 
 function! vlime#compat#neovim#ch_status(chan)
-    try
-        let job_pid = jobpid(a:chan.job_id)
-    catch /^Vim\%((\a\+)\)\=:E900/  " Invalid job id
-        let job_pid = 0
-    endtry
-
-    return (job_pid > 0) ? 'open' : 'closed'
+    return a:chan['is_connected'] ? 'open' : 'closed'
 endfunction
 
 function! vlime#compat#neovim#ch_info(chan)
@@ -45,9 +35,9 @@ endfunction
 
 function! vlime#compat#neovim#ch_close(chan)
     try
-        return jobstop(a:chan.job_id)
-    catch /^Vim\%((\a\+)\)\=:E900/  " Invalid job id
-        " The job already stopped
+        return chanclose(a:chan.ch_id)
+    catch /^Vim\%((\a\+)\)\=:E900/  " Invalid ch id
+        " The channel already closed
         throw 'vlime#compat#neovim#ch_close: not an open channel'
     endtry
 endfunction
@@ -60,13 +50,15 @@ endfunction
 function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback) 
     let msg = [a:chan.next_msg_id, a:expr]
 
-    if jobsend(a:chan.job_id, json_encode(msg) . "\n")
+    let ret = chansend(a:chan.ch_id, json_encode(msg) . "\n")
+    if ret == 0
+        let a:chan['is_connected'] = v:false
+        throw 'vlime#compat#neovim#ch_sendexpr: chansend() failed'
+    else
         if type(a:callback) != type(v:null)
             let a:chan.msg_callbacks[a:chan.next_msg_id] = a:callback
         endif
         call s:IncMsgID(a:chan)
-    else
-        throw 'vlime#compat#neovim#ch_sendexpr: jobsend() failed'
     endif
 endfunction
 
