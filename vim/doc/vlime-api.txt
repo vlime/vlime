@@ -885,9 +885,10 @@ vlime#plugin#Setup([force])                             *vlime#plugin#Setup()*
   already initialized. If [force] is present and |TRUE|, always perform the
   initialization.
 
-vlime#plugin#InteractionMode()                *vlime#plugin#InteractionMode()*
+vlime#plugin#InteractionMode([value])         *vlime#plugin#InteractionMode()*
 
-  Toggle interaction mode.
+  Toggle interaction mode if no [value] is given. If [value] is |TRUE| enable
+  interaction mode, if [value] is |FALSE| disable it.
 
 vlime#ui#New()                                                *vlime#ui#New()*
 

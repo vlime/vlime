@@ -1132,18 +1132,18 @@ endfunction
 " @public
 "
 " Toggle interaction mode.
-function! vlime#plugin#InteractionMode()
-    if getbufvar(bufnr('%'), 'vlime_interaction_mode', v:false)
-        let b:vlime_interaction_mode = v:false
-        nnoremap <buffer> <cr> <cr>
-        vnoremap <buffer> <cr> <cr>
-        echom 'Interaction mode disabled.'
-    else
+function! vlime#plugin#InteractionMode(...)
+    let enable = get(a:000, 0, !getbufvar(bufnr('%'), 'vlime_interaction_mode', v:false))
+    if enable
         let b:vlime_interaction_mode = v:true
         nnoremap <buffer> <silent> <cr> :call vlime#plugin#SendToREPL(vlime#ui#CurExprOrAtom())<cr>
         vnoremap <buffer> <silent> <cr> :<c-u>call vlime#plugin#SendToREPL(vlime#ui#CurSelection())<cr>
-        echom 'Interaction mode enabled.'
+    else
+        let b:vlime_interaction_mode = v:false
+        nnoremap <buffer> <cr> <cr>
+        vnoremap <buffer> <cr> <cr>
     endif
+    echom 'Interaction mode ' . (enable ? 'enabled' : 'disabled') . '.'
 endfunction
 
 function! s:NormalizeIdentifierForIndentInfo(ident)
