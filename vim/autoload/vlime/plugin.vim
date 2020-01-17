@@ -1166,6 +1166,10 @@ function! vlime#plugin#CalcCurIndent(...)
                 \ op =~ '^do-'
         return 2
     else
+        " Indent as a property list if the list starts with a keyword
+        if op_list[0][0] =~ '^:'
+            return vs_col
+        endif
         return lispindent(line_no)
     endif
 endfunction
