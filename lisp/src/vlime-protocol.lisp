@@ -86,9 +86,11 @@
     (reverse acc)))
 
 
-(defvar *json-cache* (make-hash-table :test #'eq
-                                      :synchronized t
-                                      :weakness :key-or-value))
+(defvar *json-cache* (apply #'make-hash-table
+                            :test #'eq
+                            :weakness :key
+                            #+(or sbcl ecl) '(:synchronized t)
+                            #-(or sbcl ecl) '()))
 
 (defun form-to-json (form)
   (cond
