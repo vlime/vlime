@@ -1001,16 +1001,15 @@ function! vlime#plugin#VlimeKey(key)
             endif
         endif
     elseif key == 'tab'
+        if s:isInString()
+            return "\<tab>"
+        endif
         let line = getline('.')
         let spaces = vlime#ui#CalcLeadingSpaces(line, v:true)
         let col = virtcol('.')
         if col <= spaces + 1
             let indent = vlime#plugin#CalcCurIndent()
-            if spaces < indent
-                call vlime#ui#IndentCurLine(indent)
-            else
-                return "\<tab>"
-            endif
+            call vlime#ui#IndentCurLine(indent)
         else
             return "\<c-x>\<c-o>"
         endif
@@ -1082,6 +1081,11 @@ function! vlime#plugin#CalcCurIndent(...)
     let shift_width = get(a:000, 0, 2)
     let line_no = line('.')
 
+    " Don't indent inside a string
+    if s:isInString()
+        return 0
+    end
+
     let conn = vlime#connection#Get(v:true)
 
     " The deepest special forms this function can handle are FLET/LABELS,
@@ -1152,7 +1156,20 @@ function! vlime#plugin#CalcCurIndent(...)
         endif
     elseif type(a_count) == v:t_list
         return vs_col + a_count[1] - 1
+    elseif op =~ '^def' &&
+                \ op !~ '^default' &&
+                \ op !~ '^definition' &&
+                \ op !~ '^definier'
+        return vs_col + 1
+    elseif op =~ '^with-' ||
+                \ op =~ '^without-' ||
+                \ op =~ '^do-'
+        return vs_col + 1
     else
+        " Indent as a property list if the list starts with a keyword
+        if op_list[-1][0] != 'defpackage' && op_list[0][0] =~ '^:'
+            return vs_col
+        endif
         return lispindent(line_no)
     endif
 endfunction
@@ -1620,6 +1637,7 @@ function! s:InputCheckEditFlag(edit, text)
 endfunction
 
 let s:local_func_op_list = ['flet', 'labels', 'macrolet']
+let s:handler_macro_op_list = ['handler-case', 'restart-case']
 
 function! s:IndentCheckSpecialForms(op_list)
     if len(a:op_list) >= 3 &&
@@ -1635,9 +1653,9 @@ function! s:IndentCheckSpecialForms(op_list)
         " method definitions in DEFGENERIC
         return 1
     elseif len(a:op_list) >= 2 &&
-                \ tolower(a:op_list[1][0]) == 'handler-case' &&
+                \ index(s:handler_macro_op_list, a:op_list[1][0], 0, v:true) >= 0 &&
                 \ a:op_list[1][1] >= 2
-        " condition clauses in HANDLER-CASE
+        " condition clauses in HANDLER-CASE etc.
         return 1
     elseif len(a:op_list) >= 2 &&
                 \ tolower(a:op_list[1][0]) == 'cond' &&
@@ -1649,3 +1667,11 @@ function! s:IndentCheckSpecialForms(op_list)
         return v:null
     endif
 endfunction
+
+function! s:isInString()
+    if !exists("*synstack")
+        return v:false
+    endif
+    let syntax = map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+    return index(syntax, 'lispString') >= 0
+endfunc
