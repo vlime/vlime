@@ -1167,7 +1167,7 @@ function! vlime#plugin#CalcCurIndent(...)
         return 2
     else
         " Indent as a property list if the list starts with a keyword
-        if op_list[0][0] =~ '^:'
+        if op_list[-1][0] != 'defpackage' && op_list[0][0] =~ '^:'
             return vs_col
         endif
         return lispindent(line_no)
