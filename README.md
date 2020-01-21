@@ -89,6 +89,12 @@ Installing using [Vundle](https://github.com/VundleVim/Vundle.Vim):
    `:PluginInstall` in Vim.
 2. Run the server: `sbcl --load <your bundle dir>/vlime/lisp/start-vlime.lisp`
 
+Installing using Vim-Plug
+
+1. Add `Plug 'l04m33/vlime', {'rtp': 'vim/'}` to your `vimrc`, then run
+   `:PlugInstall` in Vim.
+2. Run the server: `sbcl --load <your bundle dir>/vlime/lisp/start-vlime.lisp`
+
 Installing using [dein.vim](https://github.com/Shougo/dein.vim):
 
 1. Add `call dein#add('l04m33/vlime', {'rtp': 'vim/'})` to your `vimrc`, then run
