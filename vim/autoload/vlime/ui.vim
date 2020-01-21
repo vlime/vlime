@@ -358,12 +358,40 @@ let s:cur_expr_pos_search_flags = {
 " is omitted.
 function! vlime#ui#CurExprPos(cur_char, ...)
     let side = get(a:000, 0, 'begin')
-    if a:cur_char == '('
-        return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][0])
-    elseif a:cur_char == ')'
-        return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][1])
+
+    " This paragraph taken from https://github.com/vim/vim/blob/master/runtime/plugin/matchparen.vim
+    " VIM License applies, see root directory
+    if !has("syntax") || !exists("g:syntax_on")
+      let s_skip = "0"
     else
-        return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][2])
+      " Build an expression that detects whether the current cursor position is
+      " in certain syntax types (string, comment, etc.), for use as
+      " searchpairpos()'s skip argument.
+      " We match "escape" for special items, such as lispEscapeSpecial.
+      let s_skip = '!empty(filter(map(synstack(line("."), col(".")), ''synIDattr(v:val, "name")''), ' .
+      \ '''v:val =~? "string\\|character\\|singlequote\\|escape\\|comment"''))'
+      " If executing the expression determines that the cursor is currently in
+      " one of the syntax types, then we want searchpairpos() to find the pair
+      " within those syntax types (i.e., not skip).  Otherwise, the cursor is
+      " outside of the syntax types and s_skip should keep its value so we skip
+      " any matching pair inside the syntax types.
+      " Catch if this throws E363: pattern uses more memory than 'maxmempattern'.
+      try
+        execute 'if ' . s_skip . ' | let s_skip = "0" | endif'
+      catch /^Vim\%((\a\+)\)\=:E363/
+        " We won't find anything, so skip searching, should keep Vim responsive.
+        return
+      endtry
+    endif
+    " End of vim include
+
+
+    if a:cur_char == '('
+        return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][0], s_skip)
+    elseif a:cur_char == ')'
+        return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][1], s_skip)
+    else
+        return searchpairpos('(', '', ')', s:cur_expr_pos_search_flags[side][2], s_skip)
     endif
 endfunction
 
