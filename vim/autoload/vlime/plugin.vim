@@ -1160,11 +1160,11 @@ function! vlime#plugin#CalcCurIndent(...)
                 \ op !~ '^default' &&
                 \ op !~ '^definition' &&
                 \ op !~ '^definier'
-        return 2
+        return vs_col + 1
     elseif op =~ '^with-' ||
                 \ op =~ '^without-' ||
                 \ op =~ '^do-'
-        return 2
+        return vs_col + 1
     else
         " Indent as a property list if the list starts with a keyword
         if op_list[-1][0] != 'defpackage' && op_list[0][0] =~ '^:'
