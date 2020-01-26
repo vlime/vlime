@@ -1083,7 +1083,7 @@ function! vlime#plugin#CalcCurIndent(...)
 
     " Don't indent inside a string
     if s:isInString()
-        return 0
+        return indent(line_no)
     end
 
     let conn = vlime#connection#Get(v:true)
