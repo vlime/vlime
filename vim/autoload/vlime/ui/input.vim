@@ -1,3 +1,11 @@
+function! s:BufUnload(buf) abort
+  try
+    execute 'bunload!' a:buf
+  catch /^Vim\%((\a\+)\)\=:E937:/
+    return
+  endtry
+endfunction
+
 function! vlime#ui#input#FromBuffer(conn, prompt, init_val, complete_cb)
     let orig_win = win_getid()
     let buf = vlime#ui#OpenBufferWithWinSettings(
@@ -16,7 +24,7 @@ function! vlime#ui#input#FromBuffer(conn, prompt, init_val, complete_cb)
 
     augroup VlimeInputBufferLeaveAu
         autocmd!
-        execute 'autocmd BufWinLeave <buffer> bunload!' buf
+        execute 'autocmd BufWinLeave <buffer> call s:BufUnload(' buf ')'
     augroup end
 
     call setbufvar(buf, 'vlime_input_complete_cb', a:complete_cb)
