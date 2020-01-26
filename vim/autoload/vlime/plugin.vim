@@ -1672,6 +1672,6 @@ function! s:isInString()
     if !exists("*synstack")
         return v:false
     endif
-    let syntax = map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+    let syntax = map(synstack(line('.'), max([col('.')-1, 0])), 'synIDattr(v:val, "name")')
     return index(syntax, 'lispString') >= 0
 endfunc
