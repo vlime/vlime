@@ -14,9 +14,14 @@ function! vlime#compat#neovim#ch_open(host, port, callback, timeout)
         let chan_obj['chan_callback'] = a:callback
     endif
 
-    let ch_id = sockconnect('tcp', a:host . ':' . a:port, chan_obj)
-    let chan_obj['ch_id'] = ch_id
-    let chan_obj['is_connected'] = v:true
+    try
+        let ch_id = sockconnect('tcp', a:host . ':' . a:port, chan_obj)
+        let chan_obj['ch_id'] = ch_id
+        let chan_obj['is_connected'] = v:true
+    catch
+        let chan_obj['ch_id'] = v:null
+        let chan_obj['is_connected'] = v:false
+    endtry
 
     " XXX: There should be a better way to wait for the channel is ready
     let waittime = (type(a:timeout) != type(v:null)) ? (a:timeout + 500) : 500
@@ -35,7 +40,9 @@ endfunction
 
 function! vlime#compat#neovim#ch_close(chan)
     try
-        return chanclose(a:chan.ch_id)
+        if a:chan.ch_id
+            return chanclose(a:chan.ch_id)
+        endif
     catch /^Vim\%((\a\+)\)\=:E900/  " Invalid ch id
         " The channel already closed
         throw 'vlime#compat#neovim#ch_close: not an open channel'
