@@ -19,6 +19,8 @@ CONTENTS                                              *vlime-contents*
         3.11 Input Buffers .................. |vlime-input-buffer|
         3.12 Trace Dialog ................... |vlime-trace-dialog|
         3.13 Multiple REPLs ........................ |vlime-mrepl|
+        3.14. Integrations .................. |vlime-integrations|
+            3.14.1 asyncomplete  |vlime-integrations-asyncomplete|
     4. Mappings ................................. |vlime-mappings|
         4.1 Remap Keys .................... |vlime-mappings-remap|
         4.2 Key Conflicts ................... |vlime-key-conflict|
@@ -477,6 +479,17 @@ Modifying text outside this range may cause unexpected bahavior.
 
 See |vlime-mappings-mrepl| for all available operations in the MREPL
 buffer.
+
+----------------------------------------------------------------------
+3.14. Integrations                                *vlime-integrations*
+
+......................................................................
+3.14.1 asyncomplete                  *vlime-integrations-asyncomplete*
+
+Vlime provides an integration to asyncomplete.vim. The following
+configuration is required to enable it:
+
+    autocmd User asyncomplete_setup call asyncomplete#register_source(asyncomplete#sources#vlime#get_source_options({ 'priority': 10 }))
 
 ======================================================================
 4. Mappings                                           *vlime-mappings*
