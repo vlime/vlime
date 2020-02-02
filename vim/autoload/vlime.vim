@@ -105,6 +105,7 @@ function! vlime#New(...)
                 \ 'InspectorNext': function('vlime#InspectorNext'),
                 \ 'InspectCurrentCondition': function('vlime#InspectCurrentCondition'),
                 \ 'InspectInFrame': function('vlime#InspectInFrame'),
+                \ 'InspectFrameVar': function('vlime#InspectFrameVar'),
                 \ 'ListThreads': function('vlime#ListThreads'),
                 \ 'KillNthThread': function('vlime#KillNthThread'),
                 \ 'DebugNthThread': function('vlime#DebugNthThread'),
@@ -866,6 +867,20 @@ function! vlime#InspectInFrame(thing, frame, ...) dict
                     \ [s:SYM('SWANK', 'INSPECT-IN-FRAME'), a:thing, a:frame]),
                 \ function('vlime#SimpleSendCB',
                     \ [self, Callback, 'vlime#InspectInFrame']))
+endfunction
+
+""
+" @dict VlimeConnection.InspectFrameVar
+" @usage {var_num} {frame} [callback]
+" @public
+"
+" When the debugger is active, inspect variable #{var_num} in the context of {frame}.
+function! vlime#InspectFrameVar(var_num, frame, ...) dict
+    let Callback = get(a:000, 0, v:null)
+    call self.Send(self.EmacsRex(
+                    \ [s:SYM('SWANK', 'INSPECT-FRAME-VAR'), a:frame, a:var_num]),
+                \ function('vlime#SimpleSendCB',
+                    \ [self, Callback, 'vlime#InspectFrameVar']))
 endfunction
 
 ""
@@ -1804,4 +1819,16 @@ endfunction
 function! vlime#DummyCB(conn, result)
     echom '---------------------------'
     echom string(a:result)
+endfunction
+
+function! vlime#KeywordList2Dict(input)
+    if type(a:input) == v:t_list
+        let dct = {}
+        for el in a:input
+            if type(el) == v:t_list && type(el[0]) == v:t_dict && el[0]["package"] == 'KEYWORD'
+                let dct[ el[0]["name"] ] = el[1]
+            endif
+        endfor
+        return dct
+    endif
 endfunction

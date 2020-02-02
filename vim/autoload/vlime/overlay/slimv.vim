@@ -327,8 +327,8 @@ if !exists('g:vlime_default_mappings')
                         \ 'Invoke the restart labeled ABORT.'],
                     \ ['n', 'C', ':call vlime#ui#sldb#InspectCurCondition()<cr>',
                         \ 'Inspect the current condition object.'],
-                    \ ['n', 'i', ':call vlime#ui#sldb#InspectInCurFrame()<cr>',
-                        \ 'Evaluate and inspect an expression in the frame under the cursor.'],
+                    \ ['n', 'i', ':call vlime#ui#sldb#InspectVarInCurFrame()<cr>',
+                        \ 'Inspect a variable in the frame under the cursor.'],
                     \ ['n', 'e', ':call vlime#ui#sldb#EvalStringInCurFrame()<cr>',
                         \ 'Evaluate an expression in the frame under the cursor.'],
                     \ ['n', 'E', ':call vlime#ui#sldb#SendValueInCurFrameToREPL()<cr>',
@@ -353,7 +353,7 @@ if !exists('g:vlime_default_mappings')
                         \ 'Yank the evaluation result under the cursor.'],
                     \ ['n', ['<tab>', '<c-n>'], ':call vlime#ui#repl#NextField(v:true)<cr>',
                         \ 'Move the cursor to the next presented object.'],
-                    \ ['n', '<c-p>', ':call vlime#ui#repl#NextField(v:false)<cr>',
+                    \ ['n', ['<s-tab>', '<c-p>'], ':call vlime#ui#repl#NextField(v:false)<cr>',
                         \ 'Move the cursor to the previous presented object.'],
                 \ ],
                 \
@@ -393,7 +393,7 @@ if !exists('g:vlime_default_mappings')
                         \ 'Open the source code for the value being inspected.'],
                     \ ['n', ['<tab>', '<c-n>'], ':call vlime#ui#inspector#NextField(v:true)<cr>',
                         \ 'Select the next interactable field/button.'],
-                    \ ['n', '<c-p>', ':call vlime#ui#inspector#NextField(v:false)<cr>',
+                    \ ['n', ['<s-tab>', '<c-p>'], ':call vlime#ui#inspector#NextField(v:false)<cr>',
                         \ 'Select the previous interactable field/button.'],
                     \ ['n', 'p', ':call vlime#ui#inspector#InspectorPop()<cr>',
                         \ 'Return to the previous inspected object.'],
@@ -417,7 +417,7 @@ if !exists('g:vlime_default_mappings')
                         \ 'Refresh the trace dialog.'],
                     \ ['n', ['<tab>', '<c-n>'], ':call vlime#ui#trace_dialog#NextField(v:true)<cr>',
                         \ 'Select the next interactable field/button.'],
-                    \ ['n', '<c-p>', ':call vlime#ui#trace_dialog#NextField(v:false)<cr>',
+                    \ ['n', ['<s-tab>', '<c-p>'], ':call vlime#ui#trace_dialog#NextField(v:false)<cr>',
                         \ 'Select the previous interactable field/button.'],
                 \ ],
                 \
@@ -477,9 +477,9 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', s:slimv_leader.'?', ':call vlime#ui#ShowQuickRef("input")<cr>',
                         \ 'Show this quick reference.'],
                     \
-                    \ ['n', '<c-p>', ':call vlime#ui#input#NextHistoryItem("backward")<cr>',
+                    \ ['n', ['<s-tab>', '<c-p>'], ':call vlime#ui#input#NextHistoryItem("backward")<cr>',
                         \ 'Show the previous item in input history.'],
-                    \ ['n', '<c-n>', ':call vlime#ui#input#NextHistoryItem("forward")<cr>',
+                    \ ['n', ['<tab>', '<c-n>'], ':call vlime#ui#input#NextHistoryItem("forward")<cr>',
                         \ 'Show the next item in input history.'],
                 \ ],
             \ }
@@ -497,3 +497,13 @@ function! s:DialogUntraceAllComplete(conn, result)
         endfor
     endif
 endfunction
+
+
+function! SlimvEval(data)
+    for expr in a:data
+        call vlime#overlay#slimv#SendToREPL(expr)
+    endfor
+endfunction
+
+nnoremap <F2> :<C-U>let g:my_slimv_eval_form=vlime#overlay#slimv#CurTopExprOrAtom() \| call vlime#overlay#slimv#SendToREPL(g:my_slimv_eval_form)<CR>
+nnoremap <F3> :<C-U>call vlime#overlay#slimv#SendToREPL(vlime#overlay#slimv#CurTopExprOrAtom()) \| call vlime#overlay#slimv#SendToREPL(g:my_slimv_eval_form)<CR>

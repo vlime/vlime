@@ -22,6 +22,15 @@
 
 (defparameter +swank-msg-len-size+ 6)
 
+(defparameter *yason-char-replacements*
+  (alexandria:plist-hash-table
+    (list* #\Nul "<NUL>"
+           #\Esc "<Esc>"
+           (alexandria:hash-table-plist
+             yason::*char-replacements*)))
+  "Handling of NUL would need special code; see ':help json_encode' for details.
+  So we just patch NULs out.")
+
 
 (defun parse-form (input-str)
   (with-standard-io-syntax
@@ -77,6 +86,12 @@
     (reverse acc)))
 
 
+(defvar *json-cache* (apply #'make-hash-table
+                            :test #'eq
+                            :weakness :key
+                            #+(or sbcl ecl) '(:synchronized t)
+                            #-(or sbcl ecl) '()))
+
 (defun form-to-json (form)
   (cond
     ((listp form)
@@ -86,12 +101,14 @@
      ; thus saving some space
      form)
     ((symbolp form)
-     (let ((sym-obj (make-hash-table :test #'equal))
-           (sym-name (symbol-name form))
-           (sym-package (package-name (symbol-package form))))
-       (setf (gethash "name" sym-obj) sym-name)
-       (setf (gethash "package" sym-obj) sym-package)
-       sym-obj))
+     (alexandria:ensure-gethash form 
+                                *json-cache*
+                                (let ((sym-obj (make-hash-table :test #'equal))
+                                      (sym-name (symbol-name form))
+                                      (sym-package (package-name (symbol-package form))))
+                                  (setf (gethash "name" sym-obj) sym-name)
+                                  (setf (gethash "package" sym-obj) sym-package)
+                                  sym-obj)))
     (t
      ; Numbers & strings
      form)))
@@ -163,6 +180,7 @@
 
   (let* ((form (parse-form msg))
          (json (normalize-swank-form form))
+         (yason::*char-replacements* *yason-char-replacements*)
          (encoded (with-output-to-string (json-out)
                     (yason:encode json json-out)))
          (full-line (concatenate

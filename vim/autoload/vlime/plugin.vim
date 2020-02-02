@@ -48,7 +48,24 @@ endfunction
 ""
 " @public
 "
-" Show the output buffer for a server started by Vlime.
+" View the console output of the current server.
+function! vlime#plugin#ShowCurrentServer()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == type(v:null)
+        return
+    endif
+    call vlime#server#Show(server)
+endfunction
+
+""
+" @public
+"
+" Show a list of Vlime servers and view the console output of the chosen one.
 function! vlime#plugin#ShowSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
@@ -60,7 +77,42 @@ endfunction
 ""
 " @public
 "
-" Stop a server started by Vlime.
+" Stop the current server.
+function! vlime#plugin#StopCurrentServer()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == type(v:null)
+        return
+    endif
+    call vlime#server#Stop(server)
+endfunction
+
+function! vlime#plugin#RestartCurrentServer()
+    let conn = vlime#connection#Get()
+    if type(conn) == type(v:null)
+        return
+    endif
+
+    let server = get(conn.cb_data, 'server', v:null)
+    if type(server) == type(v:null)
+        return
+    endif
+    call vlime#server#Stop(server)
+    let auto_connect = get(server, 'auto_connect', v:null)
+    let use_terminal = get(server, 'use_terminal', v:null)
+    let name = get(server, 'name', v:null)
+    let cl_impl = get(server, 'cl_impl', v:null)
+    call vlime#server#New(auto_connect, use_terminal, name, cl_impl)
+endfunction
+
+""
+" @public
+"
+" Show a list of Vlime servers and stop the chosen one.
 function! vlime#plugin#StopSelectedServer()
     let server = vlime#server#Select()
     if type(server) == type(v:null)
@@ -949,16 +1001,15 @@ function! vlime#plugin#VlimeKey(key)
             endif
         endif
     elseif key == 'tab'
+        if s:isInString()
+            return "\<tab>"
+        endif
         let line = getline('.')
         let spaces = vlime#ui#CalcLeadingSpaces(line, v:true)
         let col = virtcol('.')
         if col <= spaces + 1
             let indent = vlime#plugin#CalcCurIndent()
-            if spaces < indent
-                call vlime#ui#IndentCurLine(indent)
-            else
-                return "\<tab>"
-            endif
+            call vlime#ui#IndentCurLine(indent)
         else
             return "\<c-x>\<c-o>"
         endif
@@ -976,7 +1027,7 @@ if !exists('g:vlime_default_indent_keywords')
                 \ 'defmethod': 2,
                 \ 'deftype': 2,
                 \ 'lambda': 1,
-                \ 'if': 1,
+                \ 'if': 3,
                 \ 'unless': 1,
                 \ 'when': 1,
                 \ 'case': 1,
@@ -1015,6 +1066,7 @@ if !exists('g:vlime_default_indent_keywords')
                 \ 'with-slots': 2,
                 \ 'with-accessors': 2,
                 \ 'print-unreadable-object': 1,
+                \ 'block': 1,
                 \ }
 endif
 
@@ -1028,6 +1080,11 @@ endif
 function! vlime#plugin#CalcCurIndent(...)
     let shift_width = get(a:000, 0, 2)
     let line_no = line('.')
+
+    " Don't indent inside a string
+    if s:isInString()
+        return indent(line_no)
+    end
 
     let conn = vlime#connection#Get(v:true)
 
@@ -1070,8 +1127,12 @@ function! vlime#plugin#CalcCurIndent(...)
         endif
 
         let indent_info = get(conn.cb_data, 'indent_info', {})
-        if has_key(indent_info, op) && index(indent_info[op][1], op_pkg) >= 0
+        if has_key(indent_info, op)
+          if index(indent_info[op][1], op_pkg) >= 0
             let a_count = indent_info[op][0]
+          else " Set it anyway in case that 'op_pkg' is a nickname
+            let a_count = indent_info[op][0]
+          endif
         endif
     endif
 
@@ -1095,7 +1156,20 @@ function! vlime#plugin#CalcCurIndent(...)
         endif
     elseif type(a_count) == v:t_list
         return vs_col + a_count[1] - 1
+    elseif op =~ '^def' &&
+                \ op !~ '^default' &&
+                \ op !~ '^definition' &&
+                \ op !~ '^definier'
+        return vs_col + 1
+    elseif op =~ '^with-' ||
+                \ op =~ '^without-' ||
+                \ op =~ '^do-'
+        return vs_col + 1
     else
+        " Indent as a property list if the list starts with a keyword
+        if op_list[-1][0] != 'defpackage' && op_list[0][0] =~ '^:'
+            return vs_col
+        endif
         return lispindent(line_no)
     endif
 endfunction
@@ -1563,6 +1637,7 @@ function! s:InputCheckEditFlag(edit, text)
 endfunction
 
 let s:local_func_op_list = ['flet', 'labels', 'macrolet']
+let s:handler_macro_op_list = ['handler-case', 'restart-case']
 
 function! s:IndentCheckSpecialForms(op_list)
     if len(a:op_list) >= 3 &&
@@ -1578,9 +1653,9 @@ function! s:IndentCheckSpecialForms(op_list)
         " method definitions in DEFGENERIC
         return 1
     elseif len(a:op_list) >= 2 &&
-                \ tolower(a:op_list[1][0]) == 'handler-case' &&
+                \ index(s:handler_macro_op_list, a:op_list[1][0], 0, v:true) >= 0 &&
                 \ a:op_list[1][1] >= 2
-        " condition clauses in HANDLER-CASE
+        " condition clauses in HANDLER-CASE etc.
         return 1
     elseif len(a:op_list) >= 2 &&
                 \ tolower(a:op_list[1][0]) == 'cond' &&
@@ -1592,3 +1667,11 @@ function! s:IndentCheckSpecialForms(op_list)
         return v:null
     endif
 endfunction
+
+function! s:isInString()
+    if !exists("*synstack")
+        return v:false
+    endif
+    let syntax = map(synstack(line('.'), max([col('.')-1, 0])), 'synIDattr(v:val, "name")')
+    return index(syntax, 'lispString') >= 0
+endfunc

@@ -6,6 +6,7 @@
     * .slime-secret support `:help vlime-slime-secret`.
     * SWANK-MREPL support `:help vlime-mrepl`.
     * Better and customizable auto indent `:help vlime-auto-indent`.
+    * Debugger and REPL buffers now set `filetype` properly, so `autocommand FileType ...` will work.
 
 * v0.4.0
     * The trace dialog `:help vlime-trace-dialog`.

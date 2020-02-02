@@ -2,7 +2,6 @@ function! vlime#ui#repl#InitREPLBuf(conn)
     let repl_buf = bufnr(vlime#ui#REPLBufName(a:conn), v:true)
     if !vlime#ui#VlimeBufferInitialized(repl_buf)
         call vlime#ui#SetVlimeBufferOpts(repl_buf, a:conn)
-        call setbufvar(repl_buf, '&filetype', 'vlime_repl')
         call vlime#ui#WithBuffer(repl_buf, function('s:InitREPLBuf'))
     endif
     return repl_buf
@@ -66,6 +65,14 @@ function! vlime#ui#repl#YankCurREPLPresentation()
 endfunction
 
 function! vlime#ui#repl#ClearREPLBuffer()
+    let conn = vlime#connection#Get()
+    if type(conn) != type(v:null)
+        let repl_buf = bufnr(vlime#ui#REPLBufName(conn), v:true)
+        call vlime#ui#WithBuffer(repl_buf, function("s:ClearREPLBuffer_inBuffer"))
+    endif
+endfunction
+
+function! s:ClearREPLBuffer_inBuffer()
     setlocal modifiable
     1,$delete _
     if exists('b:vlime_repl_pending_coords')
@@ -76,7 +83,7 @@ function! vlime#ui#repl#ClearREPLBuffer()
     endif
     if exists('b:vlime_repl_coords_match')
         call vlime#ui#MatchDeleteList(b:vlime_repl_coords_match)
-        unlet b:vlime_repl_coords_match
+        let b:vlime_repl_coords_match = []
     endif
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable
@@ -132,6 +139,8 @@ function! s:FindCurCoord(cur_pos, coords)
 endfunction
 
 function! s:InitREPLBuf()
+    setlocal filetype=vlime_repl
+
     setlocal modifiable
     call s:ShowREPLBanner(b:vlime_conn)
     setlocal nomodifiable

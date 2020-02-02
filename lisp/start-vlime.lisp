@@ -13,4 +13,19 @@
 (let ((load-vlime-src (merge-pathnames (parse-namestring "load-vlime.lisp") *vlime-home*)))
     (load load-vlime-src))
 
-(vlime:main :port 7002)
+(defun read-port ()
+  (format t "Enter a port: ")
+  (force-output)
+  (multiple-value-list (eval (read))))
+
+(defun run (port)
+  (loop
+    :until (restart-case (progn (vlime:main :port port)
+                                t)
+             (choose-different-port (p)
+               :report "Choose a different port"
+               :interactive read-port
+               (setf port p)
+               nil))))
+
+(run 7002)

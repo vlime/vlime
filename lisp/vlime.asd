@@ -5,6 +5,7 @@
   :license "MIT"
   :version "0.4.0"
   :depends-on (#:swank
+               #:alexandria
                #:yason)
   :components ((:module "src"
                 :pathname "src"

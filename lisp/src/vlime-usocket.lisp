@@ -57,12 +57,12 @@
                                                                 :adjustable t
                                                                 :fill-pointer 0)))
                (handler-case
-                 (swank/backend:send control-thread
-                                     `(:client-data ,(copy-seq (read-client-data data-buf))))
+                   (loop
+                     (setf (fill-pointer data-buf) 0)
+                     (swank/backend:send control-thread
+                                         `(:client-data ,(copy-seq (read-client-data data-buf)))))
                  (t (c)
-                    (swank/backend:send control-thread `(:client-eof ,c))
-                    (return-from client-read-loop)))
-               (client-read-loop))
+                   (swank/backend:send control-thread `(:client-eof ,c)))))
 
              (read-swank-data (buf)
                (let ((read-len (read-sequence buf swank-stream)))
@@ -76,16 +76,16 @@
                                                         +swank-msg-len-size+
                                                         :element-type '(unsigned-byte 8))))
                (handler-case
-                 (if (read-swank-data msg-len-buf)
-                   (let* ((msg-len (parse-swank-msg-len msg-len-buf))
-                          (msg-buf (make-array msg-len :element-type '(unsigned-byte 8))))
-                     (when (read-swank-data msg-buf)
-                       (swank/backend:send control-thread `(:swank-data ,msg-buf))))
-                   (return-from swank-read-loop))
+                   (loop
+                     (if (read-swank-data msg-len-buf)
+                       (let* ((msg-len (parse-swank-msg-len msg-len-buf))
+                              (msg-buf (make-array msg-len :element-type '(unsigned-byte 8))))
+                         (when (read-swank-data msg-buf)
+                           (swank/backend:send control-thread `(:swank-data ,msg-buf))))
+                       (return-from swank-read-loop)))
                  (t (c)
-                    (swank/backend:send control-thread `(:swank-eof ,c))
-                    (return-from swank-read-loop)))
-               (swank-read-loop msg-len-buf)))
+                   (swank/backend:send control-thread `(:swank-eof ,c))
+                   ))))
 
       (let ((client-read-thread (swank/backend:spawn
                                   #'client-read-loop
