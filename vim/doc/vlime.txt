@@ -19,7 +19,7 @@ CONTENTS                                              *vlime-contents*
         3.11 Input Buffers .................. |vlime-input-buffer|
         3.12 Trace Dialog ................... |vlime-trace-dialog|
         3.13 Multiple REPLs ........................ |vlime-mrepl|
-        3.14. Integrations .................. |vlime-integrations|
+        3.14 Integrations ................... |vlime-integrations|
             3.14.1 asyncomplete  |vlime-integrations-asyncomplete|
     4. Mappings ................................. |vlime-mappings|
         4.1 Remap Keys .................... |vlime-mappings-remap|
@@ -481,7 +481,7 @@ See |vlime-mappings-mrepl| for all available operations in the MREPL
 buffer.
 
 ----------------------------------------------------------------------
-3.14. Integrations                                *vlime-integrations*
+3.14  Integrations                                *vlime-integrations*
 
 ......................................................................
 3.14.1 asyncomplete                  *vlime-integrations-asyncomplete*
