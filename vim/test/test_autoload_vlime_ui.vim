@@ -228,6 +228,11 @@ function! TestCurTopExpr()
         call assert_equal(['(cons (list (cons 1 2) 3) 4)', [cur_line, 1], [cur_line, 28]],
                     \ vlime#ui#CurTopExpr(v:true))
 
+        " Enable syntax highlighting, and see if comments and strings are
+        " correctly recognized.
+        syntax on
+        set filetype=lisp
+
         call append(line('$'), ['#| #(, |# (cons 1 2) #| ) |#'])
         call setpos('.', [0, line('$'), 12, 0])
         let cur_line = line('.')
@@ -257,12 +262,6 @@ function! TestCurTopExpr()
         let cur_line = line('.')
         call assert_equal(['(cons 1 2)', [cur_line, 1], [cur_line, 10]],
                     \ vlime#ui#CurTopExpr(v:true))
-
-
-        " Enable syntax highlighting, and see if comments and strings are
-        " correctly recognized.
-        syntax on
-        set filetype=lisp
 
         "call append(line('$'), ['#| #(, |# (cons 1 2) #| ) |#'])
         call setpos('.', [0, line('$') - 10, 12, 0])
