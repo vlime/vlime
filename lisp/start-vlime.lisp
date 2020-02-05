@@ -20,7 +20,9 @@
 
 (defun run (port)
   (loop
-    :until (restart-case (progn (vlime:main :port port)
+    :until (restart-case (progn (vlime:main :port port
+                                            #+allegro :backend #+allegro :vlime-patched
+                                            )
                                 t)
              (choose-different-port (p)
                :report "Choose a different port"
