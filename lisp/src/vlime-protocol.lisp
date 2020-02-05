@@ -88,9 +88,13 @@
 
 (defvar *json-cache* (apply #'make-hash-table
                             :test #'eq
-                            :weakness :key
+                            #-allegro :weakness #-allegro :key
                             #+(or sbcl ecl) '(:synchronized t)
-                            #-(or sbcl ecl) '()))
+                            #-(or sbcl ecl) '(
+                              #+allegro :weak-keys t
+                              #+allegro :values t
+                              )
+                            ))
 
 (defun form-to-json (form)
   (cond
