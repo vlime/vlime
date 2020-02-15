@@ -3,6 +3,7 @@
 (defpackage #:vlime-protocol
   (:use #:cl)
   (:export #:+swank-msg-len-size+
+           #:*yason-char-replacements*
            #:parse-form
            #:write-form
            #:seq-client-to-swank

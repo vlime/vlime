@@ -45,7 +45,7 @@
     (if (eql (car message) :return)
       (setf json (seq-swank-to-client json))
       (setf json (list 0 json)))
-    (let* ((yason::*char-replacements* vlime-protocol::*yason-char-replacements*)
+    (let* ((yason::*char-replacements* *yason-char-replacements*)
            (encoded (with-output-to-string (json-out)
                       (yason:encode json json-out)))
            (full-line (concatenate
