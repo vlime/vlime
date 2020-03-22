@@ -1270,7 +1270,7 @@ function! s:OnSwankRequireCallInitializersComplete(added, conn)
 endfunction
 
 function! s:OnConnectionInfoComplete(conn, result)
-    let a:conn.cb_data['version'] = get(a:result, 'VERSION', '<unkown version>')
+    let a:conn.cb_data['version'] = get(a:result, 'VERSION', '<unknown version>')
     let a:conn.cb_data['pid'] = get(a:result, 'PID', '<unknown pid>')
     let features = get(a:result, 'FEATURES', [])
     if type(features) == type(v:null)
