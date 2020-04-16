@@ -14,11 +14,6 @@ function! vlime#ui#input#FromBuffer(conn, prompt, init_val, complete_cb)
         call vlime#ui#AppendString(a:init_val)
     endif
 
-    augroup VlimeInputBufferLeaveAu
-        autocmd!
-        execute 'autocmd BufWinLeave <buffer> bunload!' buf
-    augroup end
-
     call setbufvar(buf, 'vlime_input_complete_cb', a:complete_cb)
     call setbufvar(buf, 'vlime_input_orig_win', orig_win)
     nnoremap <buffer> <silent> <cr> :call vlime#ui#input#FromBufferComplete()<cr>
