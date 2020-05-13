@@ -86,7 +86,10 @@ function! s:ClearREPLBuffer_inBuffer()
         let b:vlime_repl_coords_match = []
     endif
     call s:ShowREPLBanner(b:vlime_conn)
-    setlocal nomodifiable
+
+    if !exists('*prompt_setprompt')
+        setlocal nomodifiable
+    endif
 endfunction
 
 function! vlime#ui#repl#NextField(forward)
@@ -143,7 +146,16 @@ function! s:InitREPLBuf()
 
     setlocal modifiable
     call s:ShowREPLBanner(b:vlime_conn)
-    setlocal nomodifiable
+
+    if exists('*prompt_setprompt')
+        setlocal buftype=prompt
+        call prompt_setprompt(bufnr(''), '')
+        call prompt_setcallback(bufnr(''), function('vlime#plugin#SendToREPL'))
+        setlocal omnifunc=vlime#plugin#CompleteFunc
+        setlocal indentexpr=vlime#plugin#CalcCurIndent()
+    else
+        setlocal nomodifiable
+    end
 
     call vlime#ui#MapBufferKeys('repl')
 endfunction
