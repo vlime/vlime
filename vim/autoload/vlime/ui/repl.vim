@@ -30,6 +30,12 @@ function! vlime#ui#repl#AppendOutput(repl_buf, str)
     finally
         call setbufvar(a:repl_buf, '&modifiable', old_modifiable)
     endtry
+
+    " Protect the REPL out from being deleted if user is in REPL buffer.
+    if exists('*prompt_setprompt') && repl_winnr == winnr()
+        stopinsert
+        startinsert
+    end
 endfunction
 
 function! vlime#ui#repl#InspectCurREPLPresentation()
