@@ -35,6 +35,7 @@ function! vlime#ui#repl#AppendOutput(repl_buf, str)
     if exists('*prompt_setprompt') && repl_winnr == winnr()
         stopinsert
         startinsert
+        call setbufvar(a:repl_buf, '&modified', 0)
     end
 endfunction
 
@@ -161,6 +162,8 @@ function! s:InitREPLBuf()
         call prompt_setcallback(bufnr(''), function('vlime#plugin#SendToREPL'))
         setlocal omnifunc=vlime#plugin#CompleteFunc
         setlocal indentexpr=vlime#plugin#CalcCurIndent()
+        setlocal nomodified
+        autocmd InsertLeave <buffer> :setlocal nomodified
     else
         setlocal nomodifiable
     end
