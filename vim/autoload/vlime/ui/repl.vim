@@ -31,10 +31,7 @@ function! vlime#ui#repl#AppendOutput(repl_buf, str)
         call setbufvar(a:repl_buf, '&modifiable', old_modifiable)
     endtry
 
-    " Protect the REPL out from being deleted if user is in REPL buffer.
-    if exists('*prompt_setprompt') && repl_winnr == winnr()
-        stopinsert
-        startinsert
+    if exists('*prompt_setprompt')
         call setbufvar(a:repl_buf, '&modified', 0)
     end
 endfunction
@@ -158,12 +155,12 @@ function! s:InitREPLBuf()
 
     if exists('*prompt_setprompt')
         setlocal buftype=prompt
-        call prompt_setprompt(bufnr(''), '')
-        call prompt_setcallback(bufnr(''), function('vlime#plugin#SendToREPL'))
+        call prompt_setprompt(bufnr(), ' ')
+        call prompt_setcallback(bufnr(), function('vlime#plugin#SendToREPL'))
         setlocal omnifunc=vlime#plugin#CompleteFunc
         setlocal indentexpr=vlime#plugin#CalcCurIndent()
         setlocal nomodified
-        autocmd InsertLeave <buffer> :setlocal nomodified
+        autocmd InsertLeave <buffer> call append(line('$'), '') | setlocal nomodified
     else
         setlocal nomodifiable
     end

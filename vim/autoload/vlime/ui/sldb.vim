@@ -496,6 +496,7 @@ endfunction
 
 function! s:InitSLDBBuf()
     setlocal filetype=vlime_sldb
+    stopinsert
     call vlime#ui#MapBufferKeys('sldb')
 endfunction
 
