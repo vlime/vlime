@@ -116,6 +116,8 @@ function! s:ShowREPLBanner(conn)
     if has_key(a:conn.cb_data, 'pid')
         let banner .= ', pid ' . a:conn.cb_data['pid']
     endif
+    " TODO IPv6
+    let banner .= ', remote ' . a:conn.cb_data['remote_host'] . ':' . a:conn.cb_data['remote_port'] 
     let banner_len = len(banner)
     let banner .= ("\n" . repeat('=', banner_len) . "\n")
     call vlime#ui#AppendString(banner)

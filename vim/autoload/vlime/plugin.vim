@@ -203,6 +203,9 @@ function! vlime#plugin#ConnectREPL(...)
     endtry
     call s:CleanUpNullBufConnections()
 
+    let conn.cb_data["remote_host"] = host
+    let conn.cb_data["remote_port"] = port
+
     let contribs = exists('g:vlime_contribs') ?
                 \ g:vlime_contribs : [
                     \ 'SWANK-ASDF', 'SWANK-PACKAGE-FU',
