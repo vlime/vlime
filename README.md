@@ -85,22 +85,22 @@ Before proceeding with the instructions shown below, please make sure
 
 Installing using [Vundle](https://github.com/VundleVim/Vundle.Vim):
 
-1. Add `Plugin 'l04m33/vlime', {'rtp': 'vim/'}` to your `vimrc`, then run
+1. Add `Plugin 'vlime/vlime', {'rtp': 'vim/'}` to your `vimrc`, then run
    `:PluginInstall` in Vim.
 2. Run the server: `sbcl --load <your bundle dir>/vlime/lisp/start-vlime.lisp`
 
 Installing using Vim-Plug
 
-1. Add `Plug 'l04m33/vlime', {'rtp': 'vim/'}` to your `vimrc`, then run
+1. Add `Plug 'vlime/vlime', {'rtp': 'vim/'}` to your `vimrc`, then run
    `:PlugInstall` in Vim.
 2. Run the server: `sbcl --load <your bundle dir>/vlime/lisp/start-vlime.lisp`
 
 Installing using [dein.vim](https://github.com/Shougo/dein.vim):
 
-1. Add `call dein#add('l04m33/vlime', {'rtp': 'vim/'})` to your `vimrc`, then run
+1. Add `call dein#add('vlime/vlime', {'rtp': 'vim/'})` to your `vimrc`, then run
    `:call dein#install(['vlime'])` in Vim.
 2. Run the server:
-   `sbcl --load <your bundle dir>/repos/github.com/l04m33/vlime/lisp/start-vlime.lisp`
+   `sbcl --load <your bundle dir>/repos/github.com/vlime/vlime/lisp/start-vlime.lisp`
 
 Installing manually:
 
@@ -133,7 +133,7 @@ Contributing
 
 The source repo for Vlime is hosted on GitHub:
 
-    https://github.com/l04m33/vlime
+    https://github.com/vlime/vlime
 
 Issues and pull requests are welcome. Please feel free to contact me at
 l04m33(at)gmail.com if you have any suggestions for improving Vlime.
@@ -144,6 +144,6 @@ tests for development.
 Sponsor
 =======
 
-<a target='_blank' rel='nofollow' href='https://app.codesponsor.io/link/EFJRj73XqnJXrjmRNJd9gKeU/l04m33/vlime'>
-  <img alt='Sponsor' width='888' height='68' src='https://app.codesponsor.io/embed/EFJRj73XqnJXrjmRNJd9gKeU/l04m33/vlime.svg' />
+<a target='_blank' rel='nofollow' href='https://app.codesponsor.io/link/EFJRj73XqnJXrjmRNJd9gKeU/vlime/vlime'>
+  <img alt='Sponsor' width='888' height='68' src='https://app.codesponsor.io/embed/EFJRj73XqnJXrjmRNJd9gKeU/vlime/vlime.svg' />
 </a>
