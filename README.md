@@ -111,6 +111,19 @@ Installing manually:
    automatically locate the server entry point.
 3. Run the server: `sbcl --load <vlime repo>/lisp/start-vlime.lisp`
 
+Manual install example:
+```
+# Navigate to the directory you want to install Vlime in
+cd $HOME/.vim/pack/plugins/start
+# Git clone this repository
+git clone https://github.com/vlime/vlime.git
+# Add the vlime/vim directory to your Vim runtimepath
+echo "set runtimepath+=\$HOME/.vim/pack/plugins/start/vlime/vim" >> $HOME/.vimrc
+# Run the server
+sbcl --load $HOME/.vim/pack/plugins/start/vlime/lisp/start-vlime.lisp
+```
+
+
 If it's your first time running the server, Vlime will try to install it's
 dependencies via Quicklisp.
 
