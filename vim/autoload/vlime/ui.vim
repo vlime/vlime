@@ -649,6 +649,10 @@ function! vlime#ui#CurBufferContent(...)
 
     let lines = getline(1, '$')
     if !raw
+        " #58: ignore shebang lines
+        if lines[0][0:1] == '#!'
+            remove(lines, 0)
+        endif
         let lines = filter(lines, "match(v:val, '^\s*;.*$') < 0")
     endif
 
