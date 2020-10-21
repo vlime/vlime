@@ -5,7 +5,6 @@
   :license "MIT"
   :version "0.4.0"
   :depends-on (#:vlime
-               #:sb-bsd-sockets
                #:sb-introspect
                #:vom)
   :components ((:module "src"
