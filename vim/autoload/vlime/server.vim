@@ -246,7 +246,12 @@ function! s:ServerOutputCB(server_obj, auto_connect, data)
 
     for line in a:data
         let matched = matchlist(line, 'Server created: (#([[:digit:][:blank:]]\+)\s\+\(\d\+\))')
+        if len(matched) == 0
+            " TODO: ipv6
+            let matched = matchlist(line, 'Server created: [0-9.]\+:\+\(\d\+\)')
+        endif
         if len(matched) > 0
+            " TODO: ip
             let port = str2nr(matched[1])
             let a:server_obj['port'] = port
             echom 'Vlime server listening on port ' . port
