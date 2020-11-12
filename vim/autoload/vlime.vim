@@ -223,11 +223,10 @@ endfunction
 function! vlime#FixRemotePath(path) dict
     if type(a:path) == v:t_string
         return self['remote_prefix'] . a:path
-    elseif type(a:path) == v:t_list && type(a:path[0]) == v:t_dict
-                \ && a:path[0]['name'] == 'LOCATION'
-        if a:path[1][0]['name'] == 'FILE'
+    elseif type(a:path) == v:t_list && a:path[0] == vlime#KW('LOCATION')
+        if a:path[1][0] == vlime#KW('FILE')
             let a:path[1][1] = self['remote_prefix'] . a:path[1][1]
-        elseif a:path[1][0]['name'] == 'BUFFER-AND-FILE'
+        elseif a:path[1][0] == vlime#KW('BUFFER-AND-FILE')
             let a:path[1][2] = self['remote_prefix'] . a:path[1][2]
         endif
         return a:path
@@ -426,7 +425,7 @@ function! vlime#EmacsChannelSend(chan_id, msg) dict
     if !has_key(self['remote_channels'], a:chan_id)
         throw 'vlime#EmacsChannelSend: channel ' . a:chan_id . ' does not exist'
     else
-        return [s:KW('EMACS-CHANNEL-SEND'), a:chan_id, a:msg]
+        return [vlime#KW('EMACS-CHANNEL-SEND'), a:chan_id, a:msg]
     endif
 endfunction
 
@@ -456,7 +455,7 @@ function! vlime#Ping() dict
     let cur_tag = self.ping_tag
     let self.ping_tag = (self.ping_tag >= 65536) ? 1 : (self.ping_tag + 1)
 
-    let result = self.Call(self.EmacsRex([s:SYM('SWANK', 'PING'), cur_tag]))
+    let result = self.Call(self.EmacsRex([vlime#SYM('SWANK', 'PING'), cur_tag]))
     if type(result) == v:t_string && len(result) == 0
         " Error or timeout
         throw 'vlime#Ping: failed'
@@ -476,7 +475,7 @@ endfunction
 " {thread} and {ttag} are parameters received in the PING message from the
 " server.
 function! vlime#Pong(thread, ttag) dict
-    call self.Send([s:KW('EMACS-PONG'), a:thread, a:ttag])
+    call self.Send([vlime#KW('EMACS-PONG'), a:thread, a:ttag])
 endfunction
 
 ""
@@ -505,7 +504,7 @@ function! vlime#ConnectionInfo(...) dict
 
     let return_dict = get(a:000, 0, v:true)
     let Callback = get(a:000, 1, v:null)
-    call self.Send(self.EmacsRex([s:SYM('SWANK', 'CONNECTION-INFO')]),
+    call self.Send(self.EmacsRex([vlime#SYM('SWANK', 'CONNECTION-INFO')]),
                 \ function('s:ConnectionInfoCB', [self, Callback, return_dict]))
 endfunction
 
@@ -528,12 +527,12 @@ endfunction
 function! vlime#SwankRequire(contrib, ...) dict
     let Callback = get(a:000, 0, v:null)
     if type(a:contrib) == v:t_list
-        let required = [s:CL('QUOTE'), map(copy(a:contrib), {k, v -> s:KW(v)})]
+        let required = [vlime#SYM("COMMON-LISP", 'QUOTE'), map(copy(a:contrib), {k, v -> vlime#KW(v)})]
     else
-        let required = s:KW(a:contrib)
+        let required = vlime#KW(a:contrib)
     endif
 
-    call self.Send(self.EmacsRex([s:SYM('SWANK', 'SWANK-REQUIRE'), required]),
+    call self.Send(self.EmacsRex([vlime#SYM('SWANK', 'SWANK-REQUIRE'), required]),
                 \ function('vlime#SimpleSendCB', [self, Callback, 'vlime#SwankRequire']))
 endfunction
 
@@ -542,11 +541,11 @@ endfunction
 " @public
 "
 " Interrupt {thread}.
-" {thread} should be a numeric thread ID, or {"package": "KEYWORD", "name":
-" "REPL-THREAD"} for the REPL thread. The debugger will be activated upon
+" {thread} should be a numeric thread ID, or vlime#KW("REPL-THREAD")
+" for the REPL thread. The debugger will be activated upon
 " interruption.
 function! vlime#Interrupt(thread) dict
-    call self.Send([s:KW('EMACS-INTERRUPT'), a:thread])
+    call self.Send([vlime#KW('EMACS-INTERRUPT'), a:thread])
 endfunction
 
 ""
@@ -557,7 +556,7 @@ endfunction
 " When the debugger is active, invoke the ABORT restart.
 function! vlime#SLDBAbort(...) dict
     let Callback = get(a:000, 0, v:null)
-    call self.Send(self.EmacsRex([s:SYM('SWANK', 'SLDB-ABORT')]),
+    call self.Send(self.EmacsRex([vlime#SYM('SWANK', 'SLDB-ABORT')]),
                 \ function('s:SLDBSendCB', [self, Callback, 'vlime#SLDBAbort']))
 endfunction
 
