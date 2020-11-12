@@ -142,13 +142,13 @@ function! vlime#ui#inspector#InspectorSelect()
         return
     endif
 
-    if coord['type'] == 'ACTION'
+    if coord['type'] == ':ACTION'
         call b:vlime_conn.InspectorCallNthAction(coord['id'],
                     \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
-    elseif coord['type'] == 'VALUE'
+    elseif coord['type'] == ':VALUE'
         call b:vlime_conn.InspectNthPart(coord['id'],
                     \ {c, r -> c.ui.OnInspect(c, r, v:null, v:null)})
-    elseif coord['type'] == 'RANGE'
+    elseif coord['type'] == ':RANGE'
         let range_size = b:vlime_inspector_content_end -
                     \ b:vlime_inspector_content_start
         if coord['id'] > 0
@@ -169,7 +169,7 @@ function! vlime#ui#inspector#InspectorSelect()
                             \ v:null, v:null)})
         else
             echom 'Fetching all inspector content, please wait...'
-            let acc = {'TITLE': b:vlime_inspector_title, 'CONTENT': [[], 0, 0, 0]}
+            let acc = {':TITLE': b:vlime_inspector_title, 'CONTENT': [[], 0, 0, 0]}
             call b:vlime_conn.InspectorRange(0, range_size,
                         \ function('s:InspectorFetchAllCB', [acc]))
         endif
