@@ -1666,27 +1666,51 @@ endfunction
 " @private
 "
 " Return a Common Lisp symbol serialized using the Vlime protocol. An ad-hoc
-" measure to export s:SYM().
+" measure to export vlime#SYM().
 function! vlime#SYM(package, name)
-    return s:SYM(a:package, a:name)
+    " TODO: only works for simple names; no || supported yet
+    return "§§" . a:package . "::" . a:name
 endfunction
 
 ""
 " @private
 "
-" Return a Common Lisp keyword serialized using the Vlime protocol. An ad-hoc
-" measure to export s:KW().
+" Return a Common Lisp keyword serialized using the Vlime protocol.
 function! vlime#KW(name)
-    return s:KW(a:name)
+    return "§§:" . a:name
 endfunction
 
-""
-" @private
-"
-" Return a Common Lisp symbol in the CL package, serialized using the Vlime
-" protocol. An ad-hoc measure to export s:CL().
-function! vlime#CL(name)
-    return s:CL(a:name)
+
+function! s:SplitSymbol(sym, keyword_pkg_as_empty)
+    " Either §§:KEYWORD or §§PKG::SYM
+    let m = matchlist(a:sym, '\v^§§(::?(.*)|([^:]+)::(.+))$')
+    if len(m) == 0
+        return [v:null, v:null]
+    elseif m[2] != ''
+        return [a:keyword_pkg_as_empty ? '' : 'KEYWORD', m[2]]
+    else
+        return [m[3], m[4]]
+    endif
+endfunction
+
+function! vlime#SymbolName(sym)
+    return s:SplitSymbol(a:sym, 0)[1]
+endfunction
+
+" Returns the package of a symbol. 'KEYWORD' for keywords.
+function! vlime#SymbolPackage(sym)
+    return s:SplitSymbol(a:sym, 0)[0]
+endfunction
+
+function! vlime#SymbolAsString(sym)
+    let [pkg, name] =  s:SplitSymbol(a:sym, 0)
+    if pkg == 'KEYWORD'
+        return ':' . name
+    elseif pkg == 'COMMON-LISP'
+        return name
+    else
+        return pkg . '::' . name
+    endif
 endfunction
 
 function! s:SearchPList(plist, name)
