@@ -139,34 +139,60 @@ endfunction
 
 function! s:ChanInputCB(job_id, data, source) dict
     let obj_list = []
-    let buffered = get(self, 'recv_buffer', '')
-    for frag in a:data
-        let buffered .= frag
-        try
-            " XXX: what about E488: Trailing characters?
-            let json_obj = json_decode(buffered)
-            call add(obj_list, json_obj)
-            let buffered = ''
-        catch /^Vim\%((\a\+)\)\=:E474/  " Invalid argument
-        endtry
-    endfor
+    let bytes_want = -1
+    let buffered = get(self, 'recv_buffer', '') . join(a:data, "")
+    while len(buffered) > 0
+        if bytes_want == -1 
+            if len(buffered) >= 6
+                let bytes_want = str2nr(strpart(buffered, 0, 6), 16)
+                let buffered = strpart(buffered, 6)
+            else
+                " Not enough data
+                break
+            endif
+        else
+            if len(buffered) >= bytes_want
+                let json_obj = json_decode(strpart(buffered, 0, bytes_want))
+                call add(obj_list, json_obj)
+                let buffered = strpart(buffered, bytes_want)
+                let bytes_want = -1
+            else
+                " Not enough data
+                " keep the length information for next time
+                let buffered = printf("%06x", bytes_want) . buffered
+                break
+            endif
+        endif
+    endwhile
 
     let self['recv_buffer'] = buffered
 
     for json_obj in obj_list
-        if json_obj[0] == 0
-            let CB = get(self, 'chan_callback', v:null)
+        let type = json_obj[0]
+
+        " Previously vlime always sent a callback index with a message
+        " now we've got to read swanks data directly
+        " See previous NORMALIZE-SWANK-FORM (in lisp/src/vlime-protocol.lisp)
+        if type == vlime#KW("RETURN")
+            let cb_index = remove(json_obj, -1)
+            "echomsg "got obj " json_encode(json_obj) " cb " cb_index
+
+            if cb_index == 0
+                let CB = get(self, 'chan_callback', v:null)
+            else
+                try
+                    let CB = remove(self.msg_callbacks, cb_index)
+                catch /^Vim\%((\a\+)\)\=:E716/  " Key not present in Dictionary
+                    let CB = v:null
+                endtry
+            endif
         else
-            try
-                let CB = remove(self.msg_callbacks, json_obj[0])
-            catch /^Vim\%((\a\+)\)\=:E716/  " Key not present in Dictionary
-                let CB = v:null
-            endtry
+            let CB = get(self, 'chan_callback', v:null)
         endif
 
         if type(CB) != type(v:null)
             try
-                call CB(self, json_obj[1])
+                call CB(self, json_obj)
             catch /.*/
                 call vlime#ui#ErrMsg('vlime: callback failed: ' . v:exception)
             endtry
