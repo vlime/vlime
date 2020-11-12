@@ -9,23 +9,9 @@
 
 
 (defun server-listener (socket swank-host swank-port dont-close)
-  (vom:info "Server created: ~s" (multiple-value-list (get-local-name socket)))
-  (loop
-    (handler-case
-      (let ((client-socket (socket-accept socket)))
-        (swank/backend:spawn
-          #'(lambda ()
-              (vlime-control-thread
-                client-socket swank-host swank-port))
-          :name "Vlime Control Thread")
-        (unless dont-close
-          (socket-close socket)
-          (return-from server-listener)))
-      (t (c)
-         (vom:error "server-listener: ~a" c)
-         (socket-close socket)
-         (vom:error "Listener socket stopped." c)
-         (return-from server-listener)))))
+  (vom:info "Server created: ~{~d~^.~}::~d" 
+            (coerce swank-host 'list)
+            swank-port))
 
 
 (defun vlime-control-thread (client-socket swank-host swank-port)

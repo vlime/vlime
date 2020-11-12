@@ -72,18 +72,7 @@
                    (with-standard-io-syntax
                      (write port :stream pf)))))
              (start-vlime-server (backend)
-               (let ((to-connect
-                       ; When connecting, use #(127 0 0 1) instead of #(0 0 0 0)
-                       (if (> (loop for b across swank-interface sum b) 0)
-                         swank-interface
-                         #(127 0 0 1))))
-                 (multiple-value-bind (server local-name)
-                                      (start-server backend
-                                                    interface port
-                                                    to-connect swank-port
-                                                    dont-close)
-                   (declare (ignore server))
-                   (announce-vlime-port (nth 1 local-name)))))
+             (announce-vlime-port swank-port))
              (start-swank-server (announce-port)
                (let ((swank-loopback (symbol-value (find-symbol "*LOOPBACK-INTERFACE*" "SWANK"))))
                  ; This is... ugly and not safe at all, but we don't have access
