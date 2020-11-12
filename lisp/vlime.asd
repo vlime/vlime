@@ -10,5 +10,6 @@
   :components ((:module "src"
                 :pathname "src"
                 :components ((:file "vlime")
+                             (:file "json-via-yason")
                              (:file "vlime-protocol"))))
   :in-order-to ((test-op (test-op #:vlime-test))))
