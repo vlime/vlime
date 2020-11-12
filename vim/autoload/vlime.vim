@@ -1391,6 +1391,7 @@ endfunction
 " @public
 "
 " Convert a {plist} sent from the server to a native |dict|.
+" The keys are only the symbol _name_, ie the package is lost!
 function! vlime#PListToDict(plist)
     if type(a:plist) == type(v:null)
         return {}
@@ -1399,7 +1400,10 @@ function! vlime#PListToDict(plist)
     let d = {}
     let i = 0
     while i < len(a:plist)
-        let d[a:plist[i]['name']] = a:plist[i+1]
+        let key = vlime#SymbolName(a:plist[i])
+        if type(key) == v:t_number || key != ''
+            let d[key . ''] = a:plist[i+1]
+        endif
         let i += 2
     endwhile
     return d
