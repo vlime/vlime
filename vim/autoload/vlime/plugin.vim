@@ -610,7 +610,7 @@ function! vlime#plugin#CurAutodoc()
             let autodoc_cache = get(s:, 'autodoc_cache', {})
             let cached_result = get(autodoc_cache, string(raw_form), v:null)
             if type(cached_result) == type(v:null)
-                let quoted_raw_form = [{'package': 'COMMON-LISP', 'name': 'QUOTE'}, raw_form]
+                let quoted_raw_form = [vlime#SYM('COMMON-LISP', 'QUOTE'), raw_form]
                 let margin = s:GetArgListWinWidth()
                 if type(margin) != type(v:null) &&
                             \ (&number || &relativenumber) &&
@@ -1432,7 +1432,7 @@ endfunction
 
 function! s:OnListenerEvalComplete(conn, result)
     if type(a:result) == v:t_list && len(a:result) > 0 &&
-                \ type(a:result[0]) == v:t_dict && a:result[0]['name'] == 'VALUES' &&
+                \ a:result[0] == vlime#KW('VALUES') &&
                 \ type(a:conn.ui) != type(v:null)
         let values = a:result[1:]
         if len(values) > 0
@@ -1440,13 +1440,13 @@ function! s:OnListenerEvalComplete(conn, result)
                 call a:conn.ui.OnWriteString(
                             \ a:conn,
                             \ val . "\n",
-                            \ {'name': 'REPL-RESULT', 'package': 'KEYWORD'})
+                            \ vlime#KW('REPL-RESULT'))
             endfor
         else
             call a:conn.ui.OnWriteString(
                         \ a:conn,
                         \ "; No value\n",
-                        \ {'name': 'REPL-RESULT', 'package': 'KEYWORD'})
+                        \ vlime#KW('REPL-RESULT'))
         endif
     endif
 
@@ -1495,8 +1495,8 @@ function! s:ShowAsyncResult(conn, result)
 endfunction
 
 function! s:SendToREPLInputComplete(conn, content)
-    call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call a:conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+    call a:conn.ui.OnWriteString(a:conn, "--\n", vlime#KW('REPL-SEP'))
+    call a:conn.WithThread(vlime#KW('REPL-THREAD'),
                 \ function(a:conn.ListenerEval, [a:content, function('s:OnListenerEvalComplete')]))
 endfunction
 
@@ -1520,7 +1520,7 @@ function! s:CompileInputComplete(conn, win, policy, content)
         let policy = v:null
     endif
 
-    call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    call a:conn.ui.OnWriteString(a:conn, "--\n", vlime#KW('REPL-SEP'))
 
     if type(a:content) == v:t_string
         call a:conn.CompileStringForEmacs(
@@ -1542,7 +1542,7 @@ function! s:CompileFileInputComplete(conn, win, policy, load, file_name)
         let policy = v:null
     endif
 
-    call a:conn.ui.OnWriteString(a:conn, "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+    call a:conn.ui.OnWriteString(a:conn, "--\n", vlime#KW('REPL-SEP'))
     call a:conn.CompileFileForEmacs(a:file_name, a:load, policy,
                 \ function('s:OnCompilationComplete', [a:win]))
 endfunction

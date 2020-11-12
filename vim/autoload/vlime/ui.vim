@@ -243,8 +243,7 @@ endfunction
 function! vlime#ui#OnXRef(conn, xref_list, orig_win) dict
     if type(a:xref_list) == type(v:null)
         call vlime#ui#ErrMsg('No xref found.')
-    elseif type(a:xref_list) == v:t_dict &&
-                \ a:xref_list['name'] == 'NOT-IMPLEMENTED'
+    elseif a:xref_list == vlime#KW('NOT-IMPLEMENTED')
         call vlime#ui#ErrMsg('Not implemented.')
     else
         let xref_buf = vlime#ui#xref#InitXRefBuf(a:conn, a:orig_win)

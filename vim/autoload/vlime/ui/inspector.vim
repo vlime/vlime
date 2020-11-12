@@ -32,7 +32,7 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
     let range_buttons = []
     if b:vlime_inspector_content_start > 0
         call add(range_buttons,
-                    \ [{'name': 'RANGE', 'package': 'KEYWORD'},
+                    \ [vlime#KW('RANGE'),
                         \ "[prev range]", -1])
     endif
     if b:vlime_inspector_content_more
@@ -40,13 +40,13 @@ function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
             call add(range_buttons, '  ')
         endif
         call add(range_buttons,
-                    \ [{'name': 'RANGE', 'package': 'KEYWORD'},
+                    \ [vlime#KW('RANGE'),
                         \ "[next range]", 1])
     endif
     if len(range_buttons) > 0
         call add(range_buttons, '  ')
         call add(range_buttons,
-                    \ [{'name': 'RANGE', 'package': 'KEYWORD'},
+                    \ [vlime#KW('RANGE'),
                         \ "[all content]", 0])
         if len(getline('.')) > 0
             let range_buttons = ["\n", range_buttons]
@@ -92,7 +92,8 @@ function! vlime#ui#inspector#FillInspectorBufContent(content, coords)
         let eof_coord = vlime#ui#GetEndOfFileCoord()
         call setpos('.', [0, eof_coord[0], eof_coord[1], 0])
     elseif type(a:content) == v:t_list
-        if len(a:content) == 3 && type(a:content[0]) == v:t_dict
+        let sym0 = vlime#SymbolAsString(a:content[0])
+        if len(a:content) == 3 && sym0 != ""
             let begin_pos = getcurpos()
             if begin_pos[2] != 1 || len(getline('.')) > 0
                 let begin_pos[2] += 1
@@ -103,7 +104,7 @@ function! vlime#ui#inspector#FillInspectorBufContent(content, coords)
             call add(a:coords, {
                         \ 'begin': [begin_pos[1], begin_pos[2]],
                         \ 'end': [end_pos[1], end_pos[2]],
-                        \ 'type': a:content[0]['name'],
+                        \ 'type': sym0,
                         \ 'id': a:content[2],
                         \ })
         else
@@ -155,16 +156,16 @@ function! vlime#ui#inspector#InspectorSelect()
             let next_end = b:vlime_inspector_content_end + range_size
             call b:vlime_conn.InspectorRange(next_start, next_end,
                         \ {c, r -> c.ui.OnInspect(c,
-                            \ [{'name': 'TITLE', 'package': 'KEYWORD'}, b:vlime_inspector_title,
-                                \ {'name': 'CONTENT', 'package': 'KEYWORD'}, r],
+                            \ [vlime#KW(':TITLE'), b:vlime_inspector_title,
+                                \ vlime#KW('CONTENT'), r],
                             \ v:null, v:null)})
         elseif coord['id'] < 0
             let next_start = max([0, b:vlime_inspector_content_start - range_size])
             let next_end = b:vlime_inspector_content_start
             call b:vlime_conn.InspectorRange(next_start, next_end,
                         \ {c, r -> c.ui.OnInspect(c,
-                            \ [{'name': 'TITLE', 'package': 'KEYWORD'}, b:vlime_inspector_title,
-                                \ {'name': 'CONTENT', 'package': 'KEYWORD'}, r],
+                            \ [vlime#KW(':TITLE'), b:vlime_inspector_title,
+                                \ vlime#KW('CONTENT'), r],
                             \ v:null, v:null)})
         else
             echom 'Fetching all inspector content, please wait...'
@@ -183,16 +184,16 @@ function! vlime#ui#inspector#SendCurValueToREPL()
     endif
 
     call b:vlime_conn.ui.OnWriteString(b:vlime_conn,
-                \ "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call b:vlime_conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                \ "--\n", vlime#KW('REPL-SEP'))
+    call b:vlime_conn.WithThread(vlime#KW('REPL-THREAD'),
                 \ function(b:vlime_conn.ListenerEval,
                     \ ['(nth-value 0 (swank:inspector-nth-part ' . coord['id'] . '))']))
 endfunction
 
 function! vlime#ui#inspector#SendCurInspecteeToREPL()
     call b:vlime_conn.ui.OnWriteString(b:vlime_conn,
-                \ "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
-    call b:vlime_conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+                \ "--\n", vlime#KW('REPL-SEP'))
+    call b:vlime_conn.WithThread(vlime#KW('REPL-THREAD'),
                 \ function(b:vlime_conn.ListenerEval,
                     \ ['(swank::istate.object swank::*istate*)']))
 endfunction
@@ -266,8 +267,8 @@ function! s:InspectorFetchAllCB(acc, conn, result)
     else
         let a:acc['CONTENT'][1] = len(a:acc['CONTENT'][0])
         let a:acc['CONTENT'][3] = a:acc['CONTENT'][1]
-        let full_content = [{'name': 'TITLE', 'package': 'KEYWORD'}, a:acc['TITLE'],
-                    \ {'name': 'CONTENT', 'package': 'KEYWORD'}, a:acc['CONTENT']]
+        let full_content = [vlime#KW('TITLE'), a:acc['TITLE'],
+                    \ vlime#KW('CONTENT'), a:acc['CONTENT']]
         call a:conn.ui.OnInspect(a:conn, full_content, v:null, v:null)
         echom 'Done fetching inspector content.'
     endif
@@ -290,7 +291,7 @@ function! s:FindSourceCB(edit_cmd, win_to_go, force_open, conn, msg)
         endif
 
         call vlime#ui#ShowSource(a:conn, valid_loc, a:edit_cmd, a:force_open)
-    elseif type(a:msg) != type(v:null) && a:msg[0]['name'] == 'ERROR'
+    elseif type(a:msg) != type(v:null) && a:msg[0] == vlime#KW('ERROR')
         call vlime#ui#ErrMsg(a:msg[1])
     else
         call vlime#ui#ErrMsg('No source available.')

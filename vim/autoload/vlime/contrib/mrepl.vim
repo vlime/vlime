@@ -88,7 +88,7 @@ function! s:OnPrompt(conn, chan_obj, msg)
 endfunction
 
 function! s:OnSetReadMode(conn, chan_obj, msg)
-    let a:chan_obj['mrepl']['mode'] = a:msg[1]['name']
+    let a:chan_obj['mrepl']['mode'] = vlime#SymbolName(a:msg[1])
 endfunction
 
 function! s:OnEvaluationAborted(conn, chan_obj, msg)
@@ -107,7 +107,7 @@ let s:channel_event_handlers = {
 
 function! s:MREPL_ChannelCB(conn, chan_obj, msg)
     let msg_type = a:msg[0]
-    let Handler = get(s:channel_event_handlers, msg_type['name'], v:null)
+    let Handler = get(s:channel_event_handlers, vlime#SymbolName(msg_type), v:null)
     if type(Handler) != type(v:null)
         let ToCall = function(Handler, [a:conn, a:chan_obj, a:msg])
         call ToCall()

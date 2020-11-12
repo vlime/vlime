@@ -211,7 +211,7 @@ if !exists('g:vlime_default_mappings')
                     \ ['n', s:vlime_leader.'?', ':call vlime#ui#ShowQuickRef("repl")<cr>',
                         \ 'Show this quick reference.'],
                     \
-                    \ ['n', '<c-c>', ':call b:vlime_conn.Interrupt({"name": "REPL-THREAD", "package": "KEYWORD"})<cr>',
+                    \ ['n', '<c-c>', ':call b:vlime_conn.Interrupt(vlime#KW("REPL-THREAD"))<cr>',
                         \ 'Interrupt the REPL thread.'],
                     \ ['n', s:vlime_leader.'I', ':call vlime#ui#repl#InspectCurREPLPresentation()<cr>',
                         \ 'Inspect the evaluation result under the cursor.'],

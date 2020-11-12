@@ -74,9 +74,9 @@ function! vlime#ui#trace_dialog#Select(...)
         elseif action == 'to_repl'
             let part_type = (coord['type'] == 'TRACE-ENTRY-ARG') ? ':arg' : ':retval'
             call b:vlime_conn.ui.OnWriteString(b:vlime_conn,
-                        \ "--\n", {'name': 'REPL-SEP', 'package': 'KEYWORD'})
+                        \ "--\n", vlime#KW('REPL-SEP'))
             let args_str = join([coord['id'][0], coord['id'][1], part_type])
-            call b:vlime_conn.WithThread({'name': 'REPL-THREAD', 'package': 'KEYWORD'},
+            call b:vlime_conn.WithThread(vlime#KW('REPL-THREAD'),
                         \ function(b:vlime_conn.ListenerEval,
                             \ ['(nth-value 0 (swank-trace-dialog:find-trace-part ' . args_str . '))']))
         endif

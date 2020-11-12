@@ -17,8 +17,7 @@ function! vlime#ui#xref#FillXRefBuf(xref_list)
         let b:vlime_xref_coords = []
         let b:vlime_xref_list = []
         return
-    elseif type(a:xref_list) == v:t_dict &&
-                \ a:xref_list['name'] == 'NOT-IMPLEMENTED'
+    elseif a:xref_list == vlime#KW('NOT-IMPLEMENTED')
         call vlime#ui#ReplaceContent('Not implemented.')
         let b:vlime_xref_coords = []
         let b:vlime_xref_list = []
@@ -99,7 +98,7 @@ function! vlime#ui#xref#OpenCurXref(...)
         endif
 
         call vlime#ui#ShowSource(b:vlime_conn, valid_loc, edit_cmd, count_specified)
-    elseif type(raw_xref_loc) != type(v:null) && raw_xref_loc[0]['name'] == 'ERROR'
+    elseif type(raw_xref_loc) != type(v:null) && raw_xref_loc[0] == vlime#KW('ERROR')
         call vlime#ui#ErrMsg(raw_xref_loc[1])
     else
         call vlime#ui#ErrMsg('No source available.')
@@ -109,7 +108,7 @@ endfunction
 function! s:FindXRefLocationProp(key, prop_list)
     if type(a:prop_list) != type(v:null)
         for p in a:prop_list
-            if type(p) == v:t_list && p[0]['name'] == a:key
+            if type(p) == v:t_list && vlime#SymbolName(p[0]) == a:key
                 return p[1]
             endif
         endfor

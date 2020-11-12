@@ -29,7 +29,7 @@ function! vlime#ui#compiler_notes#FillCompilerNotesBuf(note_list)
         call add(nlist, note_dict)
 
         let begin_pos = getcurpos()
-        call vlime#ui#AppendString(note_dict['SEVERITY']['name'] . ': ' . note_dict['MESSAGE'])
+        call vlime#ui#AppendString(vlime#SymbolName(note_dict['SEVERITY']) . ': ' . note_dict['MESSAGE'])
         let eof_coord = vlime#ui#GetEndOfFileCoord()
         if idx < note_count - 1
             call vlime#ui#AppendString("\n--\n")
@@ -84,7 +84,7 @@ function! vlime#ui#compiler_notes#OpenCurNote(...)
             return
         endif
         call vlime#ui#ShowSource(b:vlime_conn, valid_loc, edit_cmd, count_specified)
-    elseif type(raw_note_loc) != type(v:null) && raw_note_loc[0]['name'] == 'ERROR'
+    elseif type(raw_note_loc) != type(v:null) && raw_note_loc[0] == vlime#KW('ERROR')
         call vlime#ui#ErrMsg(raw_note_loc[1])
     else
         call vlime#ui#ErrMsg('No source available.')
@@ -94,7 +94,7 @@ endfunction
 function! s:FindNoteLocationProp(key, loc)
     if type(a:loc) != type(v:null)
         for p in a:loc[1:]
-            if type(p) == v:t_list && p[0]['name'] == a:key
+            if type(p) == v:t_list && vlime#SymbolName(p[0]) == a:key
                 return p[1:]
             endif
         endfor

@@ -65,13 +65,13 @@ endfunction
 
 function! TestGetCurrentThread()
     function! s:DummyThreadGetter(...) dict
-        return {'name': 'REPL-THREAD', 'package': 'KEYWORD'}
+        return vlime#KW('REPL-THREAD')
     endfunction
     let ui = vlime#ui#New()
     let ui['GetCurrentThread'] = function('s:DummyThreadGetter')
     let conn = vlime#New(v:null, ui)
     let thread = conn.GetCurrentThread()
-    call assert_equal({'name': 'REPL-THREAD', 'package': 'KEYWORD'}, thread)
+    call assert_equal(vlime#KW('REPL-THREAD'), thread)
 endfunction
 
 function! TestSetCurrentThread()
@@ -82,8 +82,8 @@ function! TestSetCurrentThread()
     let ui['SetCurrentThread'] = function('s:DummyThreadSetter')
     let conn = vlime#New(v:null, ui)
     let b:vlime_test_dummy_thread = v:null
-    call conn.SetCurrentThread({'name': 'DUMMY-THREAD', 'package': 'KEYWORD'})
-    call assert_equal({'name': 'DUMMY-THREAD', 'package': 'KEYWORD'}, b:vlime_test_dummy_thread)
+    call conn.SetCurrentThread(vlime#KW('DUMMY-THREAD'))
+    call assert_equal(vlime#KW('DUMMY-THREAD'), b:vlime_test_dummy_thread)
     unlet b:vlime_test_dummy_thread
 endfunction
 
@@ -104,11 +104,11 @@ function! TestWithThread()
     let ui['GetCurrentThread'] = function('s:DummyThreadGetter')
     let ui['SetCurrentThread'] = function('s:DummyThreadSetter')
     let conn = vlime#New(v:null, ui)
-    let b:vlime_test_dummy_thread = {'name': 'OLD-THREAD', 'package': 'KEYWORD'}
+    let b:vlime_test_dummy_thread = vlime#KW('OLD-THREAD')
     let b:vlime_test_dummy_action_result = v:null
     call conn.WithThread(1, function('s:DummyAction', [conn]))
     call assert_equal(1, b:vlime_test_dummy_action_result)
-    call assert_equal({'name': 'OLD-THREAD', 'package': 'KEYWORD'}, b:vlime_test_dummy_thread)
+    call assert_equal(vlime#KW('OLD-THREAD'), b:vlime_test_dummy_thread)
     unlet b:vlime_test_dummy_thread
     unlet b:vlime_test_dummy_action_result
 endfunction
@@ -141,10 +141,10 @@ endfunction
 
 function! TestEmacsRex()
     let conn = vlime#New()
-    let rex = conn.EmacsRex([{'package': 'SWANK', 'name': 'CONNECTION-INFO'}])
+    let rex = conn.EmacsRex([vlime#SYM('SWANK', 'CONNECTION-INFO')])
     call assert_equal([
-                    \ {'package': 'KEYWORD', 'name': 'EMACS-REX'},
-                    \ [{'package': 'SWANK', 'name': 'CONNECTION-INFO'}],
+                    \ vlime#KW('EMACS-REX'),
+                    \ [vlime#SYM('SWANK', 'CONNECTION-INFO')],
                     \ v:null, v:true],
                 \ rex)
 endfunction
@@ -157,7 +157,7 @@ function! TestOnServerEvent()
     let conn = vlime#New()
     let conn['server_event_handlers']['PING'] = function('s:DummyPingHandler')
     let b:vlime_test_ping_handler_called = v:false
-    call conn.OnServerEvent(v:null, [{'name': 'PING', 'package': 'KEYWORD'}, 1, 42])
+    call conn.OnServerEvent(v:null, [vlime#KW('PING'), 1, 42])
     call assert_true(b:vlime_test_ping_handler_called)
     unlet b:vlime_test_ping_handler_called
 endfunction
@@ -525,12 +525,12 @@ let b:messages_to_test = [
                 \ 1],
             \ ['FindTracePart',
                 \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'FIND-TRACE-PART', 1, 2,
-                    \ {'package': 'KEYWORD', 'name': 'ARG'}),
+                    \ vlime#KW('ARG')),
                 \ s:OKReturn(v:null),
                 \ 1, 2, 'ARG'],
             \ ['InspectTracePart',
                 \ s:ExpectedEmacsRex('SWANK-TRACE-DIALOG', 'INSPECT-TRACE-PART', 1, 2,
-                    \ {'package': 'KEYWORD', 'name': 'ARG'}),
+                    \ vlime#KW('ARG')),
                 \ s:OKReturn(v:null),
                 \ 1, 2, 'ARG'],
             \ ['ReportPartialTree',
