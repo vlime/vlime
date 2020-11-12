@@ -201,8 +201,17 @@ function! vlime#ui#OnIndentationUpdate(conn, indent_info) dict
     if !has_key(a:conn.cb_data, 'indent_info')
         let a:conn.cb_data['indent_info'] = {}
     endif
-    for i in a:indent_info
-        let a:conn.cb_data['indent_info'][i[0]] = [i[1], i[2]]
+    let ii = a:conn.cb_data['indent_info']
+    for [name, indent, pkgs] in a:indent_info
+        if !has_key(ii, name)
+            let ii[name] = {}
+        endif
+
+        for pkg in pkgs
+            let ii[name][pkg] = indent
+        endfor
+        " COMPAT, see CalcCurIndent
+        let ii[name][""] = indent
     endfor
 endfunction
 
