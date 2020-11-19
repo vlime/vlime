@@ -148,4 +148,7 @@ function! s:InitREPLBuf()
     setlocal nomodifiable
 
     call vlime#ui#MapBufferKeys('repl')
+
+    " We modify the buffer very often; this is needed to reduce CPU time.
+    :let b:matchup_delim_enabled=0
 endfunction
