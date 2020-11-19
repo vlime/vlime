@@ -158,10 +158,9 @@ function! s:InitREPLBuf()
         setlocal omnifunc=vlime#plugin#CompleteFunc
         setlocal indentexpr=vlime#plugin#CalcCurIndent()
         setlocal nomodified
-        autocmd InsertLeave <buffer> call append(line('$'), '') | setlocal nomodified
     else
         setlocal nomodifiable
     end
-
+    let b:matchup_delim_enabled=0
     call vlime#ui#MapBufferKeys('repl')
 endfunction
