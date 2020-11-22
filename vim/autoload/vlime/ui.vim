@@ -1139,7 +1139,7 @@ function! vlime#ui#CurArgPos(...)
 
             let syntax = map(synstack(ln, idx), 'synIDattr(v:val, "name")')
 
-            if len(syntax) != 0 && syntax[0] =~ '^lispComment'
+            if index(syntax, 'lispComment') >= 0
                 " do nothing
             elseif ch == ' ' || ch == "\<tab>" || ch == "\n"
                 if last_type != 's' && last_type != ')' && paren_count == 1
