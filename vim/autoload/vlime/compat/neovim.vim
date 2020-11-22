@@ -58,11 +58,9 @@ function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback)
     let msg = add(a:expr, a:chan.next_msg_id)
 
     let json = json_encode(msg) . "\n"
-    if $JS_SWANK_PORT != ''
-        let l_str = printf("%06x", len(json))
-        let json = l_str . json
-    endif
-    let ret = chansend(a:chan.ch_id, json)
+    let l_str = printf("%06x", len(json))
+    let json2 = l_str . json
+    let ret = chansend(a:chan.ch_id, json2)
     if ret == 0
         let a:chan['is_connected'] = v:false
         throw 'vlime#compat#neovim#ch_sendexpr: chansend() failed'
