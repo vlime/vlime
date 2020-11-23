@@ -1410,6 +1410,37 @@ function! vlime#PListToDict(plist)
 endfunction
 
 ""
+" @public
+"
+" Convert a {alist} sent from the server to a native |dict|.
+" The keys are only the symbol _name_, ie the package is lost!
+function! vlime#AListToDict(alist)
+    if type(a:alist) == type(v:null)
+        return {}
+    endif
+
+    let d = {}
+    let i = 0
+    for p in a:alist
+        if type(p) != v:t_list
+            continue
+        endif
+
+        let key = vlime#SymbolName(p[0])
+        if len(p) == 1
+            let d[key] = v:null
+        elseif len(p) == 2
+            let d[key] = p[1]
+        elseif len(p) > 2
+            let d[key] = p[1:]
+        endif
+    endfor
+    return d
+endfunction
+
+
+
+""
 " @usage [func_and_cb...]
 " @public
 "
