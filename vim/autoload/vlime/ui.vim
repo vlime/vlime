@@ -250,14 +250,16 @@ function! vlime#ui#OnTraceDialog(conn, spec_list, trace_count) dict
 endfunction
 
 function! vlime#ui#OnXRef(conn, xref_list, orig_win) dict
-    if type(a:xref_list) == type(v:null)
+    if a:xref_list is v:null
         call vlime#ui#ErrMsg('No xref found.')
-    elseif a:xref_list == vlime#KW('NOT-IMPLEMENTED')
-        call vlime#ui#ErrMsg('Not implemented.')
-    else
+    elseif type(a:xref_list) == v:t_list
         let xref_buf = vlime#ui#xref#InitXRefBuf(a:conn, a:orig_win)
         call vlime#ui#OpenBufferWithWinSettings(xref_buf, v:false, 'xref')
         call vlime#ui#xref#FillXRefBuf(a:xref_list)
+    elseif a:xref_list == vlime#KW('NOT-IMPLEMENTED') 
+        call vlime#ui#ErrMsg('Not implemented.')
+    else
+        call vlime#ui#ErrMsg('Unknown data for XRef')
     endif
 endfunction
 

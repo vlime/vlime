@@ -1480,27 +1480,11 @@ endfunction
 " Parse a source location object {loc} sent from the server, and convert it
 " into a native |dict|.
 function! vlime#ParseSourceLocation(loc)
-    if type(a:loc[0]) != v:t_dict || a:loc[0] != vlime#KW('LOCATION')
+    if a:loc[0] != vlime#KW('LOCATION')
         throw 'vlime#ParseSourceLocation: invalid location: ' . string(a:loc)
     endif
 
-    let loc_obj = {}
-
-    for p in a:loc[1:]
-        if type(p) != v:t_list
-            continue
-        endif
-
-        if len(p) == 1
-            let loc_obj[p[0]['name']] = v:null
-        elseif len(p) == 2
-            let loc_obj[p[0]['name']] = p[1]
-        elseif len(p) > 2
-            let loc_obj[p[0]['name']] = p[1:]
-        endif
-    endfor
-
-    return loc_obj
+    return vlime#AListToDict(a:loc[1:])
 endfunction
 
 ""
