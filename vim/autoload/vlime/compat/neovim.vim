@@ -54,8 +54,11 @@ function! vlime#compat#neovim#ch_evalexpr(chan, expr)
 endfunction
 
 " vlime#compat#neovim#ch_sendexpr(chan, expr, callback)
-function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback) 
-    let msg = add(a:expr, a:chan.next_msg_id)
+function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback, raw) 
+    let msg = a:expr
+    if !a:raw
+        call add(msg, a:chan.next_msg_id)
+    endif
 
     let json = json_encode(msg) . "\n"
     let l_str = printf("%06x", len(json))

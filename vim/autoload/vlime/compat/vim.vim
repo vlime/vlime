@@ -35,8 +35,9 @@ function! vlime#compat#vim#ch_evalexpr(chan, expr)
     return ch_evalexpr(a:chan, a:expr)
 endfunction
 
-" vlime#compat#vim#ch_sendexpr(chan, expr, callback)
-function! vlime#compat#vim#ch_sendexpr(chan, expr, callback)
+" vlime#compat#vim#ch_sendexpr(chan, expr, callback, raw)
+function! vlime#compat#vim#ch_sendexpr(chan, expr, callback, raw)
+    "FIXME
     if type(a:callback) == type(v:null)
         return ch_sendexpr(a:chan, a:expr)
     else

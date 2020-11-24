@@ -204,13 +204,10 @@ endfunction
 "
 " Send a raw message {msg} to the server, and optionally register an async
 " [callback] function to handle the reply.
+" Also an optional flag [raw] can be used to _not_ append a (swank) message ID.
 function! vlime#Send(msg, ...) dict
-    let Callback = get(a:000, 0, v:null)
-    if type(Callback) != type(v:null)
-        call vlime#compat#ch_sendexpr(self.channel, a:msg, Callback)
-    else
-        call vlime#compat#ch_sendexpr(self.channel, a:msg)
-    endif
+    " TODO: remove that indirection?
+    return call('vlime#compat#ch_sendexpr', [self.channel, a:msg] + a:000)
 endfunction
 
 ""
@@ -545,7 +542,7 @@ endfunction
 " for the REPL thread. The debugger will be activated upon
 " interruption.
 function! vlime#Interrupt(thread) dict
-    call self.Send([vlime#KW('EMACS-INTERRUPT'), a:thread])
+    call self.Send([vlime#KW('EMACS-INTERRUPT'), a:thread], v:null, 1) 
 endfunction
 
 ""
