@@ -272,7 +272,6 @@ endfunction
 
 function! s:ServerExitCB(server_obj, exit_status)
     call remove(g:vlime_servers, a:server_obj['id'])
-    echom a:server_obj['name'] . ' stopped.'
 
     let conn_dict = get(a:server_obj, 'connections', {})
     for conn_id in keys(conn_dict)
