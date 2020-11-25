@@ -17,7 +17,10 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
         return
     endif
 
-    let field_widths = s:CalcAllFieldWidths(a:thread_list)
+    let headers = copy(a:thread_list[0])
+    call map(headers, 'vlime#SymbolName(v:val)')
+
+    let field_widths = s:CalcAllFieldWidths([headers] + a:thread_list[1:])
     let total_width = 0
     for w in field_widths
         let total_width += w
@@ -25,30 +28,32 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
     " Consider the column separators
     let total_width += (len(a:thread_list[0]) * 2)
 
+    "We assume 3 columns for now
+    let format=call('printf', ['%%%ds | %%-%ds | %%-%ds'] + field_widths)
+
     let coords = []
     1,$delete _
-    let idx = -1
-    for thread in a:thread_list
-        let begin_pos = getcurpos()
-        call map(thread, function('s:AppendThreadInfoField', [field_widths]))
 
+    call vlime#ui#AppendString(call('printf', [format] + headers))
+    call vlime#ui#AppendString("\n" . repeat('-', total_width) . "\n")
+
+    let idx = 0
+    for thread in a:thread_list[1:]
+        let begin_pos = getcurpos()
+        call vlime#ui#AppendString(call('printf', [format] + thread))
         let eof_coord = vlime#ui#GetEndOfFileCoord()
         call setpos('.', [0, eof_coord[0], eof_coord[1], 0])
 
-        if idx >= 0
-            let end_pos = getcurpos()
-            call add(coords, {
-                        \ 'begin': [begin_pos[1], begin_pos[2]],
-                        \ 'end': [end_pos[1], end_pos[2]],
-                        \ 'type': 'THREAD',
-                        \ 'id': thread[0],
-                        \ 'nth': idx,
-                        \ 'name': thread[1],
-                        \ })
-            call vlime#ui#AppendString("\n")
-        else
-            call vlime#ui#AppendString("\n" . repeat('-', total_width) . "\n")
-        endif
+        let end_pos = getcurpos()
+        call add(coords, {
+                    \ 'begin': [begin_pos[1], begin_pos[2]],
+                    \ 'end': [end_pos[1], end_pos[2]],
+                    \ 'type': 'THREAD',
+                    \ 'id': thread[0],
+                    \ 'nth': idx,
+                    \ 'name': thread[1],
+                    \ })
+        call vlime#ui#AppendString("\n")
         let idx += 1
     endfor
     call setpos('.', [0, 1, 1, 0, 1])
