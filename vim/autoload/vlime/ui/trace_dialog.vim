@@ -194,7 +194,7 @@ function! s:DrawSpecList(spec_list, coords)
     for spec in spec_list
         let untrace_button = s:AddButton(
                     \ '', '[untrace]', 'UNTRACE-SPEC', spec, cur_line, a:coords)
-        let content .= (untrace_button . ' ' . s:NameObjToStr(spec) . "\n")
+        let content .= (untrace_button . ' ' . vlime#SymbolAsString(spec) . "\n")
         let cur_line += 1
     endfor
 
@@ -317,7 +317,7 @@ function! s:DrawTraceEntries(toplevel, cached_entries, coords, ...)
         let str_id = string(entry['id'])
         let name_line = s:AlignTraceID(entry['id'], id_width) . line_prefix .
                     \ connector_char . repeat('-', s:indent_level_width - 1) . ' ' .
-                    \ s:NameObjToStr(entry['name']) . "\n"
+                    \ vlime#SymbolAsString(entry['name']) . "\n"
         let content .= name_line
         let cur_line += 1
 
@@ -571,18 +571,6 @@ endfunction
 
 function! s:Indent(str, count)
     return repeat(' ', a:count) . a:str
-endfunction
-
-function! s:NameObjToStr(name)
-    if type(a:name) == v:t_dict
-        return a:name['package'] . '::' . a:name['name']
-    elseif type(a:name) == v:t_list
-
-        let names = map(a:name, { idx, val -> vlime#SymbolAsString(val) })
-        return '(' . join(name_list) . ')'
-    else
-        throw 'NameObjToStr: illegal name: ' . string(name)
-    endif
 endfunction
 
 function! s:ConstructTraceEntryArgs(
