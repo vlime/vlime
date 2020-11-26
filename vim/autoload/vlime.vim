@@ -472,7 +472,7 @@ endfunction
 " {thread} and {ttag} are parameters received in the PING message from the
 " server.
 function! vlime#Pong(thread, ttag) dict
-    call self.Send([vlime#KW('EMACS-PONG'), a:thread, a:ttag])
+    call self.Send([vlime#KW('EMACS-PONG'), a:thread, a:ttag], v:null, v:null)
 endfunction
 
 ""

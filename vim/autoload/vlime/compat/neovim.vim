@@ -54,10 +54,12 @@ function! vlime#compat#neovim#ch_evalexpr(chan, expr)
 endfunction
 
 " vlime#compat#neovim#ch_sendexpr(chan, expr, callback)
-function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback, raw) 
+function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback, raw_or_tag) 
     let msg = a:expr
-    if !a:raw
+    if a:raw_or_tag == -1
         call add(msg, a:chan.next_msg_id)
+    elseif  a:raw_or_tag > 0
+        call add(msg, a:raw_or_tag)
     endif
 
     let json = json_encode(msg) . "\n"

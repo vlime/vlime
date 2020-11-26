@@ -58,9 +58,9 @@ function! vlime#compat#ch_evalexpr(chan, expr)
     return s:ch_impl.ch_evalexpr(a:chan, a:expr)
 endfunction
 
-" vlime#compat#ch_sendexpr(chan, expr[, callback[, raw]])
+" vlime#compat#ch_sendexpr(chan, expr[, callback[, raw-or-tag]])
 function! vlime#compat#ch_sendexpr(chan, expr, ...)
-    return s:ch_impl.ch_sendexpr(a:chan, a:expr, get(a:000, 0, v:null), get(a:000, 1, 0))
+    return s:ch_impl.ch_sendexpr(a:chan, a:expr, get(a:000, 0, v:null), get(a:000, 1, -1))
 endfunction
 
 
