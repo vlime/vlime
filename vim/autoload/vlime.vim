@@ -1861,3 +1861,13 @@ function! vlime#KeywordList2Dict(input)
         return dct
     endif
 endfunction
+
+function! vlime#switchToJson(...) dict
+    let Callback = get(a:000, 0, v:null)
+    
+    " only continue when swank was set to JSON encoding!
+    let self.channel.msg_callbacks[1] = Callback
+    " We cannot use the "normal" mechanisms here - they'd use JSON encoding already,
+    " while Swank would still expect S-expressions!
+    call chansend(self.channel.ch_id, "000026(:emacs-rex (vlime::use-json) :cl t 1)")
+endfunction
