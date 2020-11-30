@@ -158,7 +158,10 @@ function! s:ChanInputCB(job_id, data, source) dict
             endif
         else
             if len(buffered) >= bytes_want
-                let json_obj = json_decode(strpart(buffered, 0, bytes_want))
+                let input = strpart(buffered, 0, bytes_want)
+                " msgpack-special-dict - see VIM help for json_decode()
+                let input = substitute(input, "\\u0000", "", "g")
+                let json_obj = json_decode(input)
                 call add(obj_list, json_obj)
                 let buffered = strpart(buffered, bytes_want)
                 let bytes_want = -1
