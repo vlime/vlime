@@ -73,6 +73,8 @@ function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback, raw_or_tag)
     else
         if type(a:callback) != type(v:null)
             let a:chan.msg_callbacks[a:chan.next_msg_id] = a:callback
+            "echomsg  "set idx " a:chan.next_msg_id " for " msg
+            " cb " a:callback
         endif
         call s:IncMsgID(a:chan)
     endif
@@ -179,7 +181,6 @@ function! s:ChanInputCB(job_id, data, source) dict
         " See previous NORMALIZE-SWANK-FORM (in lisp/src/vlime-protocol.lisp)
         if type == vlime#KW("RETURN")
             let cb_index = remove(json_obj, -1)
-            "echomsg "got obj " json_encode(json_obj) " cb " cb_index
 
             if cb_index == 0
                 let CB = get(self, 'chan_callback', v:null)
@@ -194,6 +195,7 @@ function! s:ChanInputCB(job_id, data, source) dict
             let CB = get(self, 'chan_callback', v:null)
         endif
 
+        "echomsg "got obj " json_encode(json_obj)
         if type(CB) != type(v:null)
             try
                 call CB(self, json_obj)

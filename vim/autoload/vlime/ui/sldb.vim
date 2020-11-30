@@ -13,7 +13,7 @@ endfunction
 " Operates on current buffer. Should be called with vlime#ui#WithBuffer(...)
 function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
     setlocal modifiable
-
+    
     1,$delete _
 
     call vlime#ui#AppendString(
@@ -44,6 +44,7 @@ function! vlime#ui#sldb#FillSLDBBuf(thread, level, condition, restarts, frames)
 
     let frames_str = "Frames:\n"
     let max_digits = len(string(len(a:frames) - 1))
+    " f[2] may contain [ :RESTARTABLE, true ]
     for f in a:frames
         let idx_str = vlime#ui#Pad(string(f[0]), '.', max_digits)
         let frames_str .= ('  F ' . idx_str . f[1] . "\n")
