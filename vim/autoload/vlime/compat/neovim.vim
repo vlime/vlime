@@ -3,11 +3,12 @@ function! vlime#compat#neovim#ch_type()
 endfunction
 
 function! vlime#compat#neovim#ch_open(host, port, callback, timeout)
+    " Avoid duplicates with initialization messages
     let chan_obj = {
                 \ 'hostname': a:host,
                 \ 'port': a:port,
                 \ 'on_data': function('s:ChanInputCB'),
-                \ 'next_msg_id': 1,
+                \ 'next_msg_id': 10,
                 \ 'msg_callbacks': {},
                 \ }
     if type(a:callback) != type(v:null)
