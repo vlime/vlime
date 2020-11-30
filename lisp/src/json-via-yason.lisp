@@ -58,15 +58,6 @@
       (rec tree0))))
 
 (defun use-json ()
-  (with-open-file (da "/tmp/dsfg"
-                      :if-exists :append
-                      :direction :output
-                      :if-does-not-exist :create)
-    (format da "X~s~%" (multiple-value-list (get-decoded-time))))
-  #+(or)
-  (trace swank/rpc::read-message swank::decode-message vlime::recover-symbols swank/rpc::read-packet
-         swank/rpc::parse-header swank/rpc::read-chunk swank/rpc::asciify
-         )
   (swank::set-data-protocol
     #'encode-via-yason
     #'recover-symbols))
