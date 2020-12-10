@@ -1148,10 +1148,10 @@ function! vlime#plugin#CalcCurIndent(...)
 
         let indent_info = get(conn.cb_data, 'indent_info', {})
         let ii2 = get(indent_info, op, 0)
-        if ii2
+        if type(ii2) == v:t_dict
             let ii3 = get(ii2, op_pkg, 0)
             " Set it anyway in case that 'op_pkg' is a nickname
-            let a_count = ii3 ?  get(ii2, "", 0)
+            let a_count = ii3 ? ii3 : get(ii2, "", 0)
         endif
     endif
 
