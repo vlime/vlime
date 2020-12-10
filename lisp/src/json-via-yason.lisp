@@ -4,7 +4,7 @@
 (defvar vlime-symbol-prefix "§§")
 
 
-(defmethod yason:encode ((sym symbol) &optional stream)
+(defmethod yason:encode ((sym symbol) &optional (stream yason::*json-output*))
   (yason:encode
     (yason::encode-symbol-as-string sym nil vlime-symbol-prefix)
     stream))
@@ -13,7 +13,10 @@
   (declare (ignore package))
   (with-output-to-string (s) 
     (let ((yason:*list-encoder* #'yason:encode-plain-list-to-array)
-          (yason:*symbol-key-encoder* #'yason::encode-symbol-as-string))
+          (yason:*symbol-key-encoder* 
+            (lambda (sym)
+              (yason:encode-symbol-as-string sym nil 
+                                             vlime-symbol-prefix))))
       (yason:encode obj s))))
 
 (defun recover-symbols (input &optional package)
