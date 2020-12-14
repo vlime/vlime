@@ -542,7 +542,7 @@ endfunction
 " for the REPL thread. The debugger will be activated upon
 " interruption.
 function! vlime#Interrupt(thread) dict
-    call self.Send([vlime#KW('EMACS-INTERRUPT'), a:thread], v:null, 1) 
+    call self.Send([vlime#KW('EMACS-INTERRUPT'), a:thread], v:null, 0) 
 endfunction
 
 ""
