@@ -345,6 +345,11 @@ let s:cur_expr_pos_search_flags = {
             \ 'end':   ['nW', 'cnW', 'nW'],
             \ }
 
+" List syntax types to skip when using searchpairpos():
+" - "escape" for special items, such as lispEscapeSpecial.
+" - "symbol" for odd symbols like `|nice-(|`
+let s:skipped_regions = 'string\|character\|singlequote\|comment\|escape\|symbol'
+
 ""
 " @usage {cur_char} [side]
 " @public
@@ -367,9 +372,8 @@ function! vlime#ui#CurExprPos(cur_char, ...)
       " Build an expression that detects whether the current cursor position is
       " in certain syntax types (string, comment, etc.), for use as
       " searchpairpos()'s skip argument.
-      " We match "escape" for special items, such as lispEscapeSpecial.
       let s_skip = '!empty(filter(map(synstack(line("."), col(".")), ''synIDattr(v:val, "name")''), ' .
-      \ '''v:val =~? "string\\|character\\|singlequote\\|escape\\|comment"''))'
+      \ '''v:val =~? s:skipped_regions''))'
       " If executing the expression determines that the cursor is currently in
       " one of the syntax types, then we want searchpairpos() to find the pair
       " within those syntax types (i.e., not skip).  Otherwise, the cursor is
@@ -583,7 +587,7 @@ function! vlime#ui#ParseOuterOperators(max_count)
     let old_cur_pos = getcurpos()
     try
         while len(stack) < a:max_count
-            let [p_line, p_col] = searchpairpos('(', '', ')', 'bnW')
+            let [p_line, p_col] = searchpairpos('(', '', ')', 'bnW', s:skipped_regions)
             if p_line <= 0 || p_col <= 0
                 break
             endif
