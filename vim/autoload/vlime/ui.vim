@@ -559,21 +559,14 @@ endfunction
 " Return the operator symbol name of the parentheses-enclosed expression under
 " the cursor. If no expression is found, return an empty string.
 function! vlime#ui#CurOperator()
-    let expr = vlime#ui#CurExpr()
-    if len(expr) > 0
-        let matches = matchlist(expr, '^(\_s*\(\k\+\)\_s*\_.*)$')
+    " There may be an incomplete expression, so instead of
+    " @function(vlime#ui#CurExpr) we use searchpairpos() instead
+    let [s_line, s_col] = vlime#ui#SearchParenPos('cbnW')
+    if s_line > 0 && s_col > 0
+        let op_line = getline(s_line)[(s_col-1):]
+        let matches = matchlist(op_line, '^(\s*\(\k\+\)\s*')
         if len(matches) > 0
             return matches[1]
-        endif
-    else
-        " There may be an incomplete expression
-        let [s_line, s_col] = searchpairpos('(', '', ')', 'cbnW')
-        if s_line > 0 && s_col > 0
-            let op_line = getline(s_line)[(s_col-1):]
-            let matches = matchlist(op_line, '^(\s*\(\k\+\)\s*')
-            if len(matches) > 0
-                return matches[1]
-            endif
         endif
     endif
     return ''
