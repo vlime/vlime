@@ -345,11 +345,6 @@ let s:cur_expr_pos_search_flags = {
             \ 'end':   ['nW', 'cnW', 'nW'],
             \ }
 
-" List syntax types to skip when using searchpairpos():
-" - "escape" for special items, such as lispEscapeSpecial.
-" - "symbol" for odd symbols like `|nice-(|`
-let s:skipped_regions = 'string\|character\|singlequote\|comment\|escape\|symbol'
-
 ""
 " @usage {cur_char} [side]
 " @public
@@ -421,6 +416,25 @@ function! vlime#ui#CurTopExpr(...)
     else
         return return_pos ? ['', [0, 0], [0, 0]] : ''
     endif
+endfunction
+
+""
+" @usage [flags]
+" @public
+"
+" Tiny searchpairpos() wrapper tailored for searching pairs of matching
+" parenthesis.
+"
+" It automatically skips matches found inside certain syntax regions like:
+" - escape (i.e. lispEscapeSpecial)
+" - symbol (i.e. lispBarSymbol)
+"
+" See `:help search" for the use of [flags].
+function! vlime#ui#SearchParenPos(flags)
+    let skipped_regions_fn = '!empty(filter(map(synstack(line("."), col(".")), ''synIDattr(v:val, "name")''), ' .
+        \ '''v:val =~? "string\\|character\\|singlequote\\|escape\\|symbol\\|comment"''))'
+
+    return searchpairpos('(', '', ')', a:flags, skipped_regions_fn)
 endfunction
 
 ""
