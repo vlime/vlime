@@ -579,7 +579,7 @@ endfunction
 " surrounding expression instead, if the cursor is on the left enclosing
 " parentheses.
 function! vlime#ui#SurroundingOperator()
-    let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
+    let [s_line, s_col] = vlime#ui#SearchParenPos('bnW')
     if s_line > 0 && s_col > 0
         let op_line = getline(s_line)[(s_col-1):]
         let matches = matchlist(op_line, '^(\s*\(\k\+\)\s*')
