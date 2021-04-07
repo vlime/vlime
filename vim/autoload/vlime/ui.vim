@@ -465,7 +465,7 @@ function! vlime#ui#CurTopExprPos(...)
     let cur_level = 1
     try
         while type(max_level) == type(v:null) || cur_level <= max_level
-            let cur_pos = searchpairpos('(', '', ')', search_flags)
+            let cur_pos = vlime#ui#SearchParenPos(search_flags)
             if cur_pos[0] <= 0 || cur_pos[1] <= 0 ||
                         \ (type(max_lines) != type(v:null) && abs(old_cur_pos[1] - cur_pos[0]) > max_lines)
                 break
@@ -480,7 +480,7 @@ function! vlime#ui#CurTopExprPos(...)
         else
             let cur_char = vlime#ui#CurChar()
             if cur_char == '(' || cur_char == ')'
-                return searchpairpos('(', '', ')', search_flags . 'c')
+                return vlime#ui#SearchParenPos(search_flags . 'c')
             else
                 return [0, 0]
             endif
