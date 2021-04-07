@@ -372,8 +372,9 @@ function! vlime#ui#CurExprPos(cur_char, ...)
       " Build an expression that detects whether the current cursor position is
       " in certain syntax types (string, comment, etc.), for use as
       " searchpairpos()'s skip argument.
+      " We match "escape" for special items, such as lispEscapeSpecial.
       let s_skip = '!empty(filter(map(synstack(line("."), col(".")), ''synIDattr(v:val, "name")''), ' .
-      \ '''v:val =~? s:skipped_regions''))'
+          \ '''v:val =~? "string\\|character\\|singlequote\\|escape\\|symbol\\|comment"''))'
       " If executing the expression determines that the cursor is currently in
       " one of the syntax types, then we want searchpairpos() to find the pair
       " within those syntax types (i.e., not skip).  Otherwise, the cursor is
