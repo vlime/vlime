@@ -595,7 +595,7 @@ function! vlime#ui#ParseOuterOperators(max_count)
     let old_cur_pos = getcurpos()
     try
         while len(stack) < a:max_count
-            let [p_line, p_col] = searchpairpos('(', '', ')', 'bnW', s:skipped_regions)
+            let [p_line, p_col] = vlime#ui#SearchParenPos('bnW')
             if p_line <= 0 || p_col <= 0
                 break
             endif
