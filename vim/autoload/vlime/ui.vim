@@ -1112,7 +1112,7 @@ function! vlime#ui#CurArgPos(...)
     let arg_pos = -1
 
     if type(s_pos) == type(v:null)
-        let [s_line, s_col] = searchpairpos('(', '', ')', 'bnW')
+        let [s_line, s_col] = vlime#ui#SearchParenPos('bnW')
     else
         let [s_line, s_col] = s_pos
     endif
@@ -1153,6 +1153,10 @@ function! vlime#ui#CurArgPos(...)
 
             if index(syntax, 'lispComment') >= 0
                 " do nothing
+            elseif last_type == '\'
+                let last_type = 'i'
+            elseif ch == '\'
+                let last_type = '\'
             elseif ch == ' ' || ch == "\<tab>" || ch == "\n"
                 if last_type != 's' && last_type != ')' && paren_count == 1
                     let arg_pos += 1
