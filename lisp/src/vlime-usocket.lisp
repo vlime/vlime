@@ -105,7 +105,8 @@
                                     swank-stream)
                     (finish-output swank-stream))
                   (t (c)
-                     (swank/backend:send control-thread `(:client-data-error ,c)))))
+                     (let ((msg (format nil "~A" c)))
+                       (swank/backend:send control-thread `(:client-data-error ,msg))))))
 
               (:swank-data
                 (vom:debug "swank-data msg")
@@ -116,7 +117,8 @@
                                     client-stream)
                     (finish-output client-stream))
                   (t (c)
-                     (swank/backend:send control-thread `(:swank-data-error ,c)))))
+                     (let ((msg (format nil "~A" c)))
+                       (swank/backend:send control-thread `(:swank-data-error ,msg))))))
 
               ((:exit :client-eof :swank-eof :client-data-error :swank-data-error)
                 (vom:info "Control thread stopping: ~s" msg)
