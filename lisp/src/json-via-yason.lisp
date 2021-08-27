@@ -4,6 +4,8 @@
 (defvar vlime-symbol-prefix "§§")
 
 
+(setf (gethash #\Nul yason::*char-replacements*)
+      "Nul")
 
 (defun encode-via-yason (obj package)
   (declare (ignore package))
