@@ -295,11 +295,11 @@ if !exists('g:vlime_default_mappings')
                     \
                     \ ['n', '<cr>', ':<c-u>call vlime#ui#xref#OpenCurXref()<cr>',
                         \ 'Open the selected source location.'],
-                    \ ['n', 't', ':<c-u>call vlime#ui#xref#OpenCurXref(v:true, "tabedit")<cr>',
+                    \ ['n', 't', ':<c-u>call vlime#ui#xref#OpenCurXref(v:false, "tabedit")<cr>',
                         \ 'Open the selected source location, in a separate tab.'],
-                    \ ['n', 's', ':<c-u>call vlime#ui#xref#OpenCurXref(v:true, "split")<cr>',
+                    \ ['n', 's', ':<c-u>call vlime#ui#xref#OpenCurXref(v:false, "split")<cr>',
                         \ 'Open the selected source location, in a horizontal split window.'],
-                    \ ['n', 'S', ':<c-u>call vlime#ui#xref#OpenCurXref(v:true, "vsplit")<cr>',
+                    \ ['n', 'S', ':<c-u>call vlime#ui#xref#OpenCurXref(v:false, "vsplit")<cr>',
                         \ 'Open the selected source location, in a vertical split window.'],
                 \ ],
                 \
