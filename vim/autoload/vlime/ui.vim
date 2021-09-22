@@ -542,21 +542,26 @@ endfunction
 " package name specified in that expression. If no such an expression can be
 " found, an empty string is returned.
 function! vlime#ui#CurInPackage()
-    let pattern = '(\_s*in-package\_s\+\(.\+\)\_s*)'
+    " in-package from arbitrary packages is left as an exercise to the reader.
+    let pattern = '(\s*\(cl:\)\?in-package\s\+\(.\+\)\s*)'
     let old_cur_pos = getcurpos()
     try
+        " Must not be in a comment!!
         let package_line = search(pattern, 'bcW')
         if package_line <= 0
             let package_line = search(pattern, 'cW')
         endif
-        if package_line > 0
-            let matches = matchlist(vlime#ui#CurExpr(), pattern)
-            " The pattern used here does not check for lone parentheses,
-            " so there may not be a match.
-            let package = (len(matches) > 0) ? s:NormalizePackageName(matches[1]) : ''
-        else
-            let package = ''
-        endif
+        let void = search('in-package')
+        normal W
+        let package = expand("<cword>")
+        "if package_line > 0
+        "    let matches = matchlist(vlime#ui#CurExpr(), pattern)
+        "    " The pattern used here does not check for lone parentheses,
+        "    " so there may not be a match.
+        "    let package = (len(matches) > 0) ? s:NormalizePackageName(matches[2]) : ''
+        "else
+        "    let package = ''
+        "endif
         return package
     finally
         call setpos('.', old_cur_pos)
