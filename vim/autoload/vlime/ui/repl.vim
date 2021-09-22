@@ -168,6 +168,7 @@ function! s:InitREPLBuf()
     call vlime#ui#MapBufferKeys('repl')
 
     " We modify the buffer very often; this is needed to reduce CPU time.
+    let b:matchup_delim_enabled=0 
     let b:matchup_matchparen_enabled = 0
     let b:ycm_largefile = 1
     if type(g:ycm_filetype_blacklist) == v:t_dict
