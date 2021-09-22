@@ -206,24 +206,6 @@ function! vlime#server#BuildServerCommand(cl_impl)
     return Builder(vlime_loader, '(vlime:main)')
 endfunction
 
-function! s:MatchServerCreatedPort()
-    let pattern = 'Server created: (#([[:digit:][:blank:]]\+)\s\+\(\d\+\))'
-    let old_pos = getcurpos()
-    try
-        call setpos('.', [0, 1, 1, 0, 1])
-        let port_line_nr = search(pattern, 'n')
-    finally
-        call setpos('.', old_pos)
-    endtry
-    if port_line_nr > 0
-        let port_line = getline(port_line_nr)
-        let matched = matchlist(port_line, pattern)
-        return str2nr(matched[1])
-    else
-        return v:null
-    endif
-endfunction
-
 function! s:NormalizeServerID(id)
     if type(a:id) == v:t_dict
         return a:id['id']
@@ -245,19 +227,20 @@ function! s:ServerOutputCB(server_obj, auto_connect, data)
     endif
 
     for line in a:data
-        let matched = matchlist(line, 'Server created: (#([[:digit:][:blank:]]\+)\s\+\(\d\+\))')
-        if len(matched) == 0
-            " TODO: ipv6
-            let matched = matchlist(line, 'Server created: [0-9.]\+:\+\(\d\+\)')
-        endif
+        "let matched = matchlist(line, 'Server created: (#([[:digit:][:blank:]]\+)\s\+\(\d\+\))')
+        "if len(matched) == 0
+        let matched = matchlist(line, 'Server created: (\([0-9a-fA-F.:]\+\) \(\d\+\))')
+        "echomsg 'got ' . line . ', matched ' . json_encode(matched)
+        "endif
         if len(matched) > 0
-            " TODO: ip
-            let port = str2nr(matched[1])
+            let host = matched[1]
+            let port = str2nr(matched[2])
             let a:server_obj['port'] = port
-            echom 'Vlime server listening on port ' . port
+            let a:server_obj['host'] = host
+            echom 'Vlime server listening on ' . host . ', port ' . port
 
             if a:auto_connect
-                let auto_conn = vlime#plugin#ConnectREPL('127.0.0.1', port)
+                let auto_conn = vlime#plugin#ConnectREPL(host, port)
                 if type(auto_conn) != type(v:null)
                     let auto_conn.cb_data['server'] = a:server_obj
                     let a:server_obj['connections'] =

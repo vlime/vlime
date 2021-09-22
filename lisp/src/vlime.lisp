@@ -35,18 +35,17 @@
       (install-with-quicklisp package))))
 
 (defun main (&key backend
-                  (interface #(127 0 0 1))
+                  (interface "localhost")
                   (port 0)
                   port-file
-                  (start-swank t)
-                  (swank-interface #(127 0 0 1) swank-interface-p)
-                  (swank-port 0 swank-port-p)
                   (dont-close t))
-  (declare (ignore backend interface port port-file start-swank swank-interface-p swank-port-p))
-  (dyn-call "SWANK" "SETUP-SERVER"
-            swank-port 
-            #'(lambda (port)
-                (format t "Server created: (~a ~a)~%" swank-interface port))
-            swank:*communication-style*
-            dont-close 
-            nil))
+  (declare (ignore backend port-file))
+  ;; create-server would accept an INTERFACE argument
+  (let ((swank::*loopback-interface* interface))
+    (dyn-call "SWANK" "SETUP-SERVER"
+              port 
+              (lambda (addr port)
+                  (format t "Server created: (~a ~a)~%" addr port))
+              swank:*communication-style*
+              dont-close 
+              nil)))

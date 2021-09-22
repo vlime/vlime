@@ -213,25 +213,6 @@ keyword arguments to allow the caller to fine-tune server behavior:
         number on which it's listening in the specified file, once the
         server is fully operational. Default: NIL
 
-    :start-swank
-        Whether to start a Swank server or not. Usually the Vlime
-        server will start a Swank server automatically, and relay all
-        requests to it. If you have a Swank server that's already
-        running, and you want to use that instead, pass NIL to this
-        argument, and point :swank-interface and :swank-port to the
-        existing Swank server. Default: T
-
-    :swank-interface
-        When the :start-swank argument is T, this argument specifies
-        the interface that the new Swank server binds to. Otherwise
-        this should be the interface for a running Swank server.
-        Default: #(127 0 0 1)
-
-    :swank-port
-        When the :start-swank argument is T, this argument specifies
-        the port that the new Swank server listens on. Otherwise this
-        should be the port for a running Swank server. Default: 0
-
     :dont-close
         Do not shutdown the server after the first connection. Pass
         NIL to allow one client only. Default: T
