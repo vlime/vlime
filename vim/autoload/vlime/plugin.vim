@@ -211,7 +211,7 @@ function! vlime#plugin#ConnectREPL(...)
                     \ 'SWANK-ASDF', 'SWANK-PACKAGE-FU',
                     \ 'SWANK-PRESENTATIONS', 'SWANK-FANCY-INSPECTOR',
                     \ 'SWANK-C-P-C', 'SWANK-ARGLISTS', 'SWANK-REPL',
-                    \ 'SWANK-FUZZY']
+                    \ 'SWANK-FUZZY', 'SWANK-TRACE-DIALOG']
 
     call s:MaybeSendSecret(conn)
 
