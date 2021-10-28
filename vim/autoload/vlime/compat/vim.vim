@@ -45,32 +45,9 @@ function! vlime#compat#vim#ch_evalexpr(chan, expr)
     return ch_evalexpr(a:chan.ch, a:expr)
 endfunction
 
-" XXX 99% copy pasta from vlime#compat#neovmim
-" vlime#compat#vim#ch_sendexpr(chan, expr, callback, r_or_tagaw)
-function! vlime#compat#vim#ch_sendexpr(chan, expr, callback, raw_or_tag)
-    let msg = a:expr
-    if a:raw_or_tag == -1
-        call add(msg, a:chan.next_msg_id)
-    elseif  a:raw_or_tag > 0
-        call add(msg, a:raw_or_tag)
-    endif
-
-    let json = json_encode(msg) . "\n"
-    let l_str = printf("%06x", len(json))
-    let json2 = l_str . json
-    let ret = ch_sendraw(a:chan.ch, json2)
-    echom 'ret ' . ret
-    " XXX do something with `ret`
-    if type(a:callback) != type(v:null)
-        let a:chan.msg_callbacks[a:chan.next_msg_id] = a:callback
-        "echomsg  "set idx " a:chan.next_msg_id " for " msg
-        " cb " a:callback
-    endif
-    call s:IncMsgID(a:chan)
-endfunction
-
 function! vlime#compat#vim#ch_sendraw(chan, msg)
-    return ch_sendraw(a:chan.ch, a:msg)
+    call ch_sendraw(a:chan.ch, a:msg)
+    return 1 "XXX better error management?!
 endfunction
 
 function! vlime#compat#vim#job_start(cmd, opts)
@@ -185,15 +162,6 @@ function! s:ChanInputCB(ch, data) dict
             endtry
         endif
     endfor
-endfunction
-
-" XXX 100% copy pasta from vlime#compat#neovmim
-function! s:IncMsgID(chan)
-    if a:chan.next_msg_id >= 65535
-        let a:chan.next_msg_id = 1
-    else
-        let a:chan.next_msg_id += 1
-    endif
 endfunction
 
 function! s:JobOutputCB(user_cb, chan, data)

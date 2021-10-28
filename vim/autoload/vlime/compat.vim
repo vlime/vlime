@@ -61,13 +61,41 @@ endfunction
 
 " vlime#compat#ch_sendexpr(chan, expr[, callback[, raw-or-tag]])
 function! vlime#compat#ch_sendexpr(chan, expr, ...)
-    return s:ch_impl.ch_sendexpr(a:chan, a:expr, get(a:000, 0, v:null), get(a:000, 1, -1))
+    let Callback = get(a:000, 0, v:null)
+    let raw_or_tag = get(a:000, 1, -1)
+
+    let msg = a:expr
+    if raw_or_tag == -1
+        call add(msg, a:chan.next_msg_id)
+    elseif  raw_or_tag > 0
+        call add(msg, raw_or_tag)
+    endif
+
+    let json = json_encode(msg) . "\n"
+    call vlime#compat#ch_sendraw(a:chan, json)
+    if type(Callback) != type(v:null)
+        let a:chan.msg_callbacks[a:chan.next_msg_id] = Callback
+        "echomsg  "set idx " a:chan.next_msg_id " for " msg
+        " cb " Callback
+    endif
+    call s:IncMsgID(a:chan)
+endfunction
+
+function! s:IncMsgID(chan)
+    if a:chan.next_msg_id >= 65535
+        let a:chan.next_msg_id = 1
+    else
+        let a:chan.next_msg_id += 1
+    endif
 endfunction
 
 function! vlime#compat#ch_sendraw(chan, msg)
     let l_str = printf("%06x", len(a:msg))
     let msg = l_str . a:msg
-    return s:ch_impl.ch_sendraw(a:chan, msg)
+    let ret = s:ch_impl.ch_sendraw(a:chan, msg)
+    if ret == 0
+        throw 'vlime#compat#ch_sendraw failed [ret= ' . ret . ']'
+    endif
 endfunction
 
 function! vlime#compat#job_start(cmd, opts)

@@ -54,34 +54,12 @@ function! vlime#compat#neovim#ch_evalexpr(chan, expr)
     throw 'vlime#compat#neovim#ch_evalexpr: not supported'
 endfunction
 
-" vlime#compat#neovim#ch_sendexpr(chan, expr, callback)
-function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback, raw_or_tag) 
-    let msg = a:expr
-    if a:raw_or_tag == -1
-        call add(msg, a:chan.next_msg_id)
-    elseif  a:raw_or_tag > 0
-        call add(msg, a:raw_or_tag)
-    endif
-
-    let json = json_encode(msg) . "\n"
-    let l_str = printf("%06x", len(json))
-    let json2 = l_str . json
-    let ret = chansend(a:chan.ch_id, json2)
+function! vlime#compat#neovim#ch_sendraw(chan, msg)
+    let ret = chansend(a:chan.ch_id, a:msg)
     if ret == 0
         let a:chan['is_connected'] = v:false
-        throw 'vlime#compat#neovim#ch_sendexpr: chansend() failed'
-    else
-        if type(a:callback) != type(v:null)
-            let a:chan.msg_callbacks[a:chan.next_msg_id] = a:callback
-            "echomsg  "set idx " a:chan.next_msg_id " for " msg
-            " cb " a:callback
-        endif
-        call s:IncMsgID(a:chan)
     endif
-endfunction
-
-function! vlime#compat#neovim#ch_sendraw(chan, msg)
-    return chansend(a:chan.ch_id, a:msg)
+    return ret
 endfunction
 
 function! vlime#compat#neovim#job_start(cmd, opts)
@@ -210,14 +188,6 @@ function! s:ChanInputCB(job_id, data, source) dict
             endtry
         endif
     endfor
-endfunction
-
-function! s:IncMsgID(chan)
-    if a:chan.next_msg_id >= 65535
-        let a:chan.next_msg_id = 1
-    else
-        let a:chan.next_msg_id += 1
-    endif
 endfunction
 
 function! s:JobOutputCB(user_cb, job_id, data, source) dict
