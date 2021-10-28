@@ -1654,7 +1654,9 @@ function! s:MaybeSendSecret(conn)
     if filereadable(secret_file)
         let content = readfile(secret_file, '', 1)
         let secret = len(content) > 0 ? content[0] : ''
-        call a:conn.Send([vlime#KW('VLIME-RAW-MSG'), secret])
+        let l_str = printf("%06x", len(secret))
+        let msg = l_str . secret
+        call a:conn.SendRaw(msg)
     endif
 endfunction
 
