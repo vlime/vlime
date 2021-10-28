@@ -65,7 +65,9 @@ function! vlime#compat#ch_sendexpr(chan, expr, ...)
 endfunction
 
 function! vlime#compat#ch_sendraw(chan, msg)
-    return s:ch_impl.ch_sendraw(a:chan, a:msg)
+    let l_str = printf("%06x", len(a:msg))
+    let msg = l_str . a:msg
+    return s:ch_impl.ch_sendraw(a:chan, msg)
 endfunction
 
 function! vlime#compat#job_start(cmd, opts)
