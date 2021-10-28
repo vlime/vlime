@@ -45,6 +45,9 @@ function! vlime#compat#vim#ch_sendexpr(chan, expr, callback, raw)
     endif
 endfunction
 
+function! vlime#compat#vim#ch_sendraw(chan, msg)
+    return ch_sendraw(a:chan, a:msg)
+endfunction
 
 function! vlime#compat#vim#job_start(cmd, opts)
     let buf_name = a:opts['buf_name']
