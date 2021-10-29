@@ -7,13 +7,9 @@ function! vlime#compat#neovim#ch_open(host, port, callback, timeout)
     let chan_obj = {
                 \ 'hostname': a:host,
                 \ 'port': a:port,
-                \ 'on_data': function('s:ChanInputCB'),
-                \ 'next_msg_id': 10,
-                \ 'msg_callbacks': {},
+                \ 'on_data': function('vlime#compat#neovim#ch_on_data'),
+                \ 'callback': a:callback,
                 \ }
-    if type(a:callback) != type(v:null)
-        let chan_obj['chan_callback'] = a:callback
-    endif
 
     try
         let ch_id = sockconnect('tcp', a:host . ':' . a:port, chan_obj)
@@ -29,6 +25,11 @@ function! vlime#compat#neovim#ch_open(host, port, callback, timeout)
     execute 'sleep' waittime 'm'
 
     return chan_obj
+endfunction
+
+function! vlime#compat#neovim#ch_on_data(job_id, data, source) dict
+    let CB = get(self, 'callback')
+    call CB(self, join(a:data, ""))
 endfunction
 
 function! vlime#compat#neovim#ch_status(chan)
@@ -121,73 +122,6 @@ endfunction
 
 function! vlime#compat#neovim#job_getbufnr(job)
     return get(a:job, 'out_buf', 0)
-endfunction
-
-
-function! s:ChanInputCB(job_id, data, source) dict
-    let obj_list = []
-    let bytes_want = -1
-    let buffered = get(self, 'recv_buffer', '') . join(a:data, "")
-    while len(buffered) > 0
-        if bytes_want == -1 
-            if len(buffered) >= 6
-                let bytes_want = str2nr(strpart(buffered, 0, 6), 16)
-                let buffered = strpart(buffered, 6)
-            else
-                " Not enough data
-                break
-            endif
-        else
-            if len(buffered) >= bytes_want
-                let input = strpart(buffered, 0, bytes_want)
-                " msgpack-special-dict - see VIM help for json_decode()
-                let input = substitute(input, "\\u0000", "", "g")
-                let json_obj = json_decode(input)
-                call add(obj_list, json_obj)
-                let buffered = strpart(buffered, bytes_want)
-                let bytes_want = -1
-            else
-                " Not enough data
-                " keep the length information for next time
-                let buffered = printf("%06x", bytes_want) . buffered
-                break
-            endif
-        endif
-    endwhile
-
-    let self['recv_buffer'] = buffered
-
-    for json_obj in obj_list
-        let type = json_obj[0]
-
-        " Previously vlime always sent a callback index with a message
-        " now we've got to read swanks data directly
-        " See previous NORMALIZE-SWANK-FORM (in lisp/src/vlime-protocol.lisp)
-        if type == vlime#KW("RETURN")
-            let cb_index = remove(json_obj, -1)
-
-            if cb_index == 0
-                let CB = get(self, 'chan_callback', v:null)
-            else
-                try
-                    let CB = remove(self.msg_callbacks, cb_index)
-                catch /^Vim\%((\a\+)\)\=:E716/  " Key not present in Dictionary
-                    let CB = v:null
-                endtry
-            endif
-        else
-            let CB = get(self, 'chan_callback', v:null)
-        endif
-
-        "echomsg "got obj " json_encode(json_obj)
-        if type(CB) != type(v:null)
-            try
-                call CB(self, json_obj)
-            catch /.*/
-                call vlime#ui#ErrMsg('vlime: callback failed: ' . v:exception)
-            endtry
-        endif
-    endfor
 endfunction
 
 function! s:JobOutputCB(user_cb, job_id, data, source) dict
