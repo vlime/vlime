@@ -73,7 +73,7 @@ Allegro CL      10.0     Tested with the Express Edition
 CLISP           2.49+    No multithreading support
 ECL             16.1.3   No SLDB support
 CCL             1.11     
-SBCL            1.3.13   
+SBCL            2.1.19   
 LispWorks       6.1      Tested with the Personal Edition
 ```
 
