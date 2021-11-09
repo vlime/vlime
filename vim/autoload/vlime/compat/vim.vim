@@ -3,48 +3,53 @@ function! vlime#compat#vim#ch_type()
 endfunction
 
 function! vlime#compat#vim#ch_open(host, port, callback, timeout)
-    let opts = {'mode': 'json'}
-    if type(a:callback) != type(v:null)
-        let opts['callback'] = a:callback
-    endif
+    let chan_obj = {
+                \ 'on_data': function('vlime#compat#vim#ch_on_data'),
+                \ 'callback': a:callback,
+                \ }
+
+    let opts = {
+                \ 'mode': 'raw',
+                \ 'callback': chan_obj.on_data,
+                \ }
     if type(a:timeout) != type(v:null)
         let opts['waittime'] = a:timeout
     endif
-    return ch_open(a:host . ':' . string(a:port), opts)
+    let chan_obj["ch"] = ch_open(a:host . ':' . string(a:port), opts)
+    return chan_obj
+endfunction
+
+function! vlime#compat#vim#ch_on_data(ch, msg) dict
+    let CB = get(self, 'callback')
+    call CB(self, a:msg)
 endfunction
 
 function! vlime#compat#vim#ch_status(chan)
-    let stat = ch_status(a:chan)
+    let stat = ch_status(a:chan.ch)
     return (stat == 'open') ? 'open' : 'closed'
 endfunction
 
 function! vlime#compat#vim#ch_info(chan)
-    let info = ch_info(a:chan)
+    let info = ch_info(a:chan.ch)
     return {'hostname': info['hostname'], 'port': info['port']}
 endfunction
 
 function! vlime#compat#vim#ch_close(chan)
     try
-        return ch_close(a:chan)
+        return ch_close(a:chan.ch)
     catch /^Vim\%((\a\+)\)\=:E906/  " Not an open channel
         throw 'vlime#compat#vim#ch_close: not an open channel'
     endtry
 endfunction
 
 function! vlime#compat#vim#ch_evalexpr(chan, expr)
-    return ch_evalexpr(a:chan, a:expr)
+    return ch_evalexpr(a:chan.ch, a:expr)
 endfunction
 
-" vlime#compat#vim#ch_sendexpr(chan, expr, callback, raw)
-function! vlime#compat#vim#ch_sendexpr(chan, expr, callback, raw)
-    "FIXME
-    if type(a:callback) == type(v:null)
-        return ch_sendexpr(a:chan, a:expr)
-    else
-        return ch_sendexpr(a:chan, a:expr, {'callback': a:callback})
-    endif
+function! vlime#compat#vim#ch_sendraw(chan, msg)
+    call ch_sendraw(a:chan.ch, a:msg)
+    return 1 "XXX better error management?!
 endfunction
-
 
 function! vlime#compat#vim#job_start(cmd, opts)
     let buf_name = a:opts['buf_name']
@@ -92,6 +97,8 @@ endfunction
 function! vlime#compat#vim#job_getbufnr(job)
     return ch_getbufnr(a:job, 'out')
 endfunction
+
+" XXX 99% copy pasta from vlime#compat#neovmim
 
 function! s:JobOutputCB(user_cb, chan, data)
     let ToCall = function(a:user_cb, [[a:data]])

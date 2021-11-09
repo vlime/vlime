@@ -171,7 +171,7 @@ function! s:InitREPLBuf()
     let b:matchup_delim_enabled=0 
     let b:matchup_matchparen_enabled = 0
     let b:ycm_largefile = 1
-    if type(g:ycm_filetype_blacklist) == v:t_dict
+    if exists("g:ycm_filetype_blacklist")
         let g:ycm_filetype_blacklist["vlime_repl"] = 1
     endif
 endfunction

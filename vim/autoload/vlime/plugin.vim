@@ -215,7 +215,7 @@ function! vlime#plugin#ConnectREPL(...)
 
     call s:MaybeSendSecret(conn)
 
-    call chansend(conn.channel.ch_id, "000026(:emacs-rex (vlime::use-json) :cl t 0)")
+    call conn.SendRaw("(:emacs-rex (vlime::use-json) :cl t 0)")
                 " \ function('vlime#switchToJson', [], conn),
 
     call vlime#ChainCallbacks(
@@ -1654,7 +1654,7 @@ function! s:MaybeSendSecret(conn)
     if filereadable(secret_file)
         let content = readfile(secret_file, '', 1)
         let secret = len(content) > 0 ? content[0] : ''
-        call a:conn.Send([vlime#KW('VLIME-RAW-MSG'), secret])
+        call a:conn.SendRaw(secret)
     endif
 endfunction
 
