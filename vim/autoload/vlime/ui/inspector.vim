@@ -3,7 +3,7 @@ function! vlime#ui#inspector#InitInspectorBuf(ui, conn, thread)
     if !vlime#ui#VlimeBufferInitialized(buf)
         call vlime#ui#SetVlimeBufferOpts(buf, a:conn)
         call setbufvar(buf, '&filetype', 'vlime_inspector')
-        call vlime#ui#WithBuffer(buf, function('s:InitInspectorBuf'))
+        call vlime#ui#WithBuffer(buf, function('s:InitInspectorBuf', [a:conn]))
     endif
     if type(a:thread) != type(v:null)
         call a:ui.SetCurrentThread(a:thread, buf)
@@ -298,8 +298,11 @@ function! s:FindSourceCB(edit_cmd, win_to_go, force_open, conn, msg)
     endif
 endfunction
 
-function! s:InitInspectorBuf()
+function! s:InitInspectorBuf(conn)
     call vlime#ui#MapBufferKeys('inspector')
+
+    " Make all actions send this package name
+    call a:conn.SetCurrentPackage(['COMMON-LISP','CL'])
 endfunction
 
 function! s:GetCurCoord()
