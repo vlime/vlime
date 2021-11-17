@@ -26,14 +26,14 @@ function! vlime#ui#threads#FillThreadsBuf(thread_list)
         let total_width += w
     endfor
     " Consider the column separators
-    let total_width += (len(a:thread_list[0]) * 2)
+    let total_width += (len(a:thread_list[0]) - 1) * 3
 
     " first column right-aligned, rest left-aligned
     "let format=call('printf', ['%%-%ds' .. join(repeat('%%%ds',  , ' | ') 
     "let format=call('printf', [ join(repeat('%%%ds',  , ' | ') 
 
     "We assume 3 columns for now
-    let format=call('printf', ['%%%ds | %%-%ds | %%-%ds'] + field_widths)
+    let format=call('printf', ['%%%ds ' . repeat('| %%-%ds ', len(a:thread_list[0]) - 1)] + field_widths)
 
     let coords = []
     1,$delete _
