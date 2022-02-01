@@ -216,7 +216,15 @@ endfunction
 "
 " Send a message {msg} to the server, and optionally register an async
 " [callback] function to handle the reply.
-" Also an optional flag [raw] can be used to _not_ append a (swank) message ID.
+"
+" An additional optional flag, [raw-or-tag], can be used to get a (swank)
+" message ID conditionally appended to message; in particular, the specified
+" value will be used as follows:
+"
+" - -1: a new ID will be generated and appended to the message
+" -  0: no ID will be generated nor appended to the message
+" - >0: [raw-or-tag] is assumed to be a valid swank ID, and will be appended to
+"       the message as is
 function! vlime#Send(msg, ...) dict
     " TODO: remove that indirection?
     return call('vlime#compat#ch_sendexpr', [self.channel, a:msg] + a:000)
