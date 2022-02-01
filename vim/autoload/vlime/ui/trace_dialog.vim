@@ -47,7 +47,7 @@ function! vlime#ui#trace_dialog#Select(...)
             call b:vlime_conn.DialogUntraceAll(
                         \ function('s:DialogUntraceAllComplete', [bufnr('%')]))
         elseif coord['type'] == 'UNTRACE-SPEC'
-            call b:vlime_conn.DialogUntrace([vlime#CL('QUOTE'), coord['id']],
+            call b:vlime_conn.DialogUntrace([vlime#SYM('COMMON-LISP', 'QUOTE'), coord['id']],
                         \ function('s:DialogUntraceComplete', [bufnr('%')]))
         elseif coord['type'] == 'REFRESH-TRACE-ENTRY-HEADER'
             call b:vlime_conn.ReportTotal(
