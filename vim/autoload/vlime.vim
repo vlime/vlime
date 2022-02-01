@@ -1043,11 +1043,11 @@ function! vlime#SimpleCompletions(symbol, ...) dict
 endfunction
 
 function! vlime#ReturnString(thread, ttag, str) dict
-    call self.Send([vlime#KW('EMACS-RETURN-STRING'), a:thread, a:ttag, a:str])
+    call self.Send([vlime#KW('EMACS-RETURN-STRING'), a:thread, a:ttag, a:str], v:null, 0)
 endfunction
 
 function! vlime#Return(thread, ttag, val) dict
-    call self.Send([vlime#KW('EMACS-RETURN'), a:thread, a:ttag, a:val])
+    call self.Send([vlime#KW('EMACS-RETURN'), a:thread, a:ttag, a:val], v:null, 0)
 endfunction
 
 ""
