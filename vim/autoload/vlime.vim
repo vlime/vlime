@@ -216,7 +216,15 @@ endfunction
 "
 " Send a message {msg} to the server, and optionally register an async
 " [callback] function to handle the reply.
-" Also an optional flag [raw] can be used to _not_ append a (swank) message ID.
+"
+" An additional optional flag, [raw-or-tag], can be used to get a (swank)
+" message ID conditionally appended to message; in particular, the specified
+" value will be used as follows:
+"
+" - -1: a new ID will be generated and appended to the message
+" -  0: no ID will be generated nor appended to the message
+" - >0: [raw-or-tag] is assumed to be a valid swank ID, and will be appended to
+"       the message as is
 function! vlime#Send(msg, ...) dict
     " TODO: remove that indirection?
     return call('vlime#compat#ch_sendexpr', [self.channel, a:msg] + a:000)
@@ -484,7 +492,7 @@ endfunction
 " {thread} and {ttag} are parameters received in the PING message from the
 " server.
 function! vlime#Pong(thread, ttag) dict
-    call self.Send([vlime#KW('EMACS-PONG'), a:thread, a:ttag], v:null, v:null)
+    call self.Send([vlime#KW('EMACS-PONG'), a:thread, a:ttag], v:null, 0)
 endfunction
 
 ""
@@ -554,7 +562,7 @@ endfunction
 " for the REPL thread. The debugger will be activated upon
 " interruption.
 function! vlime#Interrupt(thread) dict
-    call self.Send([vlime#KW('EMACS-INTERRUPT'), a:thread], v:null, 0) 
+    call self.Send([vlime#KW('EMACS-INTERRUPT'), a:thread], v:null, 0)
 endfunction
 
 ""
@@ -1043,11 +1051,11 @@ function! vlime#SimpleCompletions(symbol, ...) dict
 endfunction
 
 function! vlime#ReturnString(thread, ttag, str) dict
-    call self.Send([vlime#KW('EMACS-RETURN-STRING'), a:thread, a:ttag, a:str])
+    call self.Send([vlime#KW('EMACS-RETURN-STRING'), a:thread, a:ttag, a:str], v:null, 0)
 endfunction
 
 function! vlime#Return(thread, ttag, val) dict
-    call self.Send([vlime#KW('EMACS-RETURN'), a:thread, a:ttag, a:val])
+    call self.Send([vlime#KW('EMACS-RETURN'), a:thread, a:ttag, a:val], v:null, 0)
 endfunction
 
 ""
