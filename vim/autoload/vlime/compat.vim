@@ -54,34 +54,40 @@ function! vlime#compat#ch_open(host, port, ...)
 endfunction
 
 function! vlime#compat#ch_on_data(ch, data) dict
+    let header_len = 6
     let obj_list = []
     let bytes_want = -1
     let buffered = get(self, 'recv_buffer', '') . a:data
     while len(buffered) > 0
         if bytes_want == -1
-            if len(buffered) >= 6
-                let bytes_want = str2nr(strpart(buffered, 0, 6), 16)
-                let buffered = strpart(buffered, 6)
+            if len(buffered) >= header_len
+                let len_def = strpart(buffered, 0, header_len)
+                if match(len_def, '\v^[0-9a-f]{' . header_len . '}$') == -1
+                    echomsg 'VLIME: got bad packet length ' len_def ' Press Ctrl-C to continue'
+                    sleep 86400
+                endif
+                let s:old_len=len_def
+                let bytes_want = str2nr(len_def, 16)
+                "let buffered = strpart(buffered, header_len)
             else
                 " Not enough data
                 break
             endif
+        endif
+        " Now bytes_want needs to be set!
+        if len(buffered) >= bytes_want + header_len " including the header
+            "echomsg printf("Extracting %06x from %06x", bytes_want, len(buffered))
+            let input = strpart(buffered, header_len, bytes_want)
+            " before removing NULs!
+            let buffered = strpart(buffered, bytes_want + header_len)
+            " msgpack-special-dict - see VIM help for json_decode()
+            let input = substitute(input, "\\u0000", "", "g")
+            let json_obj = json_decode(input)
+            call add(obj_list, json_obj)
+            let bytes_want = -1
         else
-            if len(buffered) >= bytes_want
-                let input = strpart(buffered, 0, bytes_want)
-                " before removing NULs!
-                let buffered = strpart(buffered, bytes_want)
-                " msgpack-special-dict - see VIM help for json_decode()
-                let input = substitute(input, "\\u0000", "", "g")
-                let json_obj = json_decode(input)
-                call add(obj_list, json_obj)
-                let bytes_want = -1
-            else
-                " Not enough data
-                " keep the length information for next time
-                let buffered = printf("%06x", bytes_want) . buffered
-                break
-            endif
+            " Not enough data
+            break
         endif
     endwhile
 
