@@ -215,7 +215,7 @@ function! vlime#plugin#ConnectREPL(...)
 
     call s:MaybeSendSecret(conn)
 
-    call conn.SendRaw("(:emacs-rex (vlime::use-json) :cl t 0)")
+    call conn.SendRaw("(:emacs-rex (vlime::use-json) \"CL\" t 0)")
                 " \ function('vlime#switchToJson', [], conn),
 
     call vlime#ChainCallbacks(

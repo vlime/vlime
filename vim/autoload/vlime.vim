@@ -1889,5 +1889,5 @@ function! vlime#switchToJson(...) dict
     let self.channel.msg_callbacks[1] = Callback
     " We cannot use the "normal" mechanisms here - they'd use JSON encoding already,
     " while Swank would still expect S-expressions!
-    call chansend(self.channel.ch_id, "000026(:emacs-rex (vlime::use-json) :cl t 1)")
+    call chansend(self.channel.ch_id, "000026(:emacs-rex (vlime::use-json) \"CL\" t 1)")
 endfunction
