@@ -81,7 +81,7 @@ function! vlime#compat#ch_on_data(ch, data) dict
             " before removing NULs!
             let buffered = strpart(buffered, bytes_want + header_len)
             " msgpack-special-dict - see VIM help for json_decode()
-            let input = substitute(input, "\\u0000", "", "g")
+            "let input = substitute(input, "\\u0000", "", "g")
             let json_obj = json_decode(input)
             call add(obj_list, json_obj)
             let bytes_want = -1
