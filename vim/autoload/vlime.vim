@@ -1297,7 +1297,8 @@ function! vlime#OnWriteString(conn, msg)
     if type(a:conn.ui) != type(v:null)
         let str = a:msg[1]
         let str_type = (len(a:msg) >= 3) ? a:msg[2] : v:null
-        call a:conn.ui.OnWriteString(a:conn, str, str_type)
+        let thread = (len(a:msg) >= 4) ? a:msg[3] : v:null
+        call a:conn.ui.OnWriteString(a:conn, str, str_type, thread)
     endif
 endfunction
 

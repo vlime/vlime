@@ -175,7 +175,7 @@ endfunction
 " Write an arbitrary string {str} to the REPL buffer.
 " {conn} should be a valid @dict(VlimeConnection). {str_type} is currently
 " ignored.
-function! vlime#ui#OnWriteString(conn, str, str_type) dict
+function! vlime#ui#OnWriteString(conn, str, str_type, ...) dict
     let repl_buf = vlime#ui#repl#InitREPLBuf(a:conn)
     if len(win_findbuf(repl_buf)) <= 0
         call vlime#ui#KeepCurWindow(
@@ -183,6 +183,10 @@ function! vlime#ui#OnWriteString(conn, str, str_type) dict
                         \ [repl_buf, v:false, 'repl']))
     endif
     call vlime#ui#repl#AppendOutput(repl_buf, a:str)
+    if a:0 >= 1
+        " new as per slime 78ad57b7455be3f34a38da456183ddf8d604bdf8
+        call a:conn.SendRaw("(:write-done " .. a:1 .. ")")
+    endif
 endfunction
 
 function! vlime#ui#OnReadString(conn, thread, ttag) dict
