@@ -20,7 +20,7 @@ function! vlime#contrib#repl#CreateREPL(...) dict
         call vlime#TryToCall(a:Callback, [a:conn, a:msg[1][1]])
     endfunction
 
-    let cmd = [vlime#SYM('SWANK-REPL', 'CREATE-REPL'), v:null]
+    let cmd = [vlime#SYM('SWANK-REPL', 'CREATE-REPL'), v:false]
     let coding_system = get(a:000, 0, v:null)
     if coding_system != v:null
         let cmd += [vlime#KW('CODING-SYSTEM'), coding_system]
