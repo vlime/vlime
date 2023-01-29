@@ -392,7 +392,7 @@ function! s:ShowFrameLocalsCB(frame, restartable, line, conn, result)
         endfor
     endif
     let catch_tags = a:result[1]
-    if type(catch_tags) != type(v:null)
+    if type(catch_tags) == v:t_list
         let content .= "\tCatch tags:\n"
         for ct in catch_tags
             let content .= "\t  " . ct . "\n"
