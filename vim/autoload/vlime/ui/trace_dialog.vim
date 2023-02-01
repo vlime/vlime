@@ -175,7 +175,7 @@ function! s:DrawSpecList(spec_list, coords)
         let [first_line, last_line] = line_range
     endif
 
-    let spec_list = (type(a:spec_list) == type(v:null)) ? [] : a:spec_list
+    let spec_list = (type(a:spec_list) == v:t_list) ? a:spec_list : []
     let title = 'Traced (' . len(spec_list) . ')'
     let content = title . "\n" . repeat('=', len(title)) . "\n\n"
     let cur_line = 4
