@@ -17,7 +17,7 @@ Short demo:
 Why?
 ====
 
-* There were barely no choice besides SLIMV.
+* There was no choice other than SLIMV.
 * SLIMV was written in Python on the Vim side, but I think a Lisp-and-Vimscript
   implementation would be awesome.
 * Vim 8 has these nice `channel` APIs, why not try them out?
