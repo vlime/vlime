@@ -69,6 +69,10 @@ function! vlime#compat#neovim#ch_sendexpr(chan, expr, callback)
     endif
 endfunction
 
+function! vlime#compat#neovim#ch_sendraw(chan, msg)
+    return chansend(a:chan.ch_id, a:msg)
+endfunction
+
 
 function! vlime#compat#neovim#job_start(cmd, opts)
     let buf_name = a:opts['buf_name']
