@@ -16,6 +16,7 @@ if !exists('s:ch_impl')
                     \ 'ch_close',
                     \ 'ch_evalexpr',
                     \ 'ch_sendexpr',
+                    \ 'ch_sendraw',
                 \ ])
 endif
 
@@ -64,6 +65,9 @@ function! vlime#compat#ch_sendexpr(chan, expr, ...)
     return s:ch_impl.ch_sendexpr(a:chan, a:expr, Callback)
 endfunction
 
+function! vlime#compat#ch_sendraw(chan, msg)
+    return s:ch_impl.ch_sendraw(a:chan, a:msg)
+endfunction
 
 function! vlime#compat#job_start(cmd, opts)
     return s:job_impl.job_start(a:cmd, a:opts)

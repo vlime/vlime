@@ -45,6 +45,7 @@ function! vlime#New(...)
                 \ 'IsConnected': function('vlime#IsConnected'),
                 \ 'Close': function('vlime#Close'),
                 \ 'Call': function('vlime#Call'),
+                \ 'SendRaw': function('vlime#SendRaw'),
                 \ 'Send': function('vlime#Send'),
                 \ 'FixRemotePath': function('vlime#FixRemotePath'),
                 \ 'FixLocalPath': function('vlime#FixLocalPath'),
@@ -197,12 +198,22 @@ function! vlime#Call(msg) dict
     return vlime#compat#ch_evalexpr(self.channel, a:msg)
 endfunction
 
+" @dict VlimeConnection.Send
+" @usage {msg} [callback]
+" @private
+"
+" Send a raw message {msg} to the server.
+function! vlime#SendRaw(msg) dict
+    " TODO: remove that indirection?
+    return call('vlime#compat#ch_sendraw', [self.channel, a:msg])
+endfunction
+
 ""
 " @dict VlimeConnection.Send
 " @usage {msg} [callback]
 " @public
 "
-" Send a raw message {msg} to the server, and optionally register an async
+" Send a message {msg} to the server, and optionally register an async
 " [callback] function to handle the reply.
 function! vlime#Send(msg, ...) dict
     let Callback = get(a:000, 0, v:null)
