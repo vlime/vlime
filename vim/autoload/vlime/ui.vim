@@ -183,9 +183,9 @@ function! vlime#ui#OnWriteString(conn, str, str_type, ...) dict
                         \ [repl_buf, v:false, 'repl']))
     endif
     call vlime#ui#repl#AppendOutput(repl_buf, a:str)
-    if a:0 >= 1
+    if (a:0 >= 1) && (a:1 != v:null)
         " new as per slime 78ad57b7455be3f34a38da456183ddf8d604bdf8
-        call a:conn.SendRaw("(:write-done " .. a:1 .. ")")
+        call a:conn.Send([vlime#KW('VLIME-RAW-MSG'), "(:write-done " .. a:1 .. ")"])
     endif
 endfunction
 
