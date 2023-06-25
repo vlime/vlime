@@ -185,7 +185,7 @@ function! vlime#ui#OnWriteString(conn, str, str_type, ...) dict
     call vlime#ui#repl#AppendOutput(repl_buf, a:str)
     if a:0 >= 1
         " new as per slime 78ad57b7455be3f34a38da456183ddf8d604bdf8
-        call a:conn.SendRaw(json_encode([vlime#KW("write-done"), a:1]))
+        call a:conn.SendRaw(json_encode([vlime#KW("WRITE-DONE"), a:1]))
     endif
 endfunction
 
