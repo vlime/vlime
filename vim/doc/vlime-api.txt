@@ -1142,7 +1142,7 @@ vlime#ui#ChooseWindowWithCount({default_win})
 
   Choose a window with |v:count|. The special variable v:count should contain
   a valid window number (see |winnr()|) or zero when this function is called.
-  The coresponding window ID is returned. If v:count is zero, try to use
+  The corresponding window ID is returned. If v:count is zero, try to use
   {default_win} as the result. In that case, if {default_win} is not a legal
   window number, try to find a window automatically.
 

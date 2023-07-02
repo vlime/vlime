@@ -107,7 +107,7 @@ If you have sbcl in your $PATH, Vlime can start a server for you:
        when it's ready, and become fully operational.
 
 Note: If it's your first time running the server, Vlime will try to
-      install it's dependencies via Quicklisp. This may take some
+      install its dependencies via Quicklisp. This may take some
       time.
 
 See |vlime-mappings-invoke-server| for more operations on Vlime
@@ -130,7 +130,7 @@ You may also start the server manually:
     3. Start editing a Common Lisp source file, and use
        |vlime-mappings-conn-cc| to create a new
        connection.
-    4. Vlime shoud now be fully operational.
+    4. Vlime should now be fully operational.
 
                                      *vlime-start-up-in-running-image*
 If you have a running Common Lisp image, and want to start the server
@@ -475,7 +475,7 @@ open an "mrepl" command line buffer automatically. Just enter |Insert|
 mode and use it as you may use any other REPL prompts. But note that
 the command line is somewhat fragile, in that it is implemented by
 simply extracting the text between the last prompt string and EOF.
-Modifying text outside this range may cause unexpected bahavior.
+Modifying text outside this range may cause unexpected behavior.
 
 See |vlime-mappings-mrepl| for all available operations in the MREPL
 buffer.
@@ -803,7 +803,7 @@ Key mappings available in lisp source files:
 ......................................................................
 4.3.2 REPL Buffer Mappings                       *vlime-mappings-repl*
 
-Key mappings avaialble in the REPL buffer:
+Key mappings available in the REPL buffer:
 
     CTRL-c
         Interrupt the REPL thread.
@@ -817,7 +817,7 @@ Key mappings avaialble in the REPL buffer:
     <LocalLeader>C
         Clear the REPL buffer.
     <Tab>
-        Move the cursor to the next prensented object.
+        Move the cursor to the next presented object.
     CTRL-n
         Same as <Tab>.
     CTRL-p
@@ -883,7 +883,7 @@ Key mappings available in the debugger:
 ......................................................................
 4.3.4 Inspector Mappings                    *vlime-mappings-inspector*
 
-Key mappings avaialble in the inspector:
+Key mappings available in the inspector:
 
     <CR>
         Activate the interactable field/button under the cursor.
@@ -911,7 +911,7 @@ Key mappings avaialble in the inspector:
                                                  *vlime-mappings-xref*
                                        *vlime-mappings-compiler-notes*
 
-Key mappings avaialble in the cross reference list and the compiler
+Key mappings available in the cross reference list and the compiler
 notes window:
 
     <CR>
@@ -935,7 +935,7 @@ notes window:
 ......................................................................
 4.3.6 Thread List Mappings                *vlime-mappings-thread-list*
 
-Key mappings avaialble in the thread list:
+Key mappings available in the thread list:
 
     CTRL-c
         Interrupt the thread under the cursor. The debugger will be
@@ -950,7 +950,7 @@ Key mappings avaialble in the thread list:
 ......................................................................
 4.3.7 Server Output Buffer Mappings            *vlime-mappings-server*
 
-Key mappings avaialble in the server output buffer:
+Key mappings available in the server output buffer:
 
     <LocalLeader>c                           *vlime-mappings-server-c*
         Connect to this server.
@@ -960,7 +960,7 @@ Key mappings avaialble in the server output buffer:
 ......................................................................
 4.3.8 Input Buffer Mappings                     *vlime-mappings-input*
 
-Key mappings avaialble in the input buffer:
+Key mappings available in the input buffer:
 
     CTRL-p or Shift-Tab
         Show the previous item in input history.
@@ -970,7 +970,7 @@ Key mappings avaialble in the input buffer:
 ......................................................................
 4.3.9 Trace Dialog Mappings              *vlime-mappings-trace-dialog*
 
-Key mappings avaialble in the trace dialog:
+Key mappings available in the trace dialog:
 
     <CR>
         Activate the interactable field/button under the cursor.
@@ -992,7 +992,7 @@ Key mappings avaialble in the trace dialog:
 ......................................................................
 4.3.10 MREPL Buffer Mappings                    *vlime-mappings-mrepl*
 
-Key mappings avaialble in the MREPL buffer:
+Key mappings available in the MREPL buffer:
 
     <CR>
         (In insert mode) Submit the text snippet between the last

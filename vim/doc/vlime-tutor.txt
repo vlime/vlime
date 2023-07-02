@@ -82,7 +82,7 @@ Vim to connect to another server. For example:
 
 This will try to make a connection to 127.0.0.1:9999.
 
-Now, just for demostrating, let's type "\cc" a few more times, to
+Now, just for demonstrating, let's type "\cc" a few more times, to
 create more connections. Then type "\cs" (without the quote marks) in
 the ad-hoc.lisp buffer to see the connection list. A list with three
 connections should look like this:
@@ -94,7 +94,7 @@ connections should look like this:
     Type number and <Enter> or click with mouse (empty cancels):
 
 From there you can also choose a connection for the current buffer to
-use by typing it's ID and then <Enter>. See
+use by typing its ID and then <Enter>. See
 |vlime-current-connection|.
 
 When you're done with a connection, type "\cd" (without the quote
@@ -334,7 +334,7 @@ all window-manipulating commands.
 6. Compiling                                     *vlime-tutor-compile*
 
 Make sure you have saved fibonacci.lisp, and then type "\of" (without
-the quote marks) in it's buffer in normal mode. Go back to the REPL
+the quote marks) in its buffer in normal mode. Go back to the REPL
 buffer, you'll see the compilation result:
 
     --
@@ -423,13 +423,13 @@ This is the debugger. It pops up whenever an unhandled condition
 occurs. The content can be divided into four parts, separated by an
 empty line:
 
-    * The thread and netsted level this condition occured in.
+    * The thread and nested level this condition occurred in.
     * The description of this condition.
     * Some available restarts.
     * The stack frames.
 
 Our GENERATE function is recursive, but we see no GENERATE function
-call in the stack frames. That's because the compiler did it's job and
+call in the stack frames. That's because the compiler did its job and
 optimized our code a bit, so the debugger has fewer info available.
 
 We can't determine what went wrong yet, so let's abort the evaluation
@@ -484,7 +484,7 @@ still pop up, but this time it has more detailed stack info:
       ....
 
 This stack deserves careful examination. We can see each call of the
-FIBONACCI:GENERATE function and the values of it's arguments. To see
+FIBONACCI:GENERATE function and the values of its arguments. To see
 more details, move the cursor to frame 2 and press "d" (without the
 quote marks). A preview buffer will show all local variable names and
 their values, plus other useful info:
@@ -531,7 +531,7 @@ Now that we have fixed fibonacci.lisp, it should look like this:
         (reverse acc)
         (generate (1- n) b (+ a b) (push a acc))))
 
-It works well, but It's a boring function after all. We should
+It works well, but it's a boring function after all. We should
 probably add some fancy classes and methods:
 
     (in-package #:cl-user)
@@ -726,7 +726,7 @@ with it.
 ======================================================================
 9. Conclusion                                 *vlime-tutor-conclusion*
 
-Our Finbonacci sequence generator is working, and we have covered the
+Our Fibonacci sequence generator is working, and we have covered the
 most frequently used features of Vlime. You should now be able to use
 Vlime to write and debug Common Lisp programs. You can then read the
 full documentation in |vlime.txt|.
