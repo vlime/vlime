@@ -67,7 +67,7 @@ function! vlime#ui#compiler_notes#OpenCurNote(...)
         return
     endif
 
-    let raw_note_loc = b:vlime_compiler_note_list[note_coord['id']]['LOCATION']
+    let raw_note_loc = vlime#Get(b:vlime_compiler_note_list[note_coord['id']], 'LOCATION')
     try
         let note_loc = vlime#ParseSourceLocation(raw_note_loc)
         let valid_loc = vlime#GetValidSourceLocation(note_loc)

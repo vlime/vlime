@@ -379,14 +379,15 @@ function! s:ShowFrameLocalsCB(frame, restartable, line, conn, result)
         for lc in locals
             let rlc = vlime#PListToDict(lc)
             call add(rlocals, rlc)
-            if len(rlc['NAME']) > max_name_len
-                let max_name_len = len(rlc['NAME'])
+		 let rlc_l = len(vlime#Get(rlc, 'NAME'))
+            if rlc_l > max_name_len
+                let max_name_len = rlc_l
             endif
         endfor
         for rlc in rlocals
             let content .= "\t  "     " Indentation
-            let content .= vlime#ui#Pad(rlc['NAME'], ':', max_name_len)
-            let content .= (rlc['VALUE'] . "\n")
+            let content .= vlime#ui#Pad(vlime#Get(rlc, 'NAME'), ':', max_name_len)
+            let content .= (vlime#Get(rlc, 'VALUE') . "\n")
         endfor
     endif
     let catch_tags = a:result[1]
@@ -416,16 +417,16 @@ function! s:ShowFrameSourceLocationCB(frame, line, conn, result)
     if type(a:result[1]) == v:t_list
         let r = vlime#KeywordList2Dict(a:result[1:])
 
-        if has_key(r, "SNIPPET") 
-            let snippet = r["SNIPPET"]
+        if vlime#HasKey(r, "SNIPPET") 
+            let snippet = vlime#Get(r, "SNIPPET")
         endif
-        if has_key(r, "SOURCE-FORM") 
-            let snippet = r["SOURCE-FORM"]
+        if vlime#HasKey(r, "SOURCE-FORM") 
+            let snippet = vlime#Get(r, "SOURCE-FORM")
         endif
 
-        if has_key(r, "FILE") && has_key(r, "POSITION") 
+        if vlime#HasKey(r, "FILE") && vlime#HasKey(r, "POSITION") 
         " The position is likely the byte position, so not actually useful for gF
-            let content = "\n\tFile: " . r["FILE"] . " " . r["POSITION"] . "\n"
+            let content = "\n\tFile: " . vlime#Get(r, "FILE") . " " . vlime#Get(r, "POSITION") . "\n"
         endif
     else
         let content = "\n\tPosition: " . a:result[1] . "\n"
@@ -479,7 +480,7 @@ function! s:FindSourceCB(edit_cmd, win_to_go, force_open, frame, conn, msg)
 
     let options = map(copy(locals),
                 \ {idx, lc ->
-                    \ string(idx + 1) . '. ' . vlime#PListToDict(lc)['NAME']})
+                    \ string(idx + 1) . '. ' . vlime#Get(vlime#PListToDict(lc), 'NAME')})
     echohl Question
     echom 'Which variable?'
     echohl None
@@ -502,7 +503,7 @@ endfunction
 function! s:FrameRestartable(frame)
     if len(a:frame) > 2
         let flags = vlime#PListToDict(a:frame[2])
-        return get(flags, 'RESTARTABLE', v:false)
+        return vlime#Get(flags, 'RESTARTABLE', v:false)
     endif
     return v:false
 endfunction

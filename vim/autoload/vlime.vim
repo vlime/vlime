@@ -1376,7 +1376,8 @@ endfunction
 
 function! vlime#OnServerEvent(chan, msg) dict
     let msg_type = a:msg[0]
-    let Handler = get(self.server_event_handlers, msg_type['name'], v:null)
+    " Accomodate *PRINT-CASE*
+    let Handler = get(self.server_event_handlers, toupper(vlime#SymbolName(msg_type)), v:null)
     if type(Handler) == v:t_func
         call Handler(self, a:msg)
     elseif get(g:, '_vlime_debug', v:false)
@@ -1486,18 +1487,18 @@ endfunction
 " Normalize a source location object parsed by
 " @function(vlime#ParseSourceLocation).
 function! vlime#GetValidSourceLocation(loc)
-    let loc_file = get(a:loc, 'FILE', v:null)
-    let loc_buffer = get(a:loc, 'BUFFER', v:null)
-    let loc_buf_and_file = get(a:loc, 'BUFFER-AND-FILE', v:null)
-    let loc_src_form = get(a:loc, 'SOURCE-FORM', v:null)
+    let loc_file = vlime#Get(a:loc, 'FILE', v:null)
+    let loc_buffer = vlime#Get(a:loc, 'BUFFER', v:null)
+    let loc_buf_and_file = vlime#Get(a:loc, 'BUFFER-AND-FILE', v:null)
+    let loc_src_form = vlime#Get(a:loc, 'SOURCE-FORM', v:null)
 
     if type(loc_file) != type(v:null)
-        let loc_pos = get(a:loc, 'POSITION', v:null)
-        let loc_snippet = get(a:loc, 'SNIPPET', v:null)
+        let loc_pos = vlime#Get(a:loc, 'POSITION', v:null)
+        let loc_snippet = vlime#Get(a:loc, 'SNIPPET', v:null)
         let valid_loc = [loc_file, loc_pos, loc_snippet]
     elseif type(loc_buffer) != type(v:null)
-        let loc_offset = get(a:loc, 'OFFSET', v:null)
-        let loc_snippet = get(a:loc, 'SNIPPET', v:null)
+        let loc_offset = vlime#Get(a:loc, 'OFFSET', v:null)
+        let loc_snippet = vlime#Get(a:loc, 'SNIPPET', v:null)
         if type(loc_offset) != type(v:null)
             " Negative offsets are used to designate the code snippets entered
             " via the input buffer
@@ -1509,8 +1510,8 @@ function! vlime#GetValidSourceLocation(loc)
         endif
         let valid_loc = [loc_buffer, loc_offset, loc_snippet]
     elseif type(loc_buf_and_file) != type(v:null)
-        let loc_offset = get(a:loc, 'OFFSET', v:null)
-        let loc_snippet = get(a:loc, 'SNIPPET', v:null)
+        let loc_offset = vlime#Get(a:loc, 'OFFSET', v:null)
+        let loc_snippet = vlime#Get(a:loc, 'SNIPPET', v:null)
         if type(loc_offset) != type(v:null)
             if loc_offset[0] < 0 || loc_offset[1] < 0
                 let loc_offset = v:null
@@ -1709,6 +1710,17 @@ function! s:SearchPList(plist, name)
             return a:plist[i+1]
         endif
         let i += 2
+endfunction
+
+function! vlime#HasKey(dict, key)
+    " This is used to accomodate *PRINT-CASE*
+    return has_key(a:dict, a:key) || has_key(a:dict, tolower(a:key))
+endfunction
+
+function! vlime#Get(dict, key, ...)
+    let default = len(a:000) ? a:1 : v:null
+    " This is used to accomodate *PRINT-CASE*
+    return has_key(a:dict, a:key) ? get(a:dict, a:key, default) : get(a:dict, tolower(a:key), default)
 endfunction
 
 function! s:CheckReturnStatus(return_msg, caller)
