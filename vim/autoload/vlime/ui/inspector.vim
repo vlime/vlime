@@ -12,22 +12,23 @@ function! vlime#ui#inspector#InitInspectorBuf(ui, conn, thread)
 endfunction
 
 function! vlime#ui#inspector#FillInspectorBuf(content, thread, itag)
-    let b:vlime_inspector_title = a:content['TITLE']
-    let b:vlime_inspector_content_start = a:content['CONTENT'][2]
-    let b:vlime_inspector_content_end = a:content['CONTENT'][3]
+    let b:vlime_inspector_title = vlime#Get(a:content, 'TITLE')
+    let b:vlime_inspector_content_start = vlime#Get(a:content, 'CONTENT')[2]
+    let b:vlime_inspector_content_end = vlime#Get(a:content, 'CONTENT')[3]
     let b:vlime_inspector_content_more =
-                \ a:content['CONTENT'][1] > b:vlime_inspector_content_end
+                \ vlime#Get(a:content, 'CONTENT')[1] > b:vlime_inspector_content_end
 
     setlocal modifiable
 
-    call vlime#ui#ReplaceContent(a:content['TITLE'] . "\n"
-                \ . repeat('=', len(a:content['TITLE'])) . "\n\n")
+    let title = vlime#Get(a:content, 'TITLE') 
+    call vlime#ui#ReplaceContent(title . "\n"
+                \ . repeat('=', len(title)) . "\n\n")
     let eof_coord = vlime#ui#GetEndOfFileCoord()
     call setpos('.', [0, eof_coord[0], eof_coord[1], 0])
 
     let coords = []
     call vlime#ui#inspector#FillInspectorBufContent(
-                \ a:content['CONTENT'][0], coords)
+                \ vlime#Get(a:content, 'CONTENT')[0], coords)
 
     let range_buttons = []
     if b:vlime_inspector_content_start > 0

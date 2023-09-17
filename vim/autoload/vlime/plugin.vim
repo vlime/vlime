@@ -1295,9 +1295,9 @@ function! s:OnSwankRequireCallInitializersComplete(added, conn)
 endfunction
 
 function! s:OnConnectionInfoComplete(conn, result)
-    let a:conn.cb_data['version'] = get(a:result, 'VERSION', '<unknown version>')
-    let a:conn.cb_data['pid'] = get(a:result, 'PID', '<unknown pid>')
-    let features = get(a:result, 'FEATURES', [])
+    let a:conn.cb_data['version'] = vlime#Get(a:result, 'VERSION', '<unknown version>')
+    let a:conn.cb_data['pid'] = vlime#Get(a:result, 'PID', '<unknown pid>')
+    let features = vlime#Get(a:result, 'FEATURES', [])
     if type(features) == type(v:null)
         let features = []
     endif
@@ -1394,7 +1394,7 @@ function! s:OnAproposListComplete(conn, result)
         let content = ''
         for item in a:result
             let item_dict = vlime#PListToDict(item)
-            let content .= item_dict['DESIGNATOR']
+            let content .= vlime#Get(item_dict, 'DESIGNATOR')
             let flags = map(filter(keys(item_dict), {f -> f != 'DESIGNATOR'}), {i, f -> tolower(f)})
             if len(flags) > 0
                 let content .= ' ('
