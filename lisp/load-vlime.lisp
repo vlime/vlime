@@ -27,3 +27,6 @@
     t))
 
 (load-vlime)
+
+
+(pushnew :vlime-json *features*)
