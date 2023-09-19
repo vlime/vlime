@@ -1377,7 +1377,7 @@ endfunction
 function! vlime#OnServerEvent(chan, msg) dict
     let msg_type = a:msg[0]
     " Accomodate *PRINT-CASE*
-    let Handler = get(self.server_event_handlers, toupper(vlime#SymbolName(msg_type)), v:null)
+    let Handler = get(self.server_event_handlers, toupper(msg_type), v:null)
     if type(Handler) == v:t_func
         call Handler(self, a:msg)
     elseif get(g:, '_vlime_debug', v:false)
