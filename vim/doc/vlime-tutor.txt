@@ -256,7 +256,7 @@ And then type the content in it:
     (defun generate (n &optional (a 0) (b 1) (acc (list)))
       (if (<= n 0)
         (reverse acc)
-        (generate (1- n) b (+ a b) (push acc a))))
+        (generate (1- n) b (+ a b) (push a acc))))
 
 The GENERATE function should build a list of N Fibonacci numbers. If
 you typed the code manually instead of copy-and-paste, You may have
