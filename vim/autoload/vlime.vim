@@ -1377,7 +1377,7 @@ endfunction
 function! vlime#OnServerEvent(chan, msg) dict
     let msg_type = a:msg[0]
     " Accomodate *PRINT-CASE*
-    let Handler = get(self.server_event_handlers, toupper(msg_type), v:null)
+    let Handler = vlime#Get(self.server_event_handlers, msg_type['name'], v:null)
     if type(Handler) == v:t_func
         call Handler(self, a:msg)
     elseif get(g:, '_vlime_debug', v:false)
@@ -1849,7 +1849,7 @@ function! vlime#KeywordList2Dict(input)
     if type(a:input) == v:t_list
         let dct = {}
         for el in a:input
-            if type(el) == v:t_list && type(el[0]) == v:t_dict && el[0]["package"] == 'KEYWORD'
+            if type(el) == v:t_list && type(el[0]) == v:t_dict && (el[0]["package"] == 'KEYWORD' || el[0]["package"] == 'keyword')
                 let dct[ el[0]["name"] ] = el[1]
             endif
         endfor

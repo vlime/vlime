@@ -340,7 +340,7 @@ endfunction
 function! s:MatchRestart()
     let line = getline('.')
     let matches = matchlist(line,
-                \ '\v^  R\s+([0-9]+)\.\s+\*?[A-Z\-]+\s+-\s.+$')
+                \ '\v^  R\s+([0-9]+)\.\s+\*?[a-zA-Z\-]+\s+-\s.+$')
     return (len(matches) > 0) ? (matches[1] + 0) : -1
 endfunction
 
