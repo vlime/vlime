@@ -1337,7 +1337,20 @@ function! vlime#ui#MatchAddCoords(group, coords)
     let match_list = []
     let stride = 8
     for i in range(0, len(pos_list) - 1, stride)
-        call add(match_list, matchaddpos(a:group, pos_list[i:i+stride-1]))
+        if a:group == 'vlime_replCoord'
+            " Use a priority less than 0 so that search hilight works as
+            " expected even on the REPL buffer.
+            "
+            " From `:help matchadd`:
+            "
+            " - default priority is 10
+            " - the priority of 'hlsearch' is 0
+            "
+            " See: https://github.com/vlime/vlime/issues/74
+            call add(match_list, matchaddpos(a:group, pos_list[i:i+stride-1], -1))
+        else
+            call add(match_list, matchaddpos(a:group, pos_list[i:i+stride-1]))
+        endif
     endfor
     return match_list
 endfunction
