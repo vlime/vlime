@@ -20,6 +20,9 @@
         (dep-install-error-package c)))))
 
 
+(defmacro dyn-value (package sym)
+  `(symbol-value (find-symbol ,sym ,package)))
+
 (defun dyn-call (package sym &rest args)
   (apply (symbol-function (find-symbol sym package)) args))
 
@@ -41,11 +44,14 @@
                   (dont-close t))
   (declare (ignore backend port-file))
   ;; create-server would accept an INTERFACE argument
-  (let ((swank::*loopback-interface* interface))
-    (dyn-call "SWANK" "SETUP-SERVER"
-              port 
-              (lambda (addr port)
-                  (format t "Server created: (~a ~a)~%" addr port))
-              swank:*communication-style*
-              dont-close 
-              nil)))
+  (let ((old-interface (dyn-value "SWANK" "*LOOPBACK-INTERFACE*")))
+    (setf (dyn-value "SWANK" "*LOOPBACK-INTERFACE*") interface)
+    (unwind-protect
+        (dyn-call "SWANK" "SETUP-SERVER"
+                  port
+                  (lambda (addr port)
+                    (format t "Server created: (~a ~a)~%" addr port))
+                  (dyn-value "SWANK" "*COMMUNICATION-STYLE*")
+                  dont-close
+                  nil)
+      (setf (dyn-value "SWANK" "*LOOPBACK-INTERFACE*") old-interface))))
