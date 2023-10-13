@@ -113,8 +113,9 @@ Now that we have an active connection, let's try something simple.
 Vlime has good REPL integration, but it's different from other Lisp
 environments, in that Vlime's REPL buffer is dedicated for output,
 i.e. you can not type and evaluate an expression directly in the REPL
-buffer. To evaluate something in the REPL, you send it using key
-mappings listed in |vlime-mappings-send|.
+buffer (except you're using are using a recent version of vim with 
+with buftype 'prompt').  To evaluate something in the REPL,
+you send it using key mappings listed in |vlime-mappings-send|.
 
 Let's go to ad-hoc.lisp, the file we created in |vlime-tutor-connect|,
 and write a simple expression in it:
@@ -138,12 +139,16 @@ result:
 
 This is the REPL buffer.
 
-Try typing "i" (without the quote marks) in the REPL buffer. It will
+Try typing "i" (without the quote marks) in the REPL buffer. It may
 result in an error message:
 
     E21: Cannot make changes, 'modifiable' is off
 
-Indeed, it's read-only.
+This means that your vim/neovim version does not support prompt buffers
+and that you can not enter text in the REPL directly. In that case, you
+use can use dedicated input buffer that vlime implements
+(|vlime-input-buffer|, default mapping: `<LocalLeader>si`).
+
 
 To make sending things to the REPL easier, Vlime has an interaction
 mode for *.lisp buffers. Go back to the ad-hoc.lisp buffer at the top,

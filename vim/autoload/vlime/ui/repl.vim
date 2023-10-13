@@ -30,6 +30,10 @@ function! vlime#ui#repl#AppendOutput(repl_buf, str)
     finally
         call setbufvar(a:repl_buf, '&modifiable', old_modifiable)
     endtry
+
+    if exists('*prompt_setprompt')
+        call setbufvar(a:repl_buf, '&modified', 0)
+    end
 endfunction
 
 function! vlime#ui#repl#InspectCurREPLPresentation()
@@ -86,7 +90,10 @@ function! s:ClearREPLBuffer_inBuffer()
         let b:vlime_repl_coords_match = []
     endif
     call s:ShowREPLBanner(b:vlime_conn)
-    setlocal nomodifiable
+
+    if !exists('*prompt_setprompt')
+        setlocal nomodifiable
+    endif
 endfunction
 
 function! vlime#ui#repl#NextField(forward)
@@ -145,8 +152,18 @@ function! s:InitREPLBuf()
 
     setlocal modifiable
     call s:ShowREPLBanner(b:vlime_conn)
-    setlocal nomodifiable
 
+    if exists('*prompt_setprompt')
+        setlocal buftype=prompt
+        call prompt_setprompt(bufnr(), ' ')
+        call prompt_setcallback(bufnr(), function('vlime#plugin#SendToREPL'))
+        setlocal omnifunc=vlime#plugin#CompleteFunc
+        setlocal indentexpr=vlime#plugin#CalcCurIndent()
+        setlocal nomodified
+    else
+        setlocal nomodifiable
+    end
+    let b:matchup_delim_enabled=0
     call vlime#ui#MapBufferKeys('repl')
 
     " We modify the buffer very often; this is needed to reduce CPU time.

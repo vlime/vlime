@@ -273,6 +273,18 @@ function! vlime#plugin#SendToREPL(...)
                 \ s:InputCheckEditFlag(
                     \ get(a:000, 1, v:false),
                     \ get(a:000, 0, v:null))
+
+    " Use prompt buffer instead of MaybeInput if prompt buffer is available
+    if type(content) == type(v:null)
+        if exists('*prompt_setprompt')
+            let repl_buf = vlime#ui#repl#InitREPLBuf(conn)
+            call vlime#ui#OpenBufferWithWinSettings(repl_buf, v:true, 'repl')
+            startinsert
+            return
+        end
+    end
+        
+
     call vlime#ui#input#MaybeInput(
                 \ content,
                 \ function('s:SendToREPLInputComplete', [conn]),
