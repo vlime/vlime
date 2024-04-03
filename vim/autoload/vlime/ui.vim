@@ -236,7 +236,7 @@ function! vlime#ui#OnInspect(conn, i_content, i_thread, i_tag) dict
     let r_content = vlime#PListToDict(a:i_content)
     let old_title = getline(1)
     if vlime#Get(r_content, 'TITLE', v:null) == old_title
-        let old_cur = vlime#Getcurpos()
+        let old_cur = getcurpos()
     else
         let old_cur = [0, 1, 1, 0, 1]
     endif
