@@ -1003,6 +1003,14 @@ function! vlime#plugin#VlimeKey(key)
                 call vlime#plugin#ShowOperatorArgList(op)
             endif
         endif
+
+        if key == 'cr'
+            if get(g:, 'paredit_electric_return', v:false)
+                return PareditEnter()
+            else
+                return "\<cr>"
+            endif
+        endif
     elseif key == 'tab'
         if s:isInString()
             return "\<tab>"
