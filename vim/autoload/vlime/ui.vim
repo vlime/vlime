@@ -82,7 +82,7 @@ function! vlime#ui#GetCurrentPackage(...) dict
         if len(in_pkg) > 0
             return [in_pkg, in_pkg]
         else
-            return None
+            return v:null
         endif
     endif
 
