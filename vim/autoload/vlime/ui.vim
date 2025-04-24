@@ -77,6 +77,15 @@ endfunction
 " nicknames.
 function! vlime#ui#GetCurrentPackage(...) dict
     let buf_spec = get(a:000, 0, '%')
+    if buf_spec == '%'
+        let in_pkg = vlime#ui#CurInPackage()
+        if len(in_pkg) > 0
+            return [in_pkg, in_pkg]
+        else
+            return None
+        endif
+    endif
+
     let cur_buf = bufnr(buf_spec)
     let buf_pkg = get(self.buffer_package_map, cur_buf, v:null)
     if type(buf_pkg) != v:t_list
@@ -752,6 +761,10 @@ function! vlime#ui#WithBuffer(buf, Func, ...)
 
     let old_ei = &eventignore
     let &eventignore = ev_ignore
+
+    if old_win == buf_win
+        return a:Func()
+    endif
 
     try
         if buf_visible
