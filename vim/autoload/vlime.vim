@@ -1856,3 +1856,22 @@ function! vlime#KeywordList2Dict(input)
         return dct
     endif
 endfunction
+
+function! vlime#GotoCharInCurrentBuffer(target)
+    " first approximation by byte position
+    let cur_byte = a:target
+    let timeout = 20
+    while timeout > 0
+        execute cur_byte . 'go'
+        let w = wordcount()
+        let cur_char = w["cursor_chars"]
+        let delta = a:target - cur_char
+        echomsg "goto " . cur_byte . " says at " . cur_char . "  delta " . delta
+        if delta == 0
+            break
+        endif
+
+        let cur_byte = cur_byte + delta
+        let timeout = timeout - 1
+    endwhile
+endfunction
