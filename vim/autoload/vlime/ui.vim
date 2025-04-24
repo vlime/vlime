@@ -1452,19 +1452,9 @@ function! vlime#ui#JumpToOrOpenFile(file_path, byte_pos, ...)
     endif
 
     if type(a:byte_pos) != type(v:null)
-        let src_line = byte2line(a:byte_pos)
-        call setpos('.', [0, src_line, 1, 0, 1])
-        let cur_pos = line2byte('.') + col('.') - 1
-        if a:byte_pos - cur_pos > 0
-            call setpos('.', [0, src_line, a:byte_pos - cur_pos + 1, 0])
-        endif
-        if type(snippet) != type(v:null)
-            let to_search = '\V' . substitute(escape(snippet, '\'), "\n", '\\n', 'g')
-            call search(to_search, 'cW')
-        endif
-        " Vim may not update the screen when we move the cursor around like
-        " this. Force a redraw.
-        redraw
+        " Actually, swank returns a _character_ position, not a byte offset.
+        call vlime#GotoCharInCurrentBuffer(a:byte_pos)
+        return
     endif
 endfunction
 
