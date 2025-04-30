@@ -775,15 +775,15 @@ function! vlime#ui#WithBuffer(buf, Func, ...)
 
     let old_win = win_getid()
 
+    if old_win == buf_win
+        return a:Func()
+    endif
+
     let old_lazyredraw = &lazyredraw
     let &lazyredraw = 1
 
     let old_ei = &eventignore
     let &eventignore = ev_ignore
-
-    if old_win == buf_win
-        return a:Func()
-    endif
 
     try
         if buf_visible
