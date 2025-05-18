@@ -1914,7 +1914,6 @@ function! vlime#GotoCharInCurrentBuffer(target)
         let w = wordcount()
         let cur_char = w["cursor_chars"]
         let delta = a:target - cur_char
-        echomsg "goto " . cur_byte . " says at " . cur_char . "  delta " . delta
         if delta == 0
             break
         endif
