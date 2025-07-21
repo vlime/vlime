@@ -15,7 +15,7 @@ if !exists('g:vlime_default_mappings')
                     \
                     \ ['i', '<space>', '<space><c-r>=vlime#plugin#VlimeKey("space")<cr>',
                         \ 'Trigger the arglist hint.'],
-                    \ ['i', '<cr>', '<cr><c-r>=vlime#plugin#VlimeKey("cr")<cr>',
+                    \ ['i', '<cr>', '<c-r>=vlime#plugin#VlimeKey("cr")<cr>',
                         \ 'Trigger the arglist hint.'],
                     \ ['i', '<tab>', '<c-r>=vlime#plugin#VlimeKey("tab")<cr>',
                         \ 'Trigger omni-completion.'],
@@ -233,7 +233,7 @@ if !exists('g:vlime_default_mappings')
                         \ 'Trigger the arglist hint.'],
                     \ ['i', '<cr>', '<c-r>=vlime#ui#mrepl#Submit()<cr>',
                         \ 'Submit the last input to the REPL.'],
-                    \ ['i', '<c-j>', '<cr><c-r>=vlime#plugin#VlimeKey("cr")<cr>',
+                    \ ['i', '<c-j>', '<c-r>=vlime#plugin#VlimeKey("cr")<cr>',
                         \ 'Insert a newline, and trigger the arglist hint.'],
                     \ ['i', '<tab>', '<c-r>=vlime#plugin#VlimeKey("tab")<cr>',
                         \ 'Trigger omni-completion.'],
