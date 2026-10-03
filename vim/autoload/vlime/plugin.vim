@@ -1295,7 +1295,11 @@ function! s:OnFuzzyCompletionsComplete(col, cur_pos, conn, result)
     endif
     let r_comps = []
     for c in comps
-        let cobj = {'word': c[0],'menu': c[3]}
+          " Safely convert Lists to Strings to prevent E730
+        let l:word = type(c[0]) == type([]) ? join(c[0], "") : c[0]
+        let l:menu = type(c[3]) == type([]) ? join(c[3], " ") : c[3]
+
+        let cobj = {'word': l:word, 'menu': l:menu}
         call add(r_comps, cobj)
     endfor
 
